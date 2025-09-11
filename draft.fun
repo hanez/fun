@@ -150,7 +150,7 @@ cast(a)
   return CASTED_variable_from_one_to_another_existing_type(a)
 
 // External functions need f as a prefix to define the function.
-f get_string(a_string, b_string)
+fun get_string(a_string, b_string)
   return a_string + " " + b_string
 eof
 
