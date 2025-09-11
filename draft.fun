@@ -112,25 +112,23 @@ number foo = 23
 // Private variables can only be used here in this file.
 private number bar = 42
 
-for i in range(1, 1000) {
-  echo i
-  echo add(i, 1)
-}
+for i in range(1, 1000)
+  print i
+  print add(i, 1)
 
-for i in range(1, foo) {
-  echo "i"
-}
+for i in range(1, foo)
+  print "i"
 
 // This must not work since range() is an internal function.
 string range = "f987458n73v03258"
 
 if(x != y)
-  echo x
+  print x
 else if(a == b || h != i)
-  echo [a + b + h + i]
+  print [a + b + h + i]
 else
   if(k < 1 && l > 1)
-    echo "Buh!"
+    print "Buh!"
   fi
 fi
 
@@ -148,7 +146,8 @@ system(a)
 
 // Some kind of cast function for converting data types.
 cast(a)
-  return CASTED_string_to_another_existing_type(a)
+  // Not implemented.
+  return CASTED_variable_from_one_to_another_existing_type(a)
 
 // External functions need f as a prefix to define the function.
 f get_string(a_string, b_string)

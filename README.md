@@ -2,7 +2,7 @@
 
 Fun Uses Nothing - Life is too short not to code fun... ;)
 
-Influenced by C, Go, Lua, Python and Rust.
+Influenced by Bash, C, Go, Lua, Python and Rust.
 
 ## Idea
 
