@@ -42,7 +42,10 @@
 // Includes from a system installed file. Included libs should support the
 // extension .so and the .fun extension for core libraries implemented in fun,
 // but can be included without the extension. This directory must support
-// subdirectories. The root for this diretory is e.g. /var/lib/fun/.
+// subdirectories. The root for this diretory is e.g. /var/lib/fun/. A file
+// named fun.so and fun.fun can reside here, but the .fun file will be included
+// here; The .fun file can then include a .so file with the same name, but then
+// extension .so is required.
 // Some examples:
 #include crypt/md5
 #include crypt/sha256
@@ -50,7 +53,7 @@
 #include math
 // Files can be included with or without the extension.
 #include native/lib.fun
-#include native/std.so
+#include std.so
 #include network
 #include process
 #include socket
@@ -88,13 +91,21 @@ byte todd = 42
 
 float new_float = 0.12345
 
-// Global variables can be used everywhere in the code. Even in in cluded files.
-global string a_string = 'Hello'
+// Global variables can be used everywhere in the code. Even in included files.
+// It should be possible to use ' and ", but ' has higher priority so " can be
+// used inside '.
+global string a_string = "Hello"
 global string b_string = 'World!'
 
+// This produces: Hello World!
 string x_string = a_string + " " + b_string
+// This produces: Hello World!
 string y_string = a_string + ' ' + b_string
+// This produces: Hello " " World!
 string z_string = a_string + '" "' + b_string
+// This produces an error.
+string z_string = a_string + "' '" + b_string
+
 
 // 64 bit number
 number foo = 23

@@ -1,6 +1,6 @@
 # Fun
 
-Fun Uses Nothing - The programming language for having fun.
+Fun Uses Nothing - Life is too short not to code fun... ;)
 
 Influenced by C, Go, Lua, Python and Rust.
 
