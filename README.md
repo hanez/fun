@@ -25,17 +25,17 @@ Coding should be enjoyable, elegant, and consistent.
 
 ### Philosophy
 
- - **Fun is Fun**
+ - **Fun is Fun**<br>
    Programming should spark creativity, not frustration. Code in Fun feels light, playful, and rewarding.
- - **Fun Uses Nothing**
+ - **Fun Uses Nothing**<br>
    Minimalism is power. No unnecessary features, no endless syntax variations, no formatting debates. Just clean, uniform code.
- - **Indentation is Truth**
+ - **Indentation is Truth**<br>
    Two spaces, always. No tabs, no four-space wars. Code should look the same everywhere, from your laptop to /usr/bin/fun.
- - **One Way to Do It**
+ - **One Way to Do It**<br>
    No clutter, no 15 ways of writing the same thing. Simplicity means clarity.
- - **Hackable by Nature**
+ - **Hackable by Nature**<br>
    Fun should be small and embeddable, like Lua. Easy to understand, extend, and tinker with — true to the hacker spirit.
- - **Beautiful Defaults**
+ - **Beautiful Defaults**<br>
    A language that doesn’t need linters, formatters, or style guides. Beauty is built in.
 
 ### The Community
