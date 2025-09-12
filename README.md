@@ -13,7 +13,7 @@ Influenced by Bash, C, Go, Lua, Python and Rust.
 
 ## Characteristics
 
- * Static
+ * Static and optionally dynamic
  * No pointers
  * Type safety
  * Written in C / Internally no_camel_case... ;)
