@@ -4,8 +4,6 @@
  * Hello, world!
  */
 
-fun hello_world() {
-  print("Hello, world!")
-}
+print("Hello, world!")
 
 // Bye, world!

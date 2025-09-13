@@ -1,5 +1,7 @@
 #!/usr/bin/env fun
 
-fun hello_world() {
-  print("Hello, world!")
-}
+/*
+ * Hello world in Fun
+ */
+
+print("Hello, world!")
