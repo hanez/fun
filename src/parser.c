@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "value.h"
+#include "vm.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -123,10 +124,118 @@ static char *parse_string_literal_any_quote(const char *src, size_t len, size_t 
     return out;
 }
 
+/* === Helpers for identifiers, numbers, booleans, and globals === */
+
+static void skip_spaces(const char *src, size_t len, size_t *pos) {
+    while (*pos < len) {
+        char c = src[*pos];
+        if (c == ' ' || c == '\t' || c == '\r') { (*pos)++; continue; }
+        break;
+    }
+}
+
+static int read_identifier_into(const char *src, size_t len, size_t *pos, char **out_name) {
+    size_t p = *pos;
+    if (p < len && (isalpha((unsigned char)src[p]) || src[p] == '_')) {
+        size_t start = p;
+        p++;
+        while (p < len && (isalnum((unsigned char)src[p]) || src[p] == '_')) p++;
+        size_t n = p - start;
+        char *name = (char*)malloc(n + 1);
+        if (!name) return 0;
+        memcpy(name, src + start, n);
+        name[n] = '\0';
+        *pos = p;
+        *out_name = name;
+        return 1;
+    }
+    return 0;
+}
+
+static int64_t parse_int_literal_value(const char *src, size_t len, size_t *pos, int *ok) {
+    size_t p = *pos;
+    skip_spaces(src, len, &p);
+    int sign = 1;
+    if (p < len && (src[p] == '+' || src[p] == '-')) {
+        if (src[p] == '-') sign = -1;
+        p++;
+    }
+    if (p >= len || !isdigit((unsigned char)src[p])) { *ok = 0; return 0; }
+    int64_t val = 0;
+    while (p < len && isdigit((unsigned char)src[p])) {
+        val = val * 10 + (src[p] - '0');
+        p++;
+    }
+    *pos = p;
+    *ok = 1;
+    return sign * val;
+}
+
+/* very small global symbol table for LOAD_GLOBAL/STORE_GLOBAL */
+static struct {
+    char *names[VM_MAX_GLOBALS];
+    int count;
+} G = { {0}, 0 };
+
+static int sym_index(const char *name) {
+    for (int i = 0; i < G.count; ++i) {
+        if (strcmp(G.names[i], name) == 0) return i;
+    }
+    if (G.count >= VM_MAX_GLOBALS) {
+        fprintf(stderr, "Parser error: too many globals (max %d)\n", VM_MAX_GLOBALS);
+        exit(1);
+    }
+    G.names[G.count] = strdup(name);
+    return G.count++;
+}
+
+/* emit_expression compiles: string | number | true | false | identifier */
+static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    skip_spaces(src, len, pos);
+
+    /* string */
+    char *s = parse_string_literal_any_quote(src, len, pos);
+    if (s) {
+        int ci = bytecode_add_constant(bc, make_string(s));
+        free(s);
+        bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+        return 1;
+    }
+
+    /* number */
+    int ok = 0;
+    size_t save = *pos;
+    int64_t ival = parse_int_literal_value(src, len, pos, &ok);
+    if (ok) {
+        int ci = bytecode_add_constant(bc, make_int(ival));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+        return 1;
+    }
+    *pos = save;
+
+    /* identifier or keyword */
+    char *name = NULL;
+    if (read_identifier_into(src, len, pos, &name)) {
+        if (strcmp(name, "true") == 0 || strcmp(name, "false") == 0) {
+            int ci = bytecode_add_constant(bc, make_int(strcmp(name, "true") == 0 ? 1 : 0));
+            free(name);
+            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+            return 1;
+        }
+        int gi = sym_index(name);
+        free(name);
+        bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+        return 1;
+    }
+
+    return 0;
+}
+
 /*
  * Very small compiler:
  * - Optionally skips: fun <ident>() { ... } wrapper.
- * - Emits LOAD_CONST (string) + PRINT for each print("...") encountered.
+ * - Emits PRINT for print(expr) and supports assignments: ident = expr.
+ * - Supports literals: strings, integers, booleans; identifiers as globals.
  * - Ends with HALT.
  */
 static Bytecode *compile_minimal(const char *src, size_t len) {
@@ -149,31 +258,74 @@ static Bytecode *compile_minimal(const char *src, size_t len) {
         (void)consume_char(src, len, &pos, ')');
         skip_comments(src, len, &pos);
         skip_ws(src, len, &pos);
-        (void)consume_char(src, len, &pos, '{');  // braces optional; if not present, we continue anyway
+        (void)consume_char(src, len, &pos, '{');  // tolerate braces
     }
 
-    // Parse statements until EOF or closing brace
+    // Parse simple statements until EOF or closing brace
     while (pos < len) {
         skip_comments(src, len, &pos);
         skip_ws(src, len, &pos);
         if (pos < len && src[pos] == '}') { pos++; break; }
+        if (pos >= len) break;
 
+        // read an identifier (for 'print' or assignment), or handle print directly
+        size_t stmt_start = pos;
+        char *name = NULL;
+        if (read_identifier_into(src, len, &pos, &name)) {
+            // print(expr)
+            if (strcmp(name, "print") == 0) {
+                free(name);
+                skip_spaces(src, len, &pos);
+                (void)consume_char(src, len, &pos, '(');
+                if (emit_expression(bc, src, len, &pos)) {
+                    (void)consume_char(src, len, &pos, ')');
+                    bytecode_add_instruction(bc, OP_PRINT, 0);
+                } else {
+                    // nothing to print; still try to close ')'
+                    (void)consume_char(src, len, &pos, ')');
+                }
+                continue;
+            }
+
+            // assignment: ident = expr
+            int gi = sym_index(name);
+            free(name);
+            skip_spaces(src, len, &pos);
+            if (pos < len && src[pos] == '=') {
+                pos++; // '='
+                if (emit_expression(bc, src, len, &pos)) {
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                }
+                // end of statement (consume to end of line or semicolon-like chars)
+            } else if (pos < len && src[pos] == '(') {
+                // Call to non-builtin: not supported yet; consume a simple ()-arg for now
+                pos++; // '('
+                // best effort: parse a single expression and drop it
+                (void)emit_expression(bc, src, len, &pos);
+                (void)consume_char(src, len, &pos, ')');
+                // No CALL opcode emitted yet
+            } else {
+                // bare identifier line -> ignore for now
+            }
+            continue;
+        }
+
+        // 'print' without having read identifier (unlikely) - fallback
         if (starts_with(src, len, pos, "print")) {
             pos += 5;
+            skip_spaces(src, len, &pos);
             (void)consume_char(src, len, &pos, '(');
-            char *s = parse_string_literal_any_quote(src, len, &pos);
-            if (s) {
-                int ci = bytecode_add_constant(bc, make_string(s));
-                free(s);
-                bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+            if (emit_expression(bc, src, len, &pos)) {
+                (void)consume_char(src, len, &pos, ')');
                 bytecode_add_instruction(bc, OP_PRINT, 0);
+            } else {
+                (void)consume_char(src, len, &pos, ')');
             }
-            (void)consume_char(src, len, &pos, ')');
             continue;
         }
 
         // Unknown/unsupported token: advance to avoid infinite loop
-        pos++;
+        if (stmt_start == pos) pos++;
     }
 
     bytecode_add_instruction(bc, OP_HALT, 0);
