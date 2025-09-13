@@ -1,11 +1,13 @@
 .idea/
 build/
 dist/
+lib/*.so
 out/
 src/*.o
 tmp/
+.aiignore
 fun
 fun_test
-test_oppcodes
+test_opcodes
 test
 test.*
