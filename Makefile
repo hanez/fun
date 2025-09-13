@@ -11,9 +11,9 @@ TEST_BIN = $(TEST_SRC:src/%.c=%)
 .PHONY: all test clean
 
 # Default: build main demo
-all: main
+all: fun
 
-main: $(OBJ) src/main.c
+fun: $(OBJ) src/fun.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 # Compile object files
