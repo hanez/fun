@@ -39,13 +39,12 @@ typedef struct {
 // initialize VM (zero state)
 void vm_init(VM *vm);
 
-// run entry Bytecode (pushes first frame)
-void vm_run(VM *vm, Bytecode *entry);
-
 // helper function to clear the output
 void vm_clear_output(VM *vm);
-
+void vm_print_output(VM *vm);
 void vm_free(VM *vm);
+// run entry Bytecode (pushes first frame)
+void vm_run(VM *vm, Bytecode *entry);
 
 static inline int opcode_is_valid(int op) {
     return op >= OP_NOP && op <= OP_SWAP;  // all current opcodes

@@ -7,8 +7,10 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Core VM/library sources
 add_library(fun_core
         src/bytecode.c
+        src/parser.c
         src/value.c
         src/vm.c
+        src/parser.c
 )
 
 target_include_directories(fun_core PUBLIC
