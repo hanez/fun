@@ -66,5 +66,8 @@ int bytecode_add_instruction(Bytecode *bc, OpCode op, int32_t operand);
 void bytecode_set_operand(Bytecode *bc, int idx, int32_t operand); /* patching */
 void bytecode_free(Bytecode *bc);
 
+// utilities
+void bytecode_dump(const Bytecode *bc);
+
 #endif
 

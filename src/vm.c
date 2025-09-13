@@ -3,6 +3,7 @@
 #include "value.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void vm_clear_output(VM *vm) {
     for (int i = 0; i < vm->output_count; ++i) {
@@ -259,7 +260,29 @@ void vm_run(VM *vm, Bytecode *entry) {
             case OP_EQ: {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
-                push_value(vm, make_int((a.type == b.type && a.i == b.i) ? 1 : 0)); // for ints only, extend later
+                int eq = 0;
+                if (a.type == b.type) {
+                    switch (a.type) {
+                        case VAL_INT:
+                            eq = (a.i == b.i);
+                            break;
+                        case VAL_STRING:
+                            eq = (a.s && b.s) ? (strcmp(a.s, b.s) == 0) : (a.s == b.s);
+                            break;
+                        case VAL_FUNCTION:
+                            eq = (a.fn == b.fn);
+                            break;
+                        case VAL_NIL:
+                            eq = 1;
+                            break;
+                        default:
+                            eq = 0;
+                            break;
+                    }
+                } else {
+                    eq = 0;
+                }
+                push_value(vm, make_int(eq ? 1 : 0));
                 free_value(a); free_value(b);
                 break;
             }
@@ -267,10 +290,33 @@ void vm_run(VM *vm, Bytecode *entry) {
             case OP_NEQ: {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
-                push_value(vm, make_int((a.type != b.type || a.i != b.i) ? 1 : 0)); // for ints only
+                int neq = 1;
+                if (a.type == b.type) {
+                    switch (a.type) {
+                        case VAL_INT:
+                            neq = (a.i != b.i);
+                            break;
+                        case VAL_STRING:
+                            neq = (a.s && b.s) ? (strcmp(a.s, b.s) != 0) : (a.s != b.s);
+                            break;
+                        case VAL_FUNCTION:
+                            neq = (a.fn != b.fn);
+                            break;
+                        case VAL_NIL:
+                            neq = 0;
+                            break;
+                        default:
+                            neq = 1;
+                            break;
+                    }
+                } else {
+                    neq = 1;
+                }
+                push_value(vm, make_int(neq ? 1 : 0));
                 free_value(a); free_value(b);
                 break;
             }
+
 
             case OP_JUMP_IF_FALSE: {
                 Value cond = pop_value(vm);
