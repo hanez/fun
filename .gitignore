@@ -3,4 +3,5 @@ tmp/
 fun
 fun_test
 test_oppcodes
+test
 test.*
