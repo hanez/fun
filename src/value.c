@@ -83,10 +83,114 @@ int array_set(Value *v, int index, Value newElem) {
     if (!v || v->type != VAL_ARRAY || !v->arr) return 0;
     Array *a = (Array*)v->arr;
     if (index < 0 || index >= a->count) return 0;
-    /* replace element: free old, take ownership of newElem */
     free_value(a->items[index]);
-    a->items[index] = newElem;
+    a->items[index] = newElem; /* take ownership */
     return 1;
+}
+
+static int ensure_array_capacity(Array *a, int newCount) {
+    if (newCount <= a->count) return 1;
+    /* grow to at least newCount; double strategy */
+    int curr = a->count;
+    int cap = curr;
+    if (cap < 4) cap = 4;
+    while (cap < newCount) cap *= 2;
+    Value *newItems = (Value*)realloc(a->items, sizeof(Value) * cap);
+    if (!newItems) return 0;
+    /* if growing beyond current count, initialize new slots to nil */
+    if (cap > a->count) {
+        for (int i = a->count; i < cap; ++i) {
+            newItems[i] = make_nil();
+        }
+    }
+    a->items = newItems;
+    return 1;
+}
+
+int array_push(Value *v, Value newElem) {
+    if (!v || v->type != VAL_ARRAY || !v->arr) return -1;
+    Array *a = (Array*)v->arr;
+    /* ensure capacity for count+1 by reallocating items array to at least count+1 elements */
+    Value *newItems = (Value*)realloc(a->items, sizeof(Value) * (a->count + 1));
+    if (!newItems) { free_value(newElem); return -1; }
+    a->items = newItems;
+    a->items[a->count] = newElem; /* take ownership */
+    a->count += 1;
+    return a->count;
+}
+
+int array_pop(Value *v, Value *out) {
+    if (!v || v->type != VAL_ARRAY || !v->arr) return 0;
+    Array *a = (Array*)v->arr;
+    if (a->count <= 0) return 0;
+    int idx = a->count - 1;
+    if (out) *out = a->items[idx]; /* transfer ownership */
+    else free_value(a->items[idx]);
+    a->count -= 1;
+    return 1;
+}
+
+int array_insert(Value *v, int index, Value newElem) {
+    if (!v || v->type != VAL_ARRAY || !v->arr) return -1;
+    Array *a = (Array*)v->arr;
+    if (index < 0) index = 0;
+    if (index > a->count) index = a->count;
+    Value *newItems = (Value*)realloc(a->items, sizeof(Value) * (a->count + 1));
+    if (!newItems) { free_value(newElem); return -1; }
+    a->items = newItems;
+    /* shift right */
+    for (int i = a->count; i > index; --i) {
+        a->items[i] = a->items[i - 1];
+    }
+    a->items[index] = newElem; /* take ownership */
+    a->count += 1;
+    return a->count;
+}
+
+int array_remove(Value *v, int index, Value *out) {
+    if (!v || v->type != VAL_ARRAY || !v->arr) return 0;
+    Array *a = (Array*)v->arr;
+    if (index < 0 || index >= a->count) return 0;
+    if (out) *out = a->items[index]; /* transfer ownership */
+    else free_value(a->items[index]);
+    /* shift left */
+    for (int i = index; i < a->count - 1; ++i) {
+        a->items[i] = a->items[i + 1];
+    }
+    a->count -= 1;
+    return 1;
+}
+
+Value array_slice(const Value *v, int start, int end) {
+    if (!v || v->type != VAL_ARRAY || !v->arr) return make_nil();
+    const Array *a = (const Array*)v->arr;
+    int n = a->count;
+    if (start < 0) start = 0;
+    if (end < 0 || end > n) end = n;
+    if (start > end) start = end;
+    int m = end - start;
+    if (m <= 0) {
+        return make_array_from_values(NULL, 0);
+    }
+    return make_array_from_values(a->items + start, m);
+}
+
+Value array_concat(const Value *av, const Value *bv) {
+    if (!av || !bv || av->type != VAL_ARRAY || bv->type != VAL_ARRAY) return make_nil();
+    const Array *a = (const Array*)av->arr;
+    const Array *b = (const Array*)bv->arr;
+    int na = a ? a->count : 0;
+    int nb = b ? b->count : 0;
+    int total = na + nb;
+    if (total <= 0) return make_array_from_values(NULL, 0);
+    Value *tmp = (Value*)malloc(sizeof(Value) * total);
+    if (!tmp) return make_nil();
+    for (int i = 0; i < na; ++i) tmp[i] = a->items[i];
+    for (int j = 0; j < nb; ++j) tmp[na + j] = b->items[j];
+    Value out = make_array_from_values(tmp, total);
+    /* free temporaries we copied from (deep copy in make_array_from_values) */
+    free(tmp);
+    return out;
 }
 
 Value copy_value(const Value *v) {
@@ -113,6 +217,40 @@ Value copy_value(const Value *v) {
             break;
     }
     return out;
+}
+
+/* deep copy including arrays (recursively copies items) */
+Value deep_copy_value(const Value *v) {
+    switch (v->type) {
+        case VAL_INT:
+            return make_int(v->i);
+        case VAL_STRING:
+            return make_string(v->s ? v->s : "");
+        case VAL_FUNCTION:
+            return make_function(v->fn); /* shallow pointer for function bytecode */
+        case VAL_ARRAY: {
+            const Array *a = (const Array*)v->arr;
+            if (!a || a->count <= 0) {
+                return make_array_from_values(NULL, 0);
+            }
+            /* copy items deeply */
+            Value *tmp = (Value*)malloc(sizeof(Value) * a->count);
+            if (!tmp) return make_nil();
+            for (int i = 0; i < a->count; ++i) {
+                tmp[i] = deep_copy_value(&a->items[i]);
+            }
+            Value out = make_array_from_values(tmp, a->count);
+            /* free temporaries (we created new deep copies already moved into out) */
+            for (int i = 0; i < a->count; ++i) {
+                free_value(tmp[i]);
+            }
+            free(tmp);
+            return out;
+        }
+        case VAL_NIL:
+        default:
+            return make_nil();
+    }
 }
 
 void free_value(Value v) {

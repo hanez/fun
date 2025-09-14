@@ -75,6 +75,13 @@ static const char *opcode_name(OpCode op) {
         case OP_MAKE_ARRAY: return "MAKE_ARRAY";
         case OP_INDEX_GET: return "INDEX_GET";
         case OP_INDEX_SET: return "INDEX_SET";
+        case OP_LEN: return "LEN";
+        case OP_ARR_PUSH: return "ARR_PUSH";
+        case OP_ARR_POP: return "ARR_POP";
+        case OP_ARR_SET: return "ARR_SET";
+        case OP_ARR_INSERT: return "ARR_INSERT";
+        case OP_ARR_REMOVE: return "ARR_REMOVE";
+        case OP_SLICE: return "SLICE";
         default: return "???";
     }
 }

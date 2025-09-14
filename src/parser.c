@@ -267,15 +267,30 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             parser_fail(*pos, "Expected ')'");
             return 0;
         }
-        /* postfix indexing */
+        /* postfix indexing or slice */
         for (;;) {
             skip_spaces(src, len, pos);
             if (*pos < len && src[*pos] == '[') {
                 (*pos)++;
-                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
-                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
-                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                continue;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); return 0; }
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ':') {
+                    (*pos)++;
+                    skip_spaces(src, len, pos);
+                    size_t savep4 = *pos;
+                    if (!emit_expression(bc, src, len, pos)) {
+                        *pos = savep4;
+                        int ci4 = bytecode_add_constant(bc, make_int(-1));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ci4);
+                    }
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after slice"); return 0; }
+                    bytecode_add_instruction(bc, OP_SLICE, 0);
+                    continue;
+                } else {
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
             }
             break;
         }
@@ -288,15 +303,34 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         int ci = bytecode_add_constant(bc, make_string(s));
         free(s);
         bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-        /* postfix indexing */
+        /* postfix indexing or slice */
         for (;;) {
             skip_spaces(src, len, pos);
             if (*pos < len && src[*pos] == '[') {
                 (*pos)++;
-                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
-                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
-                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                continue;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); return 0; }
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ':') {
+                    (*pos)++;
+                    skip_spaces(src, len, pos);
+                    /* end is optional; if missing, use -1 (till end) */
+                    int has_end = 0;
+                    size_t savep = *pos;
+                    if (emit_expression(bc, src, len, pos)) {
+                        has_end = 1;
+                    } else {
+                        *pos = savep;
+                        int ci = bytecode_add_constant(bc, make_int(-1));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                    }
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after slice"); return 0; }
+                    bytecode_add_instruction(bc, OP_SLICE, 0);
+                    continue;
+                } else {
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
             }
             break;
         }
@@ -326,15 +360,30 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             return 0;
         }
         bytecode_add_instruction(bc, OP_MAKE_ARRAY, count);
-        /* postfix indexing */
+        /* postfix indexing or slice */
         for (;;) {
             skip_spaces(src, len, pos);
             if (*pos < len && src[*pos] == '[') {
                 (*pos)++;
-                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
-                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
-                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                continue;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); return 0; }
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ':') {
+                    (*pos)++;
+                    skip_spaces(src, len, pos);
+                    size_t savep3 = *pos;
+                    if (!emit_expression(bc, src, len, pos)) {
+                        *pos = savep3;
+                        int ci3 = bytecode_add_constant(bc, make_int(-1));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ci3);
+                    }
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after slice"); return 0; }
+                    bytecode_add_instruction(bc, OP_SLICE, 0);
+                    continue;
+                } else {
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
             }
             break;
         }
@@ -348,15 +397,33 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
     if (ok) {
         int ci = bytecode_add_constant(bc, make_int(ival));
         bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-        /* postfix indexing */
+        /* postfix indexing or slice */
         for (;;) {
             skip_spaces(src, len, pos);
             if (*pos < len && src[*pos] == '[') {
                 (*pos)++;
-                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
-                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
-                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                continue;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); return 0; }
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ':') {
+                    (*pos)++;
+                    skip_spaces(src, len, pos);
+                    int has_end = 0;
+                    size_t savep2 = *pos;
+                    if (emit_expression(bc, src, len, pos)) {
+                        has_end = 1;
+                    } else {
+                        *pos = savep2;
+                        int ci2 = bytecode_add_constant(bc, make_int(-1));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ci2);
+                    }
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after slice"); return 0; }
+                    bytecode_add_instruction(bc, OP_SLICE, 0);
+                    continue;
+                } else {
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
             }
             break;
         }
@@ -380,6 +447,68 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         int is_call = (*pos < len && src[*pos] == '(');
 
         if (is_call) {
+            /* builtins */
+            if (strcmp(name, "len") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "len expects 1 argument"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after len arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LEN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "push") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "push expects array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "push expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "push expects value"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after push args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ARR_PUSH, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pop") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pop expects array"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pop arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ARR_POP, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "set") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "set expects array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "set expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "set expects index"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "set expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "set expects value"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after set args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ARR_SET, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "insert") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "insert expects array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "insert expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "insert expects index"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "insert expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "insert expects value"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after insert args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ARR_INSERT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "remove") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "remove expects array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "remove expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "remove expects index"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after remove args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ARR_REMOVE, 0);
+                free(name);
+                return 1;
+            }
+
             /* push function value first */
             if (local_idx >= 0) {
                 bytecode_add_instruction(bc, OP_LOAD_LOCAL, local_idx);
@@ -412,15 +541,30 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             printf("compile: CALL %s with %d arg(s)\n", name, argc);
 #endif
             bytecode_add_instruction(bc, OP_CALL, argc);
-            /* postfix indexing */
+            /* postfix indexing or slice */
             for (;;) {
                 skip_spaces(src, len, pos);
                 if (*pos < len && src[*pos] == '[') {
                     (*pos)++;
-                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); free(name); return 0; }
-                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); free(name); return 0; }
-                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                    continue;
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); free(name); return 0; }
+                    skip_spaces(src, len, pos);
+                    if (*pos < len && src[*pos] == ':') {
+                        (*pos)++;
+                        skip_spaces(src, len, pos);
+                        size_t svp = *pos;
+                        if (!emit_expression(bc, src, len, pos)) {
+                            *pos = svp;
+                            int ci = bytecode_add_constant(bc, make_int(-1));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        }
+                        if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after slice"); free(name); return 0; }
+                        bytecode_add_instruction(bc, OP_SLICE, 0);
+                        continue;
+                    } else {
+                        if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); free(name); return 0; }
+                        bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                        continue;
+                    }
                 }
                 break;
             }
@@ -433,15 +577,30 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 int gi = sym_index(name);
                 bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
             }
-            /* postfix indexing */
+            /* postfix indexing or slice */
             for (;;) {
                 skip_spaces(src, len, pos);
                 if (*pos < len && src[*pos] == '[') {
                     (*pos)++;
-                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); free(name); return 0; }
-                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); free(name); return 0; }
-                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                    continue;
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); free(name); return 0; }
+                    skip_spaces(src, len, pos);
+                    if (*pos < len && src[*pos] == ':') {
+                        (*pos)++;
+                        skip_spaces(src, len, pos);
+                        size_t svp = *pos;
+                        if (!emit_expression(bc, src, len, pos)) {
+                            *pos = svp;
+                            int ci = bytecode_add_constant(bc, make_int(-1));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        }
+                        if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after slice"); free(name); return 0; }
+                        bytecode_add_instruction(bc, OP_SLICE, 0);
+                        continue;
+                    } else {
+                        if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); free(name); return 0; }
+                        bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                        continue;
+                    }
                 }
                 break;
             }

@@ -35,9 +35,16 @@ Value make_array_from_values(const Value *vals, int count); /* deep-copies vals 
 int array_length(const Value *v);                            /* returns -1 if not array */
 int array_get_copy(const Value *v, int index, Value *out);   /* returns 0 on error; out = copy_value(item) */
 int array_set(Value *v, int index, Value newElem);           /* returns 0 on error; takes ownership of newElem */
+int array_push(Value *v, Value newElem);                     /* returns new length or -1 on error */
+int array_pop(Value *v, Value *out);                         /* returns 1 on success, out takes ownership */
+int array_insert(Value *v, int index, Value newElem);        /* returns new length or -1 */
+int array_remove(Value *v, int index, Value *out);           /* returns 1 on success */
+Value array_slice(const Value *v, int start, int end);       /* negative end means till end */
+Value array_concat(const Value *a, const Value *b);          /* returns new array */
 
 /* copy/free */
 Value copy_value(const Value *v);    /* deep for strings, RC for arrays, shallow fn */
+Value deep_copy_value(const Value *v); /* deep copy including arrays */
 void free_value(Value v);            /* frees owned resources */
 
 /* utilities */

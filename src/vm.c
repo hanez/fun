@@ -212,8 +212,13 @@ void vm_run(VM *vm, Bytecode *entry) {
                     free_value(a);
                     free_value(b);
                     push_value(vm, res);
+                } else if (a.type == VAL_ARRAY && b.type == VAL_ARRAY) {
+                    Value res = array_concat(&a, &b);
+                    free_value(a);
+                    free_value(b);
+                    push_value(vm, res);
                 } else {
-                    fprintf(stderr, "Runtime type error: ADD expects both ints or both strings, got %s and %s\n",
+                    fprintf(stderr, "Runtime type error: ADD expects both ints, both strings, or both arrays, got %s and %s\n",
                             value_type_name(a.type), value_type_name(b.type));
                     exit(1);
                 }
@@ -440,10 +445,13 @@ void vm_run(VM *vm, Bytecode *entry) {
 
             case OP_PRINT: {
                 Value v = pop_value(vm);
+                /* snapshot value at print time (deep copy arrays) */
+                Value snap = deep_copy_value(&v);
+                free_value(v);
                 if (vm->output_count < VM_OUTPUT_SIZE) {
-                    vm->output[vm->output_count++] = v;  // store instead of printing
+                    vm->output[vm->output_count++] = snap;  // store snapshot
                 } else {
-                    free_value(v);  // prevent leak
+                    free_value(snap);  // prevent leak
                     fprintf(stderr, "Runtime error: output buffer overflow\n");
                     exit(1);
                 }
@@ -548,6 +556,129 @@ void vm_run(VM *vm, Bytecode *entry) {
                 /* arr modified in place; do not free v (ownership moved) */
                 free_value(arr);
                 free_value(idx);
+                break;
+            }
+
+            case OP_LEN: {
+                Value a = pop_value(vm);
+                int len = 0;
+                if (a.type == VAL_STRING) {
+                    len = (int)(a.s ? (int)strlen(a.s) : 0);
+                } else if (a.type == VAL_ARRAY) {
+                    len = array_length(&a);
+                    if (len < 0) len = 0;
+                } else {
+                    fprintf(stderr, "Runtime type error: LEN expects array or string\n");
+                    exit(1);
+                }
+                free_value(a);
+                push_value(vm, make_int(len));
+                break;
+            }
+
+            case OP_ARR_PUSH: {
+                Value v = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: ARR_PUSH expects array\n");
+                    exit(1);
+                }
+                int n = array_push(&arr, v);
+                if (n < 0) {
+                    fprintf(stderr, "Runtime error: push failed (OOM?)\n");
+                    exit(1);
+                }
+                free_value(arr);
+                push_value(vm, make_int(n));
+                break;
+            }
+
+            case OP_ARR_POP: {
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: ARR_POP expects array\n");
+                    exit(1);
+                }
+                Value out;
+                if (!array_pop(&arr, &out)) {
+                    fprintf(stderr, "Runtime error: pop from empty array\n");
+                    exit(1);
+                }
+                free_value(arr);
+                push_value(vm, out);
+                break;
+            }
+
+            case OP_ARR_SET: {
+                Value v = pop_value(vm);
+                Value idx = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY || idx.type != VAL_INT) {
+                    fprintf(stderr, "Runtime type error: ARR_SET expects (array, int, value)\n");
+                    exit(1);
+                }
+                if (!array_set(&arr, (int)idx.i, v)) {
+                    fprintf(stderr, "Runtime error: set index out of range\n");
+                    exit(1);
+                }
+                free_value(arr);
+                free_value(idx);
+                /* v already owned by array; push copy for return value */
+                push_value(vm, copy_value(&v));
+                free_value(v);
+                break;
+            }
+
+            case OP_ARR_INSERT: {
+                Value v = pop_value(vm);
+                Value idx = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY || idx.type != VAL_INT) {
+                    fprintf(stderr, "Runtime type error: ARR_INSERT expects (array, int, value)\n");
+                    exit(1);
+                }
+                int n = array_insert(&arr, (int)idx.i, v);
+                if (n < 0) {
+                    fprintf(stderr, "Runtime error: insert failed (OOM?)\n");
+                    exit(1);
+                }
+                free_value(arr);
+                free_value(idx);
+                push_value(vm, make_int(n));
+                break;
+            }
+
+            case OP_ARR_REMOVE: {
+                Value idx = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY || idx.type != VAL_INT) {
+                    fprintf(stderr, "Runtime type error: ARR_REMOVE expects (array, int)\n");
+                    exit(1);
+                }
+                Value out;
+                if (!array_remove(&arr, (int)idx.i, &out)) {
+                    fprintf(stderr, "Runtime error: remove index out of range\n");
+                    exit(1);
+                }
+                free_value(arr);
+                free_value(idx);
+                push_value(vm, out);
+                break;
+            }
+
+            case OP_SLICE: {
+                Value end = pop_value(vm);
+                Value start = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY || start.type != VAL_INT || end.type != VAL_INT) {
+                    fprintf(stderr, "Runtime type error: SLICE expects (array, int, int)\n");
+                    exit(1);
+                }
+                Value out = array_slice(&arr, (int)start.i, (int)end.i);
+                free_value(arr);
+                free_value(start);
+                free_value(end);
+                push_value(vm, out);
                 break;
             }
 

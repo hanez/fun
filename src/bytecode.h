@@ -48,7 +48,16 @@ typedef enum {
     // arrays
     OP_MAKE_ARRAY,    // operand = element count; pops N values, pushes array
     OP_INDEX_GET,     // pops index, array; pushes element copy
-    OP_INDEX_SET      // pops value, index, array; sets and pushes nothing
+    OP_INDEX_SET,     // pops value, index, array; sets in place
+
+    // array and builtin helpers
+    OP_LEN,           // pops array or string; pushes length
+    OP_ARR_PUSH,      // pops value, array; pushes new length
+    OP_ARR_POP,       // pops array; pushes removed element
+    OP_ARR_SET,       // pops value, index, array; pushes value
+    OP_ARR_INSERT,    // pops value, index, array; pushes new length
+    OP_ARR_REMOVE,    // pops index, array; pushes removed element
+    OP_SLICE          // pops end, start, array; pushes new array
 } OpCode;
 
 typedef struct {
