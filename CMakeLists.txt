@@ -17,6 +17,13 @@ target_include_directories(fun_core PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+# Debug option to enable verbose parser/VM logging
+option(FUN_DEBUG "Enable extra debug logging in Fun" OFF)
+if(FUN_DEBUG)
+    message(STATUS "FUN_DEBUG enabled: building with verbose debug logging")
+    target_compile_definitions(fun_core PUBLIC FUN_DEBUG=1)
+endif()
+
 # Playground / interpreter (future /usr/bin/fun)
 add_executable(fun
         src/fun.c

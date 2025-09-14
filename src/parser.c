@@ -328,8 +328,10 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 0;
             }
+#ifdef FUN_DEBUG
             /* DEBUG: show compiled call */
             printf("compile: CALL %s with %d arg(s)\n", name, argc);
+#endif
             bytecode_add_instruction(bc, OP_CALL, argc);
             free(name);
             return 1;
@@ -845,10 +847,12 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             /* ensure function returns */
             bytecode_add_instruction(fn_bc, OP_RETURN, 0);
 
+#ifdef FUN_DEBUG
             /* DEBUG: dump compiled function bytecode */
             printf("=== compiled function %s (%d params) ===\n", fname, env.count);
             bytecode_dump(fn_bc);
             printf("=== end function %s ===\n", fname);
+#endif
 
             /* bind function to global: LOAD_CONST <fn> ; STORE_GLOBAL fgi */
             int fci = bytecode_add_constant(bc, make_function(fn_bc));
