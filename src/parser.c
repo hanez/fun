@@ -380,6 +380,22 @@ static int emit_multiplicative(Bytecode *bc, const char *src, size_t len, size_t
     if (!emit_unary(bc, src, len, pos)) return 0;
     for (;;) {
         skip_spaces(src, len, pos);
+
+        /* Stop expression at start of inline comment */
+        if (*pos + 1 < len && src[*pos] == '/' && src[*pos + 1] == '/') {
+            break;
+        }
+        /* Skip block comments inside expressions */
+        if (*pos + 1 < len && src[*pos] == '/' && src[*pos + 1] == '*') {
+            size_t p = *pos + 2;
+            while (p + 1 < len && !(src[p] == '*' && src[p + 1] == '/')) {
+                p++;
+            }
+            if (p + 1 < len) p += 2; /* consume closing marker */
+            *pos = p;
+            continue;
+        }
+
         if (*pos < len && src[*pos] == '*') {
             (*pos)++;
             if (!emit_unary(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '*'"); return 0; }
@@ -684,13 +700,18 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         }
 
         /* assignment or simple call */
-        int gi = sym_index(name);
+        int lidx = local_find(name);
+        int gi = (lidx < 0) ? sym_index(name) : -1;
         free(name);
         skip_spaces(src, len, &local_pos);
         if (local_pos < len && src[local_pos] == '=') {
             local_pos++; /* '=' */
             if (emit_expression(bc, src, len, &local_pos)) {
-                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                if (lidx >= 0) {
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+                } else {
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                }
             }
             *pos = local_pos;
             skip_to_eol(src, len, pos);
@@ -934,6 +955,41 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             for (int i = 0; i < end_count; ++i) {
                 bytecode_set_operand(bc, end_jumps[i], bc->instr_count);
             }
+            continue;
+        }
+
+        /* while loop */
+        if (starts_with(src, len, *pos, "while")) {
+            *pos += 5;
+            skip_spaces(src, len, pos);
+
+            int loop_start = bc->instr_count;
+
+            /* condition */
+            if (!emit_expression(bc, src, len, pos)) {
+                int ci = bytecode_add_constant(bc, make_int(0));
+                bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+            }
+            /* end of condition */
+            skip_to_eol(src, len, pos);
+
+            /* jump over body if false */
+            int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+            /* parse body at increased indent (peek indent without advancing pos) */
+            int body_indent = 0;
+            size_t look_body = *pos;
+            if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
+                parse_block(bc, src, len, pos, body_indent);
+            } else {
+                /* empty body allowed */
+            }
+
+            /* back edge to loop start */
+            bytecode_add_instruction(bc, OP_JUMP, loop_start);
+
+            /* patch false jump to here (after body) */
+            bytecode_set_operand(bc, jmp_false, bc->instr_count);
             continue;
         }
 
