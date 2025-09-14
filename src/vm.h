@@ -14,7 +14,8 @@ static const char *opcode_names[] = {
     "LOAD_GLOBAL","STORE_GLOBAL","ADD","SUB","MUL","DIV",
     "LT","LTE","GT","GTE","EQ","NEQ","POP","JUMP",
     "JUMP_IF_FALSE","CALL","RETURN","PRINT","HALT",
-    "MOD","AND","OR","NOT","DUP","SWAP"
+    "MOD","AND","OR","NOT","DUP","SWAP",
+    "MAKE_ARRAY","INDEX_GET","INDEX_SET"
 };
 
 typedef struct {
@@ -55,7 +56,7 @@ void vm_dump_globals(VM *vm);
 void vm_run(VM *vm, Bytecode *entry);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_SWAP;  // all current opcodes
+    return op >= OP_NOP && op <= OP_INDEX_SET;  // all current opcodes
 }
 
 #endif

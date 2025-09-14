@@ -267,6 +267,18 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             parser_fail(*pos, "Expected ')'");
             return 0;
         }
+        /* postfix indexing */
+        for (;;) {
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] == '[') {
+                (*pos)++;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
+                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                continue;
+            }
+            break;
+        }
         return 1;
     }
 
@@ -276,6 +288,56 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         int ci = bytecode_add_constant(bc, make_string(s));
         free(s);
         bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+        /* postfix indexing */
+        for (;;) {
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] == '[') {
+                (*pos)++;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
+                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                continue;
+            }
+            break;
+        }
+        return 1;
+    }
+
+    /* array literal: [expr, expr, ...] */
+    skip_spaces(src, len, pos);
+    if (*pos < len && src[*pos] == '[') {
+        (*pos)++; /* '[' */
+        int count = 0;
+        skip_spaces(src, len, pos);
+        if (*pos < len && src[*pos] != ']') {
+            for (;;) {
+                if (!emit_expression(bc, src, len, pos)) {
+                    parser_fail(*pos, "Expected expression in array literal");
+                    return 0;
+                }
+                count++;
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); continue; }
+                break;
+            }
+        }
+        if (!consume_char(src, len, pos, ']')) {
+            parser_fail(*pos, "Expected ']' to close array literal");
+            return 0;
+        }
+        bytecode_add_instruction(bc, OP_MAKE_ARRAY, count);
+        /* postfix indexing */
+        for (;;) {
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] == '[') {
+                (*pos)++;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
+                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                continue;
+            }
+            break;
+        }
         return 1;
     }
 
@@ -286,6 +348,18 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
     if (ok) {
         int ci = bytecode_add_constant(bc, make_int(ival));
         bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+        /* postfix indexing */
+        for (;;) {
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] == '[') {
+                (*pos)++;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); return 0; }
+                if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                continue;
+            }
+            break;
+        }
         return 1;
     }
     *pos = save;
@@ -338,6 +412,18 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             printf("compile: CALL %s with %d arg(s)\n", name, argc);
 #endif
             bytecode_add_instruction(bc, OP_CALL, argc);
+            /* postfix indexing */
+            for (;;) {
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == '[') {
+                    (*pos)++;
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); free(name); return 0; }
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); free(name); return 0; }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
+                break;
+            }
             free(name);
             return 1;
         } else {
@@ -346,6 +432,18 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             } else {
                 int gi = sym_index(name);
                 bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+            }
+            /* postfix indexing */
+            for (;;) {
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == '[') {
+                    (*pos)++;
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected index expression"); free(name); return 0; }
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); free(name); return 0; }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
+                break;
             }
             free(name);
             return 1;
@@ -798,8 +896,48 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         /* assignment or simple call */
         int lidx = local_find(name);
         int gi = (lidx < 0) ? sym_index(name) : -1;
-        free(name);
         skip_spaces(src, len, &local_pos);
+
+        /* array element assignment: name[expr] = expr */
+        if (local_pos < len && src[local_pos] == '[') {
+            /* load array variable */
+            if (lidx >= 0) {
+                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+            } else {
+                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+            }
+            local_pos++; /* '[' */
+            if (!emit_expression(bc, src, len, &local_pos)) {
+                parser_fail(local_pos, "Expected index expression after '['");
+                free(name);
+                return;
+            }
+            if (!consume_char(src, len, &local_pos, ']')) {
+                parser_fail(local_pos, "Expected ']' after index");
+                free(name);
+                return;
+            }
+            skip_spaces(src, len, &local_pos);
+            if (local_pos >= len || src[local_pos] != '=') {
+                parser_fail(local_pos, "Expected '=' after array index");
+                free(name);
+                return;
+            }
+            local_pos++; /* '=' */
+            if (!emit_expression(bc, src, len, &local_pos)) {
+                parser_fail(local_pos, "Expected expression after '='");
+                free(name);
+                return;
+            }
+            /* perform set */
+            bytecode_add_instruction(bc, OP_INDEX_SET, 0);
+            free(name);
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+
+        free(name);
         if (local_pos < len && src[local_pos] == '=') {
             local_pos++; /* '=' */
             if (emit_expression(bc, src, len, &local_pos)) {

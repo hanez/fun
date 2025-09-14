@@ -72,6 +72,9 @@ static const char *opcode_name(OpCode op) {
         case OP_NOT: return "NOT";
         case OP_DUP: return "DUP";
         case OP_SWAP: return "SWAP";
+        case OP_MAKE_ARRAY: return "MAKE_ARRAY";
+        case OP_INDEX_GET: return "INDEX_GET";
+        case OP_INDEX_SET: return "INDEX_SET";
         default: return "???";
     }
 }

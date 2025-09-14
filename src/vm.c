@@ -485,6 +485,72 @@ void vm_run(VM *vm, Bytecode *entry) {
                 break;
             }
 
+            case OP_MAKE_ARRAY: {
+                int n = inst.operand;
+                if (n < 0 || vm->sp + 1 < n) {
+                    fprintf(stderr, "Runtime error: invalid element count for MAKE_ARRAY\n");
+                    exit(1);
+                }
+                /* pop n values into temp array preserving original order */
+                Value *vals = (Value*)malloc(sizeof(Value) * n);
+                if (!vals) { fprintf(stderr, "Runtime error: OOM in MAKE_ARRAY\n"); exit(1); }
+                for (int i = n - 1; i >= 0; --i) {
+                    vals[i] = pop_value(vm); /* take ownership */
+                }
+                /* build array by copying values, then free originals */
+                Value arr = make_array_from_values(vals, n);
+                for (int i = 0; i < n; ++i) {
+                    free_value(vals[i]);
+                }
+                free(vals);
+                push_value(vm, arr);
+                break;
+            }
+
+            case OP_INDEX_GET: {
+                Value idx = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: INDEX_GET expects array\n");
+                    exit(1);
+                }
+                if (idx.type != VAL_INT) {
+                    fprintf(stderr, "Runtime type error: INDEX_GET index must be int\n");
+                    exit(1);
+                }
+                Value elem;
+                if (!array_get_copy(&arr, (int)idx.i, &elem)) {
+                    fprintf(stderr, "Runtime error: index out of range\n");
+                    exit(1);
+                }
+                free_value(arr);
+                free_value(idx);
+                push_value(vm, elem);
+                break;
+            }
+
+            case OP_INDEX_SET: {
+                Value v = pop_value(vm);
+                Value idx = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: INDEX_SET expects array\n");
+                    exit(1);
+                }
+                if (idx.type != VAL_INT) {
+                    fprintf(stderr, "Runtime type error: INDEX_SET index must be int\n");
+                    exit(1);
+                }
+                if (!array_set(&arr, (int)idx.i, v)) {
+                    fprintf(stderr, "Runtime error: index out of range\n");
+                    exit(1);
+                }
+                /* arr modified in place; do not free v (ownership moved) */
+                free_value(arr);
+                free_value(idx);
+                break;
+            }
+
             case OP_LOAD_GLOBAL: {
                 int idx = inst.operand;
                 if (idx < 0 || idx >= VM_MAX_GLOBALS) {

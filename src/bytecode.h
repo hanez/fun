@@ -44,6 +44,11 @@ typedef enum {
 
     OP_DUP,          // duplicate top of stack
     OP_SWAP,         // swap top two stack values
+
+    // arrays
+    OP_MAKE_ARRAY,    // operand = element count; pops N values, pushes array
+    OP_INDEX_GET,     // pops index, array; pushes element copy
+    OP_INDEX_SET      // pops value, index, array; sets and pushes nothing
 } OpCode;
 
 typedef struct {
