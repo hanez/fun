@@ -1,9 +1,9 @@
 #!/usr/bin/env fun
 
 /*
- * Hello, world!
+ * Have, fun!
  */
 
-print("Hello, world!")
+print("Have, fun!")
 
-// Bye, world!
+// Bye, no fun!

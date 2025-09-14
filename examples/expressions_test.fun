@@ -1,8 +1,8 @@
 #!/usr/bin/env fun
 
-// Feature test for current Fun parser/VM.
+// Expressions test: arithmetic, precedence, comparisons, logical ops, unary, parentheses.
 
-print("=== Feature Test Start ===")
+print("=== Expressions test start ===")
 
 // Typed declarations
 number a = 2
@@ -13,7 +13,10 @@ boolean flag = true
 
 // Arithmetic and precedence
 number sum = a + b * 5 - 1
-print(sum)           // expect 2 + 3 * 5 - 1 = 16
+print(sum)           // expect 2 + 3*5 - 1 = 16
+
+number calc = (a + b) * (b - a + 1)
+print(calc)          // expect (2+3)*(3-2+1) = 5*2 = 10
 
 // Unary operators
 number neg = -n
@@ -31,10 +34,8 @@ print(true || false) // expect 1 (true)
 print(n > 5)         // expect 1
 print(s != "")       // expect 1
 
-// Indentation-based nested if blocks (two spaces)
-if (n >= 10)
-  print(n)           // expect 10
-  if (a + b == 5)
-    print(42)        // expect 42
+// Mixed logical/relational
+print(a < b && n >= 10)          // expect 1
+print((a + b) == 5 && flag)      // expect 1
 
-print("=== Feature Test End ===")
+print("=== Expressions test end ===")

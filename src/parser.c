@@ -629,36 +629,98 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
         /* at same indent -> parse statement */
         if (starts_with(src, len, *pos, "if")) {
-            *pos += 2;
-            /* require at least one space before condition if present */
-            skip_spaces(src, len, pos);
-            /* condition: a single expression (booleans/ident/number/string) */
-            if (!emit_expression(bc, src, len, pos)) {
-                /* no condition -> treat as false */
-                int ci = bytecode_add_constant(bc, make_int(0));
-                bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-            }
-            /* end of condition: ignore any trailing until EOL */
-            skip_to_eol(src, len, pos);
+            int end_jumps[64];
+            int end_count = 0;
 
-            /* conditional jump over the block */
-            int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-
-            /* parse nested block if next line is indented */
-            size_t after_if = *pos;
-            int next_indent = 0;
-            if (read_line_start(src, len, pos, &next_indent)) {
-                if (next_indent > current_indent) {
-                    /* parse body at increased indent */
-                    parse_block(bc, src, len, pos, next_indent);
+            for (;;) {
+                /* consume 'if' or 'else if' condition */
+                if (starts_with(src, len, *pos, "if")) {
+                    *pos += 2;
                 } else {
-                    /* empty if-body; keep *pos at start of that line (already set) */
+                    /* for 'else if' we arrive here with *pos already after 'if' */
                 }
-            } else {
-                /* EOF -> empty body */
+
+                /* require at least one space before condition if present */
+                skip_spaces(src, len, pos);
+                if (!emit_expression(bc, src, len, pos)) {
+                    /* no condition -> treat as false */
+                    int ci = bytecode_add_constant(bc, make_int(0));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                }
+                /* end of condition: ignore any trailing until EOL */
+                skip_to_eol(src, len, pos);
+
+                /* conditional jump over this clause's block */
+                int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+                /* parse nested block if next line is indented */
+                int next_indent = 0;
+                size_t after_hdr = *pos;
+                if (read_line_start(src, len, pos, &next_indent)) {
+                    if (next_indent > current_indent) {
+                        /* parse body at increased indent */
+                        parse_block(bc, src, len, pos, next_indent);
+                    } else {
+                        /* empty body; keep *pos at start of that line */
+                    }
+                } else {
+                    /* EOF -> empty body */
+                }
+
+                /* after body, unconditionally jump to end of the whole chain */
+                int jmp_end = bytecode_add_instruction(bc, OP_JUMP, 0);
+                if (end_count < (int)(sizeof(end_jumps) / sizeof(end_jumps[0]))) {
+                    end_jumps[end_count++] = jmp_end;
+                } else {
+                    parser_fail(*pos, "Too many chained else/if clauses");
+                    return;
+                }
+
+                /* patch false-jump target to start of next clause (or fallthrough) */
+                bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
+                /* look for else or else if at the same indentation */
+                size_t look = *pos;
+                int look_indent = 0;
+                if (!read_line_start(src, len, &look, &look_indent)) {
+                    /* EOF: break and patch end jumps */
+                    break;
+                }
+                if (look_indent != current_indent) {
+                    /* dedent or deeper indent means no 'else' clause here */
+                    break;
+                }
+                if (starts_with(src, len, look, "else")) {
+                    /* consume 'else' */
+                    *pos = look + 4;
+                    skip_spaces(src, len, pos);
+
+                    if (starts_with(src, len, *pos, "if")) {
+                        /* else if -> consume 'if' token and continue loop to parse condition */
+                        *pos += 2;
+                        continue;
+                    } else {
+                        /* plain else: parse its block and finish the chain */
+                        skip_to_eol(src, len, pos);
+                        int else_indent = 0;
+                        if (read_line_start(src, len, pos, &else_indent) && else_indent > current_indent) {
+                            parse_block(bc, src, len, pos, else_indent);
+                        } else {
+                            /* empty else-body */
+                        }
+                        /* end of chain after else */
+                        break;
+                    }
+                } else {
+                    /* next line is not an else/else if */
+                    break;
+                }
             }
-            /* patch jump to here */
-            bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
+            /* patch all end-of-clause jumps to the end of the chain */
+            for (int i = 0; i < end_count; ++i) {
+                bytecode_set_operand(bc, end_jumps[i], bc->instr_count);
+            }
             continue;
         }
 
