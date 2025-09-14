@@ -155,13 +155,18 @@ static void show_repl_help(void) {
     printf("  :quit | :q | :exit     Exit the REPL\n");
     printf("  :reset                 Reset VM state (clears globals)\n");
     printf("  :dump  | :globals      Dump current globals\n");
+    printf("  :globals [pattern]     Dump globals filtering by value substring\n");
+    printf("  :vars [pattern]        Alias for :globals\n");
     printf("  :clear                 Clear current input buffer\n");
     printf("  :print                 Show current buffer\n");
     printf("  :run                   Execute current buffer immediately\n");
+    printf("  :profile               Execute buffer and show timing + instruction count\n");
     printf("  :save <file>           Save current buffer to file\n");
     printf("  :load <file>           Load file into buffer (does not run)\n");
+    printf("  :paste [run]           Enter paste mode; end with a single '.' line (optional 'run')\n");
     printf("  :history [N]           Show last N lines of history (default 50)\n");
     printf("  :time on|off|toggle    Toggle/enable/disable timing\n");
+    printf("  :env [NAME[=VALUE]]    Get or set environment variable\n");
 }
 
 static char *read_entire_file(const char *path, size_t *out_len) {
@@ -214,6 +219,32 @@ static void append_history(FILE *hist, const char *buffer) {
     fputs(buffer, hist);
     if (buffer[0] && buffer[strlen(buffer)-1] != '\n') fputc('\n', hist);
     fflush(hist);
+}
+
+/* ---------- Env helpers ---------- */
+static void env_show_usage(void) {
+    printf("Usage:\n");
+    printf("  :env NAME          Show environment variable NAME\n");
+    printf("  :env NAME=VALUE    Set environment variable NAME to VALUE\n");
+    printf("  :env               Show this usage\n");
+}
+
+static void env_get(const char *name) {
+    const char *v = getenv(name);
+    if (v) printf("%s=%s\n", name, v);
+    else printf("%s is not set\n", name);
+}
+
+static void env_set(const char *name, const char *value) {
+#ifdef _WIN32
+    if (_putenv_s(name, value ? value : "") != 0) {
+        printf("Failed to set %s\n", name);
+    }
+#else
+    if (setenv(name, value ? value : "", 1) != 0) {
+        printf("Failed to set %s\n", name);
+    }
+#endif
 }
 
 /* ---------- Main ---------- */
@@ -297,8 +328,8 @@ int main(int argc, char **argv) {
         if (line[0] == ':') {
             /* extract command and argument */
             char cmd[64] = {0};
-            char arg[1024] = {0};
-            sscanf(line, ":%63s %1023[^\n]", cmd, arg);
+            char arg[2048] = {0};
+            sscanf(line, ":%63s %2047[^\n]", cmd, arg);
 
             if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "q") == 0 || strcmp(cmd, "exit") == 0) {
                 break;
@@ -309,8 +340,23 @@ int main(int argc, char **argv) {
                 vm_reset(&vm);
                 printf("VM state reset.\n");
                 continue;
-            } else if (strcmp(cmd, "dump") == 0 || strcmp(cmd, "globals") == 0) {
+            } else if (strcmp(cmd, "dump") == 0) {
                 vm_dump_globals(&vm);
+                continue;
+            } else if (strcmp(cmd, "globals") == 0 || strcmp(cmd, "vars") == 0) {
+                const char *pattern = lstrip(arg);
+                int filtered = (pattern && *pattern);
+                printf("=== globals%s%s ===\n", filtered ? " matching '" : "", filtered ? pattern : "");
+                if (filtered) printf("'\n");
+                for (int i = 0; i < VM_MAX_GLOBALS; ++i) {
+                    if (vm.globals[i].type == VAL_NIL) continue;
+                    char *sv = value_to_string_alloc(&vm.globals[i]);
+                    if (!filtered || (sv && strstr(sv, pattern))) {
+                        printf("[%d] %s\n", i, sv ? sv : "nil");
+                    }
+                    free(sv);
+                }
+                printf("===============\n");
                 continue;
             } else if (strcmp(cmd, "clear") == 0) {
                 buflen = 0;
@@ -329,7 +375,7 @@ int main(int argc, char **argv) {
                     if (buflen > 0 && buffer[buflen-1] != '\n') printf("\n");
                 }
                 continue;
-            } else if (strcmp(cmd, "run") == 0) {
+            } else if (strcmp(cmd, "run") == 0 || strcmp(cmd, "profile") == 0) {
                 if (buflen == 0) {
                     printf("(buffer empty)\n");
                     continue;
@@ -341,16 +387,26 @@ int main(int argc, char **argv) {
                 }
                 buffer[buflen] = '\0';
 
+                clock_t t_parse0 = 0, t_parse1 = 0, t_run0 = 0, t_run1 = 0;
+                if (strcmp(cmd, "profile") == 0) t_parse0 = clock();
                 Bytecode *bc = parse_string_to_bytecode(buffer);
+                if (strcmp(cmd, "profile") == 0) t_parse1 = clock();
+
                 if (bc) {
-                    clock_t t0 = 0, t1 = 0;
-                    if (repl_timing) t0 = clock();
+                    if (repl_timing || strcmp(cmd, "profile") == 0) t_run0 = clock();
                     vm_run(&vm, bc);
-                    if (repl_timing) {
-                        t1 = clock();
-                        double ms = (double)(t1 - t0) * 1000.0 / (double)CLOCKS_PER_SEC;
+                    if (repl_timing || strcmp(cmd, "profile") == 0) t_run1 = clock();
+
+                    if (strcmp(cmd, "profile") == 0) {
+                        double ms_parse = (double)(t_parse1 - t_parse0) * 1000.0 / (double)CLOCKS_PER_SEC;
+                        double ms_run   = (double)(t_run1 - t_run0)   * 1000.0 / (double)CLOCKS_PER_SEC;
+                        printf("[profile] parse: %.2f ms, run: %.2f ms, total: %.2f ms, instr: %lld\n",
+                               ms_parse, ms_run, ms_parse + ms_run, vm.instr_count);
+                    } else if (repl_timing) {
+                        double ms = (double)(t_run1 - t_run0) * 1000.0 / (double)CLOCKS_PER_SEC;
                         printf("[time] %.2f ms\n", ms);
                     }
+
                     vm_print_output(&vm);
                     vm_clear_output(&vm);
                     bytecode_free(bc);
@@ -406,6 +462,57 @@ int main(int argc, char **argv) {
                 free(filebuf);
                 printf("Loaded %zu bytes into buffer. Use :run or submit an empty line to execute.\n", buflen);
                 continue;
+            } else if (strcmp(cmd, "paste") == 0) {
+                int run_after = 0;
+                const char *opt = lstrip(arg);
+                if (opt && (strcmp(opt, "run") == 0 || strcmp(opt, "exec") == 0)) run_after = 1;
+                printf("(paste mode: end with single '.' line)%s\n", run_after ? " [will run]" : "");
+                for (;;) {
+                    fputs("... paste> ", stdout);
+                    fflush(stdout);
+                    char pline[8192];
+                    if (!fgets(pline, sizeof(pline), stdin)) { puts(""); break; }
+                    if ((strcmp(pline, ".\n") == 0) || (strcmp(pline, ".\r\n") == 0) || (strcmp(pline, ".") == 0)) {
+                        break;
+                    }
+                    size_t pl = strlen(pline);
+                    if (buflen + pl + 1 > bufcap) {
+                        size_t newcap = bufcap == 0 ? 1024 : bufcap * 2;
+                        while (newcap < buflen + pl + 1) newcap *= 2;
+                        buffer = (char*)realloc(buffer, newcap);
+                        bufcap = newcap;
+                    }
+                    memcpy(buffer + buflen, pline, pl);
+                    buflen += pl;
+                }
+                if (run_after) {
+                    if (buflen + 1 > bufcap) { buffer = (char*)realloc(buffer, buflen + 1); bufcap = buflen + 1; }
+                    buffer[buflen] = '\0';
+                    Bytecode *bc = parse_string_to_bytecode(buffer);
+                    if (bc) {
+                        clock_t t0 = clock();
+                        vm_run(&vm, bc);
+                        clock_t t1 = clock();
+                        double ms = (double)(t1 - t0) * 1000.0 / (double)CLOCKS_PER_SEC;
+                        printf("[time] %.2f ms\n", ms);
+                        vm_print_output(&vm);
+                        vm_clear_output(&vm);
+                        bytecode_free(bc);
+                        append_history(hist, buffer);
+                    } else {
+                        int line_no = 0, col_no = 0;
+                        char emsg[256];
+                        if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
+                            printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
+                        } else {
+                            printf("Parse error.\n");
+                        }
+                    }
+                    buflen = 0;
+                } else {
+                    printf("(pasted %zu bytes into buffer)\n", buflen);
+                }
+                continue;
             } else if (strcmp(cmd, "history") == 0) {
                 int n = 50;
                 if (arg[0] != '\0') n = atoi(arg);
@@ -421,6 +528,25 @@ int main(int argc, char **argv) {
                     continue;
                 }
                 printf("Timing %s\n", repl_timing ? "enabled" : "disabled");
+                continue;
+            } else if (strcmp(cmd, "env") == 0) {
+                const char *spec = lstrip(arg);
+                if (!spec || *spec == '\0') {
+                    env_show_usage();
+                    continue;
+                }
+                const char *eq = strchr(spec, '=');
+                if (!eq) {
+                    env_get(spec);
+                } else {
+                    char name[256];
+                    size_t nlen = (size_t)(eq - spec);
+                    if (nlen >= sizeof(name)) nlen = sizeof(name) - 1;
+                    memcpy(name, spec, nlen);
+                    name[nlen] = '\0';
+                    const char *val = eq + 1;
+                    env_set(name, val);
+                }
                 continue;
             } else {
                 printf("Unknown command. Use :help\n");

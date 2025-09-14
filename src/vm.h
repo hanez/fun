@@ -34,6 +34,8 @@ typedef struct {
 
     Value output[VM_OUTPUT_SIZE]; // store printed values
     int output_count;
+
+    long long instr_count; // executed instructions in the last vm_run
 } VM;
 
 // initialize VM (zero state)

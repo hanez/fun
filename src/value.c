@@ -90,3 +90,25 @@ int value_is_truthy(const Value *v) {
     }
 }
 
+/* allocate a printable C string for the value; caller must free */
+char *value_to_string_alloc(const Value *v) {
+    if (!v) return strdup("nil");
+    char buf[128];
+    switch (v->type) {
+        case VAL_INT: {
+            char tmp[64];
+            snprintf(tmp, sizeof(tmp), "%" PRId64, v->i);
+            return strdup(tmp);
+        }
+        case VAL_STRING:
+            return strdup(v->s ? v->s : "");
+        case VAL_FUNCTION: {
+            snprintf(buf, sizeof(buf), "<function@%p>", (void*)v->fn);
+            return strdup(buf);
+        }
+        case VAL_NIL:
+        default:
+            return strdup("nil");
+    }
+}
+

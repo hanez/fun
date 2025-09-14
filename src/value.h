@@ -35,5 +35,8 @@ void free_value(Value v);
 void print_value(const Value *v);
 int value_is_truthy(const Value *v);
 
+/* stringify into a newly-allocated C string; caller must free */
+char *value_to_string_alloc(const Value *v);
+
 #endif
 

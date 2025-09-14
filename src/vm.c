@@ -83,6 +83,7 @@ void vm_init(VM *vm) {
     vm->sp = -1;
     vm->fp = -1;
     vm->output_count = 0;
+    vm->instr_count = 0;
     for (int i = 0; i < VM_MAX_GLOBALS; ++i)
         vm->globals[i] = make_nil();
 }
@@ -125,6 +126,9 @@ void vm_print_output(VM *vm) {
 }
 
 void vm_run(VM *vm, Bytecode *entry) {
+    /* reset instruction count for this run */
+    vm->instr_count = 0;
+
     /* start with entry frame (no args) */
     vm_push_frame(vm, entry, 0, NULL);
 
@@ -140,6 +144,8 @@ void vm_run(VM *vm, Bytecode *entry) {
         }
 
         Instruction inst = f->fn->instructions[f->ip++];
+        vm->instr_count++; /* count each executed instruction */
+
         switch (inst.op) {
             case OP_NOP:
                 break;
