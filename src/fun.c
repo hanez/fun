@@ -48,6 +48,78 @@ static int starts_with_kw(const char *s, const char *kw) {
     return 0;
 }
 
+/* Compute how many indentation levels (2 spaces per level) are still open.
+ * Only counts significant lines (non-blank, not comment-only), and ignores text inside /* ... *\/ block comments. */
+static int compute_open_indent_blocks(const char *buf) {
+    int in_block_comment = 0;
+    int open = 0;
+    int have_baseline = 0;
+    int cur = 0; /* current indent level in units of 2 spaces */
+
+    const char *p = buf;
+    while (*p) {
+        /* start of line */
+        const char *line = p;
+        /* find end of line */
+        while (*p && *p != '\n') p++;
+        const char *line_end = p;
+
+        /* advance p past newline if present */
+        if (*p == '\n') p++;
+
+        if (in_block_comment) {
+            /* look for end of block comment marker on this line */
+            const char *q = line;
+            while (q < line_end) {
+                if (q + 1 < line_end && q[0] == '*' && q[1] == '/') { in_block_comment = 0; q += 2; break; }
+                q++;
+            }
+            /* whole line is inside block comment -> skip */
+            if (in_block_comment) continue;
+        }
+
+        /* measure leading spaces */
+        const char *s = line;
+        int spaces = 0;
+        while (s < line_end && *s == ' ') { spaces++; s++; }
+        /* skip tabs for safety but don't treat as indent units */
+        while (s < line_end && *s == '\t') { s++; }
+
+        /* detect line comments and block comment start */
+        const char *t = s;
+        /* blank line */
+        if (t >= line_end) continue;
+
+        if ((t + 1) <= line_end && t[0] == '/' && (t + 1 < line_end && (t[1] == '/' || t[1] == '*'))) {
+            if (t[1] == '/') {
+                /* // comment-only line */
+                continue;
+            } else if (t[1] == '*') {
+                /* /* start of block comment */
+                in_block_comment = 1;
+                continue;
+            }
+        }
+
+        /* significant line */
+        int lvl = spaces / 2; /* language uses 2 spaces per level */
+        if (!have_baseline) {
+            cur = lvl;
+            have_baseline = 1;
+            continue;
+        }
+        if (lvl > cur) {
+            open += (lvl - cur);
+        } else if (lvl < cur) {
+            int dec = (cur - lvl);
+            if (dec > open) open = 0;
+            else open -= dec;
+        }
+        cur = lvl;
+    }
+    return open;
+}
+
 /* Detect if current buffer looks incomplete:
  * - Unclosed quotes (' or ") with escapes
  * - Unclosed block comment /* ... *\/
@@ -315,7 +387,23 @@ int main(int argc, char **argv) {
     }
 
     for (;;) {
-        fputs(buflen == 0 ? "fun> " : "... ", stdout);
+        /* ensure temporary null-termination for prompt analysis */
+        if (buflen + 1 > bufcap) {
+            size_t newcap = bufcap == 0 ? 1024 : bufcap * 2;
+            while (newcap < buflen + 1) newcap *= 2;
+            buffer = (char*)realloc(buffer, newcap);
+            bufcap = newcap;
+        }
+        buffer[buflen] = '\0';
+        int indent_debt = (buflen > 0) ? compute_open_indent_blocks(buffer) : 0;
+
+        if (buflen == 0) {
+            fputs("fun> ", stdout);
+        } else if (indent_debt > 0) {
+            printf("... %d> ", indent_debt);
+        } else {
+            fputs("... ", stdout);
+        }
         fflush(stdout);
 
         char line[4096];
@@ -428,8 +516,20 @@ int main(int argc, char **argv) {
                         printf("\n");
                         for (int i = 1; i < col_no; ++i) putchar(' ');
                         printf("^\n");
+#ifdef FUN_DEBUG
+                        if (hist) {
+                            fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
+                            fflush(hist);
+                        }
+#endif
                     } else {
                         printf("Parse error.\n");
+#ifdef FUN_DEBUG
+                        if (hist) {
+                            fprintf(hist, "// ERROR: parse error\n");
+                            fflush(hist);
+                        }
+#endif
                     }
                 }
                 buflen = 0;
@@ -504,8 +604,20 @@ int main(int argc, char **argv) {
                         char emsg[256];
                         if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
                             printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
+#ifdef FUN_DEBUG
+                            if (hist) {
+                                fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
+                                fflush(hist);
+                            }
+#endif
                         } else {
                             printf("Parse error.\n");
+#ifdef FUN_DEBUG
+                            if (hist) {
+                                fprintf(hist, "// ERROR: parse error\n");
+                                fflush(hist);
+                            }
+#endif
                         }
                     }
                     buflen = 0;
@@ -565,9 +677,14 @@ int main(int argc, char **argv) {
             }
             buffer[buflen] = '\0';
 
-            /* If buffer looks incomplete, keep reading */
-            if (buffer_looks_incomplete(buffer)) {
-                printf("(incomplete, continue typing)\n");
+            /* If buffer looks incomplete or has open indent blocks, keep reading */
+            int indent_debt = compute_open_indent_blocks(buffer);
+            if (buffer_looks_incomplete(buffer) || indent_debt > 0) {
+                if (indent_debt > 0) {
+                    printf("(incomplete, open block indent +%d)\n", indent_debt);
+                } else {
+                    printf("(incomplete, continue typing)\n");
+                }
                 continue;
             }
 
@@ -604,8 +721,20 @@ int main(int argc, char **argv) {
                     printf("\n");
                     for (int i = 1; i < col_no; ++i) putchar(' ');
                     printf("^\n");
+#ifdef FUN_DEBUG
+                    if (hist) {
+                        fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
+                        fflush(hist);
+                    }
+#endif
                 } else {
                     printf("Parse error.\n");
+#ifdef FUN_DEBUG
+                    if (hist) {
+                        fprintf(hist, "// ERROR: parse error\n");
+                        fflush(hist);
+                    }
+#endif
                 }
             }
             // reset buffer
