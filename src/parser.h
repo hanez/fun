@@ -16,4 +16,7 @@
 
 Bytecode *parse_file_to_bytecode(const char *path);
 
+/* Parse source provided as a single string buffer (for REPL, tests, etc.). */
+Bytecode *parse_string_to_bytecode(const char *source);
+
 #endif

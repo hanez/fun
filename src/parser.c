@@ -1203,3 +1203,27 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     free(src);
     return bc;
 }
+
+Bytecode *parse_string_to_bytecode(const char *source) {
+    if (!source) {
+        fprintf(stderr, "Error: null source provided\n");
+        return NULL;
+    }
+    size_t len = strlen(source);
+
+    /* reset error state */
+    g_has_error = 0;
+    g_err_pos = 0;
+    g_err_msg[0] = '\0';
+
+    Bytecode *bc = compile_minimal(source, len);
+
+    if (g_has_error) {
+        int line = 1, col = 1;
+        calc_line_col(source, len, g_err_pos, &line, &col);
+        fprintf(stderr, "Parse error <input>:%d:%d: %s\n", line, col, g_err_msg);
+        if (bc) bytecode_free(bc);
+        return NULL;
+    }
+    return bc;
+}
