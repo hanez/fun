@@ -4,6 +4,8 @@ project(fun C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+include(GNUInstallDirs)
+
 # Core VM/library sources
 add_library(fun_core
         src/bytecode.c
@@ -58,3 +60,20 @@ add_custom_target(dist-clean
         ${CMAKE_BINARY_DIR}/.ninja_*
         COMMENT "Remove build outputs and CMake-generated files (reconfigure needed)"
 )
+
+# Install rules
+# - Binary
+install(TARGETS fun
+        RUNTIME DESTINATION /usr/bin)
+
+# - Optionally install example scripts
+option(FUN_INSTALL_EXAMPLES "Install example .fun scripts" ON)
+if(FUN_INSTALL_EXAMPLES)
+    install(DIRECTORY examples/
+            DESTINATION /usr/share/fun/examples
+            FILES_MATCHING PATTERN "*.fun")
+endif()
+
+# - Docs
+install(FILES README.md LICENSE
+        DESTINATION /usr/share/doc/fun)
