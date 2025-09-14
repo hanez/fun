@@ -12,6 +12,9 @@ static int g_has_error = 0;
 static size_t g_err_pos = 0;
 static char g_err_msg[256];
 
+/* ---- compiler-generated temporary counter ---- */
+static int g_temp_counter = 0;
+
 static void parser_fail(size_t pos, const char *fmt, ...) {
     g_has_error = 1;
     g_err_pos = pos;
@@ -861,6 +864,146 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
             g_locals = prev;
             free(fname);
+            continue;
+        }
+
+        /* for-sugar: for <ident> in range(a, b) */
+        if (starts_with(src, len, *pos, "for")) {
+            *pos += 3;
+            skip_spaces(src, len, pos);
+
+            /* loop variable name */
+            char *ivar = NULL;
+            if (!read_identifier_into(src, len, pos, &ivar)) {
+                parser_fail(*pos, "Expected loop variable after 'for'");
+                return;
+            }
+
+            skip_spaces(src, len, pos);
+            if (!starts_with(src, len, *pos, "in")) {
+                parser_fail(*pos, "Expected 'in' after loop variable");
+                free(ivar);
+                return;
+            }
+            *pos += 2;
+            skip_spaces(src, len, pos);
+
+            if (!starts_with(src, len, *pos, "range")) {
+                parser_fail(*pos, "Expected 'range' after 'in'");
+                free(ivar);
+                return;
+            }
+            *pos += 5;
+            if (!consume_char(src, len, pos, '(')) {
+                parser_fail(*pos, "Expected '(' after range");
+                free(ivar);
+                return;
+            }
+
+            /* Parse start expression */
+            if (!emit_expression(bc, src, len, pos)) {
+                parser_fail(*pos, "Expected start expression in range");
+                free(ivar);
+                return;
+            }
+
+            /* Determine loop variable storage and store start value */
+            int lidx = local_find(ivar);
+            int gi = -1;
+            if (lidx < 0) {
+                if (g_locals) lidx = local_add(ivar);
+                else gi = sym_index(ivar);
+            }
+            if (lidx >= 0) {
+                bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+            } else {
+                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+            }
+
+            /* comma */
+            skip_spaces(src, len, pos);
+            if (*pos >= len || src[*pos] != ',') {
+                parser_fail(*pos, "Expected ',' between range start and end");
+                free(ivar);
+                return;
+            }
+            (*pos)++; /* consume ',' */
+            skip_spaces(src, len, pos);
+
+            /* Parse end expression and store in a temp (local or global) */
+            size_t end_expr_pos_before = *pos;
+            if (!emit_expression(bc, src, len, pos)) {
+                parser_fail(*pos, "Expected end expression in range");
+                free(ivar);
+                return;
+            }
+
+            char tmpname[64];
+            snprintf(tmpname, sizeof(tmpname), "__for_end_%d", g_temp_counter++);
+
+            int lend = -1, gend = -1;
+            if (g_locals) {
+                lend = local_add(tmpname);
+                bytecode_add_instruction(bc, OP_STORE_LOCAL, lend);
+            } else {
+                gend = sym_index(tmpname);
+                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gend);
+            }
+
+            if (!consume_char(src, len, pos, ')')) {
+                parser_fail(*pos, "Expected ')' after range arguments");
+                free(ivar);
+                return;
+            }
+
+            /* end of header line */
+            skip_to_eol(src, len, pos);
+
+            /* emit loop */
+            int loop_start = bc->instr_count;
+
+            /* condition: ivar < end_tmp */
+            if (lidx >= 0) {
+                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+            } else {
+                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+            }
+            if (lend >= 0) {
+                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lend);
+            } else {
+                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gend);
+            }
+            bytecode_add_instruction(bc, OP_LT, 0);
+            int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+            /* parse body at increased indent (peek) */
+            int body_indent = 0;
+            size_t look_body = *pos;
+            if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
+                parse_block(bc, src, len, pos, body_indent);
+            } else {
+                /* empty body ok */
+            }
+
+            /* i = i + 1 */
+            int c1 = bytecode_add_constant(bc, make_int(1));
+            if (lidx >= 0) {
+                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+                bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+                bytecode_add_instruction(bc, OP_ADD, 0);
+                bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+            } else {
+                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+                bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+                bytecode_add_instruction(bc, OP_ADD, 0);
+                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+            }
+
+            /* back edge and patch */
+            bytecode_add_instruction(bc, OP_JUMP, loop_start);
+            bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
+            free(ivar);
             continue;
         }
 
