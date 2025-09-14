@@ -502,35 +502,124 @@ static int emit_equality(Bytecode *bc, const char *src, size_t len, size_t *pos)
     return 1;
 }
 
-/* logical AND: equality ( '&&' equality )* */
+/* logical AND with short-circuit: equality ( '&&' equality )* */
 static int emit_and_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    int jf_idxs[64];
+    int jf_count = 0;
+    int has_and = 0;
+
+    /* first operand */
     if (!emit_equality(bc, src, len, pos)) return 0;
+
     for (;;) {
         skip_spaces(src, len, pos);
-        if (*pos + 1 < len && src[*pos] == '&' && src[*pos + 1] == '&') {
-            *pos += 2;
-            if (!emit_equality(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '&&'"); return 0; }
-            bytecode_add_instruction(bc, OP_AND, 0);
-            continue;
+        if (!(*pos + 1 < len && src[*pos] == '&' && src[*pos + 1] == '&')) break;
+        *pos += 2;
+        has_and = 1;
+
+        /* if current value is false -> jump to false label (patched later) */
+        if (jf_count < (int)(sizeof(jf_idxs) / sizeof(jf_idxs[0]))) {
+            jf_idxs[jf_count++] = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+        } else {
+            parser_fail(*pos, "Too many operands in '&&' chain");
+            return 0;
         }
-        break;
+
+        /* evaluate next operand */
+        if (!emit_equality(bc, src, len, pos)) {
+            parser_fail(*pos, "Expected expression after '&&'");
+            return 0;
+        }
     }
+
+    if (has_and) {
+        /* final: if last operand is false -> jump false */
+        if (jf_count < (int)(sizeof(jf_idxs) / sizeof(jf_idxs[0]))) {
+            jf_idxs[jf_count++] = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+        } else {
+            parser_fail(*pos, "Too many operands in '&&' chain");
+            return 0;
+        }
+
+        /* all were truthy -> result true */
+        int c1 = bytecode_add_constant(bc, make_int(1));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+        int j_end = bytecode_add_instruction(bc, OP_JUMP, 0);
+
+        /* false label: patch all false jumps here, result false */
+        int l_false = bc->instr_count;
+        for (int i = 0; i < jf_count; ++i) {
+            bytecode_set_operand(bc, jf_idxs[i], l_false);
+        }
+        int c0 = bytecode_add_constant(bc, make_int(0));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+
+        /* end */
+        int l_end = bc->instr_count;
+        bytecode_set_operand(bc, j_end, l_end);
+    }
+
     return 1;
 }
 
-/* logical OR: and_expr ( '||' and_expr )* */
+/* logical OR with short-circuit: and_expr ( '||' and_expr )* */
 static int emit_or_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    int true_jumps[64];
+    int tj_count = 0;
+    int has_or = 0;
+
+    /* first operand */
     if (!emit_and_expr(bc, src, len, pos)) return 0;
+
     for (;;) {
         skip_spaces(src, len, pos);
-        if (*pos + 1 < len && src[*pos] == '|' && src[*pos + 1] == '|') {
-            *pos += 2;
-            if (!emit_and_expr(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '||'"); return 0; }
-            bytecode_add_instruction(bc, OP_OR, 0);
-            continue;
+        if (!(*pos + 1 < len && src[*pos] == '|' && src[*pos + 1] == '|')) break;
+        *pos += 2;
+        has_or = 1;
+
+        /* if current value is false -> proceed to next; else -> result true */
+        int jf_proceed = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+        /* true path: push 1 and jump to end */
+        int c1 = bytecode_add_constant(bc, make_int(1));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+        if (tj_count < (int)(sizeof(true_jumps) / sizeof(true_jumps[0]))) {
+            true_jumps[tj_count++] = bytecode_add_instruction(bc, OP_JUMP, 0);
+        } else {
+            parser_fail(*pos, "Too many operands in '||' chain");
+            return 0;
         }
-        break;
+
+        /* patch to start of next operand */
+        bytecode_set_operand(bc, jf_proceed, bc->instr_count);
+
+        /* evaluate next operand */
+        if (!emit_and_expr(bc, src, len, pos)) {
+            parser_fail(*pos, "Expected expression after '||'");
+            return 0;
+        }
     }
+
+    if (has_or) {
+        /* After evaluating the last operand: test it and produce 1/0 */
+        int jf_last = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+        int c1 = bytecode_add_constant(bc, make_int(1));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+        int j_end_single = bytecode_add_instruction(bc, OP_JUMP, 0);
+
+        int l_false = bc->instr_count;
+        bytecode_set_operand(bc, jf_last, l_false);
+        int c0 = bytecode_add_constant(bc, make_int(0));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+
+        int l_end = bc->instr_count;
+        bytecode_set_operand(bc, j_end_single, l_end);
+        for (int i = 0; i < tj_count; ++i) {
+            bytecode_set_operand(bc, true_jumps[i], l_end);
+        }
+    }
+
     return 1;
 }
 
