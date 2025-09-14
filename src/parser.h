@@ -19,4 +19,7 @@ Bytecode *parse_file_to_bytecode(const char *path);
 /* Parse source provided as a single string buffer (for REPL, tests, etc.). */
 Bytecode *parse_string_to_bytecode(const char *source);
 
+/* Query the last parser error (1 if present, 0 if none). */
+int parser_last_error(char *msgBuf, unsigned long msgCap, int *outLine, int *outCol);
+
 #endif

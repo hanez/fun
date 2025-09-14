@@ -23,9 +23,38 @@ void vm_clear_output(VM *vm) {
 }
 
 void vm_free(VM *vm) {
-    //if (vm->output) free(vm->output);
-    //vm->output = NULL;
-    //vm->output_count = 0;
+    // currently nothing persistent allocated inside VM itself
+}
+
+/* forward declaration for helper used in vm_reset */
+static void vm_pop_frame(VM *vm);
+
+void vm_reset(VM *vm) {
+    // Pop all frames (free locals)
+    while (vm->fp >= 0) {
+        vm_pop_frame(vm);
+    }
+    // Clear stack
+    vm->sp = -1;
+    // Free globals
+    for (int i = 0; i < VM_MAX_GLOBALS; ++i) {
+        free_value(vm->globals[i]);
+        vm->globals[i] = make_nil();
+    }
+    // Clear output buffer
+    vm_clear_output(vm);
+}
+
+void vm_dump_globals(VM *vm) {
+    printf("=== globals ===\n");
+    for (int i = 0; i < VM_MAX_GLOBALS; ++i) {
+        if (vm->globals[i].type != VAL_NIL) {
+            printf("[%d] ", i);
+            print_value(&vm->globals[i]);
+            printf("\n");
+        }
+    }
+    printf("===============\n");
 }
 
 static void push_value(VM *vm, Value v) {

@@ -63,10 +63,22 @@ int main(int argc, char **argv) {
     }
 
     // REPL mode
-    printf("Fun REPL. Type code and press Enter. Submit an empty line to run. Type 'exit' or 'quit' to leave.\n");
+    printf("Fun REPL. Type code and press Enter. Submit an empty line to run.\n");
+    printf("Commands: :help, :reset, :dump, :quit\n");
     char *buffer = NULL;
     size_t bufcap = 0;
     size_t buflen = 0;
+
+#ifdef FUN_DEBUG
+    // Open history file for appending
+    const char *home = getenv("HOME");
+    char hist_path[1024];
+    FILE *hist = NULL;
+    if (home) {
+        snprintf(hist_path, sizeof(hist_path), "%s/.fun_history", home);
+        hist = fopen(hist_path, "a");
+    }
+#endif
 
     for (;;) {
         fputs(buflen == 0 ? "fun> " : "... ", stdout);
@@ -78,9 +90,24 @@ int main(int argc, char **argv) {
             break; // EOF
         }
 
-        // Exit commands
-        if (buflen == 0 && (strcmp(line, "exit\n") == 0 || strcmp(line, "quit\n") == 0)) {
-            break;
+        // Single-line commands when buffer is empty
+        if (buflen == 0 && line[0] == ':') {
+            if (strncmp(line, ":quit", 5) == 0) break;
+            if (strncmp(line, ":help", 5) == 0) {
+                printf("Commands: :help, :reset, :dump, :quit\n");
+                continue;
+            }
+            if (strncmp(line, ":reset", 6) == 0) {
+                vm_reset(&vm);
+                printf("VM state reset.\n");
+                continue;
+            }
+            if (strncmp(line, ":dump", 5) == 0) {
+                vm_dump_globals(&vm);
+                continue;
+            }
+            printf("Unknown command. Use :help\n");
+            continue;
         }
 
         // Empty line -> compile and run accumulated buffer
@@ -99,6 +126,34 @@ int main(int argc, char **argv) {
                 vm_print_output(&vm);
                 vm_clear_output(&vm);
                 bytecode_free(bc);
+#ifdef FUN_DEBUG
+                if (hist) {
+                    fprintf(hist, "%s\n", buffer);
+                    fflush(hist);
+                }
+#endif
+            } else {
+                // Better error message with caret
+                int line_no = 0, col_no = 0;
+                char emsg[256];
+                if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
+                    printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
+                    // Print the offending line and caret
+                    int cur_line = 1;
+                    const char *p = buffer;
+                    while (*p && cur_line < line_no) {
+                        if (*p == '\n') cur_line++;
+                        p++;
+                    }
+                    const char *line_start = p;
+                    while (*p && *p != '\n') p++;
+                    fwrite(line_start, 1, (size_t)(p - line_start), stdout);
+                    printf("\n");
+                    for (int i = 1; i < col_no; ++i) putchar(' ');
+                    printf("^\n");
+                } else {
+                    printf("Parse error.\n");
+                }
             }
             // reset buffer
             buflen = 0;
@@ -116,6 +171,10 @@ int main(int argc, char **argv) {
         memcpy(buffer + buflen, line, linelen);
         buflen += linelen;
     }
+
+#ifdef FUN_DEBUG
+    if (hist) fclose(hist);
+#endif
 
     free(buffer);
     return 0;

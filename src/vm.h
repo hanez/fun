@@ -43,6 +43,12 @@ void vm_init(VM *vm);
 void vm_clear_output(VM *vm);
 void vm_print_output(VM *vm);
 void vm_free(VM *vm);
+
+// reset VM to initial state (free globals/locals/output; keep VM object)
+void vm_reset(VM *vm);
+
+// print non-nil globals (index and value) to stdout
+void vm_dump_globals(VM *vm);
 // run entry Bytecode (pushes first frame)
 void vm_run(VM *vm, Bytecode *entry);
 

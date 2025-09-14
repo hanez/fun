@@ -11,6 +11,8 @@
 static int g_has_error = 0;
 static size_t g_err_pos = 0;
 static char g_err_msg[256];
+static int g_err_line = 0;
+static int g_err_col  = 0;
 
 /* ---- compiler-generated temporary counter ---- */
 static int g_temp_counter = 0;
@@ -1277,12 +1279,16 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     g_has_error = 0;
     g_err_pos = 0;
     g_err_msg[0] = '\0';
+    g_err_line = 0;
+    g_err_col  = 0;
 
     Bytecode *bc = compile_minimal(src, len);
 
     if (g_has_error) {
         int line = 1, col = 1;
         calc_line_col(src, len, g_err_pos, &line, &col);
+        g_err_line = line;
+        g_err_col  = col;
         fprintf(stderr, "Parse error %s:%d:%d: %s\n", path ? path : "<input>", line, col, g_err_msg);
         if (bc) bytecode_free(bc);
         free(src);
@@ -1304,15 +1310,28 @@ Bytecode *parse_string_to_bytecode(const char *source) {
     g_has_error = 0;
     g_err_pos = 0;
     g_err_msg[0] = '\0';
+    g_err_line = 0;
+    g_err_col  = 0;
 
     Bytecode *bc = compile_minimal(source, len);
 
     if (g_has_error) {
         int line = 1, col = 1;
         calc_line_col(source, len, g_err_pos, &line, &col);
-        fprintf(stderr, "Parse error <input>:%d:%d: %s\n", line, col, g_err_msg);
+        g_err_line = line;
+        g_err_col  = col;
         if (bc) bytecode_free(bc);
         return NULL;
     }
     return bc;
+}
+
+int parser_last_error(char *msgBuf, unsigned long msgCap, int *outLine, int *outCol) {
+    if (!g_has_error) return 0;
+    if (msgBuf && msgCap > 0) {
+        snprintf(msgBuf, msgCap, "%s", g_err_msg);
+    }
+    if (outLine) *outLine = g_err_line;
+    if (outCol)  *outCol  = g_err_col;
+    return 1;
 }
