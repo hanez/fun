@@ -4,4 +4,4 @@
  * Hello world in Fun
  */
 
-print("Hello, world!")
+ print("Hello, world!")

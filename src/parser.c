@@ -5,6 +5,34 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdarg.h>
+
+/* ---- parser error state ---- */
+static int g_has_error = 0;
+static size_t g_err_pos = 0;
+static char g_err_msg[256];
+
+static void parser_fail(size_t pos, const char *fmt, ...) {
+    g_has_error = 1;
+    g_err_pos = pos;
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(g_err_msg, sizeof(g_err_msg), fmt, ap);
+    va_end(ap);
+}
+
+static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line, int *out_col) {
+    int line = 1, col = 1;
+    size_t limit = pos < len ? pos : len;
+    for (size_t i = 0; i < limit; ++i) {
+        if (src[i] == '\n') { line++; col = 1; }
+        else { col++; }
+    }
+    if (out_line) *out_line = line;
+    if (out_col) *out_col = col;
+}
+
+/* --------------------------- */
 
 static char *read_file_all(const char *path, size_t *out_len) {
     FILE *f = fopen(path, "rb");
@@ -182,16 +210,33 @@ static int sym_index(const char *name) {
         if (strcmp(G.names[i], name) == 0) return i;
     }
     if (G.count >= VM_MAX_GLOBALS) {
-        fprintf(stderr, "Parser error: too many globals (max %d)\n", VM_MAX_GLOBALS);
-        exit(1);
+        parser_fail(0, "Too many globals (max %d)", VM_MAX_GLOBALS);
+        return 0;
     }
     G.names[G.count] = strdup(name);
     return G.count++;
 }
 
-/* emit_expression compiles: string | number | true | false | identifier */
-static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+/* forward declaration so helpers can recurse */
+static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos);
+
+/* primary: (expr) | string | number | true/false | identifier */
+static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) {
     skip_spaces(src, len, pos);
+
+    /* parenthesized */
+    if (*pos < len && src[*pos] == '(') {
+        (*pos)++; /* '(' */
+        if (!emit_expression(bc, src, len, pos)) {
+            parser_fail(*pos, "Expected expression after '('");
+            return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+            parser_fail(*pos, "Expected ')'");
+            return 0;
+        }
+        return 1;
+    }
 
     /* string */
     char *s = parse_string_literal_any_quote(src, len, pos);
@@ -231,102 +276,424 @@ static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *po
     return 0;
 }
 
+/* unary: '!' unary | '-' unary | primary */
+static int emit_unary(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    skip_spaces(src, len, pos);
+    if (*pos < len && src[*pos] == '!') {
+        (*pos)++;
+        if (!emit_unary(bc, src, len, pos)) {
+            parser_fail(*pos, "Expected expression after '!'");
+            return 0;
+        }
+        bytecode_add_instruction(bc, OP_NOT, 0);
+        return 1;
+    }
+    if (*pos < len && src[*pos] == '-') {
+        (*pos)++;
+        /* unary minus -> 0 - expr */
+        int ci = bytecode_add_constant(bc, make_int(0));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+        if (!emit_unary(bc, src, len, pos)) {
+            parser_fail(*pos, "Expected expression after unary '-'");
+            return 0;
+        }
+        bytecode_add_instruction(bc, OP_SUB, 0);
+        return 1;
+    }
+    return emit_primary(bc, src, len, pos);
+}
+
+/* multiplicative: unary (('*' | '/' | '%') unary)* */
+static int emit_multiplicative(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    if (!emit_unary(bc, src, len, pos)) return 0;
+    for (;;) {
+        skip_spaces(src, len, pos);
+        if (*pos < len && src[*pos] == '*') {
+            (*pos)++;
+            if (!emit_unary(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '*'"); return 0; }
+            bytecode_add_instruction(bc, OP_MUL, 0);
+            continue;
+        }
+        if (*pos < len && src[*pos] == '/') {
+            (*pos)++;
+            if (!emit_unary(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '/'"); return 0; }
+            bytecode_add_instruction(bc, OP_DIV, 0);
+            continue;
+        }
+        if (*pos < len && src[*pos] == '%') {
+            (*pos)++;
+            if (!emit_unary(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '%'"); return 0; }
+            bytecode_add_instruction(bc, OP_MOD, 0);
+            continue;
+        }
+        break;
+    }
+    return 1;
+}
+
+/* additive: multiplicative (('+' | '-') multiplicative)* */
+static int emit_additive(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    if (!emit_multiplicative(bc, src, len, pos)) return 0;
+    for (;;) {
+        skip_spaces(src, len, pos);
+        if (*pos < len && src[*pos] == '+') {
+            (*pos)++;
+            if (!emit_multiplicative(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '+'"); return 0; }
+            bytecode_add_instruction(bc, OP_ADD, 0);
+            continue;
+        }
+        if (*pos < len && src[*pos] == '-') {
+            (*pos)++;
+            if (!emit_multiplicative(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '-'"); return 0; }
+            bytecode_add_instruction(bc, OP_SUB, 0);
+            continue;
+        }
+        break;
+    }
+    return 1;
+}
+
+/* relational: additive (('<' | '<=' | '>' | '>=') additive)* */
+static int emit_relational(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    if (!emit_additive(bc, src, len, pos)) return 0;
+    for (;;) {
+        skip_spaces(src, len, pos);
+        if (*pos + 1 < len && src[*pos] == '<' && src[*pos + 1] == '=') {
+            *pos += 2;
+            if (!emit_additive(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '<='"); return 0; }
+            bytecode_add_instruction(bc, OP_LTE, 0);
+            continue;
+        }
+        if (*pos + 1 < len && src[*pos] == '>' && src[*pos + 1] == '=') {
+            *pos += 2;
+            if (!emit_additive(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '>='"); return 0; }
+            bytecode_add_instruction(bc, OP_GTE, 0);
+            continue;
+        }
+        if (*pos < len && src[*pos] == '<') {
+            (*pos)++;
+            if (!emit_additive(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '<'"); return 0; }
+            bytecode_add_instruction(bc, OP_LT, 0);
+            continue;
+        }
+        if (*pos < len && src[*pos] == '>') {
+            (*pos)++;
+            if (!emit_additive(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '>'"); return 0; }
+            bytecode_add_instruction(bc, OP_GT, 0);
+            continue;
+        }
+        break;
+    }
+    return 1;
+}
+
+/* equality: relational (('==' | '!=') relational)* */
+static int emit_equality(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    if (!emit_relational(bc, src, len, pos)) return 0;
+    for (;;) {
+        skip_spaces(src, len, pos);
+        if (*pos + 1 < len && src[*pos] == '=' && src[*pos + 1] == '=') {
+            *pos += 2;
+            if (!emit_relational(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '=='"); return 0; }
+            bytecode_add_instruction(bc, OP_EQ, 0);
+            continue;
+        }
+        if (*pos + 1 < len && src[*pos] == '!' && src[*pos + 1] == '=') {
+            *pos += 2;
+            if (!emit_relational(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '!='"); return 0; }
+            bytecode_add_instruction(bc, OP_NEQ, 0);
+            continue;
+        }
+        break;
+    }
+    return 1;
+}
+
+/* logical AND: equality ( '&&' equality )* */
+static int emit_and_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    if (!emit_equality(bc, src, len, pos)) return 0;
+    for (;;) {
+        skip_spaces(src, len, pos);
+        if (*pos + 1 < len && src[*pos] == '&' && src[*pos + 1] == '&') {
+            *pos += 2;
+            if (!emit_equality(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '&&'"); return 0; }
+            bytecode_add_instruction(bc, OP_AND, 0);
+            continue;
+        }
+        break;
+    }
+    return 1;
+}
+
+/* logical OR: and_expr ( '||' and_expr )* */
+static int emit_or_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    if (!emit_and_expr(bc, src, len, pos)) return 0;
+    for (;;) {
+        skip_spaces(src, len, pos);
+        if (*pos + 1 < len && src[*pos] == '|' && src[*pos + 1] == '|') {
+            *pos += 2;
+            if (!emit_and_expr(bc, src, len, pos)) { parser_fail(*pos, "Expected expression after '||'"); return 0; }
+            bytecode_add_instruction(bc, OP_OR, 0);
+            continue;
+        }
+        break;
+    }
+    return 1;
+}
+
+/* top-level expression */
+static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    return emit_or_expr(bc, src, len, pos);
+}
+
 /*
- * Very small compiler:
- * - Optionally skips: fun <ident>() { ... } wrapper.
- * - Emits PRINT for print(expr) and supports assignments: ident = expr.
- * - Supports literals: strings, integers, booleans; identifiers as globals.
+ * Indentation-aware compiler (2 spaces):
+ * - Optional shebang and a single fun <ident>() { ... } wrapper.
+ * - Statements supported: print(expr), ident = expr, and if <expr> with an indented block.
+ * - Literals: strings, integers, booleans; identifiers are globals.
  * - Ends with HALT.
  */
+
+/* line/indent utilities */
+static void skip_to_eol(const char *src, size_t len, size_t *pos) {
+    while (*pos < len && src[*pos] != '\n') (*pos)++;
+    if (*pos < len && src[*pos] == '\n') (*pos)++;
+}
+
+static int read_line_start(const char *src, size_t len, size_t *pos, int *out_indent) {
+    while (*pos < len) {
+        size_t p = *pos;
+        int spaces = 0;
+        while (p < len && src[p] == ' ') { spaces++; p++; }
+        if (p < len && src[p] == '\t') {
+            parser_fail(p, "Tabs are forbidden for indentation");
+            return 0;
+        }
+        if (p >= len) { *pos = p; return 0; }
+        if (src[p] == '\n') { /* empty line */ p++; *pos = p; continue; }
+
+        /* comment-only line? */
+        if (p + 1 < len && src[p] == '/' && src[p + 1] == '/') {
+            /* skip entire line */
+            while (p < len && src[p] != '\n') p++;
+            if (p < len && src[p] == '\n') p++;
+            *pos = p;
+            continue;
+        }
+
+        if (spaces % 2 != 0) {
+            parser_fail(p, "Indentation must be multiples of two spaces");
+            return 0;
+        }
+        *out_indent = spaces / 2;
+        *pos = p; /* point to first code char */
+        return 1;
+    }
+    return 0;
+}
+
+/* forward decl */
+static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, int current_indent);
+
+/* parse and emit a single simple (non-if) statement on the current line */
+static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    size_t local_pos = *pos;
+    char *name = NULL;
+    if (read_identifier_into(src, len, &local_pos, &name)) {
+        /* typed declarations: number|string|boolean <ident> (= expr)? */
+        if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0) {
+            int is_number = (strcmp(name, "number") == 0);
+            int is_string = (strcmp(name, "string") == 0);
+            int is_boolean = (strcmp(name, "boolean") == 0);
+            free(name);
+
+            /* read variable name */
+            char *varname = NULL;
+            skip_spaces(src, len, &local_pos);
+            if (!read_identifier_into(src, len, &local_pos, &varname)) {
+                parser_fail(local_pos, "Expected identifier after type declaration");
+                return;
+            }
+            int gi = sym_index(varname);
+            free(varname);
+
+            skip_spaces(src, len, &local_pos);
+            if (local_pos < len && src[local_pos] == '=') {
+                local_pos++; /* '=' */
+                if (emit_expression(bc, src, len, &local_pos)) {
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                } else {
+                    parser_fail(local_pos, "Expected initializer expression after '='");
+                    return;
+                }
+            } else {
+                /* default initialize if no '=' given */
+                int ci = -1;
+                if (is_number || is_boolean) {
+                    ci = bytecode_add_constant(bc, make_int(is_boolean ? 0 : 0));
+                } else if (is_string) {
+                    ci = bytecode_add_constant(bc, make_string(""));
+                }
+                if (ci >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                }
+            }
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+
+        if (strcmp(name, "print") == 0) {
+            free(name);
+            skip_spaces(src, len, &local_pos);
+            (void)consume_char(src, len, &local_pos, '(');
+            if (emit_expression(bc, src, len, &local_pos)) {
+                (void)consume_char(src, len, &local_pos, ')');
+                bytecode_add_instruction(bc, OP_PRINT, 0);
+            } else {
+                (void)consume_char(src, len, &local_pos, ')');
+            }
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+
+        /* assignment or simple call */
+        int gi = sym_index(name);
+        free(name);
+        skip_spaces(src, len, &local_pos);
+        if (local_pos < len && src[local_pos] == '=') {
+            local_pos++; /* '=' */
+            if (emit_expression(bc, src, len, &local_pos)) {
+                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+            }
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        } else if (local_pos < len && src[local_pos] == '(') {
+            /* simple call form (argument ignored/emitted but no CALL yet) */
+            local_pos++; /* '(' */
+            (void)emit_expression(bc, src, len, &local_pos);
+            (void)consume_char(src, len, &local_pos, ')');
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        } else {
+            /* bare identifier line */
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+    }
+
+    /* fallback: print(expr) without identifier read (unlikely) */
+    if (starts_with(src, len, *pos, "print")) {
+        *pos += 5;
+        skip_spaces(src, len, pos);
+        (void)consume_char(src, len, pos, '(');
+        if (emit_expression(bc, src, len, pos)) {
+            (void)consume_char(src, len, pos, ')');
+            bytecode_add_instruction(bc, OP_PRINT, 0);
+        } else {
+            (void)consume_char(src, len, pos, ')');
+        }
+        skip_to_eol(src, len, pos);
+        return;
+    }
+
+    /* unknown token: report error */
+    parser_fail(*pos, "Unknown token at start of statement");
+}
+
+/* parse a block with lines at indentation >= current_indent; stop at dedent */
+static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, int current_indent) {
+    while (*pos < len) {
+        if (g_has_error) return;
+        size_t line_start = *pos;
+        int indent = 0;
+        if (!read_line_start(src, len, pos, &indent)) {
+            /* EOF or error */
+            return;
+        }
+        if (indent < current_indent) {
+            /* dedent -> let caller handle this line */
+            *pos = line_start;
+            return;
+        }
+        if (indent > current_indent) {
+            /* nested block without a header (tolerate by parsing it and continuing) */
+            parse_block(bc, src, len, pos, indent);
+            continue;
+        }
+
+        /* at same indent -> parse statement */
+        if (starts_with(src, len, *pos, "if")) {
+            *pos += 2;
+            /* require at least one space before condition if present */
+            skip_spaces(src, len, pos);
+            /* condition: a single expression (booleans/ident/number/string) */
+            if (!emit_expression(bc, src, len, pos)) {
+                /* no condition -> treat as false */
+                int ci = bytecode_add_constant(bc, make_int(0));
+                bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+            }
+            /* end of condition: ignore any trailing until EOL */
+            skip_to_eol(src, len, pos);
+
+            /* conditional jump over the block */
+            int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+            /* parse nested block if next line is indented */
+            size_t after_if = *pos;
+            int next_indent = 0;
+            if (read_line_start(src, len, pos, &next_indent)) {
+                if (next_indent > current_indent) {
+                    /* parse body at increased indent */
+                    parse_block(bc, src, len, pos, next_indent);
+                } else {
+                    /* empty if-body; keep *pos at start of that line (already set) */
+                }
+            } else {
+                /* EOF -> empty body */
+            }
+            /* patch jump to here */
+            bytecode_set_operand(bc, jmp_false, bc->instr_count);
+            continue;
+        }
+
+        /* otherwise: simple statement on this line */
+        parse_simple_statement(bc, src, len, pos);
+    }
+}
+
 static Bytecode *compile_minimal(const char *src, size_t len) {
     Bytecode *bc = bytecode_new();
     size_t pos = 0;
 
     skip_shebang_if_present(src, len, &pos);
 
-    // Optionally consume a single function wrapper: fun <ident>() { ... }
+    /* Optional: consume a single function wrapper line: fun <ident>() { ... } */
     skip_comments(src, len, &pos);
     skip_ws(src, len, &pos);
     if (starts_with(src, len, pos, "fun")) {
         pos += 3;
         skip_comments(src, len, &pos);
         skip_ws(src, len, &pos);
-        skip_identifier(src, len, &pos);  // function name
+        skip_identifier(src, len, &pos);  /* name */
         skip_comments(src, len, &pos);
         skip_ws(src, len, &pos);
         (void)consume_char(src, len, &pos, '(');
         (void)consume_char(src, len, &pos, ')');
         skip_comments(src, len, &pos);
         skip_ws(src, len, &pos);
-        (void)consume_char(src, len, &pos, '{');  // tolerate braces
+        (void)consume_char(src, len, &pos, '{');  /* tolerate */
+        /* move to next line start after wrapper */
+        skip_to_eol(src, len, &pos);
     }
 
-    // Parse simple statements until EOF or closing brace
-    while (pos < len) {
-        skip_comments(src, len, &pos);
-        skip_ws(src, len, &pos);
-        if (pos < len && src[pos] == '}') { pos++; break; }
-        if (pos >= len) break;
-
-        // read an identifier (for 'print' or assignment), or handle print directly
-        size_t stmt_start = pos;
-        char *name = NULL;
-        if (read_identifier_into(src, len, &pos, &name)) {
-            // print(expr)
-            if (strcmp(name, "print") == 0) {
-                free(name);
-                skip_spaces(src, len, &pos);
-                (void)consume_char(src, len, &pos, '(');
-                if (emit_expression(bc, src, len, &pos)) {
-                    (void)consume_char(src, len, &pos, ')');
-                    bytecode_add_instruction(bc, OP_PRINT, 0);
-                } else {
-                    // nothing to print; still try to close ')'
-                    (void)consume_char(src, len, &pos, ')');
-                }
-                continue;
-            }
-
-            // assignment: ident = expr
-            int gi = sym_index(name);
-            free(name);
-            skip_spaces(src, len, &pos);
-            if (pos < len && src[pos] == '=') {
-                pos++; // '='
-                if (emit_expression(bc, src, len, &pos)) {
-                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
-                }
-                // end of statement (consume to end of line or semicolon-like chars)
-            } else if (pos < len && src[pos] == '(') {
-                // Call to non-builtin: not supported yet; consume a simple ()-arg for now
-                pos++; // '('
-                // best effort: parse a single expression and drop it
-                (void)emit_expression(bc, src, len, &pos);
-                (void)consume_char(src, len, &pos, ')');
-                // No CALL opcode emitted yet
-            } else {
-                // bare identifier line -> ignore for now
-            }
-            continue;
-        }
-
-        // 'print' without having read identifier (unlikely) - fallback
-        if (starts_with(src, len, pos, "print")) {
-            pos += 5;
-            skip_spaces(src, len, &pos);
-            (void)consume_char(src, len, &pos, '(');
-            if (emit_expression(bc, src, len, &pos)) {
-                (void)consume_char(src, len, &pos, ')');
-                bytecode_add_instruction(bc, OP_PRINT, 0);
-            } else {
-                (void)consume_char(src, len, &pos, ')');
-            }
-            continue;
-        }
-
-        // Unknown/unsupported token: advance to avoid infinite loop
-        if (stmt_start == pos) pos++;
-    }
+    /* parse the top-level block at indent 0 */
+    parse_block(bc, src, len, &pos, 0);
 
     bytecode_add_instruction(bc, OP_HALT, 0);
     return bc;
@@ -339,7 +706,22 @@ Bytecode *parse_file_to_bytecode(const char *path) {
         fprintf(stderr, "Error: cannot read file: %s\n", path);
         return NULL;
     }
+    /* reset error state */
+    g_has_error = 0;
+    g_err_pos = 0;
+    g_err_msg[0] = '\0';
+
     Bytecode *bc = compile_minimal(src, len);
+
+    if (g_has_error) {
+        int line = 1, col = 1;
+        calc_line_col(src, len, g_err_pos, &line, &col);
+        fprintf(stderr, "Parse error %s:%d:%d: %s\n", path ? path : "<input>", line, col, g_err_msg);
+        if (bc) bytecode_free(bc);
+        free(src);
+        return NULL;
+    }
+
     free(src);
     return bc;
 }
