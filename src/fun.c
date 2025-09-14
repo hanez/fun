@@ -366,8 +366,8 @@ int main(int argc, char **argv) {
     }
 
     // REPL mode
-    printf("Fun REPL. Type code and press Enter. Submit an empty line to run.\n");
-    printf("Commands: :help, :reset, :dump, :quit\n");
+    printf("Fun %s REPL\n", FUN_VERSION);
+    printf("Type :help for commands. Submit an empty line to run.\n");
 
     char *buffer = NULL;
     size_t bufcap = 0;
