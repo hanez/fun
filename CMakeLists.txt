@@ -20,7 +20,6 @@ target_include_directories(fun_core PUBLIC
 # Playground / interpreter (future /usr/bin/fun)
 add_executable(fun
         src/fun.c
-        examples/hello_world.fun
 )
 target_link_libraries(fun PRIVATE fun_core)
 

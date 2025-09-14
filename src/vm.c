@@ -5,6 +5,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const char* value_type_name(ValueType t) {
+    switch (t) {
+        case VAL_INT: return "int";
+        case VAL_STRING: return "string";
+        case VAL_FUNCTION: return "function";
+        case VAL_NIL: return "nil";
+        default: return "unknown";
+    }
+}
+
 void vm_clear_output(VM *vm) {
     for (int i = 0; i < vm->output_count; ++i) {
         free_value(vm->output[i]);
@@ -144,7 +154,8 @@ void vm_run(VM *vm, Bytecode *entry) {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
                 if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: ADD expects ints\n");
+                    fprintf(stderr, "Runtime type error: ADD expects ints, got %s and %s\n",
+                            value_type_name(a.type), value_type_name(b.type));
                     exit(1);
                 }
                 Value res = make_int(a.i + b.i);
@@ -158,7 +169,8 @@ void vm_run(VM *vm, Bytecode *entry) {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
                 if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: SUB expects ints\n");
+                    fprintf(stderr, "Runtime type error: SUB expects ints, got %s and %s\n",
+                            value_type_name(a.type), value_type_name(b.type));
                     exit(1);
                 }
                 Value res = make_int(a.i - b.i);
@@ -172,7 +184,8 @@ void vm_run(VM *vm, Bytecode *entry) {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
                 if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: MUL expects ints\n");
+                    fprintf(stderr, "Runtime type error: MUL expects ints, got %s and %s\n",
+                            value_type_name(a.type), value_type_name(b.type));
                     exit(1);
                 }
                 Value res = make_int(a.i * b.i);
@@ -186,7 +199,8 @@ void vm_run(VM *vm, Bytecode *entry) {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
                 if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: DIV expects ints\n");
+                    fprintf(stderr, "Runtime type error: DIV expects ints, got %s and %s\n",
+                            value_type_name(a.type), value_type_name(b.type));
                     exit(1);
                 }
                 if (b.i == 0) {
@@ -204,7 +218,8 @@ void vm_run(VM *vm, Bytecode *entry) {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
                 if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: LT expects ints\n");
+                    fprintf(stderr, "Runtime type error: LT expects ints, got %s and %s\n",
+                            value_type_name(a.type), value_type_name(b.type));
                     exit(1);
                 }
                 Value res = make_int(a.i < b.i ? 1 : 0);
@@ -441,7 +456,8 @@ void vm_run(VM *vm, Bytecode *entry) {
                 Value b = pop_value(vm);
                 Value a = pop_value(vm);
                 if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: MOD expects ints\n");
+                    fprintf(stderr, "Runtime type error: MOD expects ints, got %s and %s\n",
+                            value_type_name(a.type), value_type_name(b.type));
                     exit(1);
                 }
                 if (b.i == 0) {

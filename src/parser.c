@@ -217,6 +217,33 @@ static int sym_index(const char *name) {
     return G.count++;
 }
 
+/* ---- locals environment for functions ---- */
+typedef struct {
+    char *names[FRAME_MAX_LOCALS];
+    int count;
+} LocalEnv;
+
+static LocalEnv *g_locals = NULL;
+
+static int local_find(const char *name) {
+    if (!g_locals) return -1;
+    for (int i = 0; i < g_locals->count; ++i) {
+        if (strcmp(g_locals->names[i], name) == 0) return i;
+    }
+    return -1;
+}
+
+static int local_add(const char *name) {
+    if (!g_locals) return -1;
+    if (g_locals->count >= FRAME_MAX_LOCALS) {
+        parser_fail(0, "Too many local variables/parameters (max %d)", FRAME_MAX_LOCALS);
+        return -1;
+    }
+    int idx = g_locals->count++;
+    g_locals->names[idx] = strdup(name);
+    return idx;
+}
+
 /* forward declaration so helpers can recurse */
 static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos);
 
@@ -267,10 +294,55 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
             return 1;
         }
-        int gi = sym_index(name);
-        free(name);
-        bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
-        return 1;
+
+        /* call or variable load (locals preferred) */
+        skip_spaces(src, len, pos);
+        int local_idx = local_find(name);
+        int is_call = (*pos < len && src[*pos] == '(');
+
+        if (is_call) {
+            /* push function value first */
+            if (local_idx >= 0) {
+                bytecode_add_instruction(bc, OP_LOAD_LOCAL, local_idx);
+            } else {
+                int gi = sym_index(name);
+                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+            }
+            /* parse arguments */
+            (*pos)++; /* '(' */
+            int argc = 0;
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] != ')') {
+                do {
+                    if (!emit_expression(bc, src, len, pos)) {
+                        parser_fail(*pos, "Expected expression as function argument");
+                        free(name);
+                        return 0;
+                    }
+                    argc++;
+                    skip_spaces(src, len, pos);
+                } while (*pos < len && src[*pos] == ',' && (++(*pos), skip_spaces(src, len, pos), 1));
+            }
+            if (!consume_char(src, len, pos, ')')) {
+                parser_fail(*pos, "Expected ')' after arguments");
+                free(name);
+                return 0;
+            }
+            /* DEBUG: show compiled call */
+            printf("compile: CALL %s with %d arg(s)\n", name, argc);
+            bytecode_add_instruction(bc, OP_CALL, argc);
+            free(name);
+            return 1;
+        } else {
+            if (local_idx >= 0) {
+                bytecode_add_instruction(bc, OP_LOAD_LOCAL, local_idx);
+            } else {
+                int gi = sym_index(name);
+                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+            }
+            free(name);
+            return 1;
+        }
     }
 
     return 0;
@@ -472,9 +544,24 @@ static int read_line_start(const char *src, size_t len, size_t *pos, int *out_in
         if (p >= len) { *pos = p; return 0; }
         if (src[p] == '\n') { /* empty line */ p++; *pos = p; continue; }
 
-        /* comment-only line? */
+        /* // comment-only line */
         if (p + 1 < len && src[p] == '/' && src[p + 1] == '/') {
             /* skip entire line */
+            while (p < len && src[p] != '\n') p++;
+            if (p < len && src[p] == '\n') p++;
+            *pos = p;
+            continue;
+        }
+
+        // block comment starting at line (treat as comment-only line)
+        if (p + 1 < len && src[p] == '/' && src[p + 1] == '*') {
+            p += 2;
+            /* advance until we find closing block comment marker */
+            while (p + 1 < len && !(src[p] == '*' && src[p + 1] == '/')) {
+                p++;
+            }
+            if (p + 1 < len) p += 2; /* consume closing block comment marker */
+            /* consume to end of current line (if any leftover) */
             while (p < len && src[p] != '\n') p++;
             if (p < len && src[p] == '\n') p++;
             *pos = p;
@@ -500,6 +587,26 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
     size_t local_pos = *pos;
     char *name = NULL;
     if (read_identifier_into(src, len, &local_pos, &name)) {
+        /* return statement */
+        if (strcmp(name, "return") == 0) {
+            free(name);
+            skip_spaces(src, len, &local_pos);
+            /* optional expression */
+            size_t save_pos = local_pos;
+            if (emit_expression(bc, src, len, &local_pos)) {
+                /* expression result already on stack */
+            } else {
+                /* no expression: return nil */
+                local_pos = save_pos;
+                int ci = bytecode_add_constant(bc, make_nil());
+                bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+            }
+            bytecode_add_instruction(bc, OP_RETURN, 0);
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+
         /* typed declarations: number|string|boolean <ident> (= expr)? */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0) {
             int is_number = (strcmp(name, "number") == 0);
@@ -514,17 +621,30 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 parser_fail(local_pos, "Expected identifier after type declaration");
                 return;
             }
-            int gi = sym_index(varname);
+
+            /* decide local vs global */
+            int lidx = -1;
+            int gi = -1;
+            if (g_locals) {
+                int existing = local_find(varname);
+                if (existing >= 0) lidx = existing;
+                else lidx = local_add(varname);
+            } else {
+                gi = sym_index(varname);
+            }
             free(varname);
 
             skip_spaces(src, len, &local_pos);
             if (local_pos < len && src[local_pos] == '=') {
                 local_pos++; /* '=' */
-                if (emit_expression(bc, src, len, &local_pos)) {
-                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
-                } else {
+                if (!emit_expression(bc, src, len, &local_pos)) {
                     parser_fail(local_pos, "Expected initializer expression after '='");
                     return;
+                }
+                if (lidx >= 0) {
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+                } else {
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
                 }
             } else {
                 /* default initialize if no '=' given */
@@ -536,7 +656,11 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 }
                 if (ci >= 0) {
                     bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                    if (lidx >= 0) {
+                        bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+                    } else {
+                        bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                    }
                 }
             }
             *pos = local_pos;
@@ -572,10 +696,12 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             skip_to_eol(src, len, pos);
             return;
         } else if (local_pos < len && src[local_pos] == '(') {
-            /* simple call form (argument ignored/emitted but no CALL yet) */
-            local_pos++; /* '(' */
-            (void)emit_expression(bc, src, len, &local_pos);
-            (void)consume_char(src, len, &local_pos, ')');
+            /* call as a statement: compile full call expression and drop result */
+            /* rewind to statement start and emit as expression */
+            local_pos = *pos;
+            if (emit_expression(bc, src, len, &local_pos)) {
+                bytecode_add_instruction(bc, OP_POP, 0); /* discard return value */
+            }
             *pos = local_pos;
             skip_to_eol(src, len, pos);
             return;
@@ -628,6 +754,91 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
         }
 
         /* at same indent -> parse statement */
+        if (starts_with(src, len, *pos, "fun")) {
+            /* parse header: fun name(arg, ...) */
+            *pos += 3;
+            skip_spaces(src, len, pos);
+            char *fname = NULL;
+            if (!read_identifier_into(src, len, pos, &fname)) {
+                parser_fail(*pos, "Expected function name after 'fun'");
+                return;
+            }
+            int fgi = sym_index(fname);
+            skip_spaces(src, len, pos);
+            if (!consume_char(src, len, pos, '(')) {
+                parser_fail(*pos, "Expected '(' after function name");
+                free(fname);
+                return;
+            }
+
+            /* build locals from parameters */
+            LocalEnv env = { {0}, 0 };
+            LocalEnv *prev = g_locals;
+            g_locals = &env;
+
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] != ')') {
+                for (;;) {
+                    char *pname = NULL;
+                    if (!read_identifier_into(src, len, pos, &pname)) {
+                        parser_fail(*pos, "Expected parameter name");
+                        g_locals = prev;
+                        free(fname);
+                        return;
+                    }
+                    if (local_find(pname) >= 0) {
+                        parser_fail(*pos, "Duplicate parameter name '%s'", pname);
+                        free(pname);
+                        g_locals = prev;
+                        free(fname);
+                        return;
+                    }
+                    local_add(pname);
+                    free(pname);
+                    skip_spaces(src, len, pos);
+                    if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); continue; }
+                    break;
+                }
+            }
+            if (!consume_char(src, len, pos, ')')) {
+                parser_fail(*pos, "Expected ')' after parameter list");
+                g_locals = prev;
+                free(fname);
+                return;
+            }
+            /* end header line */
+            skip_to_eol(src, len, pos);
+
+            /* compile body into separate Bytecode */
+            Bytecode *fn_bc = bytecode_new();
+
+            /* parse body at increased indent if present */
+            int body_indent = 0;
+            size_t look_body = *pos;
+            if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
+                /* do not advance pos here; let parse_block consume the line */
+                parse_block(fn_bc, src, len, pos, body_indent);
+            } else {
+                /* empty body: ok */
+            }
+            /* ensure function returns */
+            bytecode_add_instruction(fn_bc, OP_RETURN, 0);
+
+            /* DEBUG: dump compiled function bytecode */
+            printf("=== compiled function %s (%d params) ===\n", fname, env.count);
+            bytecode_dump(fn_bc);
+            printf("=== end function %s ===\n", fname);
+
+            /* bind function to global: LOAD_CONST <fn> ; STORE_GLOBAL fgi */
+            int fci = bytecode_add_constant(bc, make_function(fn_bc));
+            bytecode_add_instruction(bc, OP_LOAD_CONST, fci);
+            bytecode_add_instruction(bc, OP_STORE_GLOBAL, fgi);
+
+            g_locals = prev;
+            free(fname);
+            continue;
+        }
+
         if (starts_with(src, len, *pos, "if")) {
             int end_jumps[64];
             int end_count = 0;
@@ -655,10 +866,10 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
                 /* parse nested block if next line is indented */
                 int next_indent = 0;
-                size_t after_hdr = *pos;
-                if (read_line_start(src, len, pos, &next_indent)) {
+                size_t look_next = *pos;
+                if (read_line_start(src, len, &look_next, &next_indent)) {
                     if (next_indent > current_indent) {
-                        /* parse body at increased indent */
+                        /* parse body at increased indent (let parse_block consume the line) */
                         parse_block(bc, src, len, pos, next_indent);
                     } else {
                         /* empty body; keep *pos at start of that line */
@@ -703,7 +914,9 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                         /* plain else: parse its block and finish the chain */
                         skip_to_eol(src, len, pos);
                         int else_indent = 0;
-                        if (read_line_start(src, len, pos, &else_indent) && else_indent > current_indent) {
+                        size_t look_else = *pos;
+                        if (read_line_start(src, len, &look_else, &else_indent) && else_indent > current_indent) {
+                            /* let parse_block consume the line */
                             parse_block(bc, src, len, pos, else_indent);
                         } else {
                             /* empty else-body */

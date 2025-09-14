@@ -8,3 +8,8 @@ print(n)
 string s = "Hello, world!"
 print(s)
  
+fun foo()
+  //print("Have fun!")
+  print("Running foo()... forever.")
+
+foo()

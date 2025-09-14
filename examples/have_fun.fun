@@ -1,7 +1,7 @@
 #!/usr/bin/env fun
 
 /*
- * Have fun! in Fun
+ * Have fun in Fun
  */
 
- print("Hello, fun!")
+print("Have, fun!")
