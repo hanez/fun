@@ -4,4 +4,4 @@
  * Have fun in Fun
  */
 
-print("Have, fun!")
+print("Have fun!")

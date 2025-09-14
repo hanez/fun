@@ -4,6 +4,6 @@
  * Have, fun!
  */
 
-print("Have, fun!")
+print("Have fun!")
 
 // Bye, no fun!

@@ -8,7 +8,7 @@ print("=== Expressions test start ===")
 number a = 2
 number b = 3
 number n = 10
-string s = "Have, fun!"
+string s = "Have fun!"
 boolean flag = true
 
 // Arithmetic and precedence
