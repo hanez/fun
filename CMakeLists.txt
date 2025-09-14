@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun C)
+project(fun VERSION 0.2.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -30,6 +30,8 @@ endif()
 add_executable(fun
         src/fun.c
 )
+# Provide version string to the CLI
+target_compile_definitions(fun PRIVATE FUN_VERSION=\"${PROJECT_VERSION}\")
 target_link_libraries(fun PRIVATE fun_core)
 
 # Internal test programs
@@ -48,7 +50,7 @@ add_custom_target(clean-build
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
         COMMENT "Clean build outputs (objects, binaries) in the build directory"
 )
-add_custom_target(dist-clean
+add_custom_target(distclean
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
         COMMAND ${CMAKE_COMMAND} -E rm -rf
         ${CMAKE_BINARY_DIR}/CMakeCache.txt

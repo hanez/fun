@@ -1,28 +1,50 @@
-all:
-	make clean
-	make fun
-	make fun_test
-	make test_opcodes
+# Simple Makefile wrapper around CMake
 
-fun:
-	cmake -S . -B build -DFUN_DEBUG=ON
-	cmake --build build --target fun
+BUILD_DIR ?= build
+CMAKE ?= cmake
+# Default to a debug build with extra logging enabled
+CMAKE_FLAGS ?= -DFUN_DEBUG=ON
 
-fun_test:
-	cmake -S . -B build -DFUN_DEBUG=ON
-	cmake --build build --target fun_test
+.PHONY: all configure build fun fun_test test_opcodes clean distclean install repl run
 
+all: clean fun fun_test test_opcodes
+
+# One-time configure (re-runs harmlessly)
+configure:
+	$(CMAKE) -S . -B $(BUILD_DIR) $(CMAKE_FLAGS)
+
+# Build aggregate
+build: configure
+	$(CMAKE) --build $(BUILD_DIR)
+
+fun: configure
+	$(CMAKE) --build $(BUILD_DIR) --target fun
+
+fun_test: configure
+	$(CMAKE) --build $(BUILD_DIR) --target fun_test
+
+test_opcodes: configure
+	$(CMAKE) --build $(BUILD_DIR) --target test_opcodes
+
+# Clean via CMake (if configured)
 clean:
-	cmake --build build --target clean-build
+	$(CMAKE) --build $(BUILD_DIR) --target clean || true
 
-# Or set a custom prefix: cmake --install build --prefix "$HOME/.local"
-# Defaults:
-# Binary: /usr/bin/fun
-# Docs: /share/doc/fun/README.md, LICENSE
-# Examples: /share/fun/examples/*.fun
+# Full clean: remove the build directory entirely
+distclean:
+	$(CMAKE) --build $(BUILD_DIR) --target distclean || true
+
+# Install to fixed paths defined in CMake (may require sudo):
+# - Binary   : /usr/bin/fun
+# - Examples : /usr/share/fun/examples/*.fun
+# - Docs     : /usr/share/doc/fun/README.md, LICENSE
 install:
-	cmake --install build
+	$(CMAKE) --install $(BUILD_DIR)
 
-test_opcodes:
-	cmake -S . -B build -DFUN_DEBUG=ON
-	cmake --build build --target test_opcodes
+# Convenience: run REPL
+repl: fun
+	./$(BUILD_DIR)/fun
+
+# Convenience: run a script (usage: make run SCRIPT=examples/strings_test.fun)
+run: fun
+	./$(BUILD_DIR)/fun $(SCRIPT)

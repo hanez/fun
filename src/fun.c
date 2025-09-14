@@ -6,6 +6,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifndef FUN_VERSION
+#define FUN_VERSION "0.0.0-dev"
+#endif
+
 static int is_blank_line(const char *s) {
     for (const char *p = s; *p; ++p) {
         if (*p != ' ' && *p != '\t' && *p != '\r' && *p != '\n') return 0;
@@ -13,9 +17,32 @@ static int is_blank_line(const char *s) {
     return 1;
 }
 
+static void print_usage(const char *prog) {
+    printf("Fun %s\n", FUN_VERSION);
+    printf("Usage:\n");
+    printf("  %s [script.fun]\n", prog ? prog : "fun");
+    printf("  %s --help | -h\n", prog ? prog : "fun");
+    printf("  %s --version | -V\n", prog ? prog : "fun");
+    printf("\n");
+    printf("When no script is provided, a REPL starts. Submit an empty line to execute the buffer.\n");
+}
+
 int main(int argc, char **argv) {
     VM vm;
     vm_init(&vm);
+
+    // CLI flags
+    if (argc > 1) {
+        const char *arg = argv[1];
+        if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
+            print_usage(argv[0]);
+            return 0;
+        }
+        if (strcmp(arg, "--version") == 0 || strcmp(arg, "-V") == 0) {
+            printf("Fun %s\n", FUN_VERSION);
+            return 0;
+        }
+    }
 
     // If a script path is provided, parse and run it
     if (argc > 1) {
