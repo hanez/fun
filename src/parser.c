@@ -1489,9 +1489,9 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             return;
         }
 
-        /* array element assignment: name[expr] = expr */
+        /* array element assignment: name[expr] = expr and nested: name[expr1][expr2] = expr */
         if (local_pos < len && src[local_pos] == '[') {
-            /* load array variable */
+            /* load array/map variable */
             if (lidx >= 0) {
                 bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
             } else {
@@ -1509,6 +1509,44 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 return;
             }
             skip_spaces(src, len, &local_pos);
+
+            /* Nested index: name[expr1][expr2] = value */
+            if (local_pos < len && src[local_pos] == '[') {
+                /* Reduce base: stack currently has container, index1 -> get inner container */
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+
+                local_pos++; /* second '[' */
+                if (!emit_expression(bc, src, len, &local_pos)) {
+                    parser_fail(local_pos, "Expected nested index expression after '['");
+                    free(name);
+                    return;
+                }
+                if (!consume_char(src, len, &local_pos, ']')) {
+                    parser_fail(local_pos, "Expected ']' after nested index");
+                    free(name);
+                    return;
+                }
+                skip_spaces(src, len, &local_pos);
+                if (local_pos >= len || src[local_pos] != '=') {
+                    parser_fail(local_pos, "Expected '=' after nested array index");
+                    free(name);
+                    return;
+                }
+                local_pos++; /* '=' */
+                if (!emit_expression(bc, src, len, &local_pos)) {
+                    parser_fail(local_pos, "Expected expression after '='");
+                    free(name);
+                    return;
+                }
+                /* perform set into inner container */
+                bytecode_add_instruction(bc, OP_INDEX_SET, 0);
+                free(name);
+                *pos = local_pos;
+                skip_to_eol(src, len, pos);
+                return;
+            }
+
+            /* Single-level: name[expr] = value */
             if (local_pos >= len || src[local_pos] != '=') {
                 parser_fail(local_pos, "Expected '=' after array index");
                 free(name);
