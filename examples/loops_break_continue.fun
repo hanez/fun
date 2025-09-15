@@ -29,3 +29,19 @@ for x in arr
   print(x)                 // -> 1, 2, 4
   if x == 4
     break
+
+/* Expected output:
+1
+3
+5
+7
+0
+1
+2
+4
+5
+6
+1
+2
+4
+*/
