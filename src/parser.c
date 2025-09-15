@@ -230,6 +230,17 @@ typedef struct {
 
 static LocalEnv *g_locals = NULL;
 
+/* loop context for break/continue patching */
+typedef struct LoopCtx {
+    int break_jumps[64];
+    int break_count;
+    int continue_jumps[64];
+    int cont_count;
+    struct LoopCtx *prev;
+} LoopCtx;
+
+static LoopCtx *g_loop_ctx = NULL;
+
 static int local_find(const char *name) {
     if (!g_locals) return -1;
     for (int i = 0; i < g_locals->count; ++i) {
@@ -976,6 +987,42 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             return;
         }
 
+        /* break / continue */
+        if (strcmp(name, "break") == 0) {
+            free(name);
+            if (!g_loop_ctx) {
+                parser_fail(local_pos, "break used outside of loop");
+                return;
+            }
+            int j = bytecode_add_instruction(bc, OP_JUMP, 0);
+            if (g_loop_ctx->break_count < (int)(sizeof(g_loop_ctx->break_jumps) / sizeof(g_loop_ctx->break_jumps[0]))) {
+                g_loop_ctx->break_jumps[g_loop_ctx->break_count++] = j;
+            } else {
+                parser_fail(local_pos, "Too many 'break' in one loop");
+                return;
+            }
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+        if (strcmp(name, "continue") == 0) {
+            free(name);
+            if (!g_loop_ctx) {
+                parser_fail(local_pos, "continue used outside of loop");
+                return;
+            }
+            int j = bytecode_add_instruction(bc, OP_JUMP, 0);
+            if (g_loop_ctx->cont_count < (int)(sizeof(g_loop_ctx->continue_jumps) / sizeof(g_loop_ctx->continue_jumps[0]))) {
+                g_loop_ctx->continue_jumps[g_loop_ctx->cont_count++] = j;
+            } else {
+                parser_fail(local_pos, "Too many 'continue' in one loop");
+                return;
+            }
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+
         /* typed declarations: number|string|boolean <ident> (= expr)? */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0) {
             int is_number = (strcmp(name, "number") == 0);
@@ -1363,6 +1410,10 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 bytecode_add_instruction(bc, OP_LT, 0);
                 int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
 
+                /* enter loop context for break/continue */
+                LoopCtx ctx = { {0}, 0, {0}, 0, g_loop_ctx };
+                g_loop_ctx = &ctx;
+
                 /* parse body at increased indent (peek) */
                 int body_indent = 0;
                 size_t look_body = *pos;
@@ -1371,6 +1422,9 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 } else {
                     /* empty body ok */
                 }
+
+                /* continue target: start of increment */
+                int cont_label = bc->instr_count;
 
                 /* i = i + 1 */
                 int c1 = bytecode_add_constant(bc, make_int(1));
@@ -1388,7 +1442,19 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
                 /* back edge and patch */
                 bytecode_add_instruction(bc, OP_JUMP, loop_start);
-                bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
+                /* end label (after loop) */
+                int end_label = bc->instr_count;
+                bytecode_set_operand(bc, jmp_false, end_label);
+
+                /* patch continue/break jumps */
+                for (int bi = 0; bi < ctx.cont_count; ++bi) {
+                    bytecode_set_operand(bc, ctx.continue_jumps[bi], cont_label);
+                }
+                for (int bi = 0; bi < ctx.break_count; ++bi) {
+                    bytecode_set_operand(bc, ctx.break_jumps[bi], end_label);
+                }
+                g_loop_ctx = ctx.prev;
 
                 free(ivar);
                 continue;
@@ -1489,6 +1555,10 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                     bytecode_add_instruction(bc, OP_STORE_GLOBAL, gdst);
                 }
 
+                /* enter loop context for break/continue */
+                LoopCtx ctx = { {0}, 0, {0}, 0, g_loop_ctx };
+                g_loop_ctx = &ctx;
+
                 /* parse body at increased indent */
                 int body_indent = 0;
                 size_t look_body = *pos;
@@ -1497,6 +1567,9 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 } else {
                     /* empty body ok */
                 }
+
+                /* continue target: start of increment */
+                int cont_label = bc->instr_count;
 
                 /* i = i + 1 */
                 int c1 = bytecode_add_constant(bc, make_int(1));
@@ -1514,7 +1587,19 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
                 /* back edge and patch */
                 bytecode_add_instruction(bc, OP_JUMP, loop_start);
-                bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
+                /* end label (after loop) */
+                int end_label = bc->instr_count;
+                bytecode_set_operand(bc, jmp_false, end_label);
+
+                /* patch continue/break jumps */
+                for (int bi = 0; bi < ctx.cont_count; ++bi) {
+                    bytecode_set_operand(bc, ctx.continue_jumps[bi], cont_label);
+                }
+                for (int bi = 0; bi < ctx.break_count; ++bi) {
+                    bytecode_set_operand(bc, ctx.break_jumps[bi], end_label);
+                }
+                g_loop_ctx = ctx.prev;
 
                 free(ivar);
                 continue;
@@ -1637,6 +1722,10 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             /* jump over body if false */
             int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
 
+            /* enter loop context (continue -> condition) */
+            LoopCtx ctx = { {0}, 0, {0}, 0, g_loop_ctx };
+            g_loop_ctx = &ctx;
+
             /* parse body at increased indent (peek indent without advancing pos) */
             int body_indent = 0;
             size_t look_body = *pos;
@@ -1646,11 +1735,21 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 /* empty body allowed */
             }
 
+            /* patch pending continues to loop_start (re-evaluate condition) */
+            for (int bi = 0; bi < ctx.cont_count; ++bi) {
+                bytecode_set_operand(bc, ctx.continue_jumps[bi], loop_start);
+            }
+
             /* back edge to loop start */
             bytecode_add_instruction(bc, OP_JUMP, loop_start);
 
-            /* patch false jump to here (after body) */
-            bytecode_set_operand(bc, jmp_false, bc->instr_count);
+            /* end label and patches */
+            int end_label = bc->instr_count;
+            bytecode_set_operand(bc, jmp_false, end_label);
+            for (int bi = 0; bi < ctx.break_count; ++bi) {
+                bytecode_set_operand(bc, ctx.break_jumps[bi], end_label);
+            }
+            g_loop_ctx = ctx.prev;
             continue;
         }
 
