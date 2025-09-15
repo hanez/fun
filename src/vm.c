@@ -723,6 +723,253 @@ void vm_run(VM *vm, Bytecode *entry) {
                 break;
             }
 
+            case OP_SPLIT: {
+                Value sep = pop_value(vm);
+                Value str = pop_value(vm);
+                if (str.type != VAL_STRING || sep.type != VAL_STRING) {
+                    fprintf(stderr, "Runtime type error: SPLIT expects (string, string)\n");
+                    exit(1);
+                }
+                Value arr = string_split_to_array(str.s ? str.s : "", sep.s ? sep.s : "");
+                free_value(str);
+                free_value(sep);
+                push_value(vm, arr);
+                break;
+            }
+
+            case OP_JOIN: {
+                Value sep = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY || sep.type != VAL_STRING) {
+                    fprintf(stderr, "Runtime type error: JOIN expects (array, string)\n");
+                    exit(1);
+                }
+                char *s = array_join_with_sep(&arr, sep.s ? sep.s : "");
+                Value out = make_string(s ? s : "");
+                if (s) free(s);
+                free_value(arr);
+                free_value(sep);
+                push_value(vm, out);
+                break;
+            }
+
+            case OP_SUBSTR: {
+                Value lenv = pop_value(vm);
+                Value startv = pop_value(vm);
+                Value str = pop_value(vm);
+                if (str.type != VAL_STRING || startv.type != VAL_INT || lenv.type != VAL_INT) {
+                    fprintf(stderr, "Runtime type error: SUBSTR expects (string, int, int)\n");
+                    exit(1);
+                }
+                char *s = string_substr(str.s ? str.s : "", (int)startv.i, (int)lenv.i);
+                Value out = make_string(s ? s : "");
+                if (s) free(s);
+                free_value(str);
+                free_value(startv);
+                free_value(lenv);
+                push_value(vm, out);
+                break;
+            }
+
+            case OP_FIND: {
+                Value needle = pop_value(vm);
+                Value hay = pop_value(vm);
+                if (hay.type != VAL_STRING || needle.type != VAL_STRING) {
+                    fprintf(stderr, "Runtime type error: FIND expects (string, string)\n");
+                    exit(1);
+                }
+                int idx = string_find(hay.s ? hay.s : "", needle.s ? needle.s : "");
+                free_value(hay);
+                free_value(needle);
+                push_value(vm, make_int(idx));
+                break;
+            }
+
+            case OP_CONTAINS: {
+                Value needle = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: CONTAINS expects (array, value)\n");
+                    exit(1);
+                }
+                int ok = array_contains(&arr, &needle);
+                free_value(arr);
+                free_value(needle);
+                push_value(vm, make_int(ok ? 1 : 0));
+                break;
+            }
+
+            case OP_INDEX_OF: {
+                Value needle = pop_value(vm);
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: INDEX_OF expects (array, value)\n");
+                    exit(1);
+                }
+                int idx = array_index_of(&arr, &needle);
+                free_value(arr);
+                free_value(needle);
+                push_value(vm, make_int(idx));
+                break;
+            }
+
+            case OP_CLEAR: {
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: CLEAR expects array\n");
+                    exit(1);
+                }
+                array_clear(&arr);
+                free_value(arr);
+                push_value(vm, make_int(0));
+                break;
+            }
+
+            case OP_ENUMERATE: {
+                Value arr = pop_value(vm);
+                if (arr.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: ENUMERATE expects array\n");
+                    exit(1);
+                }
+                int n = array_length(&arr);
+                if (n < 0) n = 0;
+                Value *pairs = (Value*)malloc(sizeof(Value) * n);
+                for (int i = 0; i < n; ++i) {
+                    Value elem;
+                    array_get_copy(&arr, i, &elem);
+                    Value kv_vals[2];
+                    kv_vals[0] = make_int(i);
+                    kv_vals[1] = elem;
+                    Value kv = make_array_from_values(kv_vals, 2);
+                    /* kv_vals[1] (elem) already moved, free temp copies: */
+                    free_value(kv_vals[0]);
+                    free_value(kv_vals[1]);
+                    pairs[i] = kv;
+                }
+                Value out = make_array_from_values(pairs, n);
+                for (int i = 0; i < n; ++i) free_value(pairs[i]);
+                free(pairs);
+                free_value(arr);
+                push_value(vm, out);
+                break;
+            }
+
+            case OP_ZIP: {
+                Value b = pop_value(vm);
+                Value a = pop_value(vm);
+                if (a.type != VAL_ARRAY || b.type != VAL_ARRAY) {
+                    fprintf(stderr, "Runtime type error: ZIP expects (array, array)\n");
+                    exit(1);
+                }
+                int na = array_length(&a);
+                int nb = array_length(&b);
+                int n = na < nb ? na : nb;
+                if (n < 0) n = 0;
+                Value *pairs = (Value*)malloc(sizeof(Value) * n);
+                for (int i = 0; i < n; ++i) {
+                    Value av, bv;
+                    array_get_copy(&a, i, &av);
+                    array_get_copy(&b, i, &bv);
+                    Value kv_vals[2];
+                    kv_vals[0] = av;
+                    kv_vals[1] = bv;
+                    Value kv = make_array_from_values(kv_vals, 2);
+                    free_value(kv_vals[0]);
+                    free_value(kv_vals[1]);
+                    pairs[i] = kv;
+                }
+                Value out = make_array_from_values(pairs, n);
+                for (int i = 0; i < n; ++i) free_value(pairs[i]);
+                free(pairs);
+                free_value(a);
+                free_value(b);
+                push_value(vm, out);
+                break;
+            }
+
+            case OP_MIN: {
+                Value b = pop_value(vm);
+                Value a = pop_value(vm);
+                if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "MIN expects ints\n"); exit(1); }
+                push_value(vm, make_int(a.i < b.i ? a.i : b.i));
+                free_value(a); free_value(b);
+                break;
+            }
+
+            case OP_MAX: {
+                Value b = pop_value(vm);
+                Value a = pop_value(vm);
+                if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "MAX expects ints\n"); exit(1); }
+                push_value(vm, make_int(a.i > b.i ? a.i : b.i));
+                free_value(a); free_value(b);
+                break;
+            }
+
+            case OP_CLAMP: {
+                Value hi = pop_value(vm);
+                Value lo = pop_value(vm);
+                Value x = pop_value(vm);
+                if (x.type != VAL_INT || lo.type != VAL_INT || hi.type != VAL_INT) { fprintf(stderr, "CLAMP expects ints\n"); exit(1); }
+                int64_t v = x.i;
+                if (v < lo.i) v = lo.i;
+                if (v > hi.i) v = hi.i;
+                push_value(vm, make_int(v));
+                free_value(x); free_value(lo); free_value(hi);
+                break;
+            }
+
+            case OP_ABS: {
+                Value x = pop_value(vm);
+                if (x.type != VAL_INT) { fprintf(stderr, "ABS expects int\n"); exit(1); }
+                int64_t v = x.i;
+                if (v < 0) v = -v;
+                push_value(vm, make_int(v));
+                free_value(x);
+                break;
+            }
+
+            case OP_POW: {
+                Value b = pop_value(vm);
+                Value a = pop_value(vm);
+                if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "POW expects ints\n"); exit(1); }
+                /* simple integer pow */
+                int64_t base = a.i;
+                int64_t exp = b.i;
+                int64_t res = 1;
+                if (exp < 0) { res = 0; } else {
+                    while (exp > 0) {
+                        if (exp & 1) res *= base;
+                        base *= base;
+                        exp >>= 1;
+                    }
+                }
+                push_value(vm, make_int(res));
+                free_value(a); free_value(b);
+                break;
+            }
+
+            case OP_RANDOM_SEED: {
+                Value seed = pop_value(vm);
+                if (seed.type != VAL_INT) { fprintf(stderr, "RANDOM_SEED expects int\n"); exit(1); }
+                srand((unsigned int)seed.i);
+                free_value(seed);
+                push_value(vm, make_int(0));
+                break;
+            }
+
+            case OP_RANDOM_INT: {
+                Value hi = pop_value(vm);
+                Value lo = pop_value(vm);
+                if (lo.type != VAL_INT || hi.type != VAL_INT) { fprintf(stderr, "RANDOM_INT expects (int, int)\n"); exit(1); }
+                int64_t a = lo.i, b = hi.i;
+                if (b <= a) { push_value(vm, make_int((int64_t)a)); free_value(lo); free_value(hi); break; }
+                int64_t span = b - a;
+                int64_t r = (int64_t)(rand() % (span));
+                push_value(vm, make_int(a + r));
+                free_value(lo); free_value(hi);
+                break;
+            }
+
             case OP_LOAD_GLOBAL: {
                 int idx = inst.operand;
                 if (idx < 0 || idx >= VM_MAX_GLOBALS) {

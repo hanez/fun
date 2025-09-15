@@ -50,9 +50,21 @@ void free_value(Value v);            /* frees owned resources */
 /* utilities */
 void print_value(const Value *v);
 int value_is_truthy(const Value *v);
+int value_equals(const Value *a, const Value *b);  /* int/string equality */
 
 /* stringify into a newly-allocated C string; caller must free */
 char *value_to_string_alloc(const Value *v);
+
+/* array utils */
+int array_contains(const Value *arr, const Value *needle);    /* 1/0 */
+int array_index_of(const Value *arr, const Value *needle);    /* idx or -1 */
+void array_clear(Value *arr);                                  /* free elements, count=0 */
+
+/* string helpers returning newly allocated C strings or arrays */
+char *string_substr(const char *s, int start, int len);       /* clamps bounds */
+int string_find(const char *hay, const char *needle);          /* index or -1 */
+Value string_split_to_array(const char *s, const char *sep);   /* array of strings */
+char *array_join_with_sep(const Value *arr, const char *sep);  /* join items as strings */
 
 #endif
 

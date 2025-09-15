@@ -535,6 +535,153 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* string ops */
+            if (strcmp(name, "split") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "split expects string"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "split expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "split expects separator"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after split args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SPLIT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "join") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "join expects array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "join expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "join expects separator"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after join args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_JOIN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "substr") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "substr expects string"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "substr expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "substr expects start"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "substr expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "substr expects len"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after substr args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SUBSTR, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "find") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "find expects haystack"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "find expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "find expects needle"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after find args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_FIND, 0);
+                free(name);
+                return 1;
+            }
+            /* array utils */
+            if (strcmp(name, "contains") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "contains expects array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "contains expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "contains expects value"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after contains args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CONTAINS, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "indexOf") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "indexOf expects array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "indexOf expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "indexOf expects value"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after indexOf args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INDEX_OF, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "clear") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "clear expects array"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after clear arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CLEAR, 0);
+                free(name);
+                return 1;
+            }
+            /* iteration helpers */
+            if (strcmp(name, "enumerate") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "enumerate expects array"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after enumerate arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ENUMERATE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "zip") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "zip expects first array"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "zip expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "zip expects second array"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after zip args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ZIP, 0);
+                free(name);
+                return 1;
+            }
+            /* math */
+            if (strcmp(name, "min") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "min expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "min expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_MIN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "max") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "max expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "max expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_MAX, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "clamp") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "clamp expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "clamp expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "clamp expects 3 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CLAMP, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "abs") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "abs expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ABS, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pow") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "pow expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "pow expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_POW, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "random") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "random expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_RANDOM_SEED, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "randomInt") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "randomInt expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "randomInt expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_RANDOM_INT, 0);
+                free(name);
+                return 1;
+            }
 
             /* push function value first */
             if (local_idx >= 0) {

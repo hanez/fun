@@ -61,7 +61,31 @@ typedef enum {
 
     // conversions
     OP_TO_NUMBER,     // pops any; pushes int (parse strings)
-    OP_TO_STRING      // pops any; pushes string
+    OP_TO_STRING,     // pops any; pushes string
+
+    // string ops
+    OP_SPLIT,         // pops sep, string; pushes array of strings
+    OP_JOIN,          // pops sep, array; pushes string
+    OP_SUBSTR,        // pops len, start, string; pushes string
+    OP_FIND,          // pops needle, haystack; pushes int index or -1
+
+    // array utils
+    OP_CONTAINS,      // pops value, array; pushes 1/0
+    OP_INDEX_OF,      // pops value, array; pushes index or -1
+    OP_CLEAR,         // pops array; clears it; pushes nothing (we'll push 0)
+
+    // iteration helpers
+    OP_ENUMERATE,     // pops array; pushes array of [index, value]
+    OP_ZIP,           // pops b, a; pushes array of [a[i], b[i]]
+
+    // math
+    OP_MIN,           // pops b, a; pushes min(a,b)
+    OP_MAX,           // pops b, a; pushes max(a,b)
+    OP_CLAMP,         // pops hi, lo, x; pushes clamped
+    OP_ABS,           // pops x; pushes |x|
+    OP_POW,           // pops b, a; pushes a^b
+    OP_RANDOM_SEED,   // pops seed; sets RNG seed; pushes nothing (we'll push 0)
+    OP_RANDOM_INT     // pops hi, lo; pushes random int in [lo, hi)
 } OpCode;
 
 typedef struct {

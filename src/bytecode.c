@@ -84,6 +84,22 @@ static const char *opcode_name(OpCode op) {
         case OP_SLICE: return "SLICE";
         case OP_TO_NUMBER: return "TO_NUMBER";
         case OP_TO_STRING: return "TO_STRING";
+        case OP_SPLIT: return "SPLIT";
+        case OP_JOIN: return "JOIN";
+        case OP_SUBSTR: return "SUBSTR";
+        case OP_FIND: return "FIND";
+        case OP_CONTAINS: return "CONTAINS";
+        case OP_INDEX_OF: return "INDEX_OF";
+        case OP_CLEAR: return "CLEAR";
+        case OP_ENUMERATE: return "ENUMERATE";
+        case OP_ZIP: return "ZIP";
+        case OP_MIN: return "MIN";
+        case OP_MAX: return "MAX";
+        case OP_CLAMP: return "CLAMP";
+        case OP_ABS: return "ABS";
+        case OP_POW: return "POW";
+        case OP_RANDOM_SEED: return "RANDOM_SEED";
+        case OP_RANDOM_INT: return "RANDOM_INT";
         default: return "???";
     }
 }
