@@ -48,3 +48,14 @@ repl: fun
 # Convenience: run a script (usage: make run SCRIPT=examples/strings_test.fun)
 run: fun
 	./$(BUILD_DIR)/fun $(SCRIPT)
+
+# Additional convenience targets
+.PHONY: verify-ops examples run-examples
+
+# Verify that each OP_* in bytecode.h has a corresponding vm_case_*.inc include in vm.c
+verify-ops:
+	@./scripts/check_op_includes.py --verbose
+
+# Build and run all examples (searches for the fun binary automatically)
+examples run-examples: fun
+	@./scripts/run_examples.sh

@@ -5,6 +5,51 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Bring in split-out built-ins without changing the build system yet */
+#include "builtins_math.c"
+#include "builtins_io.c"
+#include "map.c"
+#include "builtins_string.c"
+#include "builtins_iter.c"
+
+/*
+Opcode case include index (vm_case_*.inc):
+- Core/stack/frame:
+  vm_case_nop.inc, vm_case_halt.inc,
+  vm_case_load_const.inc, vm_case_load_local.inc, vm_case_store_local.inc,
+  vm_case_load_global.inc, vm_case_store_global.inc,
+  vm_case_pop.inc, vm_case_dup.inc, vm_case_swap.inc,
+  vm_case_call.inc, vm_case_return.inc, vm_case_print.inc, vm_case_jump.inc, vm_case_jump_if_false.inc
+- Arithmetic and logic:
+  vm_case_add.inc, vm_case_sub.inc, vm_case_mul.inc, vm_case_div.inc,
+  vm_case_mod.inc, vm_case_lt.inc, vm_case_lte.inc, vm_case_gt.inc, vm_case_gte.inc,
+  vm_case_eq.inc, vm_case_neq.inc, vm_case_and.inc, vm_case_or.inc, vm_case_not.inc
+- Conversions:
+  vm_case_to_number.inc, vm_case_to_string.inc
+- Arrays and slices:
+  vm_case_make_array.inc, vm_case_len.inc,
+  vm_case_index_get.inc, vm_case_index_set.inc,
+  vm_case_arr_push.inc, vm_case_arr_pop.inc, vm_case_arr_set.inc, vm_case_arr_insert.inc, vm_case_arr_remove.inc,
+  vm_case_slice.inc
+- Strings and iteration helpers:
+  vm_case_split.inc, vm_case_join.inc, vm_case_substr.inc, vm_case_find.inc,
+  vm_case_enumerate.inc, vm_case_zip.inc
+- Maps and I/O:
+  vm_case_make_map.inc, vm_case_keys.inc, vm_case_values.inc, vm_case_has_key.inc,
+  vm_case_read_file.inc, vm_case_write_file.inc
+- Math utils / RNG:
+  vm_case_min.inc, vm_case_max.inc, vm_case_clamp.inc, vm_case_abs.inc, vm_case_pow.inc,
+  vm_case_random_seed.inc, vm_case_random_int.inc
+
+Dev tips:
+- When adding a new opcode:
+  1) Define OP_<NAME> in bytecode.h and opcode_names[] in vm.h.
+  2) Implement its VM handler in src/vm_case_<lowercase>.inc.
+  3) Include it in the switch below.
+  4) Run scripts/check_op_includes.py to verify coverage.
+- You can run scripts/run_examples.sh to sanity-check examples quickly.
+*/
+
 static const char* value_type_name(ValueType t) {
     switch (t) {
         case VAL_INT: return "int";
@@ -147,995 +192,69 @@ void vm_run(VM *vm, Bytecode *entry) {
         vm->instr_count++; /* count each executed instruction */
 
         switch (inst.op) {
-            case OP_NOP:
-                break;
-
-            case OP_LOAD_CONST: {
-                int idx = inst.operand;
-                if (idx < 0 || idx >= f->fn->const_count) {
-                    fprintf(stderr, "Runtime error: constant index out of range\n");
-                    exit(1);
-                }
-                Value c = copy_value(&f->fn->constants[idx]);
-                push_value(vm, c);
-                break;
-            }
-
-            case OP_LOAD_LOCAL: {
-                int slot = inst.operand;
-                if (slot < 0 || slot >= FRAME_MAX_LOCALS) {
-                    fprintf(stderr, "Runtime error: local slot out of range\n");
-                    exit(1);
-                }
-                Value val = copy_value(&f->locals[slot]);
-                push_value(vm, val);
-                break;
-            }
-
-            case OP_STORE_LOCAL: {
-                int slot = inst.operand;
-                if (slot < 0 || slot >= FRAME_MAX_LOCALS) {
-                    fprintf(stderr, "Runtime error: local slot out of range\n");
-                    exit(1);
-                }
-                Value v = pop_value(vm);
-                /* free previous local then move v into it */
-                free_value(f->locals[slot]);
-                f->locals[slot] = v;
-                break;
-            }
-
-            case OP_ADD: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type == VAL_INT && b.type == VAL_INT) {
-                    Value res = make_int(a.i + b.i);
-                    free_value(a);
-                    free_value(b);
-                    push_value(vm, res);
-                } else if (a.type == VAL_STRING && b.type == VAL_STRING) {
-                    const char *sa = a.s ? a.s : "";
-                    const char *sb = b.s ? b.s : "";
-                    size_t la = strlen(sa);
-                    size_t lb = strlen(sb);
-                    char *buf = (char*)malloc(la + lb + 1);
-                    if (!buf) {
-                        fprintf(stderr, "Runtime error: out of memory during string concatenation\n");
-                        exit(1);
-                    }
-                    memcpy(buf, sa, la);
-                    memcpy(buf + la, sb, lb);
-                    buf[la + lb] = '\0';
-                    Value res;
-                    res.type = VAL_STRING;
-                    res.s = buf;
-                    free_value(a);
-                    free_value(b);
-                    push_value(vm, res);
-                } else if (a.type == VAL_ARRAY && b.type == VAL_ARRAY) {
-                    Value res = array_concat(&a, &b);
-                    free_value(a);
-                    free_value(b);
-                    push_value(vm, res);
-                } else {
-                    fprintf(stderr, "Runtime type error: ADD expects both ints, both strings, or both arrays, got %s and %s\n",
-                            value_type_name(a.type), value_type_name(b.type));
-                    exit(1);
-                }
-                break;
-            }
-
-            case OP_SUB: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: SUB expects ints, got %s and %s\n",
-                            value_type_name(a.type), value_type_name(b.type));
-                    exit(1);
-                }
-                Value res = make_int(a.i - b.i);
-                free_value(a);
-                free_value(b);
-                push_value(vm, res);
-                break;
-            }
-
-            case OP_MUL: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: MUL expects ints, got %s and %s\n",
-                            value_type_name(a.type), value_type_name(b.type));
-                    exit(1);
-                }
-                Value res = make_int(a.i * b.i);
-                free_value(a);
-                free_value(b);
-                push_value(vm, res);
-                break;
-            }
-
-            case OP_DIV: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: DIV expects ints, got %s and %s\n",
-                            value_type_name(a.type), value_type_name(b.type));
-                    exit(1);
-                }
-                if (b.i == 0) {
-                    fprintf(stderr, "Runtime error: division by zero\n");
-                    exit(1);
-                }
-                Value res = make_int(a.i / b.i);
-                free_value(a);
-                free_value(b);
-                push_value(vm, res);
-                break;
-            }
-
-            case OP_LT: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: LT expects ints, got %s and %s\n",
-                            value_type_name(a.type), value_type_name(b.type));
-                    exit(1);
-                }
-                Value res = make_int(a.i < b.i ? 1 : 0);
-                free_value(a);
-                free_value(b);
-                push_value(vm, res);
-                break;
-            }
-
-            case OP_LTE: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: LTE expects ints\n");
-                    exit(1);
-                }
-                Value res = make_int(a.i <= b.i ? 1 : 0);
-                free_value(a);
-                free_value(b);
-                push_value(vm, res);
-                break;
-            }
-
-            case OP_JUMP: {
-                f->ip = inst.operand;
-                break;
-            }
-
-            case OP_GT: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: GT expects ints\n");
-                    exit(1);
-                }
-                push_value(vm, make_int(a.i > b.i ? 1 : 0));
-                free_value(a); free_value(b);
-                break;
-            }
-
-            case OP_GTE: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: GTE expects ints\n");
-                    exit(1);
-                }
-                push_value(vm, make_int(a.i >= b.i ? 1 : 0));
-                free_value(a); free_value(b);
-                break;
-            }
-
-            case OP_EQ: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                int eq = 0;
-                if (a.type == b.type) {
-                    switch (a.type) {
-                        case VAL_INT:
-                            eq = (a.i == b.i);
-                            break;
-                        case VAL_STRING:
-                            eq = (a.s && b.s) ? (strcmp(a.s, b.s) == 0) : (a.s == b.s);
-                            break;
-                        case VAL_FUNCTION:
-                            eq = (a.fn == b.fn);
-                            break;
-                        case VAL_NIL:
-                            eq = 1;
-                            break;
-                        default:
-                            eq = 0;
-                            break;
-                    }
-                } else {
-                    eq = 0;
-                }
-                push_value(vm, make_int(eq ? 1 : 0));
-                free_value(a); free_value(b);
-                break;
-            }
-
-            case OP_NEQ: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                int neq = 1;
-                if (a.type == b.type) {
-                    switch (a.type) {
-                        case VAL_INT:
-                            neq = (a.i != b.i);
-                            break;
-                        case VAL_STRING:
-                            neq = (a.s && b.s) ? (strcmp(a.s, b.s) != 0) : (a.s != b.s);
-                            break;
-                        case VAL_FUNCTION:
-                            neq = (a.fn != b.fn);
-                            break;
-                        case VAL_NIL:
-                            neq = 0;
-                            break;
-                        default:
-                            neq = 1;
-                            break;
-                    }
-                } else {
-                    neq = 1;
-                }
-                push_value(vm, make_int(neq ? 1 : 0));
-                free_value(a); free_value(b);
-                break;
-            }
-
-
-            case OP_JUMP_IF_FALSE: {
-                Value cond = pop_value(vm);
-                int truthy = value_is_truthy(&cond);
-                free_value(cond);
-                if (!truthy) {
-                    f->ip = inst.operand;
-                }
-                break;
-            }
-
-            case OP_CALL: {
-                int argc = inst.operand;
-                if (argc < 0) argc = 0;
-                /* collect args in reverse (preserve order) */
-                Value *args = NULL;
-                if (argc > 0) {
-                    args = (Value*)malloc(sizeof(Value) * argc);
-                    /* pop args into array in reverse */
-                    for (int i = argc - 1; i >= 0; --i) {
-                        args[i] = pop_value(vm);
-                    }
-                }
-                /* pop function value */
-                Value fnv = pop_value(vm);
-                if (fnv.type != VAL_FUNCTION) {
-                    fprintf(stderr, "Runtime type error: CALL expects function\n");
-                    exit(1);
-                }
-                /* push new frame and transfer args */
-                vm_push_frame(vm, fnv.fn, argc, args);
-                /* free args array (locals moved), free fnv (no-op for function) */
-                free(args);
-                /* note: fnv contains a pointer to the Bytecode, don't free here */
-                break;
-            }
-
-            case OP_RETURN: {
-                Value retv;
-                /* if there's something on the stack -> return it, else nil */
-                if (vm->sp >= 0) retv = pop_value(vm);
-                else retv = make_nil();
-
-                /* pop frame (free locals) */
-                vm_pop_frame(vm);
-
-                /* push return value into caller frame (or onto stack if no caller) */
-                push_value(vm, retv);
-                break;
-            }
-
-            case OP_PRINT: {
-                Value v = pop_value(vm);
-                /* snapshot value at print time (deep copy arrays) */
-                Value snap = deep_copy_value(&v);
-                free_value(v);
-                if (vm->output_count < VM_OUTPUT_SIZE) {
-                    vm->output[vm->output_count++] = snap;  // store snapshot
-                } else {
-                    free_value(snap);  // prevent leak
-                    fprintf(stderr, "Runtime error: output buffer overflow\n");
-                    exit(1);
-                }
-                break;
-            }
-
-            case OP_HALT:
-                return;
-
-            case OP_POP: {
-                if (vm->sp < 0) {
-                    fprintf(stderr, "Runtime error: stack underflow for POP\n");
-                    exit(1);
-                }
-                Value v = pop_value(vm);
-                free_value(v); // free the popped value
-                break;
-            }
-
-            case OP_DUP: {
-                if (vm->sp < 0) {
-                    fprintf(stderr, "Runtime error: stack underflow for DUP\n");
-                    exit(1);
-                }
-                Value top = vm->stack[vm->sp];
-                push_value(vm, copy_value(&top));
-                break;
-            }
-
-            case OP_SWAP: {
-                if (vm->sp < 1) {
-                    fprintf(stderr, "Runtime error: stack underflow for SWAP\n");
-                    exit(1);
-                }
-                Value a = vm->stack[vm->sp];
-                Value b = vm->stack[vm->sp - 1];
-                vm->stack[vm->sp] = b;
-                vm->stack[vm->sp - 1] = a;
-                break;
-            }
-
-            case OP_MAKE_ARRAY: {
-                int n = inst.operand;
-                if (n < 0 || vm->sp + 1 < n) {
-                    fprintf(stderr, "Runtime error: invalid element count for MAKE_ARRAY\n");
-                    exit(1);
-                }
-                /* pop n values into temp array preserving original order */
-                Value *vals = (Value*)malloc(sizeof(Value) * n);
-                if (!vals) { fprintf(stderr, "Runtime error: OOM in MAKE_ARRAY\n"); exit(1); }
-                for (int i = n - 1; i >= 0; --i) {
-                    vals[i] = pop_value(vm); /* take ownership */
-                }
-                /* build array by copying values, then free originals */
-                Value arr = make_array_from_values(vals, n);
-                for (int i = 0; i < n; ++i) {
-                    free_value(vals[i]);
-                }
-                free(vals);
-                push_value(vm, arr);
-                break;
-            }
-
-            case OP_INDEX_GET: {
-                Value idx = pop_value(vm);
-                Value container = pop_value(vm);
-                if (container.type == VAL_ARRAY) {
-                    if (idx.type != VAL_INT) { fprintf(stderr, "INDEX_GET index must be int for array\n"); exit(1); }
-                    Value elem;
-                    if (!array_get_copy(&container, (int)idx.i, &elem)) {
-                        fprintf(stderr, "Runtime error: index out of range\n"); exit(1);
-                    }
-                    free_value(container);
-                    free_value(idx);
-                    push_value(vm, elem);
-                } else if (container.type == VAL_MAP) {
-                    if (idx.type != VAL_STRING) { fprintf(stderr, "INDEX_GET key must be string for map\n"); exit(1); }
-                    Value out;
-                    if (!map_get_copy(&container, idx.s ? idx.s : "", &out)) {
-                        /* missing -> nil */
-                        out = make_nil();
-                    }
-                    free_value(container);
-                    free_value(idx);
-                    push_value(vm, out);
-                } else {
-                    fprintf(stderr, "Runtime type error: INDEX_GET expects array or map\n");
-                    exit(1);
-                }
-                break;
-            }
-
-            case OP_INDEX_SET: {
-                Value v = pop_value(vm);
-                Value idx = pop_value(vm);
-                Value container = pop_value(vm);
-                if (container.type == VAL_ARRAY) {
-                    if (idx.type != VAL_INT) { fprintf(stderr, "INDEX_SET index must be int for array\n"); exit(1); }
-                    if (!array_set(&container, (int)idx.i, v)) {
-                        fprintf(stderr, "Runtime error: index out of range\n"); exit(1);
-                    }
-                    /* v moved into array */
-                    free_value(container);
-                    free_value(idx);
-                } else if (container.type == VAL_MAP) {
-                    if (idx.type != VAL_STRING) { fprintf(stderr, "INDEX_SET key must be string for map\n"); exit(1); }
-                    if (!map_set(&container, idx.s ? idx.s : "", v)) {
-                        fprintf(stderr, "Runtime error: map set failed\n"); exit(1);
-                    }
-                    free_value(container);
-                    free_value(idx);
-                } else {
-                    fprintf(stderr, "Runtime type error: INDEX_SET expects array or map\n");
-                    exit(1);
-                }
-                break;
-            }
-
-            case OP_LEN: {
-                Value a = pop_value(vm);
-                int len = 0;
-                if (a.type == VAL_STRING) {
-                    len = (int)(a.s ? (int)strlen(a.s) : 0);
-                } else if (a.type == VAL_ARRAY) {
-                    len = array_length(&a);
-                    if (len < 0) len = 0;
-                } else {
-                    fprintf(stderr, "Runtime type error: LEN expects array or string\n");
-                    exit(1);
-                }
-                free_value(a);
-                push_value(vm, make_int(len));
-                break;
-            }
-
-            case OP_ARR_PUSH: {
-                Value v = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: ARR_PUSH expects array\n");
-                    exit(1);
-                }
-                int n = array_push(&arr, v);
-                if (n < 0) {
-                    fprintf(stderr, "Runtime error: push failed (OOM?)\n");
-                    exit(1);
-                }
-                free_value(arr);
-                push_value(vm, make_int(n));
-                break;
-            }
-
-            case OP_ARR_POP: {
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: ARR_POP expects array\n");
-                    exit(1);
-                }
-                Value out;
-                if (!array_pop(&arr, &out)) {
-                    fprintf(stderr, "Runtime error: pop from empty array\n");
-                    exit(1);
-                }
-                free_value(arr);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_ARR_SET: {
-                Value v = pop_value(vm);
-                Value idx = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY || idx.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: ARR_SET expects (array, int, value)\n");
-                    exit(1);
-                }
-                if (!array_set(&arr, (int)idx.i, v)) {
-                    fprintf(stderr, "Runtime error: set index out of range\n");
-                    exit(1);
-                }
-                free_value(arr);
-                free_value(idx);
-                /* v already owned by array; push copy for return value */
-                push_value(vm, copy_value(&v));
-                free_value(v);
-                break;
-            }
-
-            case OP_ARR_INSERT: {
-                Value v = pop_value(vm);
-                Value idx = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY || idx.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: ARR_INSERT expects (array, int, value)\n");
-                    exit(1);
-                }
-                int n = array_insert(&arr, (int)idx.i, v);
-                if (n < 0) {
-                    fprintf(stderr, "Runtime error: insert failed (OOM?)\n");
-                    exit(1);
-                }
-                free_value(arr);
-                free_value(idx);
-                push_value(vm, make_int(n));
-                break;
-            }
-
-            case OP_ARR_REMOVE: {
-                Value idx = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY || idx.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: ARR_REMOVE expects (array, int)\n");
-                    exit(1);
-                }
-                Value out;
-                if (!array_remove(&arr, (int)idx.i, &out)) {
-                    fprintf(stderr, "Runtime error: remove index out of range\n");
-                    exit(1);
-                }
-                free_value(arr);
-                free_value(idx);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_SLICE: {
-                Value end = pop_value(vm);
-                Value start = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY || start.type != VAL_INT || end.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: SLICE expects (array, int, int)\n");
-                    exit(1);
-                }
-                Value out = array_slice(&arr, (int)start.i, (int)end.i);
-                free_value(arr);
-                free_value(start);
-                free_value(end);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_TO_NUMBER: {
-                Value v = pop_value(vm);
-                if (v.type == VAL_INT) {
-                    /* pass-through */
-                    Value out = make_int(v.i);
-                    free_value(v);
-                    push_value(vm, out);
-                } else if (v.type == VAL_STRING) {
-                    const char *s = v.s ? v.s : "";
-                    /* trim spaces */
-                    const char *p = s;
-                    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
-                    char *endp = NULL;
-                    long long parsed = strtoll(p, &endp, 10);
-                    /* skip trailing spaces */
-                    while (endp && (*endp == ' ' || *endp == '\t' || *endp == '\r' || *endp == '\n')) endp++;
-                    if (endp && *endp != '\0') {
-                        /* non-numeric suffix -> 0 */
-                        push_value(vm, make_int(0));
-                    } else {
-                        push_value(vm, make_int((int64_t)parsed));
-                    }
-                    free_value(v);
-                } else {
-                    /* nil, array, function -> 0 */
-                    free_value(v);
-                    push_value(vm, make_int(0));
-                }
-                break;
-            }
-
-            case OP_TO_STRING: {
-                Value v = pop_value(vm);
-                char *s = value_to_string_alloc(&v);
-                Value out = make_string(s ? s : "");
-                if (s) free(s);
-                free_value(v);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_SPLIT: {
-                Value sep = pop_value(vm);
-                Value str = pop_value(vm);
-                if (str.type != VAL_STRING || sep.type != VAL_STRING) {
-                    fprintf(stderr, "Runtime type error: SPLIT expects (string, string)\n");
-                    exit(1);
-                }
-                Value arr = string_split_to_array(str.s ? str.s : "", sep.s ? sep.s : "");
-                free_value(str);
-                free_value(sep);
-                push_value(vm, arr);
-                break;
-            }
-
-            case OP_JOIN: {
-                Value sep = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY || sep.type != VAL_STRING) {
-                    fprintf(stderr, "Runtime type error: JOIN expects (array, string)\n");
-                    exit(1);
-                }
-                char *s = array_join_with_sep(&arr, sep.s ? sep.s : "");
-                Value out = make_string(s ? s : "");
-                if (s) free(s);
-                free_value(arr);
-                free_value(sep);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_SUBSTR: {
-                Value lenv = pop_value(vm);
-                Value startv = pop_value(vm);
-                Value str = pop_value(vm);
-                if (str.type != VAL_STRING || startv.type != VAL_INT || lenv.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: SUBSTR expects (string, int, int)\n");
-                    exit(1);
-                }
-                char *s = string_substr(str.s ? str.s : "", (int)startv.i, (int)lenv.i);
-                Value out = make_string(s ? s : "");
-                if (s) free(s);
-                free_value(str);
-                free_value(startv);
-                free_value(lenv);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_FIND: {
-                Value needle = pop_value(vm);
-                Value hay = pop_value(vm);
-                if (hay.type != VAL_STRING || needle.type != VAL_STRING) {
-                    fprintf(stderr, "Runtime type error: FIND expects (string, string)\n");
-                    exit(1);
-                }
-                int idx = string_find(hay.s ? hay.s : "", needle.s ? needle.s : "");
-                free_value(hay);
-                free_value(needle);
-                push_value(vm, make_int(idx));
-                break;
-            }
-
-            case OP_CONTAINS: {
-                Value needle = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: CONTAINS expects (array, value)\n");
-                    exit(1);
-                }
-                int ok = array_contains(&arr, &needle);
-                free_value(arr);
-                free_value(needle);
-                push_value(vm, make_int(ok ? 1 : 0));
-                break;
-            }
-
-            case OP_INDEX_OF: {
-                Value needle = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: INDEX_OF expects (array, value)\n");
-                    exit(1);
-                }
-                int idx = array_index_of(&arr, &needle);
-                free_value(arr);
-                free_value(needle);
-                push_value(vm, make_int(idx));
-                break;
-            }
-
-            case OP_CLEAR: {
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: CLEAR expects array\n");
-                    exit(1);
-                }
-                array_clear(&arr);
-                free_value(arr);
-                push_value(vm, make_int(0));
-                break;
-            }
-
-            case OP_ENUMERATE: {
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: ENUMERATE expects array\n");
-                    exit(1);
-                }
-                int n = array_length(&arr);
-                if (n < 0) n = 0;
-                Value *pairs = (Value*)malloc(sizeof(Value) * n);
-                for (int i = 0; i < n; ++i) {
-                    Value elem;
-                    array_get_copy(&arr, i, &elem);
-                    Value kv_vals[2];
-                    kv_vals[0] = make_int(i);
-                    kv_vals[1] = elem;
-                    Value kv = make_array_from_values(kv_vals, 2);
-                    /* kv_vals[1] (elem) already moved, free temp copies: */
-                    free_value(kv_vals[0]);
-                    free_value(kv_vals[1]);
-                    pairs[i] = kv;
-                }
-                Value out = make_array_from_values(pairs, n);
-                for (int i = 0; i < n; ++i) free_value(pairs[i]);
-                free(pairs);
-                free_value(arr);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_ZIP: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_ARRAY || b.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: ZIP expects (array, array)\n");
-                    exit(1);
-                }
-                int na = array_length(&a);
-                int nb = array_length(&b);
-                int n = na < nb ? na : nb;
-                if (n < 0) n = 0;
-                Value *pairs = (Value*)malloc(sizeof(Value) * n);
-                for (int i = 0; i < n; ++i) {
-                    Value av, bv;
-                    array_get_copy(&a, i, &av);
-                    array_get_copy(&b, i, &bv);
-                    Value kv_vals[2];
-                    kv_vals[0] = av;
-                    kv_vals[1] = bv;
-                    Value kv = make_array_from_values(kv_vals, 2);
-                    free_value(kv_vals[0]);
-                    free_value(kv_vals[1]);
-                    pairs[i] = kv;
-                }
-                Value out = make_array_from_values(pairs, n);
-                for (int i = 0; i < n; ++i) free_value(pairs[i]);
-                free(pairs);
-                free_value(a);
-                free_value(b);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_MIN: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "MIN expects ints\n"); exit(1); }
-                push_value(vm, make_int(a.i < b.i ? a.i : b.i));
-                free_value(a); free_value(b);
-                break;
-            }
-
-            case OP_MAX: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "MAX expects ints\n"); exit(1); }
-                push_value(vm, make_int(a.i > b.i ? a.i : b.i));
-                free_value(a); free_value(b);
-                break;
-            }
-
-            case OP_CLAMP: {
-                Value hi = pop_value(vm);
-                Value lo = pop_value(vm);
-                Value x = pop_value(vm);
-                if (x.type != VAL_INT || lo.type != VAL_INT || hi.type != VAL_INT) { fprintf(stderr, "CLAMP expects ints\n"); exit(1); }
-                int64_t v = x.i;
-                if (v < lo.i) v = lo.i;
-                if (v > hi.i) v = hi.i;
-                push_value(vm, make_int(v));
-                free_value(x); free_value(lo); free_value(hi);
-                break;
-            }
-
-            case OP_ABS: {
-                Value x = pop_value(vm);
-                if (x.type != VAL_INT) { fprintf(stderr, "ABS expects int\n"); exit(1); }
-                int64_t v = x.i;
-                if (v < 0) v = -v;
-                push_value(vm, make_int(v));
-                free_value(x);
-                break;
-            }
-
-            case OP_POW: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "POW expects ints\n"); exit(1); }
-                /* simple integer pow */
-                int64_t base = a.i;
-                int64_t exp = b.i;
-                int64_t res = 1;
-                if (exp < 0) { res = 0; } else {
-                    while (exp > 0) {
-                        if (exp & 1) res *= base;
-                        base *= base;
-                        exp >>= 1;
-                    }
-                }
-                push_value(vm, make_int(res));
-                free_value(a); free_value(b);
-                break;
-            }
-
-            case OP_RANDOM_SEED: {
-                Value seed = pop_value(vm);
-                if (seed.type != VAL_INT) { fprintf(stderr, "RANDOM_SEED expects int\n"); exit(1); }
-                srand((unsigned int)seed.i);
-                free_value(seed);
-                push_value(vm, make_int(0));
-                break;
-            }
-
-            case OP_RANDOM_INT: {
-                Value hi = pop_value(vm);
-                Value lo = pop_value(vm);
-                if (lo.type != VAL_INT || hi.type != VAL_INT) { fprintf(stderr, "RANDOM_INT expects (int, int)\n"); exit(1); }
-                int64_t a = lo.i, b = hi.i;
-                if (b <= a) { push_value(vm, make_int((int64_t)a)); free_value(lo); free_value(hi); break; }
-                int64_t span = b - a;
-                int64_t r = (int64_t)(rand() % (span));
-                push_value(vm, make_int(a + r));
-                free_value(lo); free_value(hi);
-                break;
-            }
-
-            case OP_MAKE_MAP: {
-                int pairs = inst.operand;
-                if (pairs < 0) { fprintf(stderr, "MAKE_MAP invalid pair count\n"); exit(1); }
-                Value m = make_map_empty();
-                for (int i = 0; i < pairs; ++i) {
-                    Value val = pop_value(vm);
-                    Value key = pop_value(vm);
-                    if (key.type != VAL_STRING) { fprintf(stderr, "Map literal keys must be strings\n"); exit(1); }
-                    if (!map_set(&m, key.s ? key.s : "", val)) {
-                        fprintf(stderr, "Map literal set failed\n"); exit(1);
-                    }
-                    free_value(key);
-                    /* val ownership moved */
-                }
-                push_value(vm, m);
-                break;
-            }
-
-            case OP_KEYS: {
-                Value m = pop_value(vm);
-                if (m.type != VAL_MAP) { fprintf(stderr, "KEYS expects map\n"); exit(1); }
-                Value arr = map_keys_array(&m);
-                free_value(m);
-                push_value(vm, arr);
-                break;
-            }
-
-            case OP_VALUES: {
-                Value m = pop_value(vm);
-                if (m.type != VAL_MAP) { fprintf(stderr, "VALUES expects map\n"); exit(1); }
-                Value arr = map_values_array(&m);
-                free_value(m);
-                push_value(vm, arr);
-                break;
-            }
-
-            case OP_HAS_KEY: {
-                Value key = pop_value(vm);
-                Value m = pop_value(vm);
-                if (m.type != VAL_MAP || key.type != VAL_STRING) { fprintf(stderr, "HAS_KEY expects (map, string)\n"); exit(1); }
-                int ok = map_has(&m, key.s ? key.s : "");
-                free_value(m); free_value(key);
-                push_value(vm, make_int(ok ? 1 : 0));
-                break;
-            }
-
-            case OP_READ_FILE: {
-                Value path = pop_value(vm);
-                if (path.type != VAL_STRING) { fprintf(stderr, "READ_FILE expects string\n"); exit(1); }
-                const char *p = path.s ? path.s : "";
-                FILE *f = fopen(p, "rb");
-                if (!f) { free_value(path); push_value(vm, make_string("")); break; }
-                if (fseek(f, 0, SEEK_END) != 0) { fclose(f); free_value(path); push_value(vm, make_string("")); break; }
-                long sz = ftell(f);
-                if (sz < 0) { fclose(f); free_value(path); push_value(vm, make_string("")); break; }
-                rewind(f);
-                char *buf = (char*)malloc((size_t)sz + 1);
-                size_t n = buf ? fread(buf, 1, (size_t)sz, f) : 0;
-                fclose(f);
-                if (!buf) { free_value(path); push_value(vm, make_string("")); break; }
-                buf[n] = '\0';
-                Value out = make_string(buf);
-                free(buf);
-                free_value(path);
-                push_value(vm, out);
-                break;
-            }
-
-            case OP_WRITE_FILE: {
-                Value data = pop_value(vm);
-                Value path = pop_value(vm);
-                if (path.type != VAL_STRING || data.type != VAL_STRING) { fprintf(stderr, "WRITE_FILE expects (string, string)\n"); exit(1); }
-                const char *p = path.s ? path.s : "";
-                FILE *f = fopen(p, "wb");
-                int ok = 0;
-                if (f) {
-                    size_t len = data.s ? strlen(data.s) : 0;
-                    ok = (fwrite(data.s ? data.s : "", 1, len, f) == len);
-                    fclose(f);
-                }
-                free_value(path);
-                free_value(data);
-                push_value(vm, make_int(ok ? 1 : 0));
-                break;
-            }
-
-            case OP_LOAD_GLOBAL: {
-                int idx = inst.operand;
-                if (idx < 0 || idx >= VM_MAX_GLOBALS) {
-                    fprintf(stderr, "Runtime error: global index out of range\n");
-                    exit(1);
-                }
-                push_value(vm, copy_value(&vm->globals[idx]));
-                break;
-            }
-
-            case OP_STORE_GLOBAL: {
-                int idx = inst.operand;
-                if (idx < 0 || idx >= VM_MAX_GLOBALS) {
-                    fprintf(stderr, "Runtime error: global index out of range\n");
-                    exit(1);
-                }
-                Value v = pop_value(vm);
-                free_value(vm->globals[idx]);
-                vm->globals[idx] = v;
-                break;
-            }
-
-            case OP_MOD: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                if (a.type != VAL_INT || b.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: MOD expects ints, got %s and %s\n",
-                            value_type_name(a.type), value_type_name(b.type));
-                    exit(1);
-                }
-                if (b.i == 0) {
-                    fprintf(stderr, "Runtime error: modulo by zero\n");
-                    exit(1);
-                }
-                Value res = make_int(a.i % b.i);
-                free_value(a);
-                free_value(b);
-                push_value(vm, res);
-                break;
-            }
-
-            case OP_AND: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                int res = value_is_truthy(&a) && value_is_truthy(&b);
-                free_value(a);
-                free_value(b);
-                push_value(vm, make_int(res));
-                break;
-            }
-
-            case OP_OR: {
-                Value b = pop_value(vm);
-                Value a = pop_value(vm);
-                int res = value_is_truthy(&a) || value_is_truthy(&b);
-                free_value(a);
-                free_value(b);
-                push_value(vm, make_int(res));
-                break;
-            }
-
-            case OP_NOT: {
-                Value v = pop_value(vm);
-                int res = !value_is_truthy(&v);
-                free_value(v);
-                push_value(vm, make_int(res));
-                break;
-            }
-
+            #include "vm_case_nop.inc"
+            #include "vm_case_load_const.inc"
+            #include "vm_case_load_local.inc"
+            #include "vm_case_store_local.inc"
+            #include "vm_case_add.inc"
+            #include "vm_case_sub.inc"
+            #include "vm_case_mul.inc"
+            #include "vm_case_div.inc"
+            #include "vm_case_lt.inc"
+            #include "vm_case_lte.inc"
+            #include "vm_case_jump.inc"
+            #include "vm_case_gt.inc"
+            #include "vm_case_gte.inc"
+            #include "vm_case_eq.inc"
+            #include "vm_case_neq.inc"
+            #include "vm_case_jump_if_false.inc"
+            #include "vm_case_call.inc"
+            #include "vm_case_return.inc"
+            #include "vm_case_print.inc"
+            #include "vm_case_halt.inc"
+            #include "vm_case_pop.inc"
+            #include "vm_case_dup.inc"
+            #include "vm_case_swap.inc"
+            #include "vm_case_make_array.inc"
+            #include "vm_case_index_get.inc"
+            #include "vm_case_index_set.inc"
+            #include "vm_case_len.inc"
+            #include "vm_case_arr_push.inc"
+            #include "vm_case_arr_pop.inc"
+            #include "vm_case_arr_set.inc"
+            #include "vm_case_arr_insert.inc"
+            #include "vm_case_arr_remove.inc"
+            #include "vm_case_slice.inc"
+            #include "vm_case_to_number.inc"
+            #include "vm_case_to_string.inc"
+            #include "vm_case_split.inc"
+            #include "vm_case_join.inc"
+            #include "vm_case_substr.inc"
+            #include "vm_case_find.inc"
+            #include "vm_case_contains.inc"
+            #include "vm_case_index_of.inc"
+            #include "vm_case_clear.inc"
+            #include "vm_case_enumerate.inc"
+            #include "vm_case_zip.inc"
+            #include "vm_case_min.inc"
+            #include "vm_case_max.inc"
+            #include "vm_case_clamp.inc"
+            #include "vm_case_abs.inc"
+            #include "vm_case_pow.inc"
+            #include "vm_case_random_seed.inc"
+            #include "vm_case_random_int.inc"
+            #include "vm_case_make_map.inc"
+            #include "vm_case_keys.inc"
+            #include "vm_case_values.inc"
+            #include "vm_case_has_key.inc"
+            #include "vm_case_read_file.inc"
+            #include "vm_case_write_file.inc"
+            #include "vm_case_load_global.inc"
+            #include "vm_case_store_global.inc"
+            #include "vm_case_mod.inc"
+            #include "vm_case_and.inc"
+            #include "vm_case_or.inc"
+            #include "vm_case_not.inc"
             default:
                 if (!opcode_is_valid(inst.op)) {
                     fprintf(stderr, "Runtime error: unknown opcode %d (%s) at instruction %d\n",
