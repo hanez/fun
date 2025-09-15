@@ -11,7 +11,6 @@ case OP_INDEX_SET: {
         if (!array_set(&container, (int)idx.i, v)) {
             fprintf(stderr, "Runtime error: index out of range\n"); exit(1);
         }
-        /* v moved into array */
         free_value(container);
         free_value(idx);
     } else if (container.type == VAL_MAP) {

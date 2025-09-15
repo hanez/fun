@@ -18,7 +18,6 @@ case OP_INDEX_GET: {
         if (idx.type != VAL_STRING) { fprintf(stderr, "INDEX_GET key must be string for map\n"); exit(1); }
         Value out;
         if (!map_get_copy(&container, idx.s ? idx.s : "", &out)) {
-            /* missing -> nil */
             out = make_nil();
         }
         free_value(container);

@@ -4,6 +4,6 @@ case OP_POP: {
         exit(1);
     }
     Value v = pop_value(vm);
-    free_value(v); // free the popped value
+    free_value(v);
     break;
 }

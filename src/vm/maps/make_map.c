@@ -10,7 +10,6 @@ case OP_MAKE_MAP: {
             fprintf(stderr, "Map literal set failed\n"); exit(1);
         }
         free_value(key);
-        /* val ownership moved */
     }
     push_value(vm, m);
     break;
