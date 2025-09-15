@@ -6,9 +6,4 @@ out/
 src/*.o
 tmp/
 .aiignore
-*.txt
-fun
-fun_test
-test_opcodes
-test
-test.*
+dev.txt
