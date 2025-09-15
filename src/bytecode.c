@@ -82,6 +82,8 @@ static const char *opcode_name(OpCode op) {
         case OP_ARR_INSERT: return "ARR_INSERT";
         case OP_ARR_REMOVE: return "ARR_REMOVE";
         case OP_SLICE: return "SLICE";
+        case OP_TO_NUMBER: return "TO_NUMBER";
+        case OP_TO_STRING: return "TO_STRING";
         default: return "???";
     }
 }

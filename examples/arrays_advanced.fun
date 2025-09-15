@@ -1,3 +1,5 @@
+#!/usr/bin/env fun
+
 // Advanced Arrays Demo
 
 // Start with a basic array

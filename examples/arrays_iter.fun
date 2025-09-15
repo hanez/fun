@@ -1,3 +1,5 @@
+#!/usr/bin/env fun
+
 // for-in over an array literal
 for x in [1, 2, 3]
   print(x)                 // prints: 1, then 2, then 3

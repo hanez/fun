@@ -1,3 +1,5 @@
+#!/usr/bin/env fun
+
 // Arrays basics
 arr = [1, 2, 3]
 print(arr)                 // -> [1, 2, 3]

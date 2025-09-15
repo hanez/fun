@@ -1,4 +1,5 @@
 #!/usr/bin/env fun
+
 // Strings test: concatenation with variables and literals, functions returning strings
 
 print("=== strings test start ===")

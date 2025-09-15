@@ -57,7 +57,11 @@ typedef enum {
     OP_ARR_SET,       // pops value, index, array; pushes value
     OP_ARR_INSERT,    // pops value, index, array; pushes new length
     OP_ARR_REMOVE,    // pops index, array; pushes removed element
-    OP_SLICE          // pops end, start, array; pushes new array
+    OP_SLICE,         // pops end, start, array; pushes new array
+
+    // conversions
+    OP_TO_NUMBER,     // pops any; pushes int (parse strings)
+    OP_TO_STRING      // pops any; pushes string
 } OpCode;
 
 typedef struct {

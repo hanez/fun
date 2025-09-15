@@ -1,3 +1,5 @@
+#!/usr/bin/env fun
+
 // Nested loops: break and continue behavior
 
 // 1) Nested for range: inner continue on j==2, inner break on j==4, outer break on i==3

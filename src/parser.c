@@ -519,6 +519,22 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "to_number") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "to_number expects 1 argument"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after to_number arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TO_NUMBER, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "to_string") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "to_string expects 1 argument"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after to_string arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TO_STRING, 0);
+                free(name);
+                return 1;
+            }
 
             /* push function value first */
             if (local_idx >= 0) {
