@@ -1255,7 +1255,10 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             continue;
         }
 
-        /* for-sugar: for <ident> in range(a, b) */
+        /* for-sugar:
+         *   - for <ident> in range(a, b)
+         *   - for <ident> in <array-expr>
+         */
         if (starts_with(src, len, *pos, "for")) {
             *pos += 3;
             skip_spaces(src, len, pos);
@@ -1276,123 +1279,246 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             *pos += 2;
             skip_spaces(src, len, pos);
 
-            if (!starts_with(src, len, *pos, "range")) {
-                parser_fail(*pos, "Expected 'range' after 'in'");
+            if (starts_with(src, len, *pos, "range")) {
+                /* ===== range(a, b) variant ===== */
+                *pos += 5;
+                if (!consume_char(src, len, pos, '(')) {
+                    parser_fail(*pos, "Expected '(' after range");
+                    free(ivar);
+                    return;
+                }
+
+                /* Parse start expression */
+                if (!emit_expression(bc, src, len, pos)) {
+                    parser_fail(*pos, "Expected start expression in range");
+                    free(ivar);
+                    return;
+                }
+
+                /* Determine loop variable storage and store start value */
+                int lidx = local_find(ivar);
+                int gi = -1;
+                if (lidx < 0) {
+                    if (g_locals) lidx = local_add(ivar);
+                    else gi = sym_index(ivar);
+                }
+                if (lidx >= 0) {
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+                } else {
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                }
+
+                /* comma */
+                skip_spaces(src, len, pos);
+                if (*pos >= len || src[*pos] != ',') {
+                    parser_fail(*pos, "Expected ',' between range start and end");
+                    free(ivar);
+                    return;
+                }
+                (*pos)++; /* consume ',' */
+                skip_spaces(src, len, pos);
+
+                /* Parse end expression and store in a temp (local or global) */
+                if (!emit_expression(bc, src, len, pos)) {
+                    parser_fail(*pos, "Expected end expression in range");
+                    free(ivar);
+                    return;
+                }
+
+                char tmpname[64];
+                snprintf(tmpname, sizeof(tmpname), "__for_end_%d", g_temp_counter++);
+
+                int lend = -1, gend = -1;
+                if (g_locals) {
+                    lend = local_add(tmpname);
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, lend);
+                } else {
+                    gend = sym_index(tmpname);
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gend);
+                }
+
+                if (!consume_char(src, len, pos, ')')) {
+                    parser_fail(*pos, "Expected ')' after range arguments");
+                    free(ivar);
+                    return;
+                }
+
+                /* end of header line */
+                skip_to_eol(src, len, pos);
+
+                /* emit loop */
+                int loop_start = bc->instr_count;
+
+                /* condition: ivar < end_tmp */
+                if (lidx >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+                }
+                if (lend >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, lend);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gend);
+                }
+                bytecode_add_instruction(bc, OP_LT, 0);
+                int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+                /* parse body at increased indent (peek) */
+                int body_indent = 0;
+                size_t look_body = *pos;
+                if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
+                    parse_block(bc, src, len, pos, body_indent);
+                } else {
+                    /* empty body ok */
+                }
+
+                /* i = i + 1 */
+                int c1 = bytecode_add_constant(bc, make_int(1));
+                if (lidx >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+                    bytecode_add_instruction(bc, OP_ADD, 0);
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+                    bytecode_add_instruction(bc, OP_ADD, 0);
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                }
+
+                /* back edge and patch */
+                bytecode_add_instruction(bc, OP_JUMP, loop_start);
+                bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
                 free(ivar);
-                return;
-            }
-            *pos += 5;
-            if (!consume_char(src, len, pos, '(')) {
-                parser_fail(*pos, "Expected '(' after range");
+                continue;
+            } else {
+                /* ===== array iteration: for ivar in <expr> ===== */
+                /* Evaluate the iterable once and store in a temp */
+                if (!emit_expression(bc, src, len, pos)) {
+                    parser_fail(*pos, "Expected iterable expression after 'in'");
+                    free(ivar);
+                    return;
+                }
+                char arrname[64];
+                snprintf(arrname, sizeof(arrname), "__for_arr_%d", g_temp_counter++);
+                int larr = -1, garr = -1;
+                if (g_locals) {
+                    larr = local_add(arrname);
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, larr);
+                } else {
+                    garr = sym_index(arrname);
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, garr);
+                }
+
+                /* Compute length once: len(arr) -> store temp */
+                if (larr >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr);
+                }
+                bytecode_add_instruction(bc, OP_LEN, 0);
+                char lenname[64];
+                snprintf(lenname, sizeof(lenname), "__for_len_%d", g_temp_counter++);
+                int llen = -1, glen = -1;
+                if (g_locals) {
+                    llen = local_add(lenname);
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, llen);
+                } else {
+                    glen = sym_index(lenname);
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, glen);
+                }
+
+                /* Index temp: i = 0 */
+                int c0 = bytecode_add_constant(bc, make_int(0));
+                bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+                char iname[64];
+                snprintf(iname, sizeof(iname), "__for_i_%d", g_temp_counter++);
+                int li = -1, gi = -1;
+                if (g_locals) {
+                    li = local_add(iname);
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, li);
+                } else {
+                    gi = sym_index(iname);
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                }
+
+                /* end of header line */
+                skip_to_eol(src, len, pos);
+
+                /* loop start label */
+                int loop_start = bc->instr_count;
+
+                /* condition: i < len */
+                if (li >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, li);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+                }
+                if (llen >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, llen);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, glen);
+                }
+                bytecode_add_instruction(bc, OP_LT, 0);
+                int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+                /* element: ivar = arr[i] */
+                if (larr >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr);
+                }
+                if (li >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, li);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+                }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+
+                /* assign to ivar (local preferred) */
+                int ldst = local_find(ivar);
+                int gdst = -1;
+                if (ldst < 0) {
+                    if (g_locals) ldst = local_add(ivar);
+                    else gdst = sym_index(ivar);
+                }
+                if (ldst >= 0) {
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, ldst);
+                } else {
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gdst);
+                }
+
+                /* parse body at increased indent */
+                int body_indent = 0;
+                size_t look_body = *pos;
+                if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
+                    parse_block(bc, src, len, pos, body_indent);
+                } else {
+                    /* empty body ok */
+                }
+
+                /* i = i + 1 */
+                int c1 = bytecode_add_constant(bc, make_int(1));
+                if (li >= 0) {
+                    bytecode_add_instruction(bc, OP_LOAD_LOCAL, li);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+                    bytecode_add_instruction(bc, OP_ADD, 0);
+                    bytecode_add_instruction(bc, OP_STORE_LOCAL, li);
+                } else {
+                    bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+                    bytecode_add_instruction(bc, OP_ADD, 0);
+                    bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                }
+
+                /* back edge and patch */
+                bytecode_add_instruction(bc, OP_JUMP, loop_start);
+                bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
                 free(ivar);
-                return;
+                continue;
             }
-
-            /* Parse start expression */
-            if (!emit_expression(bc, src, len, pos)) {
-                parser_fail(*pos, "Expected start expression in range");
-                free(ivar);
-                return;
-            }
-
-            /* Determine loop variable storage and store start value */
-            int lidx = local_find(ivar);
-            int gi = -1;
-            if (lidx < 0) {
-                if (g_locals) lidx = local_add(ivar);
-                else gi = sym_index(ivar);
-            }
-            if (lidx >= 0) {
-                bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
-            } else {
-                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
-            }
-
-            /* comma */
-            skip_spaces(src, len, pos);
-            if (*pos >= len || src[*pos] != ',') {
-                parser_fail(*pos, "Expected ',' between range start and end");
-                free(ivar);
-                return;
-            }
-            (*pos)++; /* consume ',' */
-            skip_spaces(src, len, pos);
-
-            /* Parse end expression and store in a temp (local or global) */
-            size_t end_expr_pos_before = *pos;
-            if (!emit_expression(bc, src, len, pos)) {
-                parser_fail(*pos, "Expected end expression in range");
-                free(ivar);
-                return;
-            }
-
-            char tmpname[64];
-            snprintf(tmpname, sizeof(tmpname), "__for_end_%d", g_temp_counter++);
-
-            int lend = -1, gend = -1;
-            if (g_locals) {
-                lend = local_add(tmpname);
-                bytecode_add_instruction(bc, OP_STORE_LOCAL, lend);
-            } else {
-                gend = sym_index(tmpname);
-                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gend);
-            }
-
-            if (!consume_char(src, len, pos, ')')) {
-                parser_fail(*pos, "Expected ')' after range arguments");
-                free(ivar);
-                return;
-            }
-
-            /* end of header line */
-            skip_to_eol(src, len, pos);
-
-            /* emit loop */
-            int loop_start = bc->instr_count;
-
-            /* condition: ivar < end_tmp */
-            if (lidx >= 0) {
-                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
-            } else {
-                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
-            }
-            if (lend >= 0) {
-                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lend);
-            } else {
-                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gend);
-            }
-            bytecode_add_instruction(bc, OP_LT, 0);
-            int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-
-            /* parse body at increased indent (peek) */
-            int body_indent = 0;
-            size_t look_body = *pos;
-            if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
-                parse_block(bc, src, len, pos, body_indent);
-            } else {
-                /* empty body ok */
-            }
-
-            /* i = i + 1 */
-            int c1 = bytecode_add_constant(bc, make_int(1));
-            if (lidx >= 0) {
-                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
-                bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
-                bytecode_add_instruction(bc, OP_ADD, 0);
-                bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
-            } else {
-                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
-                bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
-                bytecode_add_instruction(bc, OP_ADD, 0);
-                bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
-            }
-
-            /* back edge and patch */
-            bytecode_add_instruction(bc, OP_JUMP, loop_start);
-            bytecode_set_operand(bc, jmp_false, bc->instr_count);
-
-            free(ivar);
-            continue;
         }
 
         if (starts_with(src, len, *pos, "if")) {
