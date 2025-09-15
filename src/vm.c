@@ -517,45 +517,56 @@ void vm_run(VM *vm, Bytecode *entry) {
 
             case OP_INDEX_GET: {
                 Value idx = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: INDEX_GET expects array\n");
+                Value container = pop_value(vm);
+                if (container.type == VAL_ARRAY) {
+                    if (idx.type != VAL_INT) { fprintf(stderr, "INDEX_GET index must be int for array\n"); exit(1); }
+                    Value elem;
+                    if (!array_get_copy(&container, (int)idx.i, &elem)) {
+                        fprintf(stderr, "Runtime error: index out of range\n"); exit(1);
+                    }
+                    free_value(container);
+                    free_value(idx);
+                    push_value(vm, elem);
+                } else if (container.type == VAL_MAP) {
+                    if (idx.type != VAL_STRING) { fprintf(stderr, "INDEX_GET key must be string for map\n"); exit(1); }
+                    Value out;
+                    if (!map_get_copy(&container, idx.s ? idx.s : "", &out)) {
+                        /* missing -> nil */
+                        out = make_nil();
+                    }
+                    free_value(container);
+                    free_value(idx);
+                    push_value(vm, out);
+                } else {
+                    fprintf(stderr, "Runtime type error: INDEX_GET expects array or map\n");
                     exit(1);
                 }
-                if (idx.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: INDEX_GET index must be int\n");
-                    exit(1);
-                }
-                Value elem;
-                if (!array_get_copy(&arr, (int)idx.i, &elem)) {
-                    fprintf(stderr, "Runtime error: index out of range\n");
-                    exit(1);
-                }
-                free_value(arr);
-                free_value(idx);
-                push_value(vm, elem);
                 break;
             }
 
             case OP_INDEX_SET: {
                 Value v = pop_value(vm);
                 Value idx = pop_value(vm);
-                Value arr = pop_value(vm);
-                if (arr.type != VAL_ARRAY) {
-                    fprintf(stderr, "Runtime type error: INDEX_SET expects array\n");
+                Value container = pop_value(vm);
+                if (container.type == VAL_ARRAY) {
+                    if (idx.type != VAL_INT) { fprintf(stderr, "INDEX_SET index must be int for array\n"); exit(1); }
+                    if (!array_set(&container, (int)idx.i, v)) {
+                        fprintf(stderr, "Runtime error: index out of range\n"); exit(1);
+                    }
+                    /* v moved into array */
+                    free_value(container);
+                    free_value(idx);
+                } else if (container.type == VAL_MAP) {
+                    if (idx.type != VAL_STRING) { fprintf(stderr, "INDEX_SET key must be string for map\n"); exit(1); }
+                    if (!map_set(&container, idx.s ? idx.s : "", v)) {
+                        fprintf(stderr, "Runtime error: map set failed\n"); exit(1);
+                    }
+                    free_value(container);
+                    free_value(idx);
+                } else {
+                    fprintf(stderr, "Runtime type error: INDEX_SET expects array or map\n");
                     exit(1);
                 }
-                if (idx.type != VAL_INT) {
-                    fprintf(stderr, "Runtime type error: INDEX_SET index must be int\n");
-                    exit(1);
-                }
-                if (!array_set(&arr, (int)idx.i, v)) {
-                    fprintf(stderr, "Runtime error: index out of range\n");
-                    exit(1);
-                }
-                /* arr modified in place; do not free v (ownership moved) */
-                free_value(arr);
-                free_value(idx);
                 break;
             }
 
@@ -967,6 +978,92 @@ void vm_run(VM *vm, Bytecode *entry) {
                 int64_t r = (int64_t)(rand() % (span));
                 push_value(vm, make_int(a + r));
                 free_value(lo); free_value(hi);
+                break;
+            }
+
+            case OP_MAKE_MAP: {
+                int pairs = inst.operand;
+                if (pairs < 0) { fprintf(stderr, "MAKE_MAP invalid pair count\n"); exit(1); }
+                Value m = make_map_empty();
+                for (int i = 0; i < pairs; ++i) {
+                    Value val = pop_value(vm);
+                    Value key = pop_value(vm);
+                    if (key.type != VAL_STRING) { fprintf(stderr, "Map literal keys must be strings\n"); exit(1); }
+                    if (!map_set(&m, key.s ? key.s : "", val)) {
+                        fprintf(stderr, "Map literal set failed\n"); exit(1);
+                    }
+                    free_value(key);
+                    /* val ownership moved */
+                }
+                push_value(vm, m);
+                break;
+            }
+
+            case OP_KEYS: {
+                Value m = pop_value(vm);
+                if (m.type != VAL_MAP) { fprintf(stderr, "KEYS expects map\n"); exit(1); }
+                Value arr = map_keys_array(&m);
+                free_value(m);
+                push_value(vm, arr);
+                break;
+            }
+
+            case OP_VALUES: {
+                Value m = pop_value(vm);
+                if (m.type != VAL_MAP) { fprintf(stderr, "VALUES expects map\n"); exit(1); }
+                Value arr = map_values_array(&m);
+                free_value(m);
+                push_value(vm, arr);
+                break;
+            }
+
+            case OP_HAS_KEY: {
+                Value key = pop_value(vm);
+                Value m = pop_value(vm);
+                if (m.type != VAL_MAP || key.type != VAL_STRING) { fprintf(stderr, "HAS_KEY expects (map, string)\n"); exit(1); }
+                int ok = map_has(&m, key.s ? key.s : "");
+                free_value(m); free_value(key);
+                push_value(vm, make_int(ok ? 1 : 0));
+                break;
+            }
+
+            case OP_READ_FILE: {
+                Value path = pop_value(vm);
+                if (path.type != VAL_STRING) { fprintf(stderr, "READ_FILE expects string\n"); exit(1); }
+                const char *p = path.s ? path.s : "";
+                FILE *f = fopen(p, "rb");
+                if (!f) { free_value(path); push_value(vm, make_string("")); break; }
+                if (fseek(f, 0, SEEK_END) != 0) { fclose(f); free_value(path); push_value(vm, make_string("")); break; }
+                long sz = ftell(f);
+                if (sz < 0) { fclose(f); free_value(path); push_value(vm, make_string("")); break; }
+                rewind(f);
+                char *buf = (char*)malloc((size_t)sz + 1);
+                size_t n = buf ? fread(buf, 1, (size_t)sz, f) : 0;
+                fclose(f);
+                if (!buf) { free_value(path); push_value(vm, make_string("")); break; }
+                buf[n] = '\0';
+                Value out = make_string(buf);
+                free(buf);
+                free_value(path);
+                push_value(vm, out);
+                break;
+            }
+
+            case OP_WRITE_FILE: {
+                Value data = pop_value(vm);
+                Value path = pop_value(vm);
+                if (path.type != VAL_STRING || data.type != VAL_STRING) { fprintf(stderr, "WRITE_FILE expects (string, string)\n"); exit(1); }
+                const char *p = path.s ? path.s : "";
+                FILE *f = fopen(p, "wb");
+                int ok = 0;
+                if (f) {
+                    size_t len = data.s ? strlen(data.s) : 0;
+                    ok = (fwrite(data.s ? data.s : "", 1, len, f) == len);
+                    fclose(f);
+                }
+                free_value(path);
+                free_value(data);
+                push_value(vm, make_int(ok ? 1 : 0));
                 break;
             }
 

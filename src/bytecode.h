@@ -85,7 +85,17 @@ typedef enum {
     OP_ABS,           // pops x; pushes |x|
     OP_POW,           // pops b, a; pushes a^b
     OP_RANDOM_SEED,   // pops seed; sets RNG seed; pushes nothing (we'll push 0)
-    OP_RANDOM_INT     // pops hi, lo; pushes random int in [lo, hi)
+    OP_RANDOM_INT,    // pops hi, lo; pushes random int in [lo, hi)
+
+    // maps
+    OP_MAKE_MAP,      // operand = pair count; pops 2*n (key,value)..., pushes map
+    OP_KEYS,          // pops map; pushes array of keys
+    OP_VALUES,        // pops map; pushes array of values
+    OP_HAS_KEY,       // pops key, map; pushes 1/0
+
+    // file I/O
+    OP_READ_FILE,     // pops path string; pushes content string (or "")
+    OP_WRITE_FILE     // pops data string, path string; pushes 1/0
 } OpCode;
 
 typedef struct {

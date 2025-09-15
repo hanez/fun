@@ -401,6 +401,37 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         return 1;
     }
 
+    /* map literal: { "key": expr, ... } */
+    skip_spaces(src, len, pos);
+    if (*pos < len && src[*pos] == '{') {
+        (*pos)++; /* '{' */
+        int pairs = 0;
+        skip_spaces(src, len, pos);
+        if (*pos < len && src[*pos] != '}') {
+            for (;;) {
+                /* key must be a string literal */
+                char *k = parse_string_literal_any_quote(src, len, pos);
+                if (!k) { parser_fail(*pos, "Expected string key in map literal"); return 0; }
+                int kci = bytecode_add_constant(bc, make_string(k));
+                free(k);
+                bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                skip_spaces(src, len, pos);
+                if (!consume_char(src, len, pos, ':')) { parser_fail(*pos, "Expected ':' after map key"); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected value expression in map literal"); return 0; }
+                pairs++;
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); continue; }
+                break;
+            }
+        }
+        if (!consume_char(src, len, pos, '}')) {
+            parser_fail(*pos, "Expected '}' to close map literal");
+            return 0;
+        }
+        bytecode_add_instruction(bc, OP_MAKE_MAP, pairs);
+        return 1;
+    }
+
     /* number */
     int ok = 0;
     size_t save = *pos;
@@ -535,6 +566,43 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "keys") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "keys expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_KEYS, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "values") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "values expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_VALUES, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "has") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "has expects (map, key)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "has expects (map, key)"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_HAS_KEY, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "read_file") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "read_file expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_READ_FILE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "write_file") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "write_file expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "write_file expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_WRITE_FILE, 0);
+                free(name);
+                return 1;
+            }
             /* string ops */
             if (strcmp(name, "split") == 0) {
                 (*pos)++; /* '(' */
@@ -613,6 +681,238 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "enumerate expects array"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after enumerate arg"); free(name); return 0; }
                 bytecode_add_instruction(bc, OP_ENUMERATE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "map") == 0) {
+                (*pos)++; /* '(' */
+                /* arr */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "map expects (array, function)"); free(name); return 0; }
+                /* store arr -> __map_arr */
+                char tarr[64]; snprintf(tarr, sizeof(tarr), "__map_arr_%d", g_temp_counter++);
+                int larr = -1, garr = -1;
+                if (g_locals) { larr = local_add(tarr); bytecode_add_instruction(bc, OP_STORE_LOCAL, larr); }
+                else { garr = sym_index(tarr); bytecode_add_instruction(bc, OP_STORE_GLOBAL, garr); }
+                /* func */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "map expects (array, function)"); free(name); return 0; }
+                char tfn[64]; snprintf(tfn, sizeof(tfn), "__map_fn_%d", g_temp_counter++);
+                int lfn = -1, gfn = -1;
+                if (g_locals) { lfn = local_add(tfn); bytecode_add_instruction(bc, OP_STORE_LOCAL, lfn); }
+                else { gfn = sym_index(tfn); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gfn); }
+                /* res array */
+                bytecode_add_instruction(bc, OP_MAKE_ARRAY, 0);
+                char tres[64]; snprintf(tres, sizeof(tres), "__map_res_%d", g_temp_counter++);
+                int lres = -1, gres = -1;
+                if (g_locals) { lres = local_add(tres); bytecode_add_instruction(bc, OP_STORE_LOCAL, lres); }
+                else { gres = sym_index(tres); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gres); }
+                /* i=0 */
+                int c0 = bytecode_add_constant(bc, make_int(0));
+                bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+                char ti[64]; snprintf(ti, sizeof(ti), "__map_i_%d", g_temp_counter++);
+                int li = -1, gi = -1;
+                if (g_locals) { li = local_add(ti); bytecode_add_instruction(bc, OP_STORE_LOCAL, li); }
+                else { gi = sym_index(ti); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi); }
+                /* loop start */
+                int loop_start = bc->instr_count;
+                /* i < len(arr) */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr); }
+                bytecode_add_instruction(bc, OP_LEN, 0);
+                bytecode_add_instruction(bc, OP_LT, 0);
+                int jf = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                /* elem = arr[i] */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr); bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr); bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                /* call fn(elem) */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lfn); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gfn); }
+                /* reorder: we need fn below arg -> push fn first then arg already on stack? We currently have elem on stack; push fn now results top=fn. We want top args then function; OP_CALL expects fn then pops args? Our OP_CALL pops function after args; earlier compile of calls: they push function then args then OP_CALL. So we need to swap: push fn, then swap to make function below arg */
+                bytecode_add_instruction(bc, OP_SWAP, 0);
+                bytecode_add_instruction(bc, OP_CALL, 1);
+                /* Append to result via indexed assignment: res[len(res)] = value */
+                /* Store computed value to a temp */
+                char tv[64]; snprintf(tv, sizeof(tv), "__map_v_%d", g_temp_counter++);
+                int lv = -1, gv = -1;
+                if (g_locals) { lv = local_add(tv); bytecode_add_instruction(bc, OP_STORE_LOCAL, lv); }
+                else { gv = sym_index(tv); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gv); }
+
+                /* Push array (for INDEX_SET we need stack: value, index, array; we will build array, index, then value) */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lres); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gres); }
+
+                /* Compute index = len(res) */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lres); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gres); }
+                bytecode_add_instruction(bc, OP_LEN, 0);
+
+                /* Load value back on top */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lv); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gv); }
+
+                /* Append via insert: res.insert(index=len(res), value) */
+                bytecode_add_instruction(bc, OP_ARR_INSERT, 0);
+                /* discard returned new length */
+                bytecode_add_instruction(bc, OP_POP, 0);
+
+                /* i++ */
+                int c1 = bytecode_add_constant(bc, make_int(1));
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); bytecode_add_instruction(bc, OP_LOAD_CONST, c1); bytecode_add_instruction(bc, OP_ADD, 0); bytecode_add_instruction(bc, OP_STORE_LOCAL, li); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); bytecode_add_instruction(bc, OP_LOAD_CONST, c1); bytecode_add_instruction(bc, OP_ADD, 0); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi); }
+                bytecode_add_instruction(bc, OP_JUMP, loop_start);
+                bytecode_set_operand(bc, jf, bc->instr_count);
+                /* result value on stack */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lres); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gres); }
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "filter") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "filter expects (array, function)"); free(name); return 0; }
+                char tarr[64]; snprintf(tarr, sizeof(tarr), "__flt_arr_%d", g_temp_counter++);
+                int larr = -1, garr = -1;
+                if (g_locals) { larr = local_add(tarr); bytecode_add_instruction(bc, OP_STORE_LOCAL, larr); }
+                else { garr = sym_index(tarr); bytecode_add_instruction(bc, OP_STORE_GLOBAL, garr); }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "filter expects (array, function)"); free(name); return 0; }
+                char tfn[64]; snprintf(tfn, sizeof(tfn), "__flt_fn_%d", g_temp_counter++);
+                int lfn = -1, gfn = -1;
+                if (g_locals) { lfn = local_add(tfn); bytecode_add_instruction(bc, OP_STORE_LOCAL, lfn); }
+                else { gfn = sym_index(tfn); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gfn); }
+                bytecode_add_instruction(bc, OP_MAKE_ARRAY, 0);
+                char tres[64]; snprintf(tres, sizeof(tres), "__flt_res_%d", g_temp_counter++);
+                int lres = -1, gres = -1;
+                if (g_locals) { lres = local_add(tres); bytecode_add_instruction(bc, OP_STORE_LOCAL, lres); }
+                else { gres = sym_index(tres); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gres); }
+                int c0 = bytecode_add_constant(bc, make_int(0));
+                bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+                char ti[64]; snprintf(ti, sizeof(ti), "__flt_i_%d", g_temp_counter++);
+                int li = -1, gi = -1;
+                if (g_locals) { li = local_add(ti); bytecode_add_instruction(bc, OP_STORE_LOCAL, li); }
+                else { gi = sym_index(ti); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi); }
+                int loop_start = bc->instr_count;
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr); }
+                bytecode_add_instruction(bc, OP_LEN, 0);
+                bytecode_add_instruction(bc, OP_LT, 0);
+                int jf = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr); bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr); bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lfn); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gfn); }
+                bytecode_add_instruction(bc, OP_SWAP, 0);
+                bytecode_add_instruction(bc, OP_CALL, 1);
+                /* if truthy then push elem to res */
+                int jskip = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                /* Append element to result: res[len(res)] = elem */
+                /* Reload element into a temp */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr); bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr); bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+
+                char tvf[64]; snprintf(tvf, sizeof(tvf), "__flt_v_%d", g_temp_counter++);
+                int lvf = -1, gvf = -1;
+                if (g_locals) { lvf = local_add(tvf); bytecode_add_instruction(bc, OP_STORE_LOCAL, lvf); }
+                else { gvf = sym_index(tvf); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gvf); }
+
+                /* Push array */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lres); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gres); }
+
+                /* index = len(res) */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lres); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gres); }
+                bytecode_add_instruction(bc, OP_LEN, 0);
+
+                /* value */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lvf); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gvf); }
+
+                /* Append via insert: res.insert(index=len(res), value) */
+                bytecode_add_instruction(bc, OP_ARR_INSERT, 0);
+                /* discard returned new length */
+                bytecode_add_instruction(bc, OP_POP, 0);
+
+                int c1 = bytecode_add_constant(bc, make_int(1));
+                /* patch skip over append */
+                bytecode_set_operand(bc, jskip, bc->instr_count);
+                /* i++ */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); bytecode_add_instruction(bc, OP_LOAD_CONST, c1); bytecode_add_instruction(bc, OP_ADD, 0); bytecode_add_instruction(bc, OP_STORE_LOCAL, li); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); bytecode_add_instruction(bc, OP_LOAD_CONST, c1); bytecode_add_instruction(bc, OP_ADD, 0); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi); }
+                bytecode_add_instruction(bc, OP_JUMP, loop_start);
+                bytecode_set_operand(bc, jf, bc->instr_count);
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lres); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gres); }
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "reduce") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "reduce expects (array, init, function)"); free(name); return 0; }
+                char tarr[64]; snprintf(tarr, sizeof(tarr), "__red_arr_%d", g_temp_counter++);
+                int larr = -1, garr = -1;
+                if (g_locals) { larr = local_add(tarr); bytecode_add_instruction(bc, OP_STORE_LOCAL, larr); }
+                else { garr = sym_index(tarr); bytecode_add_instruction(bc, OP_STORE_GLOBAL, garr); }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "reduce expects (array, init, function)"); free(name); return 0; }
+                char tacc[64]; snprintf(tacc, sizeof(tacc), "__red_acc_%d", g_temp_counter++);
+                int lacc = -1, gacc = -1;
+                if (g_locals) { lacc = local_add(tacc); bytecode_add_instruction(bc, OP_STORE_LOCAL, lacc); }
+                else { gacc = sym_index(tacc); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gacc); }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "reduce expects (array, init, function)"); free(name); return 0; }
+                char tfn[64]; snprintf(tfn, sizeof(tfn), "__red_fn_%d", g_temp_counter++);
+                int lfn = -1, gfn = -1;
+                if (g_locals) { lfn = local_add(tfn); bytecode_add_instruction(bc, OP_STORE_LOCAL, lfn); }
+                else { gfn = sym_index(tfn); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gfn); }
+                /* loop */
+                int c0 = bytecode_add_constant(bc, make_int(0));
+                bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+                char ti[64]; snprintf(ti, sizeof(ti), "__red_i_%d", g_temp_counter++);
+                int li = -1, gi = -1;
+                if (g_locals) { li = local_add(ti); bytecode_add_instruction(bc, OP_STORE_LOCAL, li); }
+                else { gi = sym_index(ti); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi); }
+                int loop_start = bc->instr_count;
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr); }
+                bytecode_add_instruction(bc, OP_LEN, 0);
+                bytecode_add_instruction(bc, OP_LT, 0);
+                int jf = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                /* elem */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, larr); bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, garr); bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); }
+                bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+
+                /* Store elem to a temp so we can build stack as: fn, acc, elem */
+                char telem[64]; snprintf(telem, sizeof(telem), "__red_elem_%d", g_temp_counter++);
+                int lelem = -1, gelem = -1;
+                if (g_locals) { lelem = local_add(telem); bytecode_add_instruction(bc, OP_STORE_LOCAL, lelem); }
+                else { gelem = sym_index(telem); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gelem); }
+
+                /* push function */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lfn); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gfn); }
+
+                /* push accumulator (arg1) */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lacc); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gacc); }
+
+                /* push element (arg2) */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lelem); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gelem); }
+
+                /* call fn(acc, elem) -> result */
+                bytecode_add_instruction(bc, OP_CALL, 2);
+                /* store to acc */
+                if (g_locals) { bytecode_add_instruction(bc, OP_STORE_LOCAL, lacc); }
+                else { bytecode_add_instruction(bc, OP_STORE_GLOBAL, gacc); }
+                int c1 = bytecode_add_constant(bc, make_int(1));
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, li); bytecode_add_instruction(bc, OP_LOAD_CONST, c1); bytecode_add_instruction(bc, OP_ADD, 0); bytecode_add_instruction(bc, OP_STORE_LOCAL, li); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi); bytecode_add_instruction(bc, OP_LOAD_CONST, c1); bytecode_add_instruction(bc, OP_ADD, 0); bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi); }
+                bytecode_add_instruction(bc, OP_JUMP, loop_start);
+                bytecode_set_operand(bc, jf, bc->instr_count);
+                /* result = acc on stack */
+                if (g_locals) { bytecode_add_instruction(bc, OP_LOAD_LOCAL, lacc); }
+                else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gacc); }
                 free(name);
                 return 1;
             }

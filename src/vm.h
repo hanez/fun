@@ -21,7 +21,9 @@ static const char *opcode_names[] = {
     "SPLIT","JOIN","SUBSTR","FIND",
     "CONTAINS","INDEX_OF","CLEAR",
     "ENUMERATE","ZIP",
-    "MIN","MAX","CLAMP","ABS","POW","RANDOM_SEED","RANDOM_INT"
+    "MIN","MAX","CLAMP","ABS","POW","RANDOM_SEED","RANDOM_INT",
+    "MAKE_MAP","KEYS","VALUES","HAS_KEY",
+    "READ_FILE","WRITE_FILE"
 };
 
 typedef struct {
@@ -62,7 +64,7 @@ void vm_dump_globals(VM *vm);
 void vm_run(VM *vm, Bytecode *entry);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_RANDOM_INT;  // all current opcodes
+    return op >= OP_NOP && op <= OP_WRITE_FILE;  // all current opcodes
 }
 
 #endif

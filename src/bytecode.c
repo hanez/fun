@@ -100,6 +100,12 @@ static const char *opcode_name(OpCode op) {
         case OP_POW: return "POW";
         case OP_RANDOM_SEED: return "RANDOM_SEED";
         case OP_RANDOM_INT: return "RANDOM_INT";
+        case OP_MAKE_MAP: return "MAKE_MAP";
+        case OP_KEYS: return "KEYS";
+        case OP_VALUES: return "VALUES";
+        case OP_HAS_KEY: return "HAS_KEY";
+        case OP_READ_FILE: return "READ_FILE";
+        case OP_WRITE_FILE: return "WRITE_FILE";
         default: return "???";
     }
 }
