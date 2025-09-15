@@ -2,6 +2,10 @@ case OP_INDEX_SET: {
     Value v = pop_value(vm);
     Value idx = pop_value(vm);
     Value container = pop_value(vm);
+#ifdef FUN_DEBUG
+    fprintf(stderr, "DEBUG INDEX_SET: container.type=%d idx.type=%d value.type=%d\n",
+            container.type, idx.type, v.type);
+#endif
     if (container.type == VAL_ARRAY) {
         if (idx.type != VAL_INT) { fprintf(stderr, "INDEX_SET index must be int for array\n"); exit(1); }
         if (!array_set(&container, (int)idx.i, v)) {

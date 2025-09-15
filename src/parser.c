@@ -852,9 +852,11 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             printf("compile: CALL %s with %d arg(s)\n", name, argc);
 #endif
             bytecode_add_instruction(bc, OP_CALL, argc);
-            /* postfix indexing or slice */
+            /* postfix indexing, slice, and dot access/method calls */
             for (;;) {
                 skip_spaces(src, len, pos);
+
+                /* index/slice */
                 if (*pos < len && src[*pos] == '[') {
                     (*pos)++;
                     if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); free(name); return 0; }
@@ -877,6 +879,20 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         continue;
                     }
                 }
+
+                /* dot property access: obj.field -> obj["field"] */
+                if (*pos < len && src[*pos] == '.') {
+                    (*pos)++; /* '.' */
+                    skip_spaces(src, len, pos);
+                    char *mname = NULL;
+                    if (!read_identifier_into(src, len, pos, &mname)) { parser_fail(*pos, "Expected identifier after '.'"); free(name); return 0; }
+                    int kci = bytecode_add_constant(bc, make_string(mname));
+                    free(mname);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
+
                 break;
             }
             free(name);
@@ -888,9 +904,11 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 int gi = sym_index(name);
                 bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
             }
-            /* postfix indexing or slice */
+            /* postfix indexing, slice, and dot access/method calls */
             for (;;) {
                 skip_spaces(src, len, pos);
+
+                /* index/slice */
                 if (*pos < len && src[*pos] == '[') {
                     (*pos)++;
                     if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); free(name); return 0; }
@@ -913,6 +931,20 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         continue;
                     }
                 }
+
+                /* dot property access: obj.field -> obj["field"] */
+                if (*pos < len && src[*pos] == '.') {
+                    (*pos)++;
+                    skip_spaces(src, len, pos);
+                    char *mname = NULL;
+                    if (!read_identifier_into(src, len, pos, &mname)) { parser_fail(*pos, "Expected identifier after '.'"); free(name); return 0; }
+                    int kci = bytecode_add_constant(bc, make_string(mname));
+                    free(mname);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
+
                 break;
             }
             free(name);
@@ -1403,6 +1435,59 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         int lidx = local_find(name);
         int gi = (lidx < 0) ? sym_index(name) : -1;
         skip_spaces(src, len, &local_pos);
+
+        /* object field assignment: name.field = expr (only if '=' follows) */
+        if (local_pos < len && src[local_pos] == '.') {
+            size_t stmt_start = *pos;       /* for expression fallback */
+            size_t look = local_pos + 1;    /* point after '.' */
+            skip_spaces(src, len, &look);
+            char *fname = NULL;
+            if (!read_identifier_into(src, len, &look, &fname)) {
+                parser_fail(look, "Expected field name after '.'");
+                free(name);
+                return;
+            }
+            skip_spaces(src, len, &look);
+            if (look >= len || src[look] != '=') {
+                /* Not an assignment: treat as expression statement (e.g., obj.method(...)) */
+                free(fname);
+                free(name);
+                size_t expr_pos = stmt_start;
+                if (emit_expression(bc, src, len, &expr_pos)) {
+                    bytecode_add_instruction(bc, OP_POP, 0);
+                }
+                *pos = expr_pos;
+                skip_to_eol(src, len, pos);
+                return;
+            }
+
+            /* Confirmed assignment: emit container, key, value, then INDEX_SET */
+            /* Load container variable */
+            if (lidx >= 0) {
+                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+            } else {
+                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+            }
+            /* Push key */
+            int kci = bytecode_add_constant(bc, make_string(fname));
+            free(fname);
+            bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+
+            /* Advance local_pos to after '=' and parse value expression */
+            local_pos = look + 1; /* skip '=' */
+            if (!emit_expression(bc, src, len, &local_pos)) {
+                parser_fail(local_pos, "Expected expression after '='");
+                free(name);
+                return;
+            }
+            /* perform set: pops value, key, container (in that order) */
+            bytecode_add_instruction(bc, OP_INDEX_SET, 0);
+
+            free(name);
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
 
         /* array element assignment: name[expr] = expr */
         if (local_pos < len && src[local_pos] == '[') {

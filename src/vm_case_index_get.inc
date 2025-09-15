@@ -1,6 +1,10 @@
 case OP_INDEX_GET: {
     Value idx = pop_value(vm);
     Value container = pop_value(vm);
+#ifdef FUN_DEBUG
+    fprintf(stderr, "DEBUG INDEX_GET: container.type=%d idx.type=%d\n",
+            container.type, idx.type);
+#endif
     if (container.type == VAL_ARRAY) {
         if (idx.type != VAL_INT) { fprintf(stderr, "INDEX_GET index must be int for array\n"); exit(1); }
         Value elem;

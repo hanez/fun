@@ -5,6 +5,9 @@ case OP_STORE_GLOBAL: {
         exit(1);
     }
     Value v = pop_value(vm);
+#ifdef FUN_DEBUG
+    fprintf(stderr, "DEBUG STORE_GLOBAL[%d]: new.type=%d\n", idx, v.type);
+#endif
     free_value(vm->globals[idx]);
     vm->globals[idx] = v;
     break;
