@@ -1736,6 +1736,13 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
         }
 
         /* at same indent -> parse statement */
+        /* Insert a line marker for better runtime error reporting */
+        {
+            int stmt_line = 1, stmt_col = 1;
+            calc_line_col(src, len, line_start, &stmt_line, &stmt_col);
+            bytecode_add_instruction(bc, OP_LINE, stmt_line);
+        }
+
         if (starts_with(src, len, *pos, "fun")) {
             /* parse header: fun name(arg, ...) */
             *pos += 3;

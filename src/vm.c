@@ -16,6 +16,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
+
+/* Track the currently running VM to annotate error messages */
+static VM *g_active_vm = NULL;
+
+/* fprintf wrapper that appends source line info for stderr messages */
+static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
+    int written = vfprintf(stream, fmt, ap);
+    if (stream == stderr && g_active_vm && g_active_vm->current_line > 0) {
+        /* If original message didn't end with newline, add a space first */
+        if (written > 0) {
+            /* best-effort: do not attempt to inspect fmt string fully; just append line info */
+        }
+        fprintf(stream == stderr ? stderr : stream, " (line %d)\n", g_active_vm->current_line);
+    }
+    return written;
+}
+
+static int fun_vm_fprintf(FILE *stream, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int r = fun_vm_vfprintf(stream, fmt, ap);
+    va_end(ap);
+    return r;
+}
+
+/* Redirect fprintf within this translation unit so opcode handlers use our wrapper */
+#define fprintf fun_vm_fprintf
 
 /*
 Opcode case include index (vm_case_*.inc):
@@ -178,6 +206,8 @@ void vm_print_output(VM *vm) {
 void vm_run(VM *vm, Bytecode *entry) {
     /* reset instruction count for this run */
     vm->instr_count = 0;
+    vm->current_line = 1;
+    g_active_vm = vm;
 
     /* start with entry frame (no args) */
     vm_push_frame(vm, entry, 0, NULL);
@@ -266,6 +296,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/strings/substr.c"
 
             #include "vm/len.c"
+            #include "vm/line.c"
             #include "vm/print.c"
             #include "vm/to_number.c"
             #include "vm/to_string.c"
@@ -283,4 +314,5 @@ void vm_run(VM *vm, Bytecode *entry) {
                 break;
         }
     }
+    g_active_vm = NULL;
 }

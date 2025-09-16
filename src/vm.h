@@ -32,6 +32,7 @@ static const char *opcode_names[] = {
     "LOAD_GLOBAL","STORE_GLOBAL","ADD","SUB","MUL","DIV",
     "LT","LTE","GT","GTE","EQ","NEQ","POP","JUMP",
     "JUMP_IF_FALSE","CALL","RETURN","PRINT","HALT",
+    "LINE",
     "MOD","AND","OR","NOT","DUP","SWAP",
     "MAKE_ARRAY","INDEX_GET","INDEX_SET",
     "LEN","PUSH","APOP","SET","INSERT","REMOVE","SLICE",
@@ -63,6 +64,8 @@ typedef struct {
     int output_count;
 
     long long instr_count; // executed instructions in the last vm_run
+
+    int current_line; // last executed source line (debug)
 } VM;
 
 // initialize VM (zero state)

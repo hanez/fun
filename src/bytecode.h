@@ -46,6 +46,8 @@ typedef enum {
     OP_PRINT,
     OP_HALT,
 
+    OP_LINE,         // operand = source line number (debug marker)
+
     // add after existing opcodes
     OP_MOD,          // a % b
     OP_AND,      // logical AND

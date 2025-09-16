@@ -12,9 +12,9 @@
 // Objects as maps: nested fields, methods with explicit self
 
 // A method to move a 2D point by dx, dy
-fun move(self, dx, dy)
-  self["x"] = self["x"] + dx
-  self["y"] = self["y"] + dy
+fun move(p, x, y)
+  p["x"] = p["x"] + x
+  p["y"] = p["y"] + y
   return 0
 
 // Create a point directly and inspect fields
