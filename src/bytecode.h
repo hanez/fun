@@ -76,6 +76,7 @@ typedef enum {
     OP_TO_STRING,     // pops any; pushes string
     OP_TYPEOF,        // pops any; pushes string name of type
     OP_UCLAMP,        // pops number; pushes number masked to N bits (operand = bits)
+    OP_SCLAMP,        // pops number; pushes number clamped to signed N-bit range (operand = bits)
 
     // string ops
     OP_SPLIT,         // pops sep, string; pushes array of strings

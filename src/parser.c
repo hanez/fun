@@ -1454,9 +1454,13 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             return;
         }
 
-        /* typed declarations: number|string|boolean|nil|uint8|uint16|uint32|uint64 <ident> (= expr)? */
+        /* typed declarations:
+           number|string|boolean|nil|uint8|uint16|uint32|uint64|int8|int16|int32|int64 <ident> (= expr)?
+           Note: 'number' maps to unsigned 64-bit here.
+         */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0
-            || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0) {
+            || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0
+            || strcmp(name, "int8") == 0  || strcmp(name, "int16") == 0  || strcmp(name, "int32") == 0  || strcmp(name, "int64") == 0) {
             int is_number  = (strcmp(name, "number") == 0);
             int is_string  = (strcmp(name, "string") == 0);
             int is_boolean = (strcmp(name, "boolean") == 0);
@@ -1465,7 +1469,15 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             int is_u16     = (strcmp(name, "uint16") == 0);
             int is_u32     = (strcmp(name, "uint32") == 0);
             int is_u64     = (strcmp(name, "uint64") == 0) || is_number; /* number maps to uint64 */
-            int decl_bits  = is_u8 ? 8 : is_u16 ? 16 : is_u32 ? 32 : is_u64 ? 64 : 0; /* 0 for non-integer types */
+            int is_s8      = (strcmp(name, "int8")   == 0);
+            int is_s16     = (strcmp(name, "int16")  == 0);
+            int is_s32     = (strcmp(name, "int32")  == 0);
+            int is_s64     = (strcmp(name, "int64")  == 0);
+            int decl_bits  = is_u8 ? 8 : is_u16 ? 16 : is_u32 ? 32 : is_u64 ? 64
+                            : is_s8 ? 8 : is_s16 ? 16 : is_s32 ? 32 : is_s64 ? 64 : 0;
+            int decl_signed = (is_s8 || is_s16 || is_s32 || is_s64) ? 1 : 0;
+            /* store decl bits with sign encoded: negative means signed */
+            if (decl_signed) decl_bits = -decl_bits;
             free(name);
 
             /* read variable name */
@@ -1484,7 +1496,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 if (existing >= 0) lidx = existing;
                 else lidx = local_add(varname);
                 if (lidx >= 0) {
-                    g_locals->types[lidx] = decl_bits; /* record declared bits (0 for non-integer types) */
+                    g_locals->types[lidx] = decl_bits; /* negative = signed, positive = unsigned width, 0 = non-integer */
                 }
             } else {
                 gi = sym_index(varname);
@@ -1502,8 +1514,9 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     return;
                 }
                 /* clamp if integer type was declared */
-                if (decl_bits > 0) {
-                    bytecode_add_instruction(bc, OP_UCLAMP, decl_bits);
+                int abs_bits = decl_bits < 0 ? -decl_bits : decl_bits;
+                if (abs_bits > 0) {
+                    bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
                 }
                 if (lidx >= 0) {
                     bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
@@ -1517,14 +1530,15 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     ci = bytecode_add_constant(bc, make_string(""));
                 } else if (is_nil) {
                     ci = bytecode_add_constant(bc, make_nil());
-                } else if (is_number || is_boolean || decl_bits > 0) {
+                } else if (is_number || is_boolean || (decl_bits != 0)) {
                     /* integers/booleans default to 0 */
                     ci = bytecode_add_constant(bc, make_int(0));
                 }
                 if (ci >= 0) {
                     bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                    if (decl_bits > 0) {
-                        bytecode_add_instruction(bc, OP_UCLAMP, decl_bits);
+                    int abs_bits2 = decl_bits < 0 ? -decl_bits : decl_bits;
+                    if (abs_bits2 > 0) {
+                        bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits2);
                     }
                     if (lidx >= 0) {
                         bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
@@ -1699,8 +1713,9 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 } else if (gi >= 0) {
                     decl_bits = G.types[gi];
                 }
-                if (decl_bits > 0) {
-                    bytecode_add_instruction(bc, OP_UCLAMP, decl_bits);
+                int abs_bits = decl_bits < 0 ? -decl_bits : decl_bits;
+                if (abs_bits > 0) {
+                    bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
                 }
                 if (lidx >= 0) {
                     bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
