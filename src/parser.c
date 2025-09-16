@@ -1293,8 +1293,51 @@ static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *po
 
 /* line/indent utilities */
 static void skip_to_eol(const char *src, size_t len, size_t *pos) {
-    while (*pos < len && src[*pos] != '\n') (*pos)++;
-    if (*pos < len && src[*pos] == '\n') (*pos)++;
+    /* Strict mode: only allow trailing spaces and comments until end-of-line. */
+    size_t p = *pos;
+
+    for (;;) {
+        /* skip spaces */
+        while (p < len && src[p] == ' ') p++;
+
+        if (p >= len) { *pos = p; return; }
+        if (src[p] == '\n') { /* end of line reached */
+            *pos = p + 1;
+            return;
+        }
+
+        /* line or block comments allowed */
+        if (p + 1 < len && src[p] == '/' && src[p + 1] == '/') {
+            /* consume rest of line */
+            while (p < len && src[p] != '\n') p++;
+            if (p < len && src[p] == '\n') p++;
+            *pos = p;
+            return;
+        }
+
+        if (p + 1 < len && src[p] == '/' && src[p + 1] == '*') {
+            /* consume block comment, then loop again for spaces till EOL */
+            p += 2;
+            while (p + 1 < len && !(src[p] == '*' && src[p + 1] == '/')) {
+                /* allow newlines inside block comments as well */
+                p++;
+            }
+            if (p + 1 < len) {
+                p += 2; /* consume closing *\/ */
+                /* continue loop to allow spaces and then newline or another comment */
+                continue;
+            } else {
+                parser_fail(p, "Unterminated block comment at end of file");
+                *pos = p;
+                return;
+            }
+        }
+
+        /* Any other character here is unexpected trailing garbage */
+        parser_fail(p, "Unexpected trailing characters at end of line");
+        *pos = p;
+        return;
+    }
 }
 
 static int read_line_start(const char *src, size_t len, size_t *pos, int *out_indent) {
@@ -1408,11 +1451,12 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             return;
         }
 
-        /* typed declarations: number|string|boolean <ident> (= expr)? */
-        if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0) {
-            int is_number = (strcmp(name, "number") == 0);
-            int is_string = (strcmp(name, "string") == 0);
+        /* typed declarations: number|string|boolean|nil <ident> (= expr)? */
+        if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0) {
+            int is_number  = (strcmp(name, "number") == 0);
+            int is_string  = (strcmp(name, "string") == 0);
             int is_boolean = (strcmp(name, "boolean") == 0);
+            int is_nil     = (strcmp(name, "nil") == 0);
             free(name);
 
             /* read variable name */
@@ -1451,9 +1495,11 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 /* default initialize if no '=' given */
                 int ci = -1;
                 if (is_number || is_boolean) {
-                    ci = bytecode_add_constant(bc, make_int(is_boolean ? 0 : 0));
+                    ci = bytecode_add_constant(bc, make_int(0));
                 } else if (is_string) {
                     ci = bytecode_add_constant(bc, make_string(""));
+                } else if (is_nil) {
+                    ci = bytecode_add_constant(bc, make_nil());
                 }
                 if (ci >= 0) {
                     bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
@@ -1643,9 +1689,8 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             skip_to_eol(src, len, pos);
             return;
         } else {
-            /* bare identifier line */
-            *pos = local_pos;
-            skip_to_eol(src, len, pos);
+            /* invalid statement: identifier not followed by assignment or call */
+            parser_fail(local_pos, "Expected assignment '=' or call '(...)' after identifier");
             return;
         }
     }

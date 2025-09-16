@@ -15,10 +15,10 @@ number n = 10
 print(n)
 
 string s = "Hello,\nworld!"
-print(s)
+  print(s)
  
 fun foo()
-  //print("Have fun!")
+  print("Have fun!")
   print("Running foo()... forever.")
 
 foo()
