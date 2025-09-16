@@ -8,7 +8,6 @@
  */
 
 #include "value.h"
-#include <string.h>
 
 /* array utilities */
 

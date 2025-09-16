@@ -12,8 +12,6 @@
 #include <string.h>
 #include <ctype.h>
 #include "parser.h"
-#include "value.h"
-#include "vm.h"
 
 static char *read_file_all(const char *path, size_t *out_len) {
     FILE *f = fopen(path, "rb");

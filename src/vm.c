@@ -7,18 +7,15 @@
  * https://opensource.org/license/isc-license-txt
  */
 
+/* Bring in split-out built-ins without changing the build system yet */
+#include "iter.c"
+#include "map.c"
+#include "string.c"
 #include "vm.h"
 #include "value.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/* Bring in split-out built-ins without changing the build system yet */
-#include "builtins_math.c"
-#include "builtins_io.c"
-#include "map.c"
-#include "builtins_string.c"
-#include "builtins_iter.c"
 
 /*
 Opcode case include index (vm_case_*.inc):
