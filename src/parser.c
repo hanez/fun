@@ -453,9 +453,68 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             }
             if (strcmp(name, "typeof") == 0) {
                 (*pos)++; /* '(' */
-                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "typeof expects 1 argument"); free(name); return 0; }
-                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after typeof arg"); free(name); return 0; }
-                bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                /* Special-case: typeof(<identifier>) -> use declared integer subtype if available */
+                size_t peek = *pos;
+                char *vname = NULL;
+                int handled = 0;
+                if (read_identifier_into(src, len, &peek, &vname)) {
+                    /* allow spaces before ')' */
+                    skip_spaces(src, len, &peek);
+                    if (peek < len && src[peek] == ')') {
+                        /* Find declared type metadata for the identifier */
+                        int decl_bits = 0; /* >0 unsigned width, <0 signed width, 0 unknown/non-integer */
+                        int lidx2 = local_find(vname);
+                        if (lidx2 >= 0 && g_locals) {
+                            decl_bits = g_locals->types[lidx2];
+                        } else {
+                            /* lookup existing global without creating a new symbol */
+                            int gidx2 = -1;
+                            for (int gi_ = 0; gi_ < G.count; ++gi_) {
+                                if (strcmp(G.names[gi_], vname) == 0) { gidx2 = gi_; break; }
+                            }
+                            if (gidx2 >= 0) decl_bits = G.types[gidx2];
+                        }
+
+                        if (decl_bits != 0) {
+                            int bits = decl_bits < 0 ? -decl_bits : decl_bits;
+                            int is_signed = (decl_bits < 0);
+                            char tbuf[16];
+                            snprintf(tbuf, sizeof(tbuf), "%s%d", is_signed ? "Sint" : "Uint", bits);
+                            int ci = bytecode_add_constant(bc, make_string(tbuf));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        } else {
+                            /* Fallback: load the variable and use runtime typeof */
+                            if (lidx2 >= 0) {
+                                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx2);
+                            } else {
+                                /* If global not yet present, create symbol to load its value (likely nil) */
+                                int gi2 = -1;
+                                /* try to reuse existing id if found earlier */
+                                for (int gi_ = 0; gi_ < G.count; ++gi_) {
+                                    if (strcmp(G.names[gi_], vname) == 0) { gi2 = gi_; break; }
+                                }
+                                if (gi2 < 0) gi2 = sym_index(vname);
+                                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi2);
+                            }
+                            bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                        }
+                        free(vname);
+                        /* consume the ')' */
+                        *pos = peek + 1;
+                        handled = 1;
+                    } else {
+                        /* not a simple identifier-only typeof */
+                        free(vname);
+                    }
+                }
+
+                if (!handled) {
+                    /* General case: typeof(expression) */
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "typeof expects 1 argument"); free(name); return 0; }
+                    if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after typeof arg"); free(name); return 0; }
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                }
+
                 free(name);
                 return 1;
             }
@@ -1398,6 +1457,13 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
     size_t local_pos = *pos;
     char *name = NULL;
     if (read_identifier_into(src, len, &local_pos, &name)) {
+
+        /* alias: accept 'sint*' as synonyms for 'int*' */
+        if (strcmp(name, "sint8") == 0)  { free(name); name = strdup("int8");  }
+        else if (strcmp(name, "sint16") == 0) { free(name); name = strdup("int16"); }
+        else if (strcmp(name, "sint32") == 0) { free(name); name = strdup("int32"); }
+        else if (strcmp(name, "sint64") == 0) { free(name); name = strdup("int64"); }
+
         /* return statement */
         if (strcmp(name, "return") == 0) {
             free(name);
