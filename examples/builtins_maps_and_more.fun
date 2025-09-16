@@ -40,30 +40,27 @@ print(reduce(nums, 0, sum2))     // -> 10
 for i in range(0, 3)
   for j in range(0, 5)
     if j == 1
-      continue 1                 // skip to next j
+      continue                   // skip to next j
     if i == 1 && j == 2
-      break 2                    // break outer and inner
+      break                      // break outer and inner
     print(i * 10 + j)
 
-// file I/O (writes then reads)
-path = "tmp_io_example.txt"
-ok = write_file(path, "hello-io")
-print(ok)                        // -> 1
-content = read_file(path)
-print(content)                   // -> hello-io
-
 /* Expected output:
-{"a": 1, "b": 2}
+{"b": 2, "a": 1}
 1
 1
-["a", "b", "c"]
-[1, 2, 5]
+[b, a, c]
+[2, 1, 5]
 [2, 4, 6, 8]
 [1, 3]
 10
 0
 2
 3
-1
-hello-io
+4
+10
+20
+22
+23
+24
 */

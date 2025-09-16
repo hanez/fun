@@ -7,4 +7,3 @@ src/*.o
 tmp/
 .aiignore
 dev.txt
-tmp_io_example.txt

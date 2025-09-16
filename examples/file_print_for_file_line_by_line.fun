@@ -27,4 +27,5 @@ print("=== Line-by-line print end ===")
 
 /* Expected output:
 ? The content of /etc/passwd
+Like: cat /etc/passwd
 */
