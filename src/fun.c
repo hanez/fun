@@ -27,9 +27,7 @@
  * - Exits with an error if file loading or parsing fails.
  *
  * Example:
- * ```bash
  * $ fun script.fun
- * ```
  *
  * @author Johannes Findeisen
  * @date 2025-10-16
@@ -474,7 +472,7 @@ int main(int argc, char **argv) {
                 int filtered = (pattern && *pattern);
                 printf("=== globals%s%s ===\n", filtered ? " matching '" : "", filtered ? pattern : "");
                 if (filtered) printf("'\n");
-                for (int i = 0; i < VM_MAX_GLOBALS; ++i) {
+                for (int i = 0; i < MAX_GLOBALS; ++i) {
                     if (vm.globals[i].type == VAL_NIL) continue;
                     char *sv = value_to_string_alloc(&vm.globals[i]);
                     if (!filtered || (sv && strstr(sv, pattern))) {

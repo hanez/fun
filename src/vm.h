@@ -7,25 +7,16 @@
  * https://opensource.org/license/isc-license-txt
  */
 
-/**
- * This file is part of the Fun programming language.
- * https://hanez.org/project/fun/
- *
- * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
- */
-
 #ifndef FUN_VM_H
 #define FUN_VM_H
 
 #include "bytecode.h"
 
-#define VM_STACK_SIZE 1024
-#define VM_MAX_FRAMES 128
-#define VM_MAX_GLOBALS 128
-#define VM_OUTPUT_SIZE 1024
-#define FRAME_MAX_LOCALS 64
+#define MAX_FRAMES 128
+#define MAX_FRAME_LOCALS 64
+#define MAX_GLOBALS 128
+#define OUTPUT_SIZE 1024
+#define STACK_SIZE 1024
 
 static const char *opcode_names[] = {
     "NOP","LOAD_CONST","LOAD_LOCAL","STORE_LOCAL",
@@ -48,19 +39,19 @@ static const char *opcode_names[] = {
 typedef struct {
     Bytecode *fn;
     int ip;
-    Value locals[FRAME_MAX_LOCALS];
+    Value locals[MAX_FRAME_LOCALS];
 } Frame;
 
 typedef struct {
-    Value stack[VM_STACK_SIZE];
+    Value stack[STACK_SIZE];
     int sp;
 
-    Frame frames[VM_MAX_FRAMES];
+    Frame frames[MAX_FRAMES];
     int fp; // frame pointer, -1 when no frame
 
-    Value globals[VM_MAX_GLOBALS];
+    Value globals[MAX_GLOBALS];
 
-    Value output[VM_OUTPUT_SIZE]; // store printed values
+    Value output[OUTPUT_SIZE]; // store printed values
     int output_count;
 
     long long instr_count; // executed instructions in the last vm_run

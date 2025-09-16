@@ -85,10 +85,10 @@ Dev tips:
 
 static const char* value_type_name(ValueType t) {
     switch (t) {
-        case VAL_INT: return "int";
-        case VAL_STRING: return "string";
         case VAL_FUNCTION: return "function";
+        case VAL_INT: return "int";
         case VAL_NIL: return "nil";
+        case VAL_STRING: return "string";
         default: return "unknown";
     }
 }
@@ -115,7 +115,7 @@ void vm_reset(VM *vm) {
     // Clear stack
     vm->sp = -1;
     // Free globals
-    for (int i = 0; i < VM_MAX_GLOBALS; ++i) {
+    for (int i = 0; i < MAX_GLOBALS; ++i) {
         free_value(vm->globals[i]);
         vm->globals[i] = make_nil();
     }
@@ -125,7 +125,7 @@ void vm_reset(VM *vm) {
 
 void vm_dump_globals(VM *vm) {
     printf("=== globals ===\n");
-    for (int i = 0; i < VM_MAX_GLOBALS; ++i) {
+    for (int i = 0; i < MAX_GLOBALS; ++i) {
         if (vm->globals[i].type != VAL_NIL) {
             printf("[%d] ", i);
             print_value(&vm->globals[i]);
@@ -136,7 +136,7 @@ void vm_dump_globals(VM *vm) {
 }
 
 static void push_value(VM *vm, Value v) {
-    if (vm->sp >= VM_STACK_SIZE - 1) {
+    if (vm->sp >= STACK_SIZE - 1) {
         fprintf(stderr, "Runtime error: stack overflow\n");
         exit(1);
     }
@@ -154,7 +154,7 @@ static Value pop_value(VM *vm) {
 static void frame_init(Frame *f) {
     f->fn = NULL;
     f->ip = 0;
-    for (int i = 0; i < FRAME_MAX_LOCALS; ++i) f->locals[i] = make_nil();
+    for (int i = 0; i < MAX_FRAME_LOCALS; ++i) f->locals[i] = make_nil();
 }
 
 void vm_init(VM *vm) {
@@ -162,13 +162,13 @@ void vm_init(VM *vm) {
     vm->fp = -1;
     vm->output_count = 0;
     vm->instr_count = 0;
-    for (int i = 0; i < VM_MAX_GLOBALS; ++i)
+    for (int i = 0; i < MAX_GLOBALS; ++i)
         vm->globals[i] = make_nil();
 }
 
 /* push a new frame, transferring ownership of args[] into frame->locals[0..argc-1] */
 static void vm_push_frame(VM *vm, Bytecode *fn, int argc, Value *args) {
-    if (vm->fp >= VM_MAX_FRAMES - 1) {
+    if (vm->fp >= MAX_FRAMES - 1) {
         fprintf(stderr, "Runtime error: too many frames\n");
         exit(1);
     }
@@ -177,7 +177,7 @@ static void vm_push_frame(VM *vm, Bytecode *fn, int argc, Value *args) {
     f->fn = fn;
     f->ip = 0;
     /* move args into locals 0..argc-1 */
-    for (int i = 0; i < argc && i < FRAME_MAX_LOCALS; ++i) {
+    for (int i = 0; i < argc && i < MAX_FRAME_LOCALS; ++i) {
         f->locals[i] = args[i]; /* transfer ownership */
     }
 }
@@ -189,7 +189,7 @@ static void vm_pop_frame(VM *vm) {
         exit(1);
     }
     Frame *f = &vm->frames[vm->fp];
-    for (int i = 0; i < FRAME_MAX_LOCALS; ++i) {
+    for (int i = 0; i < MAX_FRAME_LOCALS; ++i) {
         free_value(f->locals[i]);
         f->locals[i] = make_nil();
     }

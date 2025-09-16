@@ -88,7 +88,7 @@ static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line
 
 /* very small global symbol table for LOAD_GLOBAL/STORE_GLOBAL */
 static struct {
-    char *names[VM_MAX_GLOBALS];
+    char *names[MAX_GLOBALS];
     int count;
 } G = { {0}, 0 };
 
@@ -96,8 +96,8 @@ static int sym_index(const char *name) {
     for (int i = 0; i < G.count; ++i) {
         if (strcmp(G.names[i], name) == 0) return i;
     }
-    if (G.count >= VM_MAX_GLOBALS) {
-        parser_fail(0, "Too many globals (max %d)", VM_MAX_GLOBALS);
+    if (G.count >= MAX_GLOBALS) {
+        parser_fail(0, "Too many globals (max %d)", MAX_GLOBALS);
         return 0;
     }
     G.names[G.count] = strdup(name);
@@ -106,7 +106,7 @@ static int sym_index(const char *name) {
 
 /* ---- locals environment for functions ---- */
 typedef struct {
-    char *names[FRAME_MAX_LOCALS];
+    char *names[MAX_FRAME_LOCALS];
     int count;
 } LocalEnv;
 
@@ -133,8 +133,8 @@ static int local_find(const char *name) {
 
 static int local_add(const char *name) {
     if (!g_locals) return -1;
-    if (g_locals->count >= FRAME_MAX_LOCALS) {
-        parser_fail(0, "Too many local variables/parameters (max %d)", FRAME_MAX_LOCALS);
+    if (g_locals->count >= MAX_FRAME_LOCALS) {
+        parser_fail(0, "Too many local variables/parameters (max %d)", MAX_FRAME_LOCALS);
         return -1;
     }
     int idx = g_locals->count++;
