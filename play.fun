@@ -14,7 +14,7 @@ print("Yay, the playground for having fun... ;)")
 number n = 10
 print(n)
 
-string s = "Hello, world!"
+string s = "Hello,\nworld!"
 print(s)
  
 fun foo()
