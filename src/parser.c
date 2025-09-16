@@ -448,6 +448,14 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "typeof") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "typeof expects 1 argument"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after typeof arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "keys") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "keys expects 1 arg"); free(name); return 0; }

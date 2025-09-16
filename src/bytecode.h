@@ -72,6 +72,7 @@ typedef enum {
     // conversions
     OP_TO_NUMBER,     // pops any; pushes int (parse strings)
     OP_TO_STRING,     // pops any; pushes string
+    OP_TYPEOF,        // pops any; pushes string name of type
 
     // string ops
     OP_SPLIT,         // pops sep, string; pushes array of strings
