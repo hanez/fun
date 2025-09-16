@@ -2240,24 +2240,9 @@ static Bytecode *compile_minimal(const char *src, size_t len) {
 
     skip_shebang_if_present(src, len, &pos);
 
-    /* Optional: consume a single function wrapper line: fun <ident>() { ... } */
+    /* Allow top-of-file function definitions; do not skip any leading 'fun' line */
     skip_comments(src, len, &pos);
     skip_ws(src, len, &pos);
-    if (starts_with(src, len, pos, "fun")) {
-        pos += 3;
-        skip_comments(src, len, &pos);
-        skip_ws(src, len, &pos);
-        skip_identifier(src, len, &pos);  /* name */
-        skip_comments(src, len, &pos);
-        skip_ws(src, len, &pos);
-        (void)consume_char(src, len, &pos, '(');
-        (void)consume_char(src, len, &pos, ')');
-        skip_comments(src, len, &pos);
-        skip_ws(src, len, &pos);
-        (void)consume_char(src, len, &pos, '{');  /* tolerate */
-        /* move to next line start after wrapper */
-        skip_to_eol(src, len, &pos);
-    }
 
     /* parse the top-level block at indent 0 */
     parse_block(bc, src, len, &pos, 0);
