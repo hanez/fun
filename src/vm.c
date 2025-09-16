@@ -207,12 +207,16 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/arithmetic/mul.c"
             #include "vm/arithmetic/sub.c"
             
-            #include "vm/arrays/arr_insert.c"
-            #include "vm/arrays/arr_pop.c"
-            #include "vm/arrays/arr_push.c"
-            #include "vm/arrays/arr_remove.c"
-            #include "vm/arrays/arr_set.c"
+            #include "vm/arrays/insert.c"
+            
+            #include "vm/arrays/apop.c"
+
+
+            #include "vm/arrays/push.c"
+            #include "vm/arrays/remove.c"
+            #include "vm/arrays/set.c"
             #include "vm/arrays/clear.c"
+
             #include "vm/arrays/contains.c"
             #include "vm/arrays/enumerate.c"
             #include "vm/arrays/index_get.c"

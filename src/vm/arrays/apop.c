@@ -8,10 +8,10 @@
  */
 
 /**
-* @file arr_pop.c
- * @brief Implements the OP_ARR_POP opcode for removing elements from arrays in the VM.
+* @file apop.c
+ * @brief Implements the OP_APOP opcode for removing elements from arrays in the VM.
  *
- * This file handles the OP_ARR_POP instruction, which removes the last element from an array
+ * This file handles the OP_APOP instruction, which removes the last element from an array
  * and pushes the removed element onto the stack. The array is popped from the stack.
  *
  * Behavior:
@@ -24,7 +24,7 @@
  * - Exits with an error if the array is empty.
  *
  * Example:
- * // Bytecode: OP_ARR_POP
+ * // Bytecode: OP_APOP
  * // Stack before: [[10, 20, 30]]
  * // Stack after: [30]
  *
@@ -32,10 +32,10 @@
  * @date 2025-10-16
  */
 
-case OP_ARR_POP: {
+case OP_APOP: {
     Value arr = pop_value(vm);
     if (arr.type != VAL_ARRAY) {
-        fprintf(stderr, "Runtime type error: ARR_POP expects array\n");
+        fprintf(stderr, "Runtime type error: ARR_APOP expects array\n");
         exit(1);
     }
     Value out;

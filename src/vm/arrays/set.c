@@ -32,7 +32,7 @@
  * @date 2025-10-16
  */
 
-case OP_ARR_SET: {
+case OP_SET: {
     Value v = pop_value(vm);
     Value idx = pop_value(vm);
     Value arr = pop_value(vm);

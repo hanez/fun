@@ -32,7 +32,7 @@
  * @date 2025-10-16
  */
 
-case OP_ARR_PUSH: {
+case OP_PUSH: {
     Value v = pop_value(vm);
     Value arr = pop_value(vm);
     if (arr.type != VAL_ARRAY) {

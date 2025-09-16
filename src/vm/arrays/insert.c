@@ -8,10 +8,10 @@
  */
 
 /**
-* @file arr_insert.c
- * @brief Implements the OP_ARR_INSERT opcode for inserting elements into arrays in the VM.
+* @file insert.c
+ * @brief Implements the OP_INSERT opcode for inserting elements into arrays in the VM.
  *
- * This file handles the OP_ARR_INSERT instruction, which inserts a value into an array
+ * This file handles the OP_INSERT instruction, which inserts a value into an array
  * at a specified index. The array, index, and value are popped from the stack, and the
  * new length of the array is pushed back onto the stack.
  *
@@ -25,7 +25,7 @@
  * - Exits with an error if memory allocation fails during the insertion.
  *
  * Example:
- * // Bytecode: OP_ARR_INSERT
+ * // Bytecode: OP_INSERT
  * // Stack before: [42, 1, [10, 20, 30]]
  * // Stack after: [4]
  *
@@ -33,7 +33,7 @@
  * @date 2025-10-16
  */
 
-case OP_ARR_INSERT: {
+case OP_INSERT: {
     Value v = pop_value(vm);
     Value idx = pop_value(vm);
     Value arr = pop_value(vm);

@@ -34,7 +34,7 @@ static const char *opcode_names[] = {
     "JUMP_IF_FALSE","CALL","RETURN","PRINT","HALT",
     "MOD","AND","OR","NOT","DUP","SWAP",
     "MAKE_ARRAY","INDEX_GET","INDEX_SET",
-    "LEN","ARR_PUSH","ARR_POP","ARR_SET","ARR_INSERT","ARR_REMOVE","SLICE",
+    "LEN","PUSH","APOP","SET","INSERT","REMOVE","SLICE",
     "TO_NUMBER","TO_STRING","TYPEOF",
     "SPLIT","JOIN","SUBSTR","FIND",
     "CONTAINS","INDEX_OF","CLEAR",

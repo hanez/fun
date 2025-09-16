@@ -33,7 +33,7 @@
  * @date 2025-10-16
  */
 
-case OP_ARR_REMOVE: {
+case OP_REMOVE: {
     Value idx = pop_value(vm);
     Value arr = pop_value(vm);
     if (arr.type != VAL_ARRAY || idx.type != VAL_INT) {

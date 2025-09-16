@@ -386,7 +386,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "push expects 2 args"); free(name); return 0; }
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "push expects value"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after push args"); free(name); return 0; }
-                bytecode_add_instruction(bc, OP_ARR_PUSH, 0);
+                bytecode_add_instruction(bc, OP_PUSH, 0);
                 free(name);
                 return 1;
             }
@@ -394,7 +394,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pop expects array"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pop arg"); free(name); return 0; }
-                bytecode_add_instruction(bc, OP_ARR_POP, 0);
+                bytecode_add_instruction(bc, OP_APOP, 0);
                 free(name);
                 return 1;
             }
@@ -406,7 +406,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "set expects 3 args"); free(name); return 0; }
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "set expects value"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after set args"); free(name); return 0; }
-                bytecode_add_instruction(bc, OP_ARR_SET, 0);
+                bytecode_add_instruction(bc, OP_SET, 0);
                 free(name);
                 return 1;
             }
@@ -418,7 +418,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "insert expects 3 args"); free(name); return 0; }
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "insert expects value"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after insert args"); free(name); return 0; }
-                bytecode_add_instruction(bc, OP_ARR_INSERT, 0);
+                bytecode_add_instruction(bc, OP_INSERT, 0);
                 free(name);
                 return 1;
             }
@@ -428,7 +428,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "remove expects 2 args"); free(name); return 0; }
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "remove expects index"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after remove args"); free(name); return 0; }
-                bytecode_add_instruction(bc, OP_ARR_REMOVE, 0);
+                bytecode_add_instruction(bc, OP_REMOVE, 0);
                 free(name);
                 return 1;
             }
@@ -641,7 +641,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gv); }
 
                 /* Append via insert: res.insert(index=len(res), value) */
-                bytecode_add_instruction(bc, OP_ARR_INSERT, 0);
+                bytecode_add_instruction(bc, OP_INSERT, 0);
                 /* discard returned new length */
                 bytecode_add_instruction(bc, OP_POP, 0);
 
@@ -720,7 +720,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 else { bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gvf); }
 
                 /* Append via insert: res.insert(index=len(res), value) */
-                bytecode_add_instruction(bc, OP_ARR_INSERT, 0);
+                bytecode_add_instruction(bc, OP_INSERT, 0);
                 /* discard returned new length */
                 bytecode_add_instruction(bc, OP_POP, 0);
 
