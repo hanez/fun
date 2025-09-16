@@ -7,7 +7,6 @@
  * https://opensource.org/license/isc-license-txt
  */
 
-#define _GNU_SOURCE
 #include "vm.h"
 #include "value.h"
 #include <stdio.h>
@@ -206,24 +205,20 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/arithmetic/div.c"
             #include "vm/arithmetic/mul.c"
             #include "vm/arithmetic/sub.c"
-            
-            #include "vm/arrays/insert.c"
-            
+
             #include "vm/arrays/apop.c"
-
-
-            #include "vm/arrays/push.c"
-            #include "vm/arrays/remove.c"
-            #include "vm/arrays/set.c"
             #include "vm/arrays/clear.c"
-
             #include "vm/arrays/contains.c"
             #include "vm/arrays/enumerate.c"
             #include "vm/arrays/index_get.c"
             #include "vm/arrays/index_of.c"
             #include "vm/arrays/index_set.c"
+            #include "vm/arrays/insert.c"
             #include "vm/arrays/join.c"
             #include "vm/arrays/make_array.c"
+            #include "vm/arrays/push.c"
+            #include "vm/arrays/remove.c"
+            #include "vm/arrays/set.c"
             #include "vm/arrays/slice.c"
             #include "vm/arrays/zip.c"
 
