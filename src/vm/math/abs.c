@@ -1,3 +1,30 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file abs.c
+ * @brief Implements the OP_ABS opcode for absolute value in the VM.
+ *
+ * This file handles the OP_ABS instruction, which computes the absolute value
+ * of an integer.
+ *
+ * Behavior:
+ * - Pops value from stack
+ * - Pushes |value|
+ *
+ * Error Handling:
+ * - Exits if not integer
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_ABS: {
     Value x = pop_value(vm);
     if (x.type != VAL_INT) { fprintf(stderr, "ABS expects int\n"); exit(1); }

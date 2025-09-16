@@ -1,3 +1,41 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file value.h
+ * @brief Defines the Value type and associated functions for the Fun VM.
+ *
+ * This file defines the `Value` type, which represents all possible data types
+ * in the Fun language, including integers, strings, functions, arrays, maps, and nil.
+ * It also provides utility functions for creating, copying, and freeing `Value` objects.
+ *
+ * Key Types:
+ * - `ValueType`: Enumeration of supported value types (e.g., `VAL_INT`, `VAL_STRING`).
+ * - `Value`: Union type that can hold any Fun value.
+ *
+ * Functions:
+ * - `make_int`, `make_string`, `make_function`, `make_nil`: Constructors for `Value`.
+ * - `array_length`, `array_get_copy`, `array_set`: Array manipulation functions.
+ * - `make_map_empty`, `map_set`, `map_get_copy`: Map manipulation functions.
+ * - `copy_value`, `deep_copy_value`, `free_value`: Functions for copying and freeing values.
+ *
+ * Example:
+ * ```c
+ * Value num = make_int(42);
+ * Value str = make_string("Hello, Fun!");
+ * ```
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
+
 #ifndef FUN_VALUE_H
 #define FUN_VALUE_H
 
@@ -78,4 +116,3 @@ Value string_split_to_array(const char *s, const char *sep);   /* array of strin
 char *array_join_with_sep(const Value *arr, const char *sep);  /* join items as strings */
 
 #endif
-

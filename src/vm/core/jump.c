@@ -1,3 +1,32 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file jump.c
+ * @brief Implements the OP_JUMP opcode for unconditional jumps in the VM.
+ *
+ * This file handles the OP_JUMP instruction, which performs an unconditional
+ * jump to a new instruction pointer location.
+ *
+ * Behavior:
+ * - Sets IP to operand value
+ * - No stack manipulation
+ *
+ * Used for:
+ * - Loops
+ * - Function returns
+ * - Conditional control flow
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_JUMP: {
     f->ip = inst.operand;
     break;

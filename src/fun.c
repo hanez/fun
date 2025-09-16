@@ -1,3 +1,41 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file fun.c
+ * @brief Main entry point for the Fun language interpreter.
+ *
+ * This file contains the core logic for the Fun interpreter, including:
+ * - Command-line argument parsing.
+ * - File and REPL mode handling.
+ * - Utility functions for parsing and executing Fun code.
+ *
+ * Key Functions:
+ * - `is_blank_line`: Checks if a line is blank or contains only whitespace.
+ * - `lstrip`: Strips leading whitespace from a string.
+ * - `ends_with_opener`: Determines if a line ends with a continuation operator.
+ * - `compute_open_indent_blocks`: Computes the number of open indentation blocks.
+ * - `buffer_looks_incomplete`: Detects if a buffer contains incomplete code.
+ *
+ * Error Handling:
+ * - Exits with an error if file loading or parsing fails.
+ *
+ * Example:
+ * ```bash
+ * $ fun script.fun
+ * ```
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
+
 #include "bytecode.h"
 #include "value.h"
 #include "vm.h"
@@ -759,4 +797,3 @@ int main(int argc, char **argv) {
     free(buffer);
     return 0;
 }
-

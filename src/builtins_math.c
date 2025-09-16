@@ -1,3 +1,41 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file builtins_math.c
+ * @brief Implements built-in math functions for the Fun VM.
+ *
+ * This file provides helper functions for mathematical operations, including:
+ * - Minimum, maximum, and clamping.
+ * - Absolute value and exponentiation.
+ * - Random number generation.
+ *
+ * Functions:
+ * - `bm_min`: Returns the smaller of two integers.
+ * - `bm_max`: Returns the larger of two integers.
+ * - `bm_clamp`: Clamps a value between a lower and upper bound.
+ * - `bm_abs`: Returns the absolute value of an integer.
+ * - `bm_pow`: Computes the power of an integer.
+ * - `bm_random_seed`: Seeds the random number generator.
+ * - `bm_random_int`: Generates a random integer within a range.
+ *
+ * Example:
+ * ```c
+ * int64_t min = bm_min(10, 20); // 10
+ * int64_t rand = bm_random_int(1, 100); // Random number between 1 and 99
+ * ```
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
+
 #include <stdint.h>
 #include <stdlib.h>
 

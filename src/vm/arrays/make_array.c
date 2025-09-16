@@ -1,3 +1,37 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file make_array.c
+ * @brief Implements the OP_MAKE_ARRAY opcode for creating arrays in the VM.
+ *
+ * This file handles the OP_MAKE_ARRAY instruction, which pops `n` values from the stack,
+ * creates an array from them, and pushes the resulting array back onto the stack.
+ *
+ * Behavior:
+ * - Validates the number of elements (`n`) to ensure it is non-negative and within stack bounds.
+ * - Allocates temporary storage for the array elements.
+ * - Constructs the array using `make_array_from_values`.
+ * - Frees temporary storage and pushes the array onto the stack.
+ *
+ * Error Handling:
+ * - Exits with an error if `n` is invalid or if memory allocation fails.
+ *
+ * Example:
+ * // Bytecode: OP_MAKE_ARRAY 3
+ * // Stack before: [1, 2, 3]
+ * // Stack after: [[1, 2, 3]]
+ *
+ * @author Johanes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_MAKE_ARRAY: {
     int n = inst.operand;
     if (n < 0 || vm->sp + 1 < n) {

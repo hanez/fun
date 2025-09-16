@@ -1,3 +1,35 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file load_global.c
+ * @brief Implements the OP_LOAD_GLOBAL opcode for loading global variables in the VM.
+ *
+ * This file handles the OP_LOAD_GLOBAL instruction, which loads a global variable
+ * onto the stack using its index.
+ *
+ * Behavior:
+ * - Loads the global variable at the specified index.
+ * - Pushes the value onto the stack.
+ *
+ * Error Handling:
+ * - Exits with an error if the index is out of bounds.
+ *
+ * Example:
+ * // Bytecode: OP_LOAD_GLOBAL 0
+ * // Stack before: []
+ * // Stack after: [global_value]
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_LOAD_GLOBAL: {
     int idx = inst.operand;
     if (idx < 0 || idx >= VM_MAX_GLOBALS) {

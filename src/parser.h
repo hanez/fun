@@ -1,4 +1,13 @@
-/*
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
  * Parse a .fun source file and compile it into entry bytecode.
  * Minimal support:
  *  - Optional shebang on the first line.

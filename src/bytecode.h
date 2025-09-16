@@ -1,3 +1,13 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+
 #ifndef FUN_BYTECODE_H
 #define FUN_BYTECODE_H
 
@@ -122,4 +132,3 @@ void bytecode_free(Bytecode *bc);
 void bytecode_dump(const Bytecode *bc);
 
 #endif
-

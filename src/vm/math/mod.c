@@ -1,3 +1,37 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file mod.c
+ * @brief Implements the OP_MOD opcode for modulo operation in the VM.
+ *
+ * This file handles the OP_MOD instruction, which computes the modulo of two integer values.
+ * The values are popped from the stack, and the result is pushed back.
+ *
+ * Behavior:
+ * - Pops two integer values from the stack.
+ * - Computes the modulo of the first value by the second.
+ * - Pushes the result onto the stack.
+ *
+ * Error Handling:
+ * - Exits with an error if the operands are not integers.
+ * - Exits with an error if the second operand is zero.
+ *
+ * Example:
+ * // Bytecode: OP_MOD
+ * // Stack before: [10, 3]
+ * // Stack after: [1]
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_MOD: {
     Value b = pop_value(vm);
     Value a = pop_value(vm);

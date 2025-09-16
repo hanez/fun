@@ -6,7 +6,7 @@
    implementation or programming. Just a compiled version of many ideas... ;)
 
    Copyright 2025 Johannes Findeisen <you@hanez.org>
-   License: Apache License, Version 2.0
+   License: ISC License, https://opensource.org/license/isc-license-txt
 
    Birthdate: 2025-09-10
 */
@@ -153,4 +153,3 @@ cast(a)
 fun get_string(a_string, b_string)
   return a_string + " " + b_string
 eof
-

@@ -1,3 +1,48 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file parser.c
+ * @brief Implements the Fun language parser that converts source code to bytecode.
+ *
+ * This file contains the main parsing logic for the Fun programming language.
+ * It handles converting .fun source files into executable bytecode for the VM.
+ *
+ * Key Features:
+ * - Handles shebang lines
+ * - Skips whitespace and comments
+ * - Parses string literals with both single and double quotes
+ * - Supports basic function definitions
+ * - Compiles print statements
+ * - Generates bytecode with proper constants and instructions
+ *
+ * Functions:
+ * - parse_file_to_bytecode(): Main entry point for file parsing
+ * - parse_string_to_bytecode(): Parses code from string buffers
+ * - parser_last_error(): Retrieves parsing errors
+ *
+ * Error Handling:
+ * - Returns NULL on parse errors
+ * - Tracks error messages and positions
+ * - Validates syntax before bytecode generation
+ *
+ * Example:
+ * Bytecode *bc = parse_file_to_bytecode("example.fun");
+ * if (bc) {
+ *     vm_run(&vm, bc);
+ *     bytecode_free(bc);
+ * }
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 #include "parser.h"
 #include "value.h"
 #include "vm.h"

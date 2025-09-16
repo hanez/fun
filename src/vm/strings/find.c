@@ -1,3 +1,37 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file find.c
+ * @brief Implements the OP_FIND opcode for finding substrings in the VM.
+ *
+ * This file handles the OP_FIND instruction, which finds the index of a substring
+ * within a string. The substring and string are popped from the stack, and the index
+ * (or -1) is pushed back.
+ *
+ * Behavior:
+ * - Pops the substring and string from the stack.
+ * - Finds the index of the substring within the string.
+ * - Pushes the index (or -1 if not found) onto the stack.
+ *
+ * Error Handling:
+ * - Exits with an error if the operands are not strings.
+ *
+ * Example:
+ * // Bytecode: OP_FIND
+ * // Stack before: ["world", "hello world"]
+ * // Stack after: [6]
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_FIND: {
     Value needle = pop_value(vm);
     Value hay = pop_value(vm);

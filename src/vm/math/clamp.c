@@ -1,3 +1,31 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file clamp.c
+ * @brief Implements the OP_CLAMP opcode for value clamping in the VM.
+ *
+ * This file handles the OP_CLAMP instruction, which clamps a value between
+ * a minimum and maximum.
+ *
+ * Behavior:
+ * - Pops x, lo, hi from stack
+ * - Pushes x clamped to [lo,hi]
+ *
+ * Error Handling:
+ * - Exits if arguments wrong types
+ * - Handles hi < lo case
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_CLAMP: {
     Value hi = pop_value(vm);
     Value lo = pop_value(vm);

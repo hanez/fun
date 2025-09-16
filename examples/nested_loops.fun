@@ -1,5 +1,14 @@
 #!/usr/bin/env fun
 
+/*
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+ 
 // Nested loops: break and continue behavior
 
 // 1) Nested for range: inner continue on j==2, inner break on j==4, outer break on i==3

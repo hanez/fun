@@ -1,3 +1,38 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file random_int.c
+ * @brief Implements the OP_RANDOM_INT opcode for generating random integers in the VM.
+ *
+ * This file handles the OP_RANDOM_INT instruction, which generates a random integer
+ * within a specified range. The range bounds are popped from the stack, and the result
+ * is pushed back.
+ *
+ * Behavior:
+ * - Pops the upper and lower bounds from the stack.
+ * - Generates a random integer within the range.
+ * - Pushes the result onto the stack.
+ *
+ * Error Handling:
+ * - Exits with an error if the bounds are not integers.
+ * - Exits with an error if the lower bound is greater than the upper bound.
+ *
+ * Example:
+ * // Bytecode: OP_RANDOM_INT
+ * // Stack before: [10, 1]
+ * // Stack after: [7]
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_RANDOM_INT: {
     Value hi = pop_value(vm);
     Value lo = pop_value(vm);

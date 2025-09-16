@@ -1,3 +1,40 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/**
+* @file add.c
+ * @brief Implements the OP_ADD opcode for arithmetic and string concatenation in the VM.
+ *
+ * This file handles the OP_ADD instruction, which performs addition or concatenation
+ * depending on the types of the operands:
+ * - Integers: Adds two integers.
+ * - Strings: Concatenates two strings.
+ * - Arrays: Concatenates two arrays.
+ *
+ * Behavior:
+ * - Pops two values from the stack.
+ * - Performs the operation based on the types of the operands.
+ * - Pushes the result back onto the stack.
+ *
+ * Error Handling:
+ * - Exits with an error if the operands are of incompatible types.
+ * - Exits with an error if memory allocation fails during string concatenation.
+ *
+ * Example:
+ * // Bytecode: OP_ADD
+ * // Stack before: [2, 3]
+ * // Stack after: [5]
+ *
+ * @author Johannes Findeisen
+ * @date 2025-10-16
+ */
+
 case OP_ADD: {
     Value b = pop_value(vm);
     Value a = pop_value(vm);

@@ -1,5 +1,14 @@
 #!/usr/bin/env fun
 
+/*
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+ 
 // Objects as maps: nested fields, methods with explicit self
 
 // A method to move a 2D point by dx, dy
