@@ -89,8 +89,9 @@ static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line
 /* very small global symbol table for LOAD_GLOBAL/STORE_GLOBAL */
 static struct {
     char *names[MAX_GLOBALS];
+    int types[MAX_GLOBALS]; /* 0=untyped/number default; else bit width: 8/16/32/64 */
     int count;
-} G = { {0}, 0 };
+} G = { {0}, {0}, 0 };
 
 static int sym_index(const char *name) {
     for (int i = 0; i < G.count; ++i) {
@@ -101,12 +102,14 @@ static int sym_index(const char *name) {
         return 0;
     }
     G.names[G.count] = strdup(name);
+    G.types[G.count] = 0; /* default: untyped (treat as 64-bit number) */
     return G.count++;
 }
 
 /* ---- locals environment for functions ---- */
 typedef struct {
     char *names[MAX_FRAME_LOCALS];
+    int  types[MAX_FRAME_LOCALS]; /* 0=untyped; else bit width: 8/16/32/64 */
     int count;
 } LocalEnv;
 
@@ -1451,12 +1454,18 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             return;
         }
 
-        /* typed declarations: number|string|boolean|nil <ident> (= expr)? */
-        if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0) {
+        /* typed declarations: number|string|boolean|nil|uint8|uint16|uint32|uint64 <ident> (= expr)? */
+        if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0
+            || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0) {
             int is_number  = (strcmp(name, "number") == 0);
             int is_string  = (strcmp(name, "string") == 0);
             int is_boolean = (strcmp(name, "boolean") == 0);
             int is_nil     = (strcmp(name, "nil") == 0);
+            int is_u8      = (strcmp(name, "uint8")  == 0);
+            int is_u16     = (strcmp(name, "uint16") == 0);
+            int is_u32     = (strcmp(name, "uint32") == 0);
+            int is_u64     = (strcmp(name, "uint64") == 0) || is_number; /* number maps to uint64 */
+            int decl_bits  = is_u8 ? 8 : is_u16 ? 16 : is_u32 ? 32 : is_u64 ? 64 : 0; /* 0 for non-integer types */
             free(name);
 
             /* read variable name */
@@ -1474,8 +1483,14 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 int existing = local_find(varname);
                 if (existing >= 0) lidx = existing;
                 else lidx = local_add(varname);
+                if (lidx >= 0) {
+                    g_locals->types[lidx] = decl_bits; /* record declared bits (0 for non-integer types) */
+                }
             } else {
                 gi = sym_index(varname);
+                if (gi >= 0) {
+                    G.types[gi] = decl_bits;
+                }
             }
             free(varname);
 
@@ -1486,6 +1501,10 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     parser_fail(local_pos, "Expected initializer expression after '='");
                     return;
                 }
+                /* clamp if integer type was declared */
+                if (decl_bits > 0) {
+                    bytecode_add_instruction(bc, OP_UCLAMP, decl_bits);
+                }
                 if (lidx >= 0) {
                     bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
                 } else {
@@ -1494,15 +1513,19 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             } else {
                 /* default initialize if no '=' given */
                 int ci = -1;
-                if (is_number || is_boolean) {
-                    ci = bytecode_add_constant(bc, make_int(0));
-                } else if (is_string) {
+                if (is_string) {
                     ci = bytecode_add_constant(bc, make_string(""));
                 } else if (is_nil) {
                     ci = bytecode_add_constant(bc, make_nil());
+                } else if (is_number || is_boolean || decl_bits > 0) {
+                    /* integers/booleans default to 0 */
+                    ci = bytecode_add_constant(bc, make_int(0));
                 }
                 if (ci >= 0) {
                     bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                    if (decl_bits > 0) {
+                        bytecode_add_instruction(bc, OP_UCLAMP, decl_bits);
+                    }
                     if (lidx >= 0) {
                         bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
                     } else {
@@ -1669,6 +1692,16 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         if (local_pos < len && src[local_pos] == '=') {
             local_pos++; /* '=' */
             if (emit_expression(bc, src, len, &local_pos)) {
+                /* clamp to declared integer width if present */
+                int decl_bits = 0;
+                if (lidx >= 0 && g_locals) {
+                    decl_bits = g_locals->types[lidx];
+                } else if (gi >= 0) {
+                    decl_bits = G.types[gi];
+                }
+                if (decl_bits > 0) {
+                    bytecode_add_instruction(bc, OP_UCLAMP, decl_bits);
+                }
                 if (lidx >= 0) {
                     bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
                 } else {

@@ -301,6 +301,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/to_number.c"
             #include "vm/to_string.c"
             #include "vm/typeof.c"
+            #include "vm/uclamp.c"
 
             default:
                 if (!opcode_is_valid(inst.op)) {
