@@ -67,3 +67,38 @@ for x in range(1, 3)
     print(x + y)      // expect: 2,3,3,4
 
 print("=== for/range test end ===")
+
+/*
+=== for/range test start ===
+0
+1
+2
+3
+4
+2
+3
+4
+5
+6
+2
+3
+3
+4
+=== for/range test end ===
+=== for/range test start ===
+0
+1
+2
+3
+4
+2
+3
+4
+5
+6
+2
+3
+3
+4
+=== for/range test end ===
+*/

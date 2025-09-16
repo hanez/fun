@@ -58,7 +58,6 @@ static int is_blank_line(const char *s) {
     return 1;
 }
 
-
 static const char* lstrip(const char *s) {
     while (*s == ' ' || *s == '\t') s++;
     return s;
