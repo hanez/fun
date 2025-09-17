@@ -1,5 +1,14 @@
 #!/usr/bin/env fun
 
+/*
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
 // Signed integer type examples with two's complement wrapping
 
 sint8  s8  = -1       // should be -1 within sint8 range

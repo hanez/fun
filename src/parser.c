@@ -1522,7 +1522,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
 
         /* typed declarations:
            number|string|boolean|nil|uint8|uint16|uint32|uint64|int8|int16|int32|int64 <ident> (= expr)?
-           Note: 'number' maps to unsigned 64-bit here.
+           Note: 'number' maps to signed 64-bit here.
          */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0
             || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0
@@ -1534,15 +1534,15 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             int is_u8      = (strcmp(name, "uint8")  == 0);
             int is_u16     = (strcmp(name, "uint16") == 0);
             int is_u32     = (strcmp(name, "uint32") == 0);
-            int is_u64     = (strcmp(name, "uint64") == 0) || is_number; /* number maps to uint64 */
+            int is_u64     = (strcmp(name, "uint64") == 0);
             int is_s8      = (strcmp(name, "int8")   == 0);
             int is_s16     = (strcmp(name, "int16")  == 0);
             int is_s32     = (strcmp(name, "int32")  == 0);
-            int is_s64     = (strcmp(name, "int64")  == 0);
+            int is_s64     = (strcmp(name, "int64")  == 0) || is_number; /* number maps to int64 (signed) */
             int decl_bits  = is_u8 ? 8 : is_u16 ? 16 : is_u32 ? 32 : is_u64 ? 64
                             : is_s8 ? 8 : is_s16 ? 16 : is_s32 ? 32 : is_s64 ? 64 : 0;
             int decl_signed = (is_s8 || is_s16 || is_s32 || is_s64) ? 1 : 0;
-            /* store decl bits with sign encoded: negative means signed */
+                /* store decl bits with sign encoded: negative means signed (number is signed 64-bit) */
             if (decl_signed) decl_bits = -decl_bits;
             free(name);
 
