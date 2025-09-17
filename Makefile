@@ -3,7 +3,7 @@
 BUILD_DIR ?= build
 CMAKE ?= cmake
 # Default to a debug build with extra logging enabled
-CMAKE_FLAGS ?= -DFUN_DEBUG=ON
+CMAKE_FLAGS ?= -DFUN_DEBUG=OFF
 
 .PHONY: all configure build fun fun_test test_opcodes clean distclean install repl run
 
