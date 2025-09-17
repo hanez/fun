@@ -4,7 +4,8 @@ Fun Uses Nothing — Life is too short not to code fun... ;)
 
 Influenced by Bash, C, Go, Lua, Python, and Rust.
 
-I am testing on:
+Developed and tested on:
+
  - [GNU/Linux](https://kernel.org/) using [GCC](https://gcc.gnu.org/) and the [GNU C library](https://www.gnu.org/software/libc/) ([glibc](https://en.wikipedia.org/wiki/Glibc)) 
  - GNU/Linux using GCC and the [musl libc](https://musl.libc.org/)
  - [FreeBSD](https://www.freebsd.org/) using Clang and the [BSD libc](https://en.wikipedia.org/wiki/C_standard_library#BSD_libc).
