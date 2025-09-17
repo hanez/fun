@@ -1,8 +1,13 @@
 # Fun
 
-Fun Uses Nothing - Life is too short not to code fun... ;)
+Fun Uses Nothing — Life is too short not to code fun... ;)
 
-Influenced by Bash, C, Go, Lua, Python and Rust.
+Influenced by Bash, C, Go, Lua, Python, and Rust.
+
+Testet on [GNU/Linux](https://kernel.org/) using [GCC](https://gcc.gnu.org/) and 
+the [GNU C library](https://www.gnu.org/software/libc/) ([glibc](https://en.wikipedia.org/wiki/Glibc)) 
+or [musl libc](https://musl.libc.org/), and [FreeBSD](https://www.freebsd.org/) using Clang 
+and [BSD libc](https://en.wikipedia.org/wiki/C_standard_library#BSD_libc).
 
 ## Idea
 
