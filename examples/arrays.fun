@@ -8,7 +8,18 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Arrays Example
+ *
+ * Demonstrates basic array operations including:
+ * - Array declaration and initialization
+ * - Accessing elements via indexing
+ * - Iterating through arrays with `for` loops
+ * - Creating subarrays (slices)
+ *- Length calculation
+ */
+
 // Arrays basics
 arr = [1, 2, 3]
 print(arr)                 // -> [1, 2, 3]

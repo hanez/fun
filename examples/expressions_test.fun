@@ -8,7 +8,18 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Expression Testing Suite
+ *
+ * Contains comprehensive tests for:
+ * - Operator precedence rules
+ * - Arithmetic expression evaluation
+ * - Logical expressions (AND, OR)
+ * - Conditional expressions (`if`, `else`)
+ * - Expression short-circuiting behavior
+ */
+
 // Expressions test: arithmetic, precedence, comparisons, logical ops, unary, parentheses.
 
 print("=== Expressions test start ===")

@@ -8,7 +8,17 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Loop Control Flow Examples
+ *
+ * Focuses on:
+ * - Using break to exit loops prematurely
+ * - Implementing continue for skipping iterations
+ * - Creating complex loop control patterns
+ * - Handling infinite loops and their termination conditions
+ */
+
 // break and continue examples
 
 // 1) while loop: print odd numbers, stop after printing 7

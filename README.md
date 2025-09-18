@@ -64,3 +64,6 @@ A language that feels like home for developers who:
 
 Fun may not change the world — but it will make programming a little more fun.
 
+## To do
+
+Everything... ;) No, a lot of stuff works already, but only a very small set of functions are available in the Fun programming language. It grows from day to day...

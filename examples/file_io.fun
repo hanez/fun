@@ -9,6 +9,16 @@
  * https://opensource.org/license/isc-license-txt
  */
 
+/*
+ * File Input/Output Examples
+ *
+ * Demonstrates:
+ * - Reading from files with `open`
+ * - Writing to output files
+ * - Working with file streams and handles
+ * - Error handling during I/O operations
+ */
+
 // file I/O (writes then reads)
 path = "/tmp/fun_io_example.txt"
 ok = write_file(path, "hello-io")

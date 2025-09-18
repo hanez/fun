@@ -8,7 +8,17 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Conditional Logic Testing Suite
+ *
+ * Tests various aspects of conditional execution including:
+ * - Basic if/else structures
+ * - Nested conditional statements
+ * - Ternary operator usage (`? :`)
+ * - Comparison conditionals with different operators
+ */
+
 // Test else / else if chains and nested if-blocks (two-space indentation)
 
 print("=== if/else-if/else test ===")

@@ -9,6 +9,16 @@
  * https://opensource.org/license/isc-license-txt
  */
 
+/*
+ * Line-by-Line File Processing
+ *
+ * Shows techniques for:
+ * - Reading files line by line using `readline`
+ * - Conditional processing based on line content
+ * - Maintaining state between lines (e.g., counters)
+ * - Implementing custom file formatters
+ */
+
 print("=== Line-by-line print start ===")
 
 string file = "/etc/passwd"

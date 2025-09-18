@@ -8,7 +8,17 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * # Extended Built-ins Examples
+ *
+ * Demonstrates advanced usage of built-in types including:
+ * - Customizing default behaviors with `default` keyword
+ * - Working with large integer values (beyond standard limits)
+ * - Implementing type-specific extensions
+ *- Handling edge cases in conversions and operations
+*/
+
 // Built-ins: strings, array utils, iteration helpers, and math
 
 // Strings

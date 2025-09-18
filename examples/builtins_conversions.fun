@@ -8,7 +8,17 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Built-in Type Conversions
+ *
+ * Shows how FunScript handles:
+ * - Implicit type conversions (numeric, string)
+ * - Explicit casting operations
+ * - Conversion functions and operators
+ * - Handling of special cases in conversions
+ */
+
 // Conversions and length built-ins demo
 
 // len on array and string

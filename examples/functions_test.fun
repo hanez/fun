@@ -8,7 +8,17 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Function Definition Testing
+ *
+ * Covers:
+ * - Basic function syntax (`def`)
+ * - Handling multiple parameter types
+ * - Function return value testing
+ * - Function composition examples
+ */
+
 // Functions test: definitions, calls, parameters, locals, returns, and if/else.
 
 print("=== Functions test start ===")

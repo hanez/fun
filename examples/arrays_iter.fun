@@ -8,7 +8,18 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Array Iteration Examples
+ *
+ * Focuses specifically on:
+ * - Various iteration methods (`for`, `while`)
+ * - Using array mapping functions
+ * - Filtering arrays based on conditions
+ * - Reducing arrays to computed values
+ *- Converting between different collection types during iteration
+ */
+
 // for-in over an array literal
 for x in [1, 2, 3]
   print(x)                 // prints: 1, then 2, then 3

@@ -8,7 +8,18 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Advanced Arrays Example
+ *
+ * Covers more complex array features such as:
+ * - Multi-dimensional arrays
+ * - Array concatenation and splitting
+ * - Repeating elements in arrays
+ * - Array comprehensions with transformations
+ * - Working with nested arrays
+ */
+
 // Advanced Arrays Demo
 
 // Start with a basic array

@@ -8,7 +8,17 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * For Loop Range Testing
+ *
+ * Focuses specifically on:
+ * - Using the `range` keyword with for loops
+ * - Nested range loops and their optimizations
+ * - Range-based iteration patterns
+ * - Comparison between traditional ranges and modern implementations
+ */
+
 // for/range test: globals, nested loops, and a function using range
 
 print("=== for/range test start ===")

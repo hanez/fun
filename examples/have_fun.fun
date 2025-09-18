@@ -8,7 +8,7 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
 /*
  * Have fun in Fun
  */

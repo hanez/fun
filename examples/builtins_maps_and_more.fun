@@ -8,7 +8,18 @@
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
  */
- 
+
+/*
+ * Maps Implementation Examples
+ *
+ * Covers:
+ * - Map declaration syntax (`map<K, V>`)
+ * - Key-value pair manipulation
+ * - Iterating through maps with `for`
+ * - Nested map structures
+ * - Converting between different collection types
+ */
+
 // Maps, map/filter/reduce, labeled break/continue (depth), and file I/O
 
 // Map literal and indexing
