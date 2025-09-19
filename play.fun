@@ -9,16 +9,22 @@
  * https://opensource.org/license/isc-license-txt
  */
 
+fun foo()
+  print("Have fun!")
+  print("Having fun... forever.")
+
 print("Yay, the playground for having fun... ;)")
 
 number n = 10
 print(n)
 
-string s = "Hello,\nworld!"
+n = "foobar"
+print(n)
+
+n = 100
+print(n)
+
+string s = 'Have\n"fun!"'
   print(s)
- 
-fun foo()
-  print("Have fun!")
-  print("Running foo()... forever.")
 
 foo()
