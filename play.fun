@@ -32,7 +32,7 @@ print("Typeof n: " + typeof(n))
 fun n()
   print("n")
 n()
-// Typeof n must be of type function here... Not Sint64.
+// Typeof n must be of type Function here... Not Sint64.
 print("Typeof n: " + typeof(n))
 
 n = 2342
@@ -50,7 +50,7 @@ a = [23, 42]
 print(a)
 print(a[0])
 
-// Why this is possible? Seting n to a string, sets n to 0. Setting an array to 1 works...? This must fail when an a is of type "array", not in this case!
+// Why this is possible? Setting n to a string, sets n to 0. Setting an array to 1 works...? This must fail when an a is of type "array", not in this case!
 a = 1
 print(a)
 
@@ -64,5 +64,4 @@ print('\'' + " \n\"Fun\"")
 print('\'' + " \n\t\"Fun\"")
 
 print("Running foo()...")
-
 foo()
