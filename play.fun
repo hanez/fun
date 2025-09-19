@@ -13,9 +13,12 @@ fun foo()
   print("Have fun!")
   print("Having fun... forever.")
 
+print("Typeof foo(): " + typeof(foo))
+
 print("Yay, the playground for having fun... ;)")
 
 number n = 23
+// Every type must be lowercase. Sint* must be sint*.
 print(n)
 
 // This must fail because n is of type number and can not become a string or function. Setting it to 0 is not an option.
