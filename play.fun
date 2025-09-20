@@ -64,5 +64,7 @@ print('\'' + " \"Fun\"")
 print('\'' + " \n\"Fun\"")
 print('\'' + " \n\t\"Fun\"")
 
-print("Running foo()...")
+print("Running foo() 2 times...")
+foo()
+// We need arguments to functions...
 foo()
