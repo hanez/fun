@@ -18,21 +18,22 @@ print("Typeof foo(): " + typeof(foo))
 print("Yay, the playground for having fun... ;)")
 
 number n = 23
-// Every type must be lowercase. Sint* must be sint*.
+// Every type MUST be lowercase. Sint* must be sint*.
 print(n)
 
-// This must fail because n is of type number and can not become a string or function. Setting it to 0 is not an option.
+// This MUST fail because n is of type number and can not become a string or function. Setting it to 0 is not an option.
 n = "FooBar"
 print(n)
+print("Typeof n: " + typeof(n))
 
 n = 100
 print(n)
 print("Typeof n: " + typeof(n))
 
 fun n()
-  print("n")
+  print("n()")
 n()
-// Typeof n must be of type Function here... Not Sint64.
+// Typeof n MUST be of type Function here... Not Sint64.
 print("Typeof n: " + typeof(n))
 
 n = 2342
