@@ -23,7 +23,7 @@
  *     move_fn(p, dx, dy)
  */
 
-class Point(number x, number y)
+class Point(number x, number y) // I don't like Uppercase or CamelCase, and core libs of Fun will not contain this, but "_" and all lowercase. It's a showup here... ;)
   x = 0
   y = 0
   /* private helper (callable only as this._shift inside class) */
