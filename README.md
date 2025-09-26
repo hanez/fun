@@ -2,7 +2,7 @@
 
 Fun Uses Nothing — Life is too short not to code with fun... ;)
 
-Influenced by Bash, C, Go, Lua, Python, and Rust.
+Influenced by Bash, **C**, Go, **Lua**, **Python**, and Rust.
 
 Developed and tested on:
 
@@ -19,8 +19,7 @@ Developed and tested on:
 
 ## Characteristics
 
- * Static and optionally dynamic
- * No pointers
+ * Dynamic and optionally statically typed
  * Type safety (Not safe yet)
  * Written in C / Internally no_camel_case... ;)
  * Only a minimal function set is written in C; All other core libraries are implemented in Fun
