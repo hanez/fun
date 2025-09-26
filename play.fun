@@ -30,9 +30,9 @@ n = 100
 print(n)
 print("Typeof n: " + typeof(n))
 
-fun n()
-  print("n()")
-n()
+fun n(num)
+  print("n(" + to_string(num) + ")")
+n(42)
 // Typeof n MUST be of type Function here... Not Sint64.
 print("Typeof n: " + typeof(n))
 

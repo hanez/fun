@@ -1857,6 +1857,223 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             bytecode_add_instruction(bc, OP_LINE, stmt_line);
         }
 
+        /* class definition -> factory function */
+        if (starts_with(src, len, *pos, "class")) {
+            *pos += 5;
+            skip_spaces(src, len, pos);
+            /* class name */
+            char *cname = NULL;
+            if (!read_identifier_into(src, len, pos, &cname)) {
+                parser_fail(*pos, "Expected class name after 'class'");
+                return;
+            }
+            int cgi = sym_index(cname);
+
+            /* end of class header line */
+            skip_to_eol(src, len, pos);
+
+            /* Build factory function: Name() -> instance map with fields and methods */
+            Bytecode *ctor_bc = bytecode_new();
+            /* local env for the factory to allow temp locals */
+            LocalEnv ctor_env;
+            memset(&ctor_env, 0, sizeof(ctor_env));
+            LocalEnv *prev_env = g_locals;
+            g_locals = &ctor_env;
+
+            /* instance map: __this = {} */
+            int l_this = local_add("__this");
+            bytecode_add_instruction(ctor_bc, OP_MAKE_MAP, 0);
+            bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_this);
+
+            /* Parse class body at increased indent */
+            int body_indent = 0;
+            size_t look_body = *pos;
+            if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
+                /* iterate over class members at body_indent */
+                for (;;) {
+                    size_t member_line_start = *pos;
+                    int member_indent = 0;
+                    if (!read_line_start(src, len, pos, &member_indent)) {
+                        /* EOF */
+                        break;
+                    }
+                    if (member_indent < body_indent) {
+                        /* end of class body */
+                        *pos = member_line_start;
+                        break;
+                    }
+                    if (member_indent > body_indent) {
+                        /* skip nested blocks that are part of previous method parsing */
+                        parse_block(ctor_bc, src, len, pos, member_indent);
+                        continue;
+                    }
+
+                    /* at body_indent: member declaration (field = expr) or method 'fun name(...)' */
+                    if (starts_with(src, len, *pos, "fun")) {
+                        /* method definition: fun m(this, ...) ... */
+                        *pos += 3;
+                        skip_spaces(src, len, pos);
+                        char *mname = NULL;
+                        if (!read_identifier_into(src, len, pos, &mname)) {
+                            parser_fail(*pos, "Expected method name after 'fun' in class");
+                            g_locals = prev_env;
+                            free(cname);
+                            return;
+                        }
+                        skip_spaces(src, len, pos);
+                        if (!consume_char(src, len, pos, '(')) {
+                            parser_fail(*pos, "Expected '(' after method name");
+                            free(mname);
+                            g_locals = prev_env;
+                            free(cname);
+                            return;
+                        }
+
+                        /* Build method function bytecode */
+                        Bytecode *m_bc = bytecode_new();
+                        LocalEnv m_env;
+                        memset(&m_env, 0, sizeof(m_env));
+                        LocalEnv *saved = g_locals;
+                        g_locals = &m_env;
+
+                        /* Parse params, ensure first is 'this' (insert if missing) */
+                        int saw_param = 0;
+                        int param_count = 0;
+                        skip_spaces(src, len, pos);
+                        if (*pos < len && src[*pos] != ')') {
+                            for (;;) {
+                                char *pname = NULL;
+                                if (!read_identifier_into(src, len, pos, &pname)) {
+                                    parser_fail(*pos, "Expected parameter name");
+                                    free(mname);
+                                    g_locals = saved;
+                                    g_locals = prev_env;
+                                    free(cname);
+                                    return;
+                                }
+                                if (param_count == 0 && strcmp(pname, "this") != 0) {
+                                    /* Require explicit 'this' as first parameter */
+                                    parser_fail(*pos, "First parameter of a method must be 'this'");
+                                    free(pname);
+                                    free(mname);
+                                    g_locals = saved;
+                                    g_locals = prev_env;
+                                    free(cname);
+                                    return;
+                                }
+                                local_add(pname);
+                                free(pname);
+                                param_count++;
+                                skip_spaces(src, len, pos);
+                                if (*pos < len && src[*pos] == ',') {
+                                    (*pos)++;
+                                    skip_spaces(src, len, pos);
+                                    continue;
+                                }
+                                break;
+                            }
+                        } else {
+                            /* no params: enforce (this) */
+                            parser_fail(*pos, "Method must declare at least 'this' parameter");
+                            free(mname);
+                            g_locals = saved;
+                            g_locals = prev_env;
+                            free(cname);
+                            return;
+                        }
+
+                        if (!consume_char(src, len, pos, ')')) {
+                            parser_fail(*pos, "Expected ')' after method parameter list");
+                            free(mname);
+                            g_locals = saved;
+                            g_locals = prev_env;
+                            free(cname);
+                            return;
+                        }
+                        /* end header line */
+                        skip_to_eol(src, len, pos);
+
+                        /* parse method body at increased indent */
+                        int m_body_indent = 0;
+                        size_t look_m = *pos;
+                        if (read_line_start(src, len, &look_m, &m_body_indent) && m_body_indent > body_indent) {
+                            parse_block(m_bc, src, len, pos, m_body_indent);
+                        } else {
+                            /* empty method body allowed -> return */
+                        }
+                        /* ensure return */
+                        bytecode_add_instruction(m_bc, OP_RETURN, 0);
+
+                        /* restore env to factory */
+                        g_locals = saved;
+
+                        /* Insert method function into instance: this["mname"] = <function> */
+                        bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+                        int kci = bytecode_add_constant(ctor_bc, make_string(mname));
+                        bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, kci);
+                        int mci = bytecode_add_constant(ctor_bc, make_function(m_bc));
+                        bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, mci);
+                        bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
+
+                        free(mname);
+                        continue;
+                    }
+
+                    /* field initializer: ident = expr */
+                    size_t lp = *pos;
+                    char *fname = NULL;
+                    if (!read_identifier_into(src, len, &lp, &fname)) {
+                        parser_fail(*pos, "Expected field or 'fun' in class body");
+                        g_locals = prev_env;
+                        free(cname);
+                        return;
+                    }
+                    size_t tmp = lp;
+                    skip_spaces(src, len, &tmp);
+                    if (tmp >= len || src[tmp] != '=') {
+                        free(fname);
+                        parser_fail(tmp, "Expected '=' in field initializer");
+                        g_locals = prev_env;
+                        free(cname);
+                        return;
+                    }
+                    /* commit position and consume '=' */
+                    *pos = tmp + 1;
+                    /* emit: this["fname"] = (expr) */
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+                    int fkey = bytecode_add_constant(ctor_bc, make_string(fname));
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, fkey);
+                    free(fname);
+                    if (!emit_expression(ctor_bc, src, len, pos)) {
+                        parser_fail(*pos, "Expected expression in field initializer");
+                        g_locals = prev_env;
+                        free(cname);
+                        return;
+                    }
+                    bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
+                    /* end of line */
+                    skip_to_eol(src, len, pos);
+                }
+            } else {
+                /* empty class body allowed */
+            }
+
+            /* return instance */
+            bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+            bytecode_add_instruction(ctor_bc, OP_RETURN, 0);
+
+            /* restore outer locals env */
+            g_locals = prev_env;
+
+            /* bind factory function globally under class name */
+            int cci = bytecode_add_constant(bc, make_function(ctor_bc));
+            bytecode_add_instruction(bc, OP_LOAD_CONST, cci);
+            bytecode_add_instruction(bc, OP_STORE_GLOBAL, cgi);
+
+            free(cname);
+            continue;
+        }
+
         if (starts_with(src, len, *pos, "fun")) {
             /* parse header: fun name(arg, ...) */
             *pos += 3;
