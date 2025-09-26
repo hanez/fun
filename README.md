@@ -2,7 +2,7 @@
 
 Fun Uses Nothing — Life is too short not to code with fun... ;)
 
-Influenced by Bash, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, Go, **[Lua](https://www.lua.org/)**, **[Python](https://www.python.org/)**, and Rust.
+Influenced by Bash, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, Go, **[Lua](https://www.lua.org/)**, **[Python](https://www.python.org/)**, and Rust (Most influenced languages are linked).
 
 Developed and tested on:
 
