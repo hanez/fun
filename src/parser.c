@@ -1927,10 +1927,75 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             }
             int cgi = sym_index(cname);
 
+            /* Optional typed parameter list: class Name(type ident, ...) */
+            char *param_names[64]; int param_kind[64]; int pcount = 0;
+            memset(param_names, 0, sizeof(param_names));
+            memset(param_kind, 0, sizeof(param_kind));
+
+            /* kind: 1=Number (numeric types incl. boolean), 2=String, 3=Nil */
+            auto int map_type_kind(const char *t) {
+                if (!t) return 0;
+                if (strcmp(t, "string") == 0) return 2;
+                if (strcmp(t, "nil") == 0) return 3;
+                if (strcmp(t, "boolean") == 0) return 1;
+                if (strcmp(t, "number") == 0) return 1;
+                if (strncmp(t, "uint", 4) == 0 || strncmp(t, "sint", 4) == 0 || strncmp(t, "int", 3) == 0) return 1;
+                return 0; /* unknown -> treat as number-like? keep as 0 => no check */
+            }
+
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] == '(') {
+                (*pos)++;
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] != ')') {
+                    for (;;) {
+                        /* read type token */
+                        char *tname = NULL;
+                        if (!read_identifier_into(src, len, pos, &tname)) {
+                            parser_fail(*pos, "Expected type in class parameter list");
+                            free(cname);
+                            return;
+                        }
+                        /* read param name */
+                        skip_spaces(src, len, pos);
+                        char *pname = NULL;
+                        if (!read_identifier_into(src, len, pos, &pname)) {
+                            parser_fail(*pos, "Expected parameter name after type");
+                            free(tname);
+                            free(cname);
+                            return;
+                        }
+                        if (pcount >= (int)(sizeof(param_names)/sizeof(param_names[0]))) {
+                            parser_fail(*pos, "Too many class parameters");
+                            free(tname); free(pname); free(cname);
+                            return;
+                        }
+                        param_names[pcount] = pname;
+                        param_kind[pcount] = map_type_kind(tname);
+                        free(tname);
+                        pcount++;
+
+                        skip_spaces(src, len, pos);
+                        if (*pos < len && src[*pos] == ',') {
+                            (*pos)++;
+                            skip_spaces(src, len, pos);
+                            continue;
+                        }
+                        break;
+                    }
+                }
+                if (!consume_char(src, len, pos, ')')) {
+                    parser_fail(*pos, "Expected ')' after class parameter list");
+                    for (int i = 0; i < pcount; ++i) free(param_names[i]);
+                    free(cname);
+                    return;
+                }
+            }
+
             /* end of class header line */
             skip_to_eol(src, len, pos);
 
-            /* Build factory function: Name() -> instance map with fields and methods */
+            /* Build factory function: Name(...) -> instance map with fields and methods */
             Bytecode *ctor_bc = bytecode_new();
             /* local env for the factory to allow temp locals */
             LocalEnv ctor_env;
@@ -1938,7 +2003,90 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             LocalEnv *prev_env = g_locals;
             g_locals = &ctor_env;
 
-            /* instance map: __this = {} */
+            /* Register parameter locals first so args land at 0..pcount-1 */
+            for (int i = 0; i < pcount; ++i) {
+                local_add(param_names[i]);
+            }
+
+            /* Guard local to detect extra argument at index == pcount */
+            int l_extra = local_add("__extra");
+
+            /* Runtime checks: missing args and type checks */
+            for (int i = 0; i < pcount; ++i) {
+                /* missing arg: local i must not be Nil */
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, i);
+                bytecode_add_instruction(ctor_bc, OP_TYPEOF, 0);
+                int ci_nil = bytecode_add_constant(ctor_bc, make_string("Nil"));
+                bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, ci_nil);
+                bytecode_add_instruction(ctor_bc, OP_EQ, 0);
+                int j_ok_present = bytecode_add_instruction(ctor_bc, OP_JUMP_IF_FALSE, 0);
+                /* then -> error */
+                {
+                    char msg[128];
+                    snprintf(msg, sizeof(msg), "TypeError: missing argument '%s' in %s()", param_names[i], cname);
+                    int ci_msg = bytecode_add_constant(ctor_bc, make_string(msg));
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, ci_msg);
+                    bytecode_add_instruction(ctor_bc, OP_PRINT, 0);
+                    bytecode_add_instruction(ctor_bc, OP_HALT, 0);
+                }
+                /* patch continue if present */
+                bytecode_set_operand(ctor_bc, j_ok_present, ctor_bc->instr_count);
+
+                /* type check for known kinds */
+                int kind = param_kind[i];
+                if (kind == 1 || kind == 2 || kind == 3) {
+                    /* typeof(local i) == Expected ? skip error : go to error */
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, i);
+                    bytecode_add_instruction(ctor_bc, OP_TYPEOF, 0);
+                    const char *exp = (kind == 1) ? "Number" : (kind == 2) ? "String" : "Nil";
+                    int ci_exp = bytecode_add_constant(ctor_bc, make_string(exp));
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, ci_exp);
+                    bytecode_add_instruction(ctor_bc, OP_EQ, 0);
+                    /* if false -> jump to error */
+                    int j_to_error = bytecode_add_instruction(ctor_bc, OP_JUMP_IF_FALSE, 0);
+                    /* on success, skip error block */
+                    int j_skip_err = bytecode_add_instruction(ctor_bc, OP_JUMP, 0);
+                    /* error block */
+                    {
+                        int err_label = ctor_bc->instr_count;
+                        bytecode_set_operand(ctor_bc, j_to_error, err_label);
+                        char msg2[160];
+                        snprintf(msg2, sizeof(msg2), "TypeError: %s() expects %s for '%s'", cname, exp, param_names[i]);
+                        int ci_msg2 = bytecode_add_constant(ctor_bc, make_string(msg2));
+                        bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, ci_msg2);
+                        bytecode_add_instruction(ctor_bc, OP_PRINT, 0);
+                        bytecode_add_instruction(ctor_bc, OP_HALT, 0);
+                    }
+                    /* continue label after error block */
+                    bytecode_set_operand(ctor_bc, j_skip_err, ctor_bc->instr_count);
+                }
+            }
+
+            /* Extra args check: guard local must be Nil; if not Nil -> error */
+            {
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_extra);
+                bytecode_add_instruction(ctor_bc, OP_TYPEOF, 0);
+                int ci_nil2 = bytecode_add_constant(ctor_bc, make_string("Nil"));
+                bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, ci_nil2);
+                bytecode_add_instruction(ctor_bc, OP_EQ, 0);
+                /* if false (not Nil) -> jump to error */
+                int j_to_error = bytecode_add_instruction(ctor_bc, OP_JUMP_IF_FALSE, 0);
+                /* if true (Nil) -> skip error */
+                int j_skip_err = bytecode_add_instruction(ctor_bc, OP_JUMP, 0);
+                {
+                    int err_label = ctor_bc->instr_count;
+                    bytecode_set_operand(ctor_bc, j_to_error, err_label);
+                    char msg3[128];
+                    snprintf(msg3, sizeof(msg3), "TypeError: %s() received too many arguments", cname);
+                    int ci_msg3 = bytecode_add_constant(ctor_bc, make_string(msg3));
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, ci_msg3);
+                    bytecode_add_instruction(ctor_bc, OP_PRINT, 0);
+                    bytecode_add_instruction(ctor_bc, OP_HALT, 0);
+                }
+                bytecode_set_operand(ctor_bc, j_skip_err, ctor_bc->instr_count);
+            }
+
+            /* instance map: __this = {} (placed after param guard) */
             int l_this = local_add("__this");
             bytecode_add_instruction(ctor_bc, OP_MAKE_MAP, 0);
             bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_this);
@@ -2116,6 +2264,15 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 /* empty class body allowed */
             }
 
+            /* Override defaults with constructor parameters: this["name"] = local i */
+            for (int i = 0; i < pcount; ++i) {
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+                int kci = bytecode_add_constant(ctor_bc, make_string(param_names[i]));
+                bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, kci);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, i);
+                bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
+            }
+
             /* return instance */
             bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
             bytecode_add_instruction(ctor_bc, OP_RETURN, 0);
@@ -2128,6 +2285,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             bytecode_add_instruction(bc, OP_LOAD_CONST, cci);
             bytecode_add_instruction(bc, OP_STORE_GLOBAL, cgi);
 
+            for (int i = 0; i < pcount; ++i) free(param_names[i]);
             free(cname);
             continue;
         }

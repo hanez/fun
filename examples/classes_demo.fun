@@ -23,7 +23,7 @@
  *     move_fn(p, dx, dy)
  */
 
-class Point
+class Point(number x, number y)
   x = 0
   y = 0
   fun move(this, dx, dy)
@@ -42,8 +42,8 @@ class Counter
     this.value = this.value + n
     return this.value
 
-// Instantiate a Point
-p = Point()
+// Instantiate a Point with constructor parameters
+p = Point(10, -2)
 
 // Types
 print("typeof(Point) = " + typeof(Point)) // Function (factory)
@@ -51,9 +51,6 @@ print("typeof(p) = " + typeof(p))         // Map (instance)
 
 // Read/write fields
 print("p.x = " + to_string(p["x"]) + ", p.y = " + to_string(p["y"]))
-p["x"] = 10
-p["y"] = -2
-print("after set -> p.x = " + to_string(p["x"]) + ", p.y = " + to_string(p["y"]))
 
 // Call methods directly with dot-call sugar: p.method(args) desugars to method(p, args)
 print("toString(p) => " + p.toString())
@@ -61,8 +58,8 @@ print("toString(p) => " + p.toString())
 p.move(3, 5)
 print("after move(3,5) -> " + p.toString()) // expect Point(13, 3)
 
-// Another instance with defaults
-q = Point()
+// Another instance (explicit constructor args)
+q = Point(0, 0)
 print("q initially -> " + q.toString()) // Point(0, 0)
 
 // Counter demo
