@@ -26,9 +26,15 @@
 class Point(number x, number y)
   x = 0
   y = 0
-  fun move(this, dx, dy)
+  /* private helper (callable only as this._shift inside class) */
+  fun _shift(this, dx, dy)
     this.x = this.x + dx
     this.y = this.y + dy
+    return 0
+  fun move(this, dx, dy)
+    /* delegate to private helper */
+    this._shift(dx, dy)
+    print("typeof(this._shift) = " + typeof(this._shift))
     return 0
   fun toString(this)
     return "Point(" + to_string(this.x) + ", " + to_string(this.y) + ")"
@@ -46,8 +52,8 @@ class Counter
 p = Point(10, -2)
 
 // Types
-print("typeof(Point) = " + typeof(Point)) // Function (factory)
-print("typeof(p) = " + typeof(p))         // Map (instance)
+print("typeof(Point) = " + typeof(Point)) // Class (factory)
+print("typeof(p) = " + typeof(p))         // Point(10, -2) (instance)
 
 // Read/write fields
 print("p.x = " + to_string(p["x"]) + ", p.y = " + to_string(p["y"]))
@@ -57,6 +63,11 @@ print("toString(p) => " + p.toString())
 
 p.move(3, 5)
 print("after move(3,5) -> " + p.toString()) // expect Point(13, 3)
+
+/* External private call should fail with AccessError and halt */
+// This fails because of calling a private method, prefixed with "_" in the class definition. Commented out to make the
+// script run without any errors.
+//p._shift(1, 1)
 
 // Another instance (explicit constructor args)
 q = Point(0, 0)
@@ -68,3 +79,17 @@ print("counter inc -> " + to_string(c.inc()))        // 1
 print("counter inc -> " + to_string(c.inc()))        // 2
 print("counter add(5) -> " + to_string(c.add(5)))    // 7
 print("counter current value = " + to_string(c["value"]))
+
+/* Expected output:
+typeof(Point) = Class
+typeof(p) = Point(10, -2)
+p.x = 10, p.y = -2
+toString(p) => Point(10, -2)
+typeof(this._shift) = Function
+after move(3,5) -> Point(13, 3)
+q initially -> Point(0, 0)
+counter inc -> 1
+counter inc -> 2
+counter add(5) -> 7
+counter current value = 7
+*/

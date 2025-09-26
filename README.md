@@ -1,6 +1,6 @@
 # Fun
 
-Fun Uses Nothing — Life is too short not to code fun... ;)
+Fun Uses Nothing — Life is too short not to code with fun... ;)
 
 Influenced by Bash, C, Go, Lua, Python, and Rust.
 
@@ -21,8 +21,9 @@ Developed and tested on:
 
  * Static and optionally dynamic
  * No pointers
- * Type safety
+ * Type safety (Not safe yet)
  * Written in C / Internally no_camel_case... ;)
+ * Only a minimal function set is written in C; All other core libraries are implemented in Fun
 
 ## The Fun Manifesto
 
@@ -66,4 +67,4 @@ Fun may not change the world — but it will make programming a little more fun.
 
 ## To do
 
-Everything... ;) No, a lot of stuff works already, but only a very small set of functions are available in the Fun programming language. It grows from day to day...
+Everything... ;) No, a lot of stuff works already, but only a tiny set of functions are available in the Fun programming language. It grows from day to day...

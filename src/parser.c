@@ -89,9 +89,10 @@ static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line
 /* very small global symbol table for LOAD_GLOBAL/STORE_GLOBAL */
 static struct {
     char *names[MAX_GLOBALS];
-    int types[MAX_GLOBALS]; /* 0=untyped/number default; else bit width: 8/16/32/64 */
+    int types[MAX_GLOBALS];   /* 0=untyped/number default; else bit width: 8/16/32/64; negative for signed */
+    int is_class[MAX_GLOBALS];/* 1 if this global name denotes a class factory */
     int count;
-} G = { {0}, {0}, 0 };
+} G = { {0}, {0}, {0}, 0 };
 
 static int sym_index(const char *name) {
     for (int i = 0; i < G.count; ++i) {
@@ -102,7 +103,8 @@ static int sym_index(const char *name) {
         return 0;
     }
     G.names[G.count] = strdup(name);
-    G.types[G.count] = 0; /* default: untyped (treat as 64-bit number) */
+    G.types[G.count] = 0;   /* default: untyped */
+    G.is_class[G.count] = 0;/* default: not a class */
     return G.count++;
 }
 
@@ -464,15 +466,19 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         /* Find declared type metadata for the identifier */
                         int decl_bits = 0; /* >0 unsigned width, <0 signed width, 0 unknown/non-integer */
                         int lidx2 = local_find(vname);
+                        int is_class_name = 0;
+                        int gidx2 = -1;
                         if (lidx2 >= 0 && g_locals) {
                             decl_bits = g_locals->types[lidx2];
                         } else {
                             /* lookup existing global without creating a new symbol */
-                            int gidx2 = -1;
                             for (int gi_ = 0; gi_ < G.count; ++gi_) {
                                 if (strcmp(G.names[gi_], vname) == 0) { gidx2 = gi_; break; }
                             }
-                            if (gidx2 >= 0) decl_bits = G.types[gidx2];
+                            if (gidx2 >= 0) {
+                                decl_bits = G.types[gidx2];
+                                is_class_name = G.is_class[gidx2];
+                            }
                         }
 
                         if (decl_bits != 0) {
@@ -482,8 +488,11 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                             snprintf(tbuf, sizeof(tbuf), "%s%d", is_signed ? "Sint" : "Uint", bits);
                             int ci = bytecode_add_constant(bc, make_string(tbuf));
                             bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        } else if (is_class_name) {
+                            int ci = bytecode_add_constant(bc, make_string("Class"));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
                         } else {
-                            /* Fallback: load the variable and use runtime typeof */
+                            /* Fallback: load the variable, but if it's a class instance (Map with "__class"), return "Class" */
                             if (lidx2 >= 0) {
                                 bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx2);
                             } else {
@@ -496,7 +505,50 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                                 if (gi2 < 0) gi2 = sym_index(vname);
                                 bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi2);
                             }
+                            /* Stack: [v] */
+                            bytecode_add_instruction(bc, OP_DUP, 0);            /* [v, v] */
+                            bytecode_add_instruction(bc, OP_TYPEOF, 0);        /* [v, tname] */
+                            {
+                                int ciMap = bytecode_add_constant(bc, make_string("Map"));
+                                bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap); /* [v, tname, "Map"] */
+                            }
+                            bytecode_add_instruction(bc, OP_EQ, 0);            /* [v, isMap] */
+                            int j_if_not_map2 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+                            /* Map branch: check for __class tag */
+                            bytecode_add_instruction(bc, OP_DUP, 0);           /* [v, v] */
+                            {
+                                int kci = bytecode_add_constant(bc, make_string("__class"));
+                                bytecode_add_instruction(bc, OP_LOAD_CONST, kci); /* [v, v, "__class"] */
+                            }
+                            bytecode_add_instruction(bc, OP_HAS_KEY, 0);       /* [v, has] */
+                            int j_no_meta2 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                            /* has __class -> call toString() and return */
+                            bytecode_add_instruction(bc, OP_DUP, 0);           /* [v, v] */
+                            {
+                                int kcits = bytecode_add_constant(bc, make_string("toString"));
+                                bytecode_add_instruction(bc, OP_LOAD_CONST, kcits); /* [v, v, "toString"] */
+                            }
+                            bytecode_add_instruction(bc, OP_INDEX_GET, 0);     /* [v, func] */
+                            bytecode_add_instruction(bc, OP_SWAP, 0);          /* [func, v] */
+                            bytecode_add_instruction(bc, OP_CALL, 1);          /* [string] */
+                            int j_end2 = bytecode_add_instruction(bc, OP_JUMP, 0);
+
+                            /* no meta: drop v and return "Map" */
+                            bytecode_set_operand(bc, j_no_meta2, bc->instr_count);
+                            bytecode_add_instruction(bc, OP_POP, 0);           /* [] */
+                            {
+                                int ciMap2 = bytecode_add_constant(bc, make_string("Map"));
+                                bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap2);
+                            }
+                            int after_map2 = bc->instr_count;
+
+                            /* not map: typeof(v) */
+                            bytecode_set_operand(bc, j_if_not_map2, after_map2);
                             bytecode_add_instruction(bc, OP_TYPEOF, 0);
+
+                            /* end */
+                            bytecode_set_operand(bc, j_end2, bc->instr_count);
                         }
                         free(vname);
                         /* consume the ')' */
@@ -509,10 +561,66 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 }
 
                 if (!handled) {
-                    /* General case: typeof(expression) */
+                    /* General case: typeof(expression)
+                       If the value is a Map with "__class" key, return that string; else return base typeof.
+                       Stack plan:
+                       - eval expr -> [v]
+                       - DUP, TYPEOF, "Map" EQ -> [v, isMap]
+                       - if not map: drop condition path and return TYPEOF(v)
+                       - if map:
+                           DUP, "__class", HAS_KEY -> [v, has]
+                           if has: "__class", INDEX_GET -> [className]; return
+                           else: POP v; return "Map"
+                    */
                     if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "typeof expects 1 argument"); free(name); return 0; }
                     if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after typeof arg"); free(name); return 0; }
-                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+
+                    /* [v] */
+                    bytecode_add_instruction(bc, OP_DUP, 0);            /* [v, v] */
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);        /* [v, tname] */
+                    {
+                        int ciMap = bytecode_add_constant(bc, make_string("Map"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap); /* [v, tname, "Map"] */
+                    }
+                    bytecode_add_instruction(bc, OP_EQ, 0);            /* [v, isMap] */
+                    int j_if_not_map = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+                    /* Map branch: [v] */
+                    bytecode_add_instruction(bc, OP_DUP, 0);           /* [v, v] */
+                    {
+                        int kci = bytecode_add_constant(bc, make_string("__class"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci); /* [v, v, "__class"] */
+                    }
+                    bytecode_add_instruction(bc, OP_HAS_KEY, 0);       /* [v, has] */
+                    int j_no_meta = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    /* has __class: try toString() -> return its result */
+                    bytecode_add_instruction(bc, OP_DUP, 0);           /* [v, v] */
+                    {
+                        int kcits = bytecode_add_constant(bc, make_string("toString"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kcits); /* [v, v, "toString"] */
+                    }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);     /* [v, func] */
+                    bytecode_add_instruction(bc, OP_SWAP, 0);          /* [func, v] */
+                    bytecode_add_instruction(bc, OP_CALL, 1);          /* [string] */
+                    int j_end = bytecode_add_instruction(bc, OP_JUMP, 0);
+
+                    /* no meta: drop v and return "Map" */
+                    bytecode_set_operand(bc, j_no_meta, bc->instr_count);
+                    bytecode_add_instruction(bc, OP_POP, 0);           /* [] */
+                    {
+                        int ciMap2 = bytecode_add_constant(bc, make_string("Map"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap2); /* ["Map"] */
+                    }
+                    int after_map = bc->instr_count;
+
+                    /* not map: compute typeof(v) */
+                    bytecode_set_operand(bc, j_if_not_map, after_map);
+                    /* Stack currently holds what after we patched? For not-map path, we still have [v] retained because JUMP_IF_FALSE popped cond.
+                       Now produce typeof(v). */
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);        /* [tname] */
+
+                    /* end */
+                    bytecode_set_operand(bc, j_end, bc->instr_count);
                 }
 
                 free(name);
@@ -1001,13 +1109,24 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                     skip_spaces(src, len, pos);
                     char *mname = NULL;
                     if (!read_identifier_into(src, len, pos, &mname)) { parser_fail(*pos, "Expected identifier after '.'"); free(name); return 0; }
+                    int is_private = (mname && mname[0] == '_');
                     int kci = bytecode_add_constant(bc, make_string(mname));
-                    free(mname);
 
                     /* Peek for immediate call: obj.method( ... ) */
                     size_t callp = *pos;
                     skip_spaces(src, len, &callp);
                     if (callp < len && src[callp] == '(') {
+                        /* If private method on non-'this' receiver in this context -> error */
+                        if (is_private) {
+                            char msg[160];
+                            snprintf(msg, sizeof(msg), "AccessError: private method '%s' is not accessible here", mname);
+                            int ci = bytecode_add_constant(bc, make_string(msg));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                            bytecode_add_instruction(bc, OP_PRINT, 0);
+                            bytecode_add_instruction(bc, OP_HALT, 0);
+                            free(mname);
+                            continue;
+                        }
                         /* Prepare: stack has <obj>. Duplicate it to preserve 'this' across INDEX_GET */
                         bytecode_add_instruction(bc, OP_DUP, 0);
                         bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
@@ -1020,20 +1139,22 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         skip_spaces(src, len, pos);
                         if (*pos < len && src[*pos] != ')') {
                             do {
-                                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected expression as method argument"); free(name); return 0; }
+                                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected expression as method argument"); free(mname); free(name); return 0; }
                                 argc++;
                                 skip_spaces(src, len, pos);
                             } while (*pos < len && src[*pos] == ',' && (++(*pos), skip_spaces(src, len, pos), 1));
                         }
-                        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(name); return 0; }
+                        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(mname); free(name); return 0; }
 
                         /* Call with implicit 'this' (+1 arg) */
                         bytecode_add_instruction(bc, OP_CALL, argc + 1);
+                        free(mname);
                         continue;
                     } else {
                         /* Plain property get: obj["field"] */
                         bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
                         bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                        free(mname);
                         continue;
                     }
                 }
@@ -1083,13 +1204,25 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                     skip_spaces(src, len, pos);
                     char *mname = NULL;
                     if (!read_identifier_into(src, len, pos, &mname)) { parser_fail(*pos, "Expected identifier after '.'"); free(name); return 0; }
+                    int is_private = (mname && mname[0] == '_');
                     int kci = bytecode_add_constant(bc, make_string(mname));
-                    free(mname);
 
                     /* Peek for call */
                     size_t callp = *pos;
                     skip_spaces(src, len, &callp);
                     if (callp < len && src[callp] == '(') {
+                        /* If private and receiver is not 'this' -> error */
+                        if (is_private && !(strcmp(name, "this") == 0)) {
+                            char msg[160];
+                            snprintf(msg, sizeof(msg), "AccessError: private method '%s' is not accessible", mname);
+                            int ci = bytecode_add_constant(bc, make_string(msg));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                            bytecode_add_instruction(bc, OP_PRINT, 0);
+                            bytecode_add_instruction(bc, OP_HALT, 0);
+                            free(mname);
+                            continue;
+                        }
+
                         /* Stack has obj: duplicate to preserve 'this' */
                         bytecode_add_instruction(bc, OP_DUP, 0);
                         bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
@@ -1101,19 +1234,21 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         skip_spaces(src, len, pos);
                         if (*pos < len && src[*pos] != ')') {
                             do {
-                                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected expression as method argument"); free(name); return 0; }
+                                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected expression as method argument"); free(mname); free(name); return 0; }
                                 argc++;
                                 skip_spaces(src, len, pos);
                             } while (*pos < len && src[*pos] == ',' && (++(*pos), skip_spaces(src, len, pos), 1));
                         }
-                        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(name); return 0; }
+                        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(mname); free(name); return 0; }
 
                         bytecode_add_instruction(bc, OP_CALL, argc + 1);
+                        free(mname);
                         continue;
                     } else {
-                        /* plain property get */
+                        /* plain property get (allowed even for private name) */
                         bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
                         bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                        free(mname);
                         continue;
                     }
                 }
@@ -2091,6 +2226,16 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             bytecode_add_instruction(ctor_bc, OP_MAKE_MAP, 0);
             bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_this);
 
+            /* tag instance with its class name: this["__class"] = "<ClassName>" */
+            bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+            {
+                int kci_cls = bytecode_add_constant(ctor_bc, make_string("__class"));
+                bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, kci_cls);
+                int vci_cls = bytecode_add_constant(ctor_bc, make_string(cname));
+                bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, vci_cls);
+            }
+            bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
+
             /* Parse class body at increased indent */
             int body_indent = 0;
             size_t look_body = *pos;
@@ -2284,6 +2429,8 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             int cci = bytecode_add_constant(bc, make_function(ctor_bc));
             bytecode_add_instruction(bc, OP_LOAD_CONST, cci);
             bytecode_add_instruction(bc, OP_STORE_GLOBAL, cgi);
+            /* mark this global as a class for typeof(identifier) */
+            G.is_class[cgi] = 1;
 
             for (int i = 0; i < pcount; ++i) free(param_names[i]);
             free(cname);
