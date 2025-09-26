@@ -1,16 +1,27 @@
 #!/usr/bin/env fun
 
-// Classes demo: fields, methods (with explicit 'this'), and usage.
-//
-// Notes:
-// - Define a class with `class Name`
-// - Fields are initialized with simple assignments inside the class body.
-// - Methods are written as `fun method(this, ...) { ... }` with 'this' required as the first parameter.
-// - Instantiation: p = Name()
-// - Method calls: load the method function from the instance into a variable, then call it with the instance as the first argument.
-//   Example:
-//     move_fn = p["move"]
-//     move_fn(p, dx, dy)
+/*
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+/*
+ * Classes demo: fields, methods (with explicit 'this'), and usage.
+ *
+ * Notes:
+ * - Define a class with `class Name`
+ * - Fields are initialized with simple assignments inside the class body.
+ * - Methods are written as `fun method(this, ...) { ... }` with 'this' required as the first parameter.
+ * - Instantiation: p = Name()
+ * - Method calls: load the method function from the instance into a variable, then call it with the instance as the first argument.
+ *   Example:
+ *     move_fn = p["move"]
+ *     move_fn(p, dx, dy)
+ */
 
 class Point
   x = 0
