@@ -55,24 +55,19 @@ p["x"] = 10
 p["y"] = -2
 print("after set -> p.x = " + to_string(p["x"]) + ", p.y = " + to_string(p["y"]))
 
-// Call methods by first loading them into identifiers, then passing 'p' as first argument
-to_str = p["toString"]
-print("toString(p) => " + to_str(p))
+// Call methods directly with dot-call sugar: p.method(args) desugars to method(p, args)
+print("toString(p) => " + p.toString())
 
-move_fn = p["move"]
-move_fn(p, 3, 5)
-print("after move(3,5) -> " + to_str(p)) // expect Point(13, 3)
+p.move(3, 5)
+print("after move(3,5) -> " + p.toString()) // expect Point(13, 3)
 
 // Another instance with defaults
 q = Point()
-print("q initially -> " + to_str(q)) // Point(0, 0)
+print("q initially -> " + q.toString()) // Point(0, 0)
 
 // Counter demo
 c = Counter()
-inc = c["inc"]
-add = c["add"]
-
-print("counter inc -> " + to_string(inc(c)))     // 1
-print("counter inc -> " + to_string(inc(c)))     // 2
-print("counter add(5) -> " + to_string(add(c, 5))) // 7
+print("counter inc -> " + to_string(c.inc()))        // 1
+print("counter inc -> " + to_string(c.inc()))        // 2
+print("counter add(5) -> " + to_string(c.add(5)))    // 7
 print("counter current value = " + to_string(c["value"]))

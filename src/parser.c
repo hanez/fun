@@ -995,7 +995,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                     }
                 }
 
-                /* dot property access: obj.field -> obj["field"] */
+                /* dot property access and method-call sugar: obj.field or obj.method(...) */
                 if (*pos < len && src[*pos] == '.') {
                     (*pos)++; /* '.' */
                     skip_spaces(src, len, pos);
@@ -1003,9 +1003,39 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                     if (!read_identifier_into(src, len, pos, &mname)) { parser_fail(*pos, "Expected identifier after '.'"); free(name); return 0; }
                     int kci = bytecode_add_constant(bc, make_string(mname));
                     free(mname);
-                    bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
-                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                    continue;
+
+                    /* Peek for immediate call: obj.method( ... ) */
+                    size_t callp = *pos;
+                    skip_spaces(src, len, &callp);
+                    if (callp < len && src[callp] == '(') {
+                        /* Prepare: stack has <obj>. Duplicate it to preserve 'this' across INDEX_GET */
+                        bytecode_add_instruction(bc, OP_DUP, 0);
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                        bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> stack: obj, func */
+                        bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> stack: func, obj (this) */
+
+                        /* Consume '(' and parse args */
+                        *pos = callp + 1;
+                        int argc = 0;
+                        skip_spaces(src, len, pos);
+                        if (*pos < len && src[*pos] != ')') {
+                            do {
+                                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected expression as method argument"); free(name); return 0; }
+                                argc++;
+                                skip_spaces(src, len, pos);
+                            } while (*pos < len && src[*pos] == ',' && (++(*pos), skip_spaces(src, len, pos), 1));
+                        }
+                        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(name); return 0; }
+
+                        /* Call with implicit 'this' (+1 arg) */
+                        bytecode_add_instruction(bc, OP_CALL, argc + 1);
+                        continue;
+                    } else {
+                        /* Plain property get: obj["field"] */
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                        bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                        continue;
+                    }
                 }
 
                 break;
@@ -1047,7 +1077,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                     }
                 }
 
-                /* dot property access: obj.field -> obj["field"] */
+                /* dot property access and method-call sugar */
                 if (*pos < len && src[*pos] == '.') {
                     (*pos)++;
                     skip_spaces(src, len, pos);
@@ -1055,9 +1085,37 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                     if (!read_identifier_into(src, len, pos, &mname)) { parser_fail(*pos, "Expected identifier after '.'"); free(name); return 0; }
                     int kci = bytecode_add_constant(bc, make_string(mname));
                     free(mname);
-                    bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
-                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
-                    continue;
+
+                    /* Peek for call */
+                    size_t callp = *pos;
+                    skip_spaces(src, len, &callp);
+                    if (callp < len && src[callp] == '(') {
+                        /* Stack has obj: duplicate to preserve 'this' */
+                        bytecode_add_instruction(bc, OP_DUP, 0);
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                        bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> obj, func */
+                        bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> func, obj */
+
+                        *pos = callp + 1;
+                        int argc = 0;
+                        skip_spaces(src, len, pos);
+                        if (*pos < len && src[*pos] != ')') {
+                            do {
+                                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected expression as method argument"); free(name); return 0; }
+                                argc++;
+                                skip_spaces(src, len, pos);
+                            } while (*pos < len && src[*pos] == ',' && (++(*pos), skip_spaces(src, len, pos), 1));
+                        }
+                        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(name); return 0; }
+
+                        bytecode_add_instruction(bc, OP_CALL, argc + 1);
+                        continue;
+                    } else {
+                        /* plain property get */
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                        bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                        continue;
+                    }
                 }
 
                 break;
