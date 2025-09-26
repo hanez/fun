@@ -2068,15 +2068,12 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             memset(param_kind, 0, sizeof(param_kind));
 
             /* kind: 1=Number (numeric types incl. boolean), 2=String, 3=Nil */
-            auto int map_type_kind(const char *t) {
-                if (!t) return 0;
-                if (strcmp(t, "string") == 0) return 2;
-                if (strcmp(t, "nil") == 0) return 3;
-                if (strcmp(t, "boolean") == 0) return 1;
-                if (strcmp(t, "number") == 0) return 1;
-                if (strncmp(t, "uint", 4) == 0 || strncmp(t, "sint", 4) == 0 || strncmp(t, "int", 3) == 0) return 1;
-                return 0; /* unknown -> treat as number-like? keep as 0 => no check */
-            }
+            /* helper macro instead of nested function (C99 compliant) */
+            #define MAP_TYPE_KIND(t) ( \
+                ((t) && strcmp((t), "string")==0) ? 2 : \
+                ((t) && strcmp((t), "nil")==0) ? 3 : \
+                ((t) && (strcmp((t), "boolean")==0 || strcmp((t), "number")==0 || strncmp((t), "uint", 4)==0 || strncmp((t), "sint", 4)==0 || strncmp((t), "int", 3)==0)) ? 1 : \
+                0 )
 
             skip_spaces(src, len, pos);
             if (*pos < len && src[*pos] == '(') {
@@ -2106,7 +2103,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                             return;
                         }
                         param_names[pcount] = pname;
-                        param_kind[pcount] = map_type_kind(tname);
+                        param_kind[pcount] = MAP_TYPE_KIND(tname);
                         free(tname);
                         pcount++;
 
