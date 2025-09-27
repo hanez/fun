@@ -1,5 +1,4 @@
 # Simple Makefile wrapper around CMake
-
 BUILD_DIR ?= build
 CMAKE ?= cmake
 # Default to a build with extra logging disabled
