@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun VERSION 0.5.2 LANGUAGES C)
+project(fun VERSION 0.6.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -67,6 +67,10 @@ add_custom_target(distclean
 # - Binary
 install(TARGETS fun
         RUNTIME DESTINATION /usr/bin)
+
+install(DIRECTORY lib/
+        DESTINATION /usr/lib/fun
+        FILES_MATCHING PATTERN "*.fun")
 
 # - Optionally install example scripts
 option(FUN_INSTALL_EXAMPLES "Install example .fun scripts" ON)

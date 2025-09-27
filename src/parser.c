@@ -3009,6 +3009,12 @@ Bytecode *parse_file_to_bytecode(const char *path) {
         fprintf(stderr, "Error: cannot read file: %s\n", path);
         return NULL;
     }
+
+    /* Preprocess includes before compiling */
+    char *prep = preprocess_includes(src);
+    const char *compile_src = prep ? prep : src;
+    size_t compile_len = strlen(compile_src);
+
     /* reset error state */
     g_has_error = 0;
     g_err_pos = 0;
@@ -3016,19 +3022,21 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     g_err_line = 0;
     g_err_col  = 0;
 
-    Bytecode *bc = compile_minimal(src, len);
+    Bytecode *bc = compile_minimal(compile_src, compile_len);
 
     if (g_has_error) {
         int line = 1, col = 1;
-        calc_line_col(src, len, g_err_pos, &line, &col);
+        calc_line_col(compile_src, compile_len, g_err_pos, &line, &col);
         g_err_line = line;
         g_err_col  = col;
         fprintf(stderr, "Parse error %s:%d:%d: %s\n", path ? path : "<input>", line, col, g_err_msg);
         if (bc) bytecode_free(bc);
+        if (prep) free(prep);
         free(src);
         return NULL;
     }
 
+    if (prep) free(prep);
     free(src);
     return bc;
 }
@@ -3038,7 +3046,11 @@ Bytecode *parse_string_to_bytecode(const char *source) {
         fprintf(stderr, "Error: null source provided\n");
         return NULL;
     }
-    size_t len = strlen(source);
+
+    /* Preprocess includes before compiling */
+    char *prep = preprocess_includes(source);
+    const char *compile_src = prep ? prep : source;
+    size_t len = strlen(compile_src);
 
     /* reset error state */
     g_has_error = 0;
@@ -3047,16 +3059,18 @@ Bytecode *parse_string_to_bytecode(const char *source) {
     g_err_line = 0;
     g_err_col  = 0;
 
-    Bytecode *bc = compile_minimal(source, len);
+    Bytecode *bc = compile_minimal(compile_src, len);
 
     if (g_has_error) {
         int line = 1, col = 1;
-        calc_line_col(source, len, g_err_pos, &line, &col);
+        calc_line_col(compile_src, len, g_err_pos, &line, &col);
         g_err_line = line;
         g_err_col  = col;
         if (bc) bytecode_free(bc);
+        if (prep) free(prep);
         return NULL;
     }
+    if (prep) free(prep);
     return bc;
 }
 

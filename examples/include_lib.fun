@@ -1,0 +1,24 @@
+#!/usr/bin/env fun
+
+/*
+ * This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
+// Demonstrates system library includes after installation to /usr/lib/fun
+
+include <hello.fun>
+include <utils/math.fun>
+
+print("== include lib demo ==")
+hello_lib()
+
+number x = 10
+number y = 32
+
+print("add(" + to_string(x) + ", " + to_string(y) + ") = " + to_string(add(x, y)))
+print("times(" + to_string(x) + ", " + to_string(y) + ") = " + to_string(times(x, y)))
