@@ -153,6 +153,26 @@ static size_t lcp_suffix(const char **names, int count, size_t base_len) {
     return base_len + (lcp == (size_t)-1 ? 0 : lcp);
 }
 
+/* Word-jump helpers (used by Ctrl+Left/Right in the REPL editor).
+ * Words are runs of non-space characters; separators are spaces.
+ */
+static void rl_word_left(const char *out, size_t len, size_t *pos) {
+    if (!out || !pos) return;
+    if (*pos == 0) return;
+    /* skip spaces to the left */
+    while (*pos > 0 && out[*pos - 1] == ' ') (*pos)--;
+    /* skip non-spaces to the left */
+    while (*pos > 0 && out[*pos - 1] != ' ') (*pos)--;
+}
+static void rl_word_right(const char *out, size_t len, size_t *pos) {
+    if (!out || !pos) return;
+    if (*pos >= len) return;
+    /* skip non-spaces to the right */
+    while (*pos < len && out[*pos] != ' ') (*pos)++;
+    /* skip spaces to the right */
+    while (*pos < len && out[*pos] == ' ') (*pos)++;
+}
+
 /* Expand file path for ":load " completion in-place; returns 1 if buffer changed (redraw) */
 static int complete_load_path(char *buf, size_t *len_io) {
     size_t len = *len_io;
@@ -360,21 +380,7 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                     }
                 }
 
-                /* Helpers for word-jumps: words are runs of non-space chars */
-                auto void word_left(void) {
-                    if (pos == 0) return;
-                    /* skip spaces left */
-                    while (pos > 0 && out[pos - 1] == ' ') pos--;
-                    /* skip non-spaces left */
-                    while (pos > 0 && out[pos - 1] != ' ') pos--;
-                };
-                auto void word_right(void) {
-                    if (pos >= len) return;
-                    /* skip non-spaces right */
-                    while (pos < len && out[pos] != ' ') pos++;
-                    /* skip spaces right */
-                    while (pos < len && out[pos] == ' ') pos++;
-                };
+                /* Helpers for word-jumps are file-scope (rl_word_left/right) */
 
                 if (final == 'A') { /* Up */
                     if (!has_saved) {
@@ -425,7 +431,7 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                 } else if (final == 'C') { /* Right */
                     if (ctrl) {
                         size_t old = pos;
-                        word_right();
+                        rl_word_right(out, len, &pos);
                         if (pos != old) RL_REDRAW_POS();
                         else { fputc('\a', stdout); fflush(stdout); }
                     } else {
@@ -435,7 +441,7 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                 } else if (final == 'D') { /* Left */
                     if (ctrl) {
                         size_t old = pos;
-                        word_left();
+                        rl_word_left(out, len, &pos);
                         if (pos != old) RL_REDRAW_POS();
                         else { fputc('\a', stdout); fflush(stdout); }
                     } else {
