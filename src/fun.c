@@ -52,6 +52,54 @@
 #include <limits.h>
 #endif
 
+/* --------- REPL history (in-memory + file integration) ---------- */
+enum { RL_HIST_MAX = 1000 };
+static char *rl_hist[RL_HIST_MAX];
+static int rl_count = 0;
+
+/* last history entry (or NULL) */
+static const char* rl_hist_last(void) {
+    if (rl_count <= 0) return NULL;
+    return rl_hist[rl_count - 1];
+}
+
+/* add one line to in-memory history (without trailing newline), dedup consecutive */
+static void rl_hist_add(const char *s) {
+    if (!s) return;
+    size_t n = strlen(s);
+    /* strip single trailing newline if present */
+    while (n > 0 && (s[n-1] == '\n' || s[n-1] == '\r')) n--;
+    if (n == 0) return;
+    /* dedupe consecutive identical */
+    const char *last = rl_hist_last();
+    if (last && strncmp(last, s, n) == 0 && last[n] == '\0') return;
+
+    /* allocate and copy */
+    char *cpy = (char*)malloc(n + 1);
+    if (!cpy) return;
+    memcpy(cpy, s, n);
+    cpy[n] = '\0';
+
+    if (rl_count == RL_HIST_MAX) {
+        free(rl_hist[0]);
+        memmove(&rl_hist[0], &rl_hist[1], sizeof(rl_hist[0]) * (RL_HIST_MAX - 1));
+        rl_count--;
+    }
+    rl_hist[rl_count++] = cpy;
+}
+
+/* preload history from file (one line per entry) */
+static void rl_hist_load_file(const char *path) {
+    if (!path) return;
+    FILE *f = fopen(path, "r");
+    if (!f) return;
+    char line[4096];
+    while (fgets(line, sizeof(line), f)) {
+        rl_hist_add(line);
+    }
+    fclose(f);
+}
+
 #ifndef _WIN32
 static struct termios g_orig_tios;
 static int g_raw_enabled = 0;
@@ -236,7 +284,7 @@ static int complete_load_path(char *buf, size_t *len_io) {
     return 1;
 }
 
-/* Read one line with prompt, handling backspace and :load path completion */
+/* Read one line with prompt, handling backspace, Up/Down history and :load path completion */
 static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
 #ifdef _WIN32
     /* fallback to standard fgets on Windows */
@@ -252,9 +300,22 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
     }
 
     size_t len = 0;
+    int hist_pos = rl_count;  /* rl_count means "editing current input", 0..rl_count-1 indexes history entries */
+    char saved_current[4096];
+    int has_saved = 0;
+
+    #define RL_REDRAW() do { \
+        fputc('\r', stdout); \
+        if (prompt) fputs(prompt, stdout); \
+        fwrite(out, 1, len, stdout); \
+        fputs("\x1b[K", stdout); \
+        fflush(stdout); \
+    } while(0)
+
     for (;;) {
         int ch = getchar();
         if (ch == EOF) { repl_disable_raw(); return 0; }
+
         if (ch == '\r' || ch == '\n') {
             fputc('\n', stdout);
             if (len + 1 < out_cap) {
@@ -263,13 +324,69 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
             } else {
                 out[len] = '\0';
             }
+            /* add to in-memory history */
+            rl_hist_add(out);
             repl_disable_raw();
             return 1;
+        } else if (ch == 27) { /* ESC sequence */
+            int c1 = getchar();
+            if (c1 == '[') {
+                int c2 = getchar();
+                if (c2 == 'A') { /* Up */
+                    if (!has_saved) { /* save current line to restore on Down past newest */
+                        size_t sl = len < sizeof(saved_current) - 1 ? len : sizeof(saved_current) - 1;
+                        memcpy(saved_current, out, sl);
+                        saved_current[sl] = '\0';
+                        has_saved = 1;
+                    }
+                    if (hist_pos > 0) {
+                        hist_pos--;
+                        const char *h = rl_hist[hist_pos];
+                        size_t hl = strlen(h);
+                        if (hl >= out_cap) hl = out_cap - 1;
+                        memcpy(out, h, hl);
+                        out[hl] = '\0';
+                        len = hl;
+                        RL_REDRAW();
+                    } else {
+                        fputc('\a', stdout); fflush(stdout);
+                    }
+                } else if (c2 == 'B') { /* Down */
+                    if (hist_pos < rl_count) {
+                        hist_pos++;
+                        if (hist_pos == rl_count) {
+                            /* restore saved current */
+                            if (has_saved) {
+                                size_t hl = strlen(saved_current);
+                                if (hl >= out_cap) hl = out_cap - 1;
+                                memcpy(out, saved_current, hl);
+                                out[hl] = '\0';
+                                len = hl;
+                            } else {
+                                len = 0; out[0] = '\0';
+                            }
+                        } else {
+                            const char *h = rl_hist[hist_pos];
+                            size_t hl = strlen(h);
+                            if (hl >= out_cap) hl = out_cap - 1;
+                            memcpy(out, h, hl);
+                            out[hl] = '\0';
+                            len = hl;
+                        }
+                        RL_REDRAW();
+                    } else {
+                        fputc('\a', stdout); fflush(stdout);
+                    }
+                } else {
+                    /* ignore other CSI sequences */
+                }
+            }
         } else if (ch == 127 || ch == 8) {
             /* backspace */
             if (len > 0) {
-                /* if last char was multi-byte we still remove one byte */
                 len--;
+                out[len] = '\0';
+                /* efficient backspace */
                 fputs("\b \b", stdout);
                 fflush(stdout);
             } else {
@@ -281,27 +398,20 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
             out[len] = '\0';
             size_t newlen = len;
             if (complete_load_path(out, &newlen)) {
-                /* redraw line */
                 len = newlen;
-                /* carriage return + redraw prompt + buffer */
-                fputc('\r', stdout);
-                if (prompt) fputs(prompt, stdout);
-                fwrite(out, 1, len, stdout);
-                fflush(stdout);
-            } else {
-                /* either no change or listed matches; redraw prompt+buffer anyway */
-                fputc('\r', stdout);
-                if (prompt) fputs(prompt, stdout);
-                fwrite(out, 1, len, stdout);
-                fflush(stdout);
             }
+            RL_REDRAW();
         } else if (ch >= 32 && ch <= 126) {
             if (len + 1 < out_cap) {
                 out[len++] = (char)ch;
+                out[len] = '\0';
                 fputc(ch, stdout);
                 fflush(stdout);
+                /* when typing after navigating history, we are editing current line; reset hist_pos to end */
+                hist_pos = rl_count;
             } else {
                 fputc('\a', stdout);
+                fflush(stdout);
             }
         } else {
             /* ignore other control characters */
@@ -685,9 +795,12 @@ int main(int argc, char **argv) {
     if (!home) home = getenv("USERPROFILE"); /* Windows fallback */
     if (home) {
         snprintf(hist_path, sizeof(hist_path), "%s/.fun_history", home);
+        /* preload history into memory before opening for append */
+        rl_hist_load_file(hist_path);
         hist = fopen(hist_path, "a+");
     } else {
         snprintf(hist_path, sizeof(hist_path), ".fun_history");
+        rl_hist_load_file(hist_path);
         hist = fopen(hist_path, "a+");
     }
 
@@ -726,6 +839,14 @@ int main(int argc, char **argv) {
             break;
         }
 #endif
+        /* Persist input line to history file (dedupe done in rl_hist_add; file stores as-is) */
+        if (hist) {
+            /* Do not store pure newline lines */
+            const char *lp = line;
+            int only_nl = 1;
+            while (*lp) { if (*lp != '\n' && *lp != '\r') { only_nl = 0; break; } lp++; }
+            if (!only_nl) append_history(hist, line);
+        }
 
         /* Command handling (available anytime) */
         if (line[0] == ':') {
