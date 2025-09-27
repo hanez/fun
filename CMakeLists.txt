@@ -64,15 +64,16 @@ add_custom_target(distclean
 )
 
 # Install rules
-# - Binary
+# Binary
 install(TARGETS fun
         RUNTIME DESTINATION /usr/bin)
 
+# Libs
 install(DIRECTORY lib/
         DESTINATION /usr/lib/fun
         FILES_MATCHING PATTERN "*.fun")
 
-# - Optionally install example scripts
+# Optionally install example scripts
 option(FUN_INSTALL_EXAMPLES "Install example .fun scripts" ON)
 if(FUN_INSTALL_EXAMPLES)
     install(DIRECTORY examples/
