@@ -1,3 +1,12 @@
+/**
+* This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
 case OP_UCLAMP: {
     /* Clamp/wrap the integer on top of the stack to 'bits' width (unsigned) */
     Value v = pop_value(vm);

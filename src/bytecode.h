@@ -7,7 +7,6 @@
  * https://opensource.org/license/isc-license-txt
  */
 
-
 #ifndef FUN_BYTECODE_H
 #define FUN_BYTECODE_H
 

@@ -35,7 +35,6 @@
  * @date 2025-10-16
  */
 
-
 #ifndef FUN_VALUE_H
 #define FUN_VALUE_H
 

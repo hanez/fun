@@ -1,3 +1,12 @@
+/**
+* This file is part of the Fun programming language.
+ * https://hanez.org/project/fun/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the ISC license.
+ * https://opensource.org/license/isc-license-txt
+ */
+
 case OP_SCLAMP: {
     /* Clamp/wrap to signed N-bit range: [-2^(N-1), 2^(N-1)-1] */
     Value v = pop_value(vm);

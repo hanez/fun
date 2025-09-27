@@ -7,10 +7,8 @@
  * https://opensource.org/license/isc-license-txt
  */
 
-
 #include "bytecode.h"
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
 
 Bytecode *bytecode_new(void) {
