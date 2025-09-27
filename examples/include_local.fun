@@ -10,7 +10,7 @@
  */
 
 // To test this you need to go to ./examples/ and test includes running ../build/fun include_local.fun
-// Local includes are always relative from the $PWD.
+// Local includes are always relative from the $PWD using "" and system includes are located at /usr/lib/fun using <>.
 
 // Demonstrates local include:
 // This resolves relative to the current working directory where 'fun' is executed.

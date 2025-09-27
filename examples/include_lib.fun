@@ -11,6 +11,8 @@
 
 // Demonstrates system library includes after installation to /usr/lib/fun
 
+// includes can also be done with a leading # like in C, but some programmers maybe like more clean code without a 
+// leading #.
 include <hello.fun>
 include <utils/math.fun>
 
