@@ -1564,16 +1564,29 @@ static void skip_to_eol(const char *src, size_t len, size_t *pos) {
         while (p < len && src[p] == ' ') p++;
 
         if (p >= len) { *pos = p; return; }
-        if (src[p] == '\n') { /* end of line reached */
+        /* Treat CR, LF, and CRLF as end-of-line */
+        if (src[p] == '\r') {
+            p++;
+            if (p < len && src[p] == '\n') p++;
+            *pos = p;
+            return;
+        }
+        if (src[p] == '\n') {
             *pos = p + 1;
             return;
         }
 
         /* line or block comments allowed */
         if (p + 1 < len && src[p] == '/' && src[p + 1] == '/') {
-            /* consume rest of line */
-            while (p < len && src[p] != '\n') p++;
-            if (p < len && src[p] == '\n') p++;
+            /* consume rest of line up to CR or LF */
+            p += 2;
+            while (p < len && src[p] != '\n' && src[p] != '\r') p++;
+            if (p < len && src[p] == '\r') {
+                p++;
+                if (p < len && src[p] == '\n') p++;
+            } else if (p < len && src[p] == '\n') {
+                p++;
+            }
             *pos = p;
             return;
         }
@@ -1582,12 +1595,10 @@ static void skip_to_eol(const char *src, size_t len, size_t *pos) {
             /* consume block comment, then loop again for spaces till EOL */
             p += 2;
             while (p + 1 < len && !(src[p] == '*' && src[p + 1] == '/')) {
-                /* allow newlines inside block comments as well */
                 p++;
             }
             if (p + 1 < len) {
-                p += 2; /* consume closing *\/ */
-                /* continue loop to allow spaces and then newline or another comment */
+                p += 2; /* consume closing */ 
                 continue;
             } else {
                 parser_fail(p, "Unterminated block comment at end of file");
@@ -1613,13 +1624,23 @@ static int read_line_start(const char *src, size_t len, size_t *pos, int *out_in
             return 0;
         }
         if (p >= len) { *pos = p; return 0; }
-        if (src[p] == '\n') { /* empty line */ p++; *pos = p; continue; }
+
+        /* empty line: handle CR, LF, and CRLF */
+        if (src[p] == '\r') {
+            p++;
+            if (p < len && src[p] == '\n') p++;
+            *pos = p;
+            continue;
+        }
+        if (src[p] == '\n') { p++; *pos = p; continue; }
 
         /* // comment-only line */
         if (p + 1 < len && src[p] == '/' && src[p + 1] == '/') {
-            /* skip entire line */
-            while (p < len && src[p] != '\n') p++;
-            if (p < len && src[p] == '\n') p++;
+            /* skip entire line up to CR/LF */
+            p += 2;
+            while (p < len && src[p] != '\n' && src[p] != '\r') p++;
+            if (p < len && src[p] == '\r') { p++; if (p < len && src[p] == '\n') p++; }
+            else if (p < len && src[p] == '\n') { p++; }
             *pos = p;
             continue;
         }
@@ -1633,8 +1654,9 @@ static int read_line_start(const char *src, size_t len, size_t *pos, int *out_in
             }
             if (p + 1 < len) p += 2; /* consume closing block comment marker */
             /* consume to end of current line (if any leftover) */
-            while (p < len && src[p] != '\n') p++;
-            if (p < len && src[p] == '\n') p++;
+            while (p < len && src[p] != '\n' && src[p] != '\r') p++;
+            if (p < len && src[p] == '\r') { p++; if (p < len && src[p] == '\n') p++; }
+            else if (p < len && src[p] == '\n') { p++; }
             *pos = p;
             continue;
         }
