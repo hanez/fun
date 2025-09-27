@@ -43,6 +43,274 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* REPL line editing and completion (POSIX) */
+#ifndef _WIN32
+#include <termios.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <limits.h>
+#endif
+
+#ifndef _WIN32
+static struct termios g_orig_tios;
+static int g_raw_enabled = 0;
+
+static void repl_disable_raw(void) {
+    if (g_raw_enabled) {
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &g_orig_tios);
+        g_raw_enabled = 0;
+    }
+}
+static int repl_enable_raw(void) {
+    if (!isatty(STDIN_FILENO)) return 0;
+    if (g_raw_enabled) return 1;
+    if (tcgetattr(STDIN_FILENO, &g_orig_tios) == -1) return 0;
+    struct termios raw = g_orig_tios;
+    raw.c_lflag &= ~(ICANON | ECHO);
+    raw.c_cc[VMIN] = 1;
+    raw.c_cc[VTIME] = 0;
+    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) return 0;
+    g_raw_enabled = 1;
+    return 1;
+}
+
+/* return 1 if path is a directory, else 0 */
+static int is_dir_path(const char *path) {
+    struct stat st;
+    if (stat(path, &st) != 0) return 0;
+    return S_ISDIR(st.st_mode);
+}
+
+/* Compute longest common prefix of a set of strings (starting from offset base_len) */
+static size_t lcp_suffix(const char **names, int count, size_t base_len) {
+    if (count <= 0) return base_len;
+    size_t lcp = (size_t)-1;
+    for (int i = 0; i < count; ++i) {
+        size_t nlen = strlen(names[i]);
+        size_t cur = 0;
+        /* compare suffix part starting at base_len */
+        while (base_len + cur < nlen) {
+            char c = names[i][base_len + cur];
+            int ok = 1;
+            for (int j = 0; j < count; ++j) {
+                size_t jlen = strlen(names[j]);
+                if (base_len + cur >= jlen || names[j][base_len + cur] != c) { ok = 0; break; }
+            }
+            if (!ok) break;
+            cur++;
+        }
+        if (lcp == (size_t)-1 || cur < lcp) lcp = cur;
+    }
+    return base_len + (lcp == (size_t)-1 ? 0 : lcp);
+}
+
+/* Expand file path for ":load " completion in-place; returns 1 if buffer changed (redraw) */
+static int complete_load_path(char *buf, size_t *len_io) {
+    size_t len = *len_io;
+    /* Only handle lines starting with ":load" + space(s) */
+    if (len < 5) return 0;
+    /* find first non-space after ":load" */
+    const char *p = buf;
+    while (*p == ' ') p++;
+    if (*p != ':') return 0;
+    p++;
+    if (strncmp(p, "load", 4) != 0) return 0;
+    p += 4;
+    while (*p == ' ' || *p == '\t') p++;
+    size_t arg_off = (size_t)(p - buf);
+    if (arg_off > len) return 0;
+
+    /* current prefix from arg_off .. len */
+    char prefix[PATH_MAX];
+    size_t plen = 0;
+    if (len - arg_off >= sizeof(prefix)) plen = sizeof(prefix) - 1;
+    else plen = len - arg_off;
+    memcpy(prefix, buf + arg_off, plen);
+    prefix[plen] = '\0';
+
+    /* handle ~ */
+    char expanded[PATH_MAX];
+    if (prefix[0] == '~') {
+        const char *home = getenv("HOME");
+        if (!home) home = getenv("USERPROFILE");
+        if (home) {
+            snprintf(expanded, sizeof(expanded), "%s%s", home, prefix + 1);
+        } else {
+            snprintf(expanded, sizeof(expanded), "%s", prefix);
+        }
+    } else {
+        snprintf(expanded, sizeof(expanded), "%s", prefix);
+    }
+
+    /* split dir/base */
+    char dirpart[PATH_MAX], base[PATH_MAX];
+    const char *slash = strrchr(expanded, '/');
+    if (slash) {
+        size_t dlen = (size_t)(slash - expanded);
+        if (dlen == 0) { strcpy(dirpart, "/"); }
+        else { memcpy(dirpart, expanded, dlen); dirpart[dlen] = '\0'; }
+        snprintf(base, sizeof(base), "%s", slash + 1);
+    } else {
+        strcpy(dirpart, ".");
+        snprintf(base, sizeof(base), "%s", expanded);
+    }
+
+    DIR *dp = opendir(dirpart);
+    if (!dp) { fputc('\a', stdout); fflush(stdout); return 0; }
+
+    /* collect matches */
+    const char *names[1024];
+    char storage[1024][NAME_MAX + 1];
+    int count = 0;
+    struct dirent *de;
+    size_t blen = strlen(base);
+    while ((de = readdir(dp)) != NULL) {
+        if (blen == 0 || strncmp(de->d_name, base, blen) == 0) {
+            if (count < (int)(sizeof(names)/sizeof(names[0]))) {
+                snprintf(storage[count], sizeof(storage[count]), "%s", de->d_name);
+                names[count] = storage[count];
+                count++;
+            }
+        }
+    }
+    closedir(dp);
+
+    if (count == 0) { fputc('\a', stdout); fflush(stdout); return 0; }
+
+    /* compute completion */
+    size_t new_pref_len = lcp_suffix(names, count, blen);
+    int changed = 0;
+
+    /* build completed path: dirpart + "/" + names[0] prefix */
+    char completed[PATH_MAX];
+    if (slash) {
+        char head[PATH_MAX];
+        memcpy(head, expanded, (size_t)(slash - expanded + 1));
+        head[slash - expanded + 1] = '\0';
+        strncpy(completed, head, sizeof(completed));
+    } else {
+        snprintf(completed, sizeof(completed), "%s", "");
+    }
+
+    /* append base + additional common chars */
+    strncat(completed, base, sizeof(completed) - strlen(completed) - 1);
+    if (new_pref_len > blen) {
+        strncat(completed, names[0] + blen, (new_pref_len - blen));
+        changed = 1;
+    } else if (count == 1) {
+        /* unique -> complete fully */
+        size_t extra = strlen(names[0]) - blen;
+        strncat(completed, names[0] + blen, extra);
+        changed = 1;
+    }
+
+    /* if unique and it's a directory, append trailing slash */
+    if (count == 1) {
+        char test[PATH_MAX];
+        if (slash) snprintf(test, sizeof(test), "%.*s/%s", (int)(slash - expanded), expanded, names[0]);
+        else snprintf(test, sizeof(test), "%s", names[0]);
+        if (is_dir_path(test)) {
+            strncat(completed, "/", sizeof(completed) - strlen(completed) - 1);
+        }
+    }
+
+    /* If no progress and multiple matches, list them */
+    if (!changed && count > 1) {
+        putchar('\n');
+        for (int i = 0; i < count; ++i) {
+            fputs(names[i], stdout);
+            fputc(((i + 1) % 6 == 0) ? '\n' : '\t', stdout);
+        }
+        if (count % 6 != 0) putchar('\n');
+        fflush(stdout);
+        return 0;
+    }
+
+    /* write back into buffer after arg_off */
+    size_t comp_len = strlen(completed);
+    if (arg_off + comp_len >= PATH_MAX - 1) comp_len = PATH_MAX - 2 - arg_off;
+    memcpy(buf + arg_off, completed, comp_len);
+    *len_io = arg_off + comp_len;
+    buf[*len_io] = '\0';
+    return 1;
+}
+
+/* Read one line with prompt, handling backspace and :load path completion */
+static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
+#ifdef _WIN32
+    /* fallback to standard fgets on Windows */
+    if (prompt) fputs(prompt, stdout), fflush(stdout);
+    if (!fgets(out, (int)out_cap, stdin)) return 0;
+    return 1;
+#else
+    if (prompt) fputs(prompt, stdout), fflush(stdout);
+    if (!repl_enable_raw()) {
+        /* no raw -> fallback */
+        if (!fgets(out, (int)out_cap, stdin)) return 0;
+        return 1;
+    }
+
+    size_t len = 0;
+    for (;;) {
+        int ch = getchar();
+        if (ch == EOF) { repl_disable_raw(); return 0; }
+        if (ch == '\r' || ch == '\n') {
+            fputc('\n', stdout);
+            if (len + 1 < out_cap) {
+                out[len++] = '\n';
+                out[len] = '\0';
+            } else {
+                out[len] = '\0';
+            }
+            repl_disable_raw();
+            return 1;
+        } else if (ch == 127 || ch == 8) {
+            /* backspace */
+            if (len > 0) {
+                /* if last char was multi-byte we still remove one byte */
+                len--;
+                fputs("\b \b", stdout);
+                fflush(stdout);
+            } else {
+                fputc('\a', stdout);
+                fflush(stdout);
+            }
+        } else if (ch == '\t') {
+            /* only attempt completion for ':load ' */
+            out[len] = '\0';
+            size_t newlen = len;
+            if (complete_load_path(out, &newlen)) {
+                /* redraw line */
+                len = newlen;
+                /* carriage return + redraw prompt + buffer */
+                fputc('\r', stdout);
+                if (prompt) fputs(prompt, stdout);
+                fwrite(out, 1, len, stdout);
+                fflush(stdout);
+            } else {
+                /* either no change or listed matches; redraw prompt+buffer anyway */
+                fputc('\r', stdout);
+                if (prompt) fputs(prompt, stdout);
+                fwrite(out, 1, len, stdout);
+                fflush(stdout);
+            }
+        } else if (ch >= 32 && ch <= 126) {
+            if (len + 1 < out_cap) {
+                out[len++] = (char)ch;
+                fputc(ch, stdout);
+                fflush(stdout);
+            } else {
+                fputc('\a', stdout);
+            }
+        } else {
+            /* ignore other control characters */
+        }
+    }
+#endif
+}
+#endif /* !_WIN32 */
+
 #ifndef FUN_VERSION
 #define FUN_VERSION "0.0.0-dev"
 #endif
@@ -434,20 +702,30 @@ int main(int argc, char **argv) {
         buffer[buflen] = '\0';
         int indent_debt = (buflen > 0) ? compute_open_indent_blocks(buffer) : 0;
 
+        /* Build prompt and read a line with editing (backspace, :load path completion) */
+        char prompt[64];
         if (buflen == 0) {
-            fputs("fun> ", stdout);
+            snprintf(prompt, sizeof(prompt), "fun> ");
         } else if (indent_debt > 0) {
-            printf("... %d> ", indent_debt);
+            snprintf(prompt, sizeof(prompt), "... %d> ", indent_debt);
         } else {
-            fputs("... ", stdout);
+            snprintf(prompt, sizeof(prompt), "... ");
         }
-        fflush(stdout);
 
         char line[4096];
-        if (!fgets(line, sizeof(line), stdin)) {
+#ifndef _WIN32
+        if (!read_line_edit(line, sizeof(line), prompt)) {
             puts("");
             break; // EOF
         }
+#else
+        fputs(prompt, stdout);
+        fflush(stdout);
+        if (!fgets(line, sizeof(line), stdin)) {
+            puts("");
+            break;
+        }
+#endif
 
         /* Command handling (available anytime) */
         if (line[0] == ':') {
