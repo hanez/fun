@@ -299,15 +299,20 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
     }
 
     size_t len = 0;
+    size_t pos = 0;           /* cursor position in [0..len] */
     int hist_pos = rl_count;  /* rl_count means "editing current input", 0..rl_count-1 indexes history entries */
     char saved_current[4096];
     int has_saved = 0;
 
-    #define RL_REDRAW() do { \
+    #define RL_REDRAW_POS() do { \
         fputc('\r', stdout); \
         if (prompt) fputs(prompt, stdout); \
         fwrite(out, 1, len, stdout); \
         fputs("\x1b[K", stdout); \
+        if (pos < len) { \
+            size_t back = (size_t)(len - pos); \
+            if (back > 0) fprintf(stdout, "\x1b[%zuD", back); \
+        } \
         fflush(stdout); \
     } while(0)
 
@@ -346,7 +351,8 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                         memcpy(out, h, hl);
                         out[hl] = '\0';
                         len = hl;
-                        RL_REDRAW();
+                        pos = len;
+                        RL_REDRAW_POS();
                     } else {
                         fputc('\a', stdout); fflush(stdout);
                     }
@@ -372,42 +378,59 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                             out[hl] = '\0';
                             len = hl;
                         }
-                        RL_REDRAW();
+                        pos = len;
+                        RL_REDRAW_POS();
                     } else {
                         fputc('\a', stdout); fflush(stdout);
                     }
+                } else if (c2 == 'C') { /* Right */
+                    if (pos < len) { pos++; fputs("\x1b[C", stdout); fflush(stdout); }
+                    else { fputc('\a', stdout); fflush(stdout); }
+                } else if (c2 == 'D') { /* Left */
+                    if (pos > 0) { pos--; fputs("\x1b[D", stdout); fflush(stdout); }
+                    else { fputc('\a', stdout); fflush(stdout); }
                 } else {
                     /* ignore other CSI sequences */
                 }
             }
         } else if (ch == 127 || ch == 8) {
-            /* backspace */
-            if (len > 0) {
+            /* backspace: delete char left of cursor */
+            if (pos > 0) {
+                /* shift tail left */
+                memmove(out + pos - 1, out + pos, len - pos);
                 len--;
+                pos--;
                 out[len] = '\0';
-                /* efficient backspace */
-                fputs("\b \b", stdout);
-                fflush(stdout);
+                RL_REDRAW_POS();
             } else {
                 fputc('\a', stdout);
                 fflush(stdout);
             }
         } else if (ch == '\t') {
-            /* only attempt completion for ':load ' */
-            out[len] = '\0';
-            size_t newlen = len;
-            if (complete_load_path(out, &newlen)) {
-                len = newlen;
+            /* only attempt completion for ':load ' when at end of line */
+            if (pos != len) {
+                fputc('\a', stdout);
+                fflush(stdout);
+            } else {
+                out[len] = '\0';
+                size_t newlen = len;
+                if (complete_load_path(out, &newlen)) {
+                    len = newlen;
+                    pos = len;
+                }
+                RL_REDRAW_POS();
             }
-            RL_REDRAW();
         } else if (ch >= 32 && ch <= 126) {
             if (len + 1 < out_cap) {
-                out[len++] = (char)ch;
+                /* insert at cursor */
+                memmove(out + pos + 1, out + pos, len - pos);
+                out[pos] = (char)ch;
+                len++;
+                pos++;
                 out[len] = '\0';
-                fputc(ch, stdout);
-                fflush(stdout);
                 /* when typing after navigating history, we are editing current line; reset hist_pos to end */
                 hist_pos = rl_count;
+                RL_REDRAW_POS();
             } else {
                 fputc('\a', stdout);
                 fflush(stdout);
