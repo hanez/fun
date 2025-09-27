@@ -41,6 +41,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 
 /* REPL line editing and completion (POSIX) */
 #ifndef _WIN32
@@ -335,9 +336,48 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
         } else if (ch == 27) { /* ESC sequence */
             int c1 = getchar();
             if (c1 == '[') {
-                int c2 = getchar();
-                if (c2 == 'A') { /* Up */
-                    if (!has_saved) { /* save current line to restore on Down past newest */
+                /* Parse CSI parameters (e.g., "1;5D") until a final byte A-Z or ~ */
+                char params[16];
+                int pi = 0;
+                int final = 0;
+                for (;;) {
+                    int cx = getchar();
+                    if (cx == EOF) break;
+                    if ((cx >= 'A' && cx <= 'Z') || (cx >= 'a' && cx <= 'z') || cx == '~') {
+                        final = cx;
+                        break;
+                    }
+                    if (pi + 1 < (int)sizeof(params)) {
+                        params[pi++] = (char)cx;
+                        params[pi] = '\0';
+                    }
+                }
+                /* Detect Ctrl modifier: presence of ";5" or "5" as a parameter */
+                int ctrl = 0;
+                if (pi > 0) {
+                    if (strstr(params, ";5") != NULL || strcmp(params, "5") == 0 || strstr(params, "1;5") != NULL) {
+                        ctrl = 1;
+                    }
+                }
+
+                /* Helpers for word-jumps: words are runs of non-space chars */
+                auto void word_left(void) {
+                    if (pos == 0) return;
+                    /* skip spaces left */
+                    while (pos > 0 && out[pos - 1] == ' ') pos--;
+                    /* skip non-spaces left */
+                    while (pos > 0 && out[pos - 1] != ' ') pos--;
+                };
+                auto void word_right(void) {
+                    if (pos >= len) return;
+                    /* skip non-spaces right */
+                    while (pos < len && out[pos] != ' ') pos++;
+                    /* skip spaces right */
+                    while (pos < len && out[pos] == ' ') pos++;
+                };
+
+                if (final == 'A') { /* Up */
+                    if (!has_saved) {
                         size_t sl = len < sizeof(saved_current) - 1 ? len : sizeof(saved_current) - 1;
                         memcpy(saved_current, out, sl);
                         saved_current[sl] = '\0';
@@ -356,11 +396,10 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                     } else {
                         fputc('\a', stdout); fflush(stdout);
                     }
-                } else if (c2 == 'B') { /* Down */
+                } else if (final == 'B') { /* Down */
                     if (hist_pos < rl_count) {
                         hist_pos++;
                         if (hist_pos == rl_count) {
-                            /* restore saved current */
                             if (has_saved) {
                                 size_t hl = strlen(saved_current);
                                 if (hl >= out_cap) hl = out_cap - 1;
@@ -383,12 +422,26 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                     } else {
                         fputc('\a', stdout); fflush(stdout);
                     }
-                } else if (c2 == 'C') { /* Right */
-                    if (pos < len) { pos++; fputs("\x1b[C", stdout); fflush(stdout); }
-                    else { fputc('\a', stdout); fflush(stdout); }
-                } else if (c2 == 'D') { /* Left */
-                    if (pos > 0) { pos--; fputs("\x1b[D", stdout); fflush(stdout); }
-                    else { fputc('\a', stdout); fflush(stdout); }
+                } else if (final == 'C') { /* Right */
+                    if (ctrl) {
+                        size_t old = pos;
+                        word_right();
+                        if (pos != old) RL_REDRAW_POS();
+                        else { fputc('\a', stdout); fflush(stdout); }
+                    } else {
+                        if (pos < len) { pos++; fputs("\x1b[C", stdout); fflush(stdout); }
+                        else { fputc('\a', stdout); fflush(stdout); }
+                    }
+                } else if (final == 'D') { /* Left */
+                    if (ctrl) {
+                        size_t old = pos;
+                        word_left();
+                        if (pos != old) RL_REDRAW_POS();
+                        else { fputc('\a', stdout); fflush(stdout); }
+                    } else {
+                        if (pos > 0) { pos--; fputs("\x1b[D", stdout); fflush(stdout); }
+                        else { fputc('\a', stdout); fflush(stdout); }
+                    }
                 } else {
                     /* ignore other CSI sequences */
                 }
