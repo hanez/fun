@@ -266,6 +266,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             
             #include "vm/io/read_file.c"
             #include "vm/io/write_file.c"
+            #include "vm/os/env.c"
             
             #include "vm/logic/and.c"
             #include "vm/logic/eq.c"

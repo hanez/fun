@@ -33,7 +33,7 @@ static const char *opcode_names[] = {
     "ENUMERATE","ZIP",
     "MIN","MAX","CLAMP","ABS","POW","RANDOM_SEED","RANDOM_INT",
     "MAKE_MAP","KEYS","VALUES","HAS_KEY",
-    "READ_FILE","WRITE_FILE"
+    "READ_FILE","WRITE_FILE","ENV"
 };
 
 typedef struct {
@@ -76,7 +76,7 @@ void vm_dump_globals(VM *vm);
 void vm_run(VM *vm, Bytecode *entry);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_WRITE_FILE;  // all current opcodes
+    return op >= OP_NOP && op <= OP_ENV;  // all current opcodes
 }
 
 #endif

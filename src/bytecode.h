@@ -110,7 +110,10 @@ typedef enum {
 
     // file I/O
     OP_READ_FILE,     // pops path string; pushes content string (or "")
-    OP_WRITE_FILE     // pops data string, path string; pushes 1/0
+    OP_WRITE_FILE,    // pops data string, path string; pushes 1/0
+
+    // OS
+    OP_ENV            // pops name string; pushes value string (or "")
 } OpCode;
 
 typedef struct {
