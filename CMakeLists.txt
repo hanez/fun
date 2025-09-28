@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun VERSION 0.9.0 LANGUAGES C)
+project(fun VERSION 0.9.1 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -12,7 +12,6 @@ add_library(fun_core
         src/parser.c
         src/value.c
         src/vm.c
-        src/parser.c
 )
 
 target_include_directories(fun_core PUBLIC
