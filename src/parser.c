@@ -65,10 +65,12 @@ static int g_temp_counter = 0;
 /* Declared type metadata encoding in types[]:
    0 = dynamic/untyped;
    positive/negative 8/16/32/64 = integers (negative means signed);
-   TYPE_META_STRING/BOOLEAN/NIL mark non-integer enforced types. */
+   TYPE_META_STRING/BOOLEAN/NIL mark non-integer enforced types;
+   TYPE_META_CLASS marks class instances (Map with "__class"). */
 #define TYPE_META_STRING  10001
 #define TYPE_META_BOOLEAN 10002
 #define TYPE_META_NIL     10003
+#define TYPE_META_CLASS   10004
 
 static void parser_fail(size_t pos, const char *fmt, ...) {
     g_has_error = 1;
@@ -489,15 +491,27 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                             }
                         }
 
-                        if (decl_bits != 0) {
+                        /* Map declared metadata to human-readable typeof */
+                        if (decl_bits == TYPE_META_STRING) {
+                            int ci = bytecode_add_constant(bc, make_string("String"));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        } else if (decl_bits == TYPE_META_NIL) {
+                            int ci = bytecode_add_constant(bc, make_string("Nil"));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        } else if (decl_bits == TYPE_META_CLASS || is_class_name) {
+                            int ci = bytecode_add_constant(bc, make_string("Class"));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        } else if (decl_bits == TYPE_META_BOOLEAN) {
+                            /* Booleans are numeric 0/1 in Fun */
+                            int ci = bytecode_add_constant(bc, make_string("Number"));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                        } else if (decl_bits == 8 || decl_bits == 16 || decl_bits == 32 || decl_bits == 64
+                                   || decl_bits == -8 || decl_bits == -16 || decl_bits == -32 || decl_bits == -64) {
                             int bits = decl_bits < 0 ? -decl_bits : decl_bits;
                             int is_signed = (decl_bits < 0);
                             char tbuf[16];
                             snprintf(tbuf, sizeof(tbuf), "%s%d", is_signed ? "Sint" : "Uint", bits);
                             int ci = bytecode_add_constant(bc, make_string(tbuf));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                        } else if (is_class_name) {
-                            int ci = bytecode_add_constant(bc, make_string("Class"));
                             bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
                         } else {
                             /* Fallback: load the variable, but if it's a class instance (Map with "__class"), return "Class" */
@@ -1752,10 +1766,11 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         }
 
         /* typed declarations:
-           number|string|boolean|nil|byte|uint8|uint16|uint32|uint64|int8|int16|int32|int64 <ident> (= expr)?
-           Note: 'number' maps to signed 64-bit here. 'byte' is an alias of unsigned 8-bit.
+           number|string|boolean|nil|Class|byte|uint8|uint16|uint32|uint64|int8|int16|int32|int64 <ident> (= expr)?
+           Note: 'number' maps to signed 64-bit here. 'byte' is an alias of unsigned 8-bit. 'Class' restricts to class instances.
          */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0
+            || strcmp(name, "Class") == 0
             || strcmp(name, "byte") == 0
             || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0
             || strcmp(name, "int8") == 0  || strcmp(name, "int16") == 0  || strcmp(name, "int32") == 0  || strcmp(name, "int64") == 0) {
@@ -1763,6 +1778,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             int is_string  = (strcmp(name, "string") == 0);
             int is_boolean = (strcmp(name, "boolean") == 0);
             int is_nil     = (strcmp(name, "nil") == 0);
+            int is_class_tkn = (strcmp(name, "Class") == 0);
             int is_byte    = (strcmp(name, "byte")   == 0);
             int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
             int is_u16     = (strcmp(name, "uint16") == 0);
@@ -1778,7 +1794,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 /* store decl bits with sign encoded: negative means signed (number is signed 64-bit) */
             if (decl_signed) decl_bits = -decl_bits;
 
-            /* declared type metadata: integers use decl_bits; string/boolean/nil use special markers */
+            /* declared type metadata: integers use decl_bits; string/boolean/nil/Class use special markers */
             int decl_meta = decl_bits;
             if (is_string) {
                 decl_meta = TYPE_META_STRING;
@@ -1786,6 +1802,8 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 decl_meta = TYPE_META_BOOLEAN;
             } else if (is_nil) {
                 decl_meta = TYPE_META_NIL;
+            } else if (is_class_tkn) {
+                decl_meta = TYPE_META_CLASS;
             }
 
             free(name);
@@ -1843,6 +1861,39 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                         bytecode_add_instruction(bc, OP_HALT, 0);
                     }
                     bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else if (decl_meta == TYPE_META_CLASS) {
+                    /* expect Class instance: Map with "__class" key */
+                    /* Check typeof(v) == "Map" */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    {
+                        int ciMap = bytecode_add_constant(bc, make_string("Map"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap);
+                    }
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_err1 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    /* Check v has "__class" */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    {
+                        int kci = bytecode_add_constant(bc, make_string("__class"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                    }
+                    bytecode_add_instruction(bc, OP_HAS_KEY, 0);
+                    int j_err2 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    /* Success path jumps over error block */
+                    int j_ok = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    /* Error block */
+                    int err_lbl = bc->instr_count;
+                    bytecode_set_operand(bc, j_err1, err_lbl);
+                    bytecode_set_operand(bc, j_err2, err_lbl);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Class"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    /* Continue after checks */
+                    bytecode_set_operand(bc, j_ok, bc->instr_count);
                 } else if (decl_meta == TYPE_META_BOOLEAN) {
                     /* expect Number then clamp to 1 bit (unsigned) */
                     bytecode_add_instruction(bc, OP_DUP, 0);
@@ -1915,6 +1966,9 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 if (is_string) {
                     ci = bytecode_add_constant(bc, make_string(""));
                 } else if (is_nil) {
+                    ci = bytecode_add_constant(bc, make_nil());
+                } else if (is_class_tkn) {
+                    /* Class-typed variable defaults to Nil until assigned an instance */
                     ci = bytecode_add_constant(bc, make_nil());
                 } else if (is_number || is_boolean || (decl_bits != 0)) {
                     /* integers/booleans default to 0 */
@@ -2117,6 +2171,39 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                         bytecode_add_instruction(bc, OP_HALT, 0);
                     }
                     bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else if (meta == TYPE_META_CLASS) {
+                    /* expect Class instance: Map with "__class" key */
+                    /* Check typeof(v) == "Map" */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    {
+                        int ciMap = bytecode_add_constant(bc, make_string("Map"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap);
+                    }
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_err1 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    /* Check v has "__class" */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    {
+                        int kci = bytecode_add_constant(bc, make_string("__class"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                    }
+                    bytecode_add_instruction(bc, OP_HAS_KEY, 0);
+                    int j_err2 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    /* Success path jumps over error block */
+                    int j_ok = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    /* Error block */
+                    int err_lbl = bc->instr_count;
+                    bytecode_set_operand(bc, j_err1, err_lbl);
+                    bytecode_set_operand(bc, j_err2, err_lbl);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Class"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    /* Continue after checks */
+                    bytecode_set_operand(bc, j_ok, bc->instr_count);
                 } else if (meta == TYPE_META_BOOLEAN) {
                     /* expect Number then clamp to 1 bit (unsigned) */
                     bytecode_add_instruction(bc, OP_DUP, 0);

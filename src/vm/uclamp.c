@@ -8,24 +8,25 @@
  */
 
 case OP_UCLAMP: {
-    /* Clamp/wrap the integer on top of the stack to 'bits' width (unsigned) */
+    /* Saturating clamp to unsigned N-bit range: [0 .. 2^N - 1] */
     Value v = pop_value(vm);
     int bits = inst.operand;
-    uint64_t u = 0;
+    int64_t vi = (v.type == VAL_INT) ? v.i : 0;
 
-    if (v.type == VAL_INT) {
-        u = (uint64_t) v.i;
+    uint64_t umax;
+    if (bits <= 0) {
+        /* treat as clamp to 0..0 */
+        umax = 0;
+    } else if (bits >= 64) {
+        umax = UINT64_MAX;
     } else {
-        /* Non-integers clamp to 0 */
-        u = 0;
+        umax = (1ULL << bits) - 1ULL;
     }
 
-    if (bits > 0 && bits < 64) {
-        uint64_t mask = (1ULL << bits) - 1ULL;
-        u &= mask;
-    } else {
-        /* bits >= 64 -> no-op; bits <= 0 -> no-op */
-    }
+    uint64_t u;
+    if (vi < 0) u = 0;
+    else if ((uint64_t)vi > umax) u = umax;
+    else u = (uint64_t)vi;
 
     push_value(vm, make_int((int64_t)u));
     free_value(v);
