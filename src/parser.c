@@ -62,6 +62,14 @@ static int g_err_col  = 0;
 /* ---- compiler-generated temporary counter ---- */
 static int g_temp_counter = 0;
 
+/* Declared type metadata encoding in types[]:
+   0 = dynamic/untyped;
+   positive/negative 8/16/32/64 = integers (negative means signed);
+   TYPE_META_STRING/BOOLEAN/NIL mark non-integer enforced types. */
+#define TYPE_META_STRING  10001
+#define TYPE_META_BOOLEAN 10002
+#define TYPE_META_NIL     10003
+
 static void parser_fail(size_t pos, const char *fmt, ...) {
     g_has_error = 1;
     g_err_pos = pos;
@@ -1767,6 +1775,17 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             int decl_signed = (is_s8 || is_s16 || is_s32 || is_s64) ? 1 : 0;
                 /* store decl bits with sign encoded: negative means signed (number is signed 64-bit) */
             if (decl_signed) decl_bits = -decl_bits;
+
+            /* declared type metadata: integers use decl_bits; string/boolean/nil use special markers */
+            int decl_meta = decl_bits;
+            if (is_string) {
+                decl_meta = TYPE_META_STRING;
+            } else if (is_boolean) {
+                decl_meta = TYPE_META_BOOLEAN;
+            } else if (is_nil) {
+                decl_meta = TYPE_META_NIL;
+            }
+
             free(name);
 
             /* read variable name */
@@ -1785,12 +1804,12 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 if (existing >= 0) lidx = existing;
                 else lidx = local_add(varname);
                 if (lidx >= 0) {
-                    g_locals->types[lidx] = decl_bits; /* negative = signed, positive = unsigned width, 0 = non-integer */
+                    g_locals->types[lidx] = decl_meta; /* encoding: ±bits for integers; TYPE_META_* for non-integer enforced types; 0 = dynamic */
                 }
             } else {
                 gi = sym_index(varname);
                 if (gi >= 0) {
-                    G.types[gi] = decl_bits;
+                    G.types[gi] = decl_meta;
                 }
             }
             free(varname);
@@ -1802,11 +1821,87 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     parser_fail(local_pos, "Expected initializer expression after '='");
                     return;
                 }
-                /* clamp if integer type was declared */
-                int abs_bits = decl_bits < 0 ? -decl_bits : decl_bits;
-                if (abs_bits > 0) {
-                    bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
+
+                /* Enforce declared type on initializer */
+                if (decl_meta == TYPE_META_STRING) {
+                    /* expect String */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciExp = bytecode_add_constant(bc, make_string("String"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciExp);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    /* error block */
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected String"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else if (decl_meta == TYPE_META_BOOLEAN) {
+                    /* expect Number then clamp to 1 bit (unsigned) */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciNum = bytecode_add_constant(bc, make_string("Number"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciNum);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Number for boolean"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                    /* clamp to 0/1 */
+                    bytecode_add_instruction(bc, OP_UCLAMP, 1);
+                } else if (decl_meta == TYPE_META_NIL) {
+                    /* expect Nil */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciNil = bytecode_add_constant(bc, make_string("Nil"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciNil);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Nil"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else {
+                    /* integer widths: expect Number then clamp */
+                    int abs_bits = decl_bits < 0 ? -decl_bits : decl_bits;
+                    if (abs_bits > 0) {
+                        /* typeof == Number */
+                        bytecode_add_instruction(bc, OP_DUP, 0);
+                        bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                        int ciNum = bytecode_add_constant(bc, make_string("Number"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciNum);
+                        bytecode_add_instruction(bc, OP_EQ, 0);
+                        int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                        int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                        bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                        {
+                            int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Number"));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                            bytecode_add_instruction(bc, OP_PRINT, 0);
+                            bytecode_add_instruction(bc, OP_HALT, 0);
+                        }
+                        bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+
+                        bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
+                    }
                 }
+
                 if (lidx >= 0) {
                     bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
                 } else {
@@ -1995,17 +2090,90 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         if (local_pos < len && src[local_pos] == '=') {
             local_pos++; /* '=' */
             if (emit_expression(bc, src, len, &local_pos)) {
-                /* clamp to declared integer width if present */
-                int decl_bits = 0;
+                /* enforce declared type if present (0 = dynamic) */
+                int meta = 0;
                 if (lidx >= 0 && g_locals) {
-                    decl_bits = g_locals->types[lidx];
+                    meta = g_locals->types[lidx];
                 } else if (gi >= 0) {
-                    decl_bits = G.types[gi];
+                    meta = G.types[gi];
                 }
-                int abs_bits = decl_bits < 0 ? -decl_bits : decl_bits;
-                if (abs_bits > 0) {
-                    bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
+
+                if (meta == TYPE_META_STRING) {
+                    /* expect String */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciStr = bytecode_add_constant(bc, make_string("String"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciStr);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected String"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else if (meta == TYPE_META_BOOLEAN) {
+                    /* expect Number then clamp to 1 bit (unsigned) */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciNum = bytecode_add_constant(bc, make_string("Number"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciNum);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Number for boolean"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                    bytecode_add_instruction(bc, OP_UCLAMP, 1);
+                } else if (meta == TYPE_META_NIL) {
+                    /* expect Nil */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciNil = bytecode_add_constant(bc, make_string("Nil"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciNil);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Nil"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else if (meta != 0) {
+                    /* integer widths: expect Number then clamp to declared width */
+                    int abs_bits = meta < 0 ? -meta : meta;
+                    /* typeof == Number */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciNum = bytecode_add_constant(bc, make_string("Number"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciNum);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Number"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+
+                    bytecode_add_instruction(bc, (meta < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
                 }
+                /* dynamic (meta==0): no enforcement */
+
                 if (lidx >= 0) {
                     bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
                 } else {
