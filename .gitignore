@@ -1,3 +1,4 @@
+.aiignore
 .idea/
 build*
 cmake*
@@ -5,6 +6,5 @@ dist/
 lib/*.so
 out/
 src/*.o
-tmp/
-.aiignore
-dev.txt
+tmp*
+
