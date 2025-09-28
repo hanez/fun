@@ -1,10 +1,9 @@
-.aiignore
-.idea/
+.*
 build*
 cmake*
 dist/
 lib/*.so
 out/
 src/*.o
+*.swp
 tmp*
-
