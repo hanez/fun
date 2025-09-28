@@ -167,7 +167,29 @@ static int64_t parse_int_literal_value(const char *src, size_t len, size_t *pos,
         if (src[p] == '-') sign = -1;
         p++;
     }
-    if (p >= len || !isdigit((unsigned char)src[p])) { *ok = 0; return 0; }
+    if (p >= len) { *ok = 0; return 0; }
+
+    /* Hexadecimal: 0x... or 0X... */
+    if ((p + 1) < len && src[p] == '0' && (src[p + 1] == 'x' || src[p + 1] == 'X')) {
+        p += 2;
+        if (p >= len || !isxdigit((unsigned char)src[p])) { *ok = 0; return 0; }
+        int64_t val = 0;
+        while (p < len && isxdigit((unsigned char)src[p])) {
+            char c = src[p];
+            int d = (c >= '0' && c <= '9') ? (c - '0')
+                  : (c >= 'a' && c <= 'f') ? (c - 'a' + 10)
+                  : (c >= 'A' && c <= 'F') ? (c - 'A' + 10)
+                  : 0;
+            val = (val << 4) + d;
+            p++;
+        }
+        *pos = p;
+        *ok = 1;
+        return sign * val;
+    }
+
+    /* Decimal fallback */
+    if (!isdigit((unsigned char)src[p])) { *ok = 0; return 0; }
     int64_t val = 0;
     while (p < len && isdigit((unsigned char)src[p])) {
         val = val * 10 + (src[p] - '0');

@@ -1752,17 +1752,19 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         }
 
         /* typed declarations:
-           number|string|boolean|nil|uint8|uint16|uint32|uint64|int8|int16|int32|int64 <ident> (= expr)?
-           Note: 'number' maps to signed 64-bit here.
+           number|string|boolean|nil|byte|uint8|uint16|uint32|uint64|int8|int16|int32|int64 <ident> (= expr)?
+           Note: 'number' maps to signed 64-bit here. 'byte' is an alias of unsigned 8-bit.
          */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0
+            || strcmp(name, "byte") == 0
             || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0
             || strcmp(name, "int8") == 0  || strcmp(name, "int16") == 0  || strcmp(name, "int32") == 0  || strcmp(name, "int64") == 0) {
             int is_number  = (strcmp(name, "number") == 0);
             int is_string  = (strcmp(name, "string") == 0);
             int is_boolean = (strcmp(name, "boolean") == 0);
             int is_nil     = (strcmp(name, "nil") == 0);
-            int is_u8      = (strcmp(name, "uint8")  == 0);
+            int is_byte    = (strcmp(name, "byte")   == 0);
+            int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
             int is_u16     = (strcmp(name, "uint16") == 0);
             int is_u32     = (strcmp(name, "uint32") == 0);
             int is_u64     = (strcmp(name, "uint64") == 0);
@@ -2270,7 +2272,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             #define MAP_TYPE_KIND(t) ( \
                 ((t) && strcmp((t), "string")==0) ? 2 : \
                 ((t) && strcmp((t), "nil")==0) ? 3 : \
-                ((t) && (strcmp((t), "boolean")==0 || strcmp((t), "number")==0 || strncmp((t), "uint", 4)==0 || strncmp((t), "sint", 4)==0 || strncmp((t), "int", 3)==0)) ? 1 : \
+                ((t) && (strcmp((t), "boolean")==0 || strcmp((t), "number")==0 || strcmp((t), "byte")==0 || strncmp((t), "uint", 4)==0 || strncmp((t), "sint", 4)==0 || strncmp((t), "int", 3)==0)) ? 1 : \
                 0 )
 
             skip_spaces(src, len, pos);
