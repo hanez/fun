@@ -112,7 +112,17 @@ typedef enum {
     OP_WRITE_FILE,    // pops data string, path string; pushes 1/0
 
     // OS
-    OP_ENV            // pops name string; pushes value string (or "")
+    OP_ENV,           // pops name string; pushes value string (or "")
+
+    // Bitwise (32-bit) and shifts/rotates
+    OP_BAND,          // pops b, a; pushes (uint32_t)(a & b)
+    OP_BOR,           // pops b, a; pushes (uint32_t)(a | b)
+    OP_BXOR,          // pops b, a; pushes (uint32_t)(a ^ b)
+    OP_BNOT,          // pops a;   pushes (uint32_t)(~a)
+    OP_SHL,           // pops s, a; pushes (uint32_t)(a << (s&31))
+    OP_SHR,           // pops s, a; pushes (uint32_t)(a >> (s&31)) logical
+    OP_ROTL,          // pops s, a; pushes rotl32(a, s)
+    OP_ROTR           // pops s, a; pushes rotr32(a, s)
 } OpCode;
 
 typedef struct {

@@ -25,11 +25,21 @@ static VM *g_active_vm = NULL;
 static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
     int written = vfprintf(stream, fmt, ap);
     if (stream == stderr && g_active_vm && g_active_vm->current_line > 0) {
-        /* If original message didn't end with newline, add a space first */
-        if (written > 0) {
-            /* best-effort: do not attempt to inspect fmt string fully; just append line info */
+        /* Append more context: line number, opcode name, and ip */
+        const char *opname = "unknown";
+        int ip = -1;
+        if (g_active_vm->fp >= 0) {
+            Frame *f = &g_active_vm->frames[g_active_vm->fp];
+            ip = f->ip - 1;
+            if (f->fn && ip >= 0 && ip < f->fn->instr_count) {
+                int op = f->fn->instructions[ip].op;
+                if (op >= 0 && op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0]))) {
+                    opname = opcode_names[op];
+                }
+            }
         }
-        fprintf(stream == stderr ? stderr : stream, " (line %d)\n", g_active_vm->current_line);
+        fprintf(stream == stderr ? stderr : stream, " (line %d, op %s @ip %d)\n",
+                g_active_vm->current_line, opname, ip);
     }
     return written;
 }
@@ -249,6 +259,16 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/arrays/slice.c"
             #include "vm/arrays/zip.c"
 
+            /* Bitwise and shifts/rotates */
+            #include "vm/bitwise/band.c"
+            #include "vm/bitwise/bor.c"
+            #include "vm/bitwise/bxor.c"
+            #include "vm/bitwise/bnot.c"
+            #include "vm/bitwise/shl.c"
+            #include "vm/bitwise/shr.c"
+            #include "vm/bitwise/rol.c"
+            #include "vm/bitwise/ror.c"
+            
             #include "vm/core/call.c"
             #include "vm/core/dup.c"
             #include "vm/core/halt.c"

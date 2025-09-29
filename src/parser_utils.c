@@ -325,6 +325,10 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                                 char *exp = preprocess_includes_internal(inc, depth + 1);
                                 free(inc);
                                 if (exp) {
+                                    /* mark file origin for better error messages */
+                                    sb_append(&out, "// __include_begin__: ");
+                                    sb_append(&out, resolved);
+                                    sb_append(&out, "\n");
                                     sb_append(&out, exp);
                                     /* ensure included chunk ends with newline to preserve line structure */
                                     if (out.len == 0 || out.buf[out.len - 1] != '\n') sb_append_ch(&out, '\n');

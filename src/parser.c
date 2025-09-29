@@ -1073,6 +1073,72 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 return 1;
             }
 
+            /* bitwise ops (32-bit) */
+            if (strcmp(name, "band") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "band expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "band expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_BAND, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "bor") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "bor expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "bor expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_BOR, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "bxor") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "bxor expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "bxor expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_BXOR, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "bnot") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "bnot expects 1 arg"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "bnot expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_BNOT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "shl") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "shl expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "shl expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SHL, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "shr") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "shr expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "shr expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SHR, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "rol") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "rol expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "rol expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ROTL, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ror") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "ror expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "ror expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ROTR, 0);
+                free(name);
+                return 1;
+            }
+
             /* push function value first */
             if (local_idx >= 0) {
                 bytecode_add_instruction(bc, OP_LOAD_LOCAL, local_idx);
@@ -3308,7 +3374,48 @@ Bytecode *parse_file_to_bytecode(const char *path) {
         calc_line_col(compile_src, compile_len, g_err_pos, &line, &col);
         g_err_line = line;
         g_err_col  = col;
-        fprintf(stderr, "Parse error %s:%d:%d: %s\n", path ? path : "<input>", line, col, g_err_msg);
+
+        /* Try to locate include context marker preceding error */
+        const char *marker = "// __include_begin__: ";
+        size_t mlen = strlen(marker);
+        int inner_line = -1;
+        char inc_path[512]; inc_path[0] = '\0';
+        /* scan backward to find last marker line */
+        size_t scan = g_err_pos;
+        while (scan > 0) {
+            /* find start of current line */
+            size_t ls = scan;
+            while (ls > 0 && compile_src[ls - 1] != '\n') ls--;
+            /* check if this line starts with marker */
+            if (ls + mlen <= compile_len && strncmp(compile_src + ls, marker, mlen) == 0) {
+                /* extract path until end-of-line */
+                size_t p = ls + mlen;
+                size_t pe = p;
+                while (pe < compile_len && compile_src[pe] != '\n' && (pe - p) < sizeof(inc_path) - 1) pe++;
+                memcpy(inc_path, compile_src + p, pe - p);
+                inc_path[pe - p] = '\0';
+                /* compute inner line as number of newlines from (pe+1) to error position */
+                int count = 1;
+                size_t q = (pe < compile_len && compile_src[pe] == '\n') ? (pe + 1) : pe;
+                while (q < g_err_pos) {
+                    if (compile_src[q] == '\n') count++;
+                    q++;
+                }
+                inner_line = count;
+                break;
+            }
+            /* move to previous line */
+            if (ls == 0) break;
+            scan = ls - 1;
+        }
+
+        if (inner_line > 0 && inc_path[0] != '\0') {
+            fprintf(stderr, "Parse error %s:%d:%d: %s (in %s:%d)\n",
+                    path ? path : "<input>", line, col, g_err_msg, inc_path, inner_line);
+        } else {
+            fprintf(stderr, "Parse error %s:%d:%d: %s\n", path ? path : "<input>", line, col, g_err_msg);
+        }
+
         if (bc) bytecode_free(bc);
         if (prep) free(prep);
         free(src);

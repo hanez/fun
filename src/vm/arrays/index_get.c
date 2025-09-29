@@ -59,7 +59,8 @@ case OP_INDEX_GET: {
         free_value(idx);
         push_value(vm, out);
     } else {
-        fprintf(stderr, "Runtime type error: INDEX_GET expects array or map\n");
+        fprintf(stderr, "Runtime type error: INDEX_GET expects array or map (got container=%s, index=%s)\n",
+                value_type_name(container.type), value_type_name(idx.type));
         exit(1);
     }
     break;

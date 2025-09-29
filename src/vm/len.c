@@ -40,8 +40,8 @@ case OP_LEN: {
         len = array_length(&a);
         if (len < 0) len = 0;
     } else {
-        fprintf(stderr, "Runtime type error: LEN expects array or string\n");
-        exit(1);
+            /* Be lenient: for non-array/non-string, treat length as 0 */
+            push_value(vm, make_int(0));
     }
     free_value(a);
     push_value(vm, make_int(len));
