@@ -545,7 +545,7 @@ static int starts_with_kw(const char *s, const char *kw) {
 
 /* Compute how many indentation levels (2 spaces per level) are still open.
  * Only counts significant lines (non-blank, not comment-only),
- * and ignores text inside comment blocks. */
+ * and ignores text inside \/* ... *\/ block comments. */
 static int compute_open_indent_blocks(const char *buf) {
     int in_block_comment = 0;
     int open = 0;
@@ -618,7 +618,7 @@ static int compute_open_indent_blocks(const char *buf) {
 
 /* Detect if current buffer looks incomplete:
  * - Unclosed quotes (\' or \") with escapes
- * - Unclosed comment block
+ * - Unclosed block comment \/* ... *\/
  * - Parentheses not balanced
  * - Last significant line is a block header (if/else/while/for/fun)
  * - Line ends with an operator/comma
