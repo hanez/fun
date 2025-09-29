@@ -4,6 +4,14 @@ CMAKE ?= cmake
 # Default to a build with extra logging disabled
 CMAKE_FLAGS ?= -DFUN_DEBUG=OFF
 
+# Optional: override default library directory for #include <...> lookups
+# Usage: make DEFAULT_LIB_DIR=/custom/fun/lib
+# This injects a compiler define: -DDEFAULT_LIB_DIR="/custom/fun/lib/"
+ifneq ($(strip $(DEFAULT_LIB_DIR)),)
+CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS) -DDEFAULT_LIB_DIR=\\\"$(DEFAULT_LIB_DIR)/\\\""
+CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS) -DDEFAULT_LIB_DIR=\\\"$(DEFAULT_LIB_DIR)/\\\""
+endif
+
 .PHONY: all configure build fun fun_test test_opcodes clean distclean install repl run
 
 all: clean fun fun_test test_opcodes

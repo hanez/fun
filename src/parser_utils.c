@@ -263,7 +263,12 @@ static char *preprocess_includes_internal(const char *src, int depth) {
         return strdup("");
     }
 
-    const char *LIB_DIR = "/usr/lib/fun/";
+    /* Build-time default, can be overridden by compiler define -DDEFAULT_LIB_DIR=".../" */
+    #ifndef DEFAULT_LIB_DIR
+    #define DEFAULT_LIB_DIR "/usr/lib/fun/"
+    #endif
+
+    const char *env_lib = getenv("FUN_LIB_DIR");
     size_t len = strlen(src);
     StrBuf out;
     sb_init(&out);
@@ -304,18 +309,40 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                             while (k < len && src[k] != '\n') k++;
                             if (k < len && src[k] == '\n') k++;
 
-                            /* resolve file path */
+                            /* resolve file path; for <...> try FUN_LIB_DIR first, then default */
                             char resolved[1024];
+                            char resolved2[1024];
+                            size_t inc_len = 0;
+                            char *inc = NULL;
+
                             if (opener == '<') {
-                                snprintf(resolved, sizeof(resolved), "%s%s", LIB_DIR, path);
+                                /* Attempt environment override if provided */
+                                if (env_lib && env_lib[0]) {
+                                    size_t elen = strlen(env_lib);
+                                    int needs_slash = (elen > 0 && env_lib[elen - 1] != '/');
+                                    if (needs_slash)
+                                        snprintf(resolved, sizeof(resolved), "%s/%s", env_lib, path);
+                                    else
+                                        snprintf(resolved, sizeof(resolved), "%s%s", env_lib, path);
+                                    inc = read_file_all(resolved, &inc_len);
+                                }
+                                /* Fallback to default lib dir */
+                                if (!inc) {
+                                    snprintf(resolved2, sizeof(resolved2), "%s%s", DEFAULT_LIB_DIR, path);
+                                    inc = read_file_all(resolved2, &inc_len);
+                                    if (inc) {
+                                        /* reflect the actual resolved path in annotations */
+                                        strncpy(resolved, resolved2, sizeof(resolved) - 1);
+                                        resolved[sizeof(resolved) - 1] = '\0';
+                                    }
+                                }
                             } else {
+                                /* quoted include: relative path */
                                 snprintf(resolved, sizeof(resolved), "%s", path);
+                                inc = read_file_all(resolved, &inc_len);
                             }
                             free(path);
 
-                            /* read and recursively expand */
-                            size_t inc_len = 0;
-                            char *inc = read_file_all(resolved, &inc_len);
                             if (!inc) {
                                 fprintf(stderr, "Include error: cannot read '%s'\n", resolved);
                                 sb_append(&out, "// include error: cannot read ");
