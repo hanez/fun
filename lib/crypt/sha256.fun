@@ -312,7 +312,7 @@ class SHA256()
       i = i + 1
     return out
 
-  // Hash raw string bytes (printable ASCII). Example: sha512_str("616263") -> ee2109...
+  // Hash raw string bytes (printable ASCII). Example: sha256_str("616263") -> ee2109...
   fun sha256_str(this, str)
     bytes = this.string_to_bytes_ascii(str)
     digest = this.sha256_bytes(bytes)
