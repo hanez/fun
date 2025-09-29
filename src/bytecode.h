@@ -73,6 +73,7 @@ typedef enum {
     // conversions
     OP_TO_NUMBER,     // pops any; pushes int (parse strings)
     OP_TO_STRING,     // pops any; pushes string
+    OP_CAST,          // pops typeName, value; pushes casted value (see vm/cast.c)
     OP_TYPEOF,        // pops any; pushes string name of type
     OP_UCLAMP,        // pops number; pushes number masked to N bits (operand = bits)
     OP_SCLAMP,        // pops number; pushes number clamped to signed N-bit range (operand = bits)

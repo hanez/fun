@@ -463,9 +463,18 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "cast") == 0) {
+                (*pos)++; /* '(' */
+                /* cast(value, typeName) */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "cast expects (value, typeName)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "cast expects (value, typeName)"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CAST, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "typeof") == 0) {
                 (*pos)++; /* '(' */
-                /* Special-case: typeof(<identifier>) -> use declared integer subtype if available */
+                /* Disable compile-time shortcut for typeof(<identifier>); always evaluate at runtime */
                 size_t peek = *pos;
                 char *vname = NULL;
                 int handled = 0;
@@ -473,109 +482,9 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                     /* allow spaces before ')' */
                     skip_spaces(src, len, &peek);
                     if (peek < len && src[peek] == ')') {
-                        /* Find declared type metadata for the identifier */
-                        int decl_bits = 0; /* >0 unsigned width, <0 signed width, 0 unknown/non-integer */
-                        int lidx2 = local_find(vname);
-                        int is_class_name = 0;
-                        int gidx2 = -1;
-                        if (lidx2 >= 0 && g_locals) {
-                            decl_bits = g_locals->types[lidx2];
-                        } else {
-                            /* lookup existing global without creating a new symbol */
-                            for (int gi_ = 0; gi_ < G.count; ++gi_) {
-                                if (strcmp(G.names[gi_], vname) == 0) { gidx2 = gi_; break; }
-                            }
-                            if (gidx2 >= 0) {
-                                decl_bits = G.types[gidx2];
-                                is_class_name = G.is_class[gidx2];
-                            }
-                        }
-
-                        /* Map declared metadata to human-readable typeof */
-                        if (decl_bits == TYPE_META_STRING) {
-                            int ci = bytecode_add_constant(bc, make_string("String"));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                        } else if (decl_bits == TYPE_META_NIL) {
-                            int ci = bytecode_add_constant(bc, make_string("Nil"));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                        } else if (decl_bits == TYPE_META_CLASS || is_class_name) {
-                            int ci = bytecode_add_constant(bc, make_string("Class"));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                        } else if (decl_bits == TYPE_META_BOOLEAN) {
-                            /* Booleans are numeric 0/1 in Fun */
-                            int ci = bytecode_add_constant(bc, make_string("Number"));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                        } else if (decl_bits == 8 || decl_bits == 16 || decl_bits == 32 || decl_bits == 64
-                                   || decl_bits == -8 || decl_bits == -16 || decl_bits == -32 || decl_bits == -64) {
-                            int bits = decl_bits < 0 ? -decl_bits : decl_bits;
-                            int is_signed = (decl_bits < 0);
-                            char tbuf[16];
-                            snprintf(tbuf, sizeof(tbuf), "%s%d", is_signed ? "Sint" : "Uint", bits);
-                            int ci = bytecode_add_constant(bc, make_string(tbuf));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
-                        } else {
-                            /* Fallback: load the variable, but if it's a class instance (Map with "__class"), return "Class" */
-                            if (lidx2 >= 0) {
-                                bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx2);
-                            } else {
-                                /* If global not yet present, create symbol to load its value (likely nil) */
-                                int gi2 = -1;
-                                /* try to reuse existing id if found earlier */
-                                for (int gi_ = 0; gi_ < G.count; ++gi_) {
-                                    if (strcmp(G.names[gi_], vname) == 0) { gi2 = gi_; break; }
-                                }
-                                if (gi2 < 0) gi2 = sym_index(vname);
-                                bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi2);
-                            }
-                            /* Stack: [v] */
-                            bytecode_add_instruction(bc, OP_DUP, 0);            /* [v, v] */
-                            bytecode_add_instruction(bc, OP_TYPEOF, 0);        /* [v, tname] */
-                            {
-                                int ciMap = bytecode_add_constant(bc, make_string("Map"));
-                                bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap); /* [v, tname, "Map"] */
-                            }
-                            bytecode_add_instruction(bc, OP_EQ, 0);            /* [v, isMap] */
-                            int j_if_not_map2 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-
-                            /* Map branch: check for __class tag */
-                            bytecode_add_instruction(bc, OP_DUP, 0);           /* [v, v] */
-                            {
-                                int kci = bytecode_add_constant(bc, make_string("__class"));
-                                bytecode_add_instruction(bc, OP_LOAD_CONST, kci); /* [v, v, "__class"] */
-                            }
-                            bytecode_add_instruction(bc, OP_HAS_KEY, 0);       /* [v, has] */
-                            int j_no_meta2 = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-                            /* has __class -> call toString() and return */
-                            bytecode_add_instruction(bc, OP_DUP, 0);           /* [v, v] */
-                            {
-                                int kcits = bytecode_add_constant(bc, make_string("toString"));
-                                bytecode_add_instruction(bc, OP_LOAD_CONST, kcits); /* [v, v, "toString"] */
-                            }
-                            bytecode_add_instruction(bc, OP_INDEX_GET, 0);     /* [v, func] */
-                            bytecode_add_instruction(bc, OP_SWAP, 0);          /* [func, v] */
-                            bytecode_add_instruction(bc, OP_CALL, 1);          /* [string] */
-                            int j_end2 = bytecode_add_instruction(bc, OP_JUMP, 0);
-
-                            /* no meta: drop v and return "Map" */
-                            bytecode_set_operand(bc, j_no_meta2, bc->instr_count);
-                            bytecode_add_instruction(bc, OP_POP, 0);           /* [] */
-                            {
-                                int ciMap2 = bytecode_add_constant(bc, make_string("Map"));
-                                bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap2);
-                            }
-                            int after_map2 = bc->instr_count;
-
-                            /* not map: typeof(v) */
-                            bytecode_set_operand(bc, j_if_not_map2, after_map2);
-                            bytecode_add_instruction(bc, OP_TYPEOF, 0);
-
-                            /* end */
-                            bytecode_set_operand(bc, j_end2, bc->instr_count);
-                        }
+                        /* Fall back to runtime evaluation path */
                         free(vname);
-                        /* consume the ')' */
-                        *pos = peek + 1;
-                        handled = 1;
+                        /* handled remains 0 so we go to general-case below */
                     } else {
                         /* not a simple identifier-only typeof */
                         free(vname);
@@ -585,14 +494,6 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (!handled) {
                     /* General case: typeof(expression)
                        If the value is a Map with "__class" key, return that string; else return base typeof.
-                       Stack plan:
-                       - eval expr -> [v]
-                       - DUP, TYPEOF, "Map" EQ -> [v, isMap]
-                       - if not map: drop condition path and return TYPEOF(v)
-                       - if map:
-                           DUP, "__class", HAS_KEY -> [v, has]
-                           if has: "__class", INDEX_GET -> [className]; return
-                           else: POP v; return "Map"
                     */
                     if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "typeof expects 1 argument"); free(name); return 0; }
                     if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after typeof arg"); free(name); return 0; }
@@ -637,8 +538,6 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
 
                     /* not map: compute typeof(v) */
                     bytecode_set_operand(bc, j_if_not_map, after_map);
-                    /* Stack currently holds what after we patched? For not-map path, we still have [v] retained because JUMP_IF_FALSE popped cond.
-                       Now produce typeof(v). */
                     bytecode_add_instruction(bc, OP_TYPEOF, 0);        /* [tname] */
 
                     /* end */

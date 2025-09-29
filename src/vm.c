@@ -321,6 +321,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/print.c"
             #include "vm/to_number.c"
             #include "vm/to_string.c"
+            #include "vm/cast.c"
             #include "vm/typeof.c"
             #include "vm/uclamp.c"
             #include "vm/sclamp.c"

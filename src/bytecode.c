@@ -92,6 +92,8 @@ static const char *opcode_name(OpCode op) {
         case OP_SLICE: return "SLICE";
         case OP_TO_NUMBER: return "TO_NUMBER";
         case OP_TO_STRING: return "TO_STRING";
+        case OP_TYPEOF: return "TYPEOF";
+        case OP_CAST: return "CAST";
         case OP_SPLIT: return "SPLIT";
         case OP_JOIN: return "JOIN";
         case OP_SUBSTR: return "SUBSTR";
