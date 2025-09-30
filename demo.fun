@@ -1,16 +1,19 @@
 #!/usr/bin/env fun
 
 /*
- * This file is part of the Fun programming language.
+* This file is part of the Fun programming language.
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the ISC license.
  * https://opensource.org/license/isc-license-txt
+ *
+ * Added: 2025-09-30
  */
 
 // Fun Interactive Demo
 // Run: FUN_LIB_DIR="$(pwd)/lib" ./build/fun demo.fun   (Linux/macOS/FreeBSD)
+//      set FUN_LIB_DIR=%CD%\lib && build-debug\fun.exe demo.fun (Windows CMD)
 //      $env:FUN_LIB_DIR="$PWD\lib"; .\build\fun.exe demo.fun  (Windows PowerShell)
 
 // Use a stdlib helper from the repository (fallback to ./lib via preprocessor)

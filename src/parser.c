@@ -94,6 +94,63 @@ static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line
 
 /* --------------------------- */
 
+/* Namespace alias tracking (for include-as):
+   We scan preprocessed source for lines starting with "// __ns_alias__: <name>"
+   and treat dot-calls on those identifiers as plain function calls (no implicit 'this'). */
+static char *g_ns_aliases[64];
+static int   g_ns_alias_count = 0;
+
+static void ns_aliases_reset(void) {
+    for (int i = 0; i < g_ns_alias_count; ++i) {
+        free(g_ns_aliases[i]);
+        g_ns_aliases[i] = NULL;
+    }
+    g_ns_alias_count = 0;
+}
+
+static void ns_aliases_scan(const char *src, size_t len) {
+    const char *marker = "// __ns_alias__: ";
+    size_t mlen = strlen(marker);
+    size_t i = 0;
+    while (i < len) {
+        /* find start of line */
+        size_t ls = i;
+        /* move to end of line first */
+        while (i < len && src[i] != '\n') i++;
+        size_t le = i;
+        /* include trailing '\n' in next iteration */
+        if (i < len && src[i] == '\n') i++;
+
+        if (le - ls >= mlen && strncmp(src + ls, marker, mlen) == 0) {
+            size_t p = ls + mlen;
+            /* read identifier */
+            size_t start = p;
+            while (p < le && (src[p] == ' ' || src[p] == '\t')) p++;
+            if (p < le && (isalpha((unsigned char)src[p]) || src[p] == '_')) {
+                size_t q = p + 1;
+                while (q < le && (isalnum((unsigned char)src[q]) || src[q] == '_')) q++;
+                size_t n = q - p;
+                if (n > 0 && g_ns_alias_count < (int)(sizeof(g_ns_aliases)/sizeof(g_ns_aliases[0]))) {
+                    char *name = (char*)malloc(n + 1);
+                    if (name) {
+                        memcpy(name, src + p, n);
+                        name[n] = '\0';
+                        g_ns_aliases[g_ns_alias_count++] = name;
+                    }
+                }
+            }
+        }
+    }
+}
+
+static int is_ns_alias(const char *name) {
+    if (!name) return 0;
+    for (int i = 0; i < g_ns_alias_count; ++i) {
+        if (strcmp(g_ns_aliases[i], name) == 0) return 1;
+    }
+    return 0;
+}
+
 #include "parser_utils.c"
 
 /* very small global symbol table for LOAD_GLOBAL/STORE_GLOBAL */
@@ -1122,11 +1179,21 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                             free(mname);
                             continue;
                         }
-                        /* Prepare: stack has <obj>. Duplicate it to preserve 'this' across INDEX_GET */
-                        bytecode_add_instruction(bc, OP_DUP, 0);
-                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
-                        bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> stack: obj, func */
-                        bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> stack: func, obj (this) */
+
+                        /* If base identifier is a namespace alias -> treat as plain function call: no implicit 'this' */
+                        int is_ns = is_ns_alias(name);
+
+                        if (!is_ns) {
+                            /* Method sugar with implicit 'this' */
+                            bytecode_add_instruction(bc, OP_DUP, 0);
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                            bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> stack: obj, func */
+                            bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> stack: func, obj (this) */
+                        } else {
+                            /* Plain property function call: obj["mname"] -> func */
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                            bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> stack: func */
+                        }
 
                         /* Consume '(' and parse args */
                         *pos = callp + 1;
@@ -1141,8 +1208,8 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         }
                         if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(mname); free(name); return 0; }
 
-                        /* Call with implicit 'this' (+1 arg) */
-                        bytecode_add_instruction(bc, OP_CALL, argc + 1);
+                        /* Call */
+                        bytecode_add_instruction(bc, OP_CALL, is_ns ? argc : (argc + 1));
                         free(mname);
                         continue;
                     } else {
@@ -1218,11 +1285,19 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                             continue;
                         }
 
-                        /* Stack has obj: duplicate to preserve 'this' */
-                        bytecode_add_instruction(bc, OP_DUP, 0);
-                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
-                        bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> obj, func */
-                        bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> func, obj */
+                        int is_ns = is_ns_alias(name);
+
+                        if (!is_ns) {
+                            /* Method sugar with implicit 'this' */
+                            bytecode_add_instruction(bc, OP_DUP, 0);
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                            bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> obj, func */
+                            bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> func, obj */
+                        } else {
+                            /* Plain property function call */
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                            bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> func */
+                        }
 
                         *pos = callp + 1;
                         int argc = 0;
@@ -1236,7 +1311,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         }
                         if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(mname); free(name); return 0; }
 
-                        bytecode_add_instruction(bc, OP_CALL, argc + 1);
+                        bytecode_add_instruction(bc, OP_CALL, is_ns ? argc : (argc + 1));
                         free(mname);
                         continue;
                     } else {
@@ -3232,6 +3307,10 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 static Bytecode *compile_minimal(const char *src, size_t len) {
     Bytecode *bc = bytecode_new();
     size_t pos = 0;
+
+    /* Refresh namespace alias table for this compilation unit */
+    ns_aliases_reset();
+    ns_aliases_scan(src, len);
 
     skip_shebang_if_present(src, len, &pos);
 

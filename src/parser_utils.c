@@ -256,6 +256,158 @@ static void sb_append_ch(StrBuf *sb, char c) {
     sb->buf[sb->len] = '\0';
 }
 
+/* ---- Export collection for include-as namespaces ---- */
+typedef struct {
+    char **names;
+    int count;
+    int cap;
+} NameList;
+
+static void nl_init(NameList *nl) {
+    nl->names = NULL;
+    nl->count = 0;
+    nl->cap = 0;
+}
+
+static void nl_add(NameList *nl, const char *name) {
+    if (!name || !name[0]) return;
+    if (nl->count >= nl->cap) {
+        int ncap = nl->cap ? nl->cap * 2 : 8;
+        char **nn = (char**)realloc(nl->names, (size_t)ncap * sizeof(char*));
+        if (!nn) return;
+        nl->names = nn;
+        nl->cap = ncap;
+    }
+    nl->names[nl->count++] = strdup(name);
+}
+
+static void nl_free(NameList *nl) {
+    if (!nl) return;
+    for (int i = 0; i < nl->count; ++i) free(nl->names[i]);
+    free(nl->names);
+    nl->names = NULL;
+    nl->count = nl->cap = 0;
+}
+
+/* Collect top-level (indent=0) exported symbols: function and class names.
+   Ignores lines inside comments/strings and ignores nested indent. */
+static void collect_exports_top_level(const char *text, NameList *out) {
+    if (!text || !out) return;
+    size_t len = strlen(text);
+    int in_line = 0, in_block = 0, in_sq = 0, in_dq = 0, esc = 0;
+    int bol = 1;
+    for (size_t i = 0; i < len; ) {
+        char c = text[i];
+
+        if (in_line) {
+            if (c == '\n') { in_line = 0; bol = 1; }
+            else { bol = 0; }
+            i++;
+            continue;
+        }
+        if (in_block) {
+            if (c == '*' && (i + 1) < len && text[i + 1] == '/') {
+                i += 2;
+                bol = 0;
+                in_block = 0;
+                continue;
+            }
+            bol = (c == '\n');
+            i++;
+            continue;
+        }
+        if (in_sq) {
+            if (!esc && c == '\\') { esc = 1; i++; bol = 0; continue; }
+            if (!esc && c == '\'') { in_sq = 0; }
+            esc = 0;
+            bol = (c == '\n');
+            i++;
+            continue;
+        }
+        if (in_dq) {
+            if (!esc && c == '\\') { esc = 1; i++; bol = 0; continue; }
+            if (!esc && c == '"') { in_dq = 0; }
+            esc = 0;
+            bol = (c == '\n');
+            i++;
+            continue;
+        }
+
+        if (c == '/' && (i + 1) < len && text[i + 1] == '/') {
+            in_line = 1;
+            bol = 0;
+            i += 2;
+            continue;
+        }
+        if (c == '/' && (i + 1) < len && text[i + 1] == '*') {
+            in_block = 1;
+            bol = 0;
+            i += 2;
+            continue;
+        }
+        if (c == '\'') { in_sq = 1; bol = 0; i++; continue; }
+        if (c == '"')  { in_dq = 1; bol = 0; i++; continue; }
+
+        if (bol) {
+            /* Compute leading spaces to filter out indented constructs */
+            size_t j = i;
+            int spaces = 0;
+            while (j < len && text[j] == ' ') { spaces++; j++; }
+            if (j < len && text[j] == '\t') {
+                /* tabs not allowed for indentation; treat as not top-level */
+                bol = 0;
+                i = j + 1;
+                continue;
+            }
+            /* Only consider top-level (indent == 0) */
+            if (spaces == 0) {
+                /* Check for 'fun ' or 'class ' */
+                const char *kw1 = "fun";
+                const char *kw2 = "class";
+                if (j + 3 <= len && strncmp(text + j, kw1, 3) == 0 && (j + 3 == len || isspace((unsigned char)text[j + 3]))) {
+                    size_t p = j + 3;
+                    while (p < len && (text[p] == ' ' || text[p] == '\t')) p++;
+                    /* read identifier */
+                    size_t start = p;
+                    if (p < len && (isalpha((unsigned char)text[p]) || text[p] == '_')) {
+                        p++;
+                        while (p < len && (isalnum((unsigned char)text[p]) || text[p] == '_')) p++;
+                        size_t n = p - start;
+                        if (n > 0) {
+                            char tmp[256];
+                            size_t copy = (n < sizeof(tmp) - 1) ? n : (sizeof(tmp) - 1);
+                            memcpy(tmp, text + start, copy);
+                            tmp[copy] = '\0';
+                            nl_add(out, tmp);
+                        }
+                    }
+                } else if (j + 5 <= len && strncmp(text + j, kw2, 5) == 0 && (j + 5 == len || isspace((unsigned char)text[j + 5]))) {
+                    size_t p = j + 5;
+                    while (p < len && (text[p] == ' ' || text[p] == '\t')) p++;
+                    /* read identifier */
+                    size_t start = p;
+                    if (p < len && (isalpha((unsigned char)text[p]) || text[p] == '_')) {
+                        p++;
+                        while (p < len && (isalnum((unsigned char)text[p]) || text[p] == '_')) p++;
+                        size_t n = p - start;
+                        if (n > 0) {
+                            char tmp[256];
+                            size_t copy = (n < sizeof(tmp) - 1) ? n : (sizeof(tmp) - 1);
+                            memcpy(tmp, text + start, copy);
+                            tmp[copy] = '\0';
+                            nl_add(out, tmp);
+                        }
+                    }
+                }
+            }
+        }
+
+        /* move forward one char */
+        bol = (c == '\n');
+        i++;
+    }
+}
+
 static char *preprocess_includes_internal(const char *src, int depth) {
     if (!src) return NULL;
     if (depth > 64) {
@@ -304,8 +456,31 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                             memcpy(path, src + path_start, path_len);
                             path[path_len] = '\0';
 
-                            /* advance to end of line */
+                            /* parse optional 'as <alias>' then advance to end of line */
                             k++;
+                            char ns[64]; ns[0] = '\0';
+                            /* skip spaces/tabs */
+                            size_t ap = k;
+                            while (ap < len && (src[ap] == ' ' || src[ap] == '\t')) ap++;
+                            /* optional 'as' */
+                            const char *askw = "as";
+                            if (ap + 2 <= len && strncmp(src + ap, askw, 2) == 0 && (ap + 2 == len || isspace((unsigned char)src[ap + 2]))) {
+                                ap += 2;
+                                while (ap < len && (src[ap] == ' ' || src[ap] == '\t')) ap++;
+                                /* read identifier [A-Za-z_][A-Za-z0-9_]* */
+                                size_t start = ap;
+                                if (ap < len && (isalpha((unsigned char)src[ap]) || src[ap] == '_')) {
+                                    ap++;
+                                    while (ap < len && (isalnum((unsigned char)src[ap]) || src[ap] == '_')) ap++;
+                                    size_t n = ap - start;
+                                    size_t copy = (n < sizeof(ns) - 1) ? n : (sizeof(ns) - 1);
+                                    memcpy(ns, src + start, copy);
+                                    ns[copy] = '\0';
+                                }
+                                /* ignore anything else on line */
+                            }
+                            /* advance to end of line */
+                            k = ap;
                             while (k < len && src[k] != '\n') k++;
                             if (k < len && src[k] == '\n') k++;
 
@@ -362,16 +537,66 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                                 sb_append(&out, resolved[0] ? resolved : "(unresolved)");
                                 sb_append(&out, "\n");
                             } else {
-                                char *exp = preprocess_includes_internal(inc, depth + 1);
+                                /* Strip optional UTF-8 BOM and top-of-file shebang from included text before preprocessing */
+                                const char *startp = inc;
+                                size_t off = 0;
+                                if ((unsigned char)inc[0] == 0xEF && (unsigned char)inc[1] == 0xBB && (unsigned char)inc[2] == 0xBF) {
+                                    off = 3;
+                                }
+                                startp = inc + off;
+                                if (startp[0] == '#' && startp[1] == '!') {
+                                    /* skip until end of line, handling CR, LF, CRLF */
+                                    const char *q = startp;
+                                    while (*q && *q != '\n' && *q != '\r') q++;
+                                    if (*q == '\r') { q++; if (*q == '\n') q++; }
+                                    else if (*q == '\n') { q++; }
+                                    startp = q;
+                                }
+                                char *inc_clean = strdup(startp);
+                                char *exp = preprocess_includes_internal(inc_clean, depth + 1);
                                 free(inc);
+                                free(inc_clean);
                                 if (exp) {
+                                    /* If alias requested, initialize namespace map before including content */
+                                    if (ns[0] != '\0') {
+                                        /* Announce alias so the parser can treat dot-call without implicit 'this' */
+                                        sb_append(&out, "// __ns_alias__: ");
+                                        sb_append(&out, ns);
+                                        sb_append(&out, "\n");
+
+                                        sb_append(&out, ns);
+                                        sb_append(&out, " = {}\n");
+                                    }
+
                                     /* mark file origin for better error messages */
                                     sb_append(&out, "// __include_begin__: ");
                                     sb_append(&out, resolved);
+                                    if (ns[0] != '\0') {
+                                        sb_append(&out, " as ");
+                                        sb_append(&out, ns);
+                                    }
                                     sb_append(&out, "\n");
+
+                                    /* append expanded included content */
                                     sb_append(&out, exp);
                                     /* ensure included chunk ends with newline to preserve line structure */
                                     if (out.len == 0 || out.buf[out.len - 1] != '\n') sb_append_ch(&out, '\n');
+
+                                    /* If alias is present, export top-level fun/class into alias map */
+                                    if (ns[0] != '\0') {
+                                        NameList nl; nl_init(&nl);
+                                        collect_exports_top_level(exp, &nl);
+                                        for (int ei = 0; ei < nl.count; ++ei) {
+                                            sb_append(&out, ns);
+                                            sb_append(&out, ".");
+                                            sb_append(&out, nl.names[ei]);
+                                            sb_append(&out, " = ");
+                                            sb_append(&out, nl.names[ei]);
+                                            sb_append(&out, "\n");
+                                        }
+                                        nl_free(&nl);
+                                    }
+
                                     free(exp);
                                 }
                             }
