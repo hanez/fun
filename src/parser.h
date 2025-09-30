@@ -3,8 +3,8 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
  */
 
 /**
@@ -13,7 +13,7 @@
  *  - Optional shebang on the first line.
  *  - Optional single function wrapper: fun <ident>() { ... }
  *  - print("...") statements inside function or at top-level.
- * Produces bytecode that executes all discovered print statements and halts.
+ * Produces bytecode that executes all dApache-2.0overed print statements and halts.
  *
  * Returns: newly allocated Bytecode*, or NULL on error.
  */

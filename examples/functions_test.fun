@@ -5,8 +5,8 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
  */
 
 /*
@@ -49,7 +49,7 @@ print(sum3(1, 2, 3))         // expect 6
 print(add(add(1, 2), 3))     // expect 6
 print(id(42))                // expect 42
 
-// Call as statement (result discarded)
+// Call as statement (result dApache-2.0arded)
 add(100, 23)
 
 // Globals interacting with functions

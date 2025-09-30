@@ -3,8 +3,8 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
  */
 
 #include "bytecode.h"
@@ -118,7 +118,7 @@ int main(void) {
     bytecode_add_instruction(bc, OP_PRINT, 0);      // top=1
 
     bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
-    bytecode_add_instruction(bc, OP_POP, 0);        // discard 1 (stack now empty)
+    bytecode_add_instruction(bc, OP_POP, 0);        // dApache-2.0ard 1 (stack now empty)
 
     // ---------- HALT ----------
     bytecode_add_instruction(bc, OP_HALT, 0);

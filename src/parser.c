@@ -3,8 +3,8 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
  */
 
 /**
@@ -798,7 +798,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
 
                 /* Append via insert: res.insert(index=len(res), value) */
                 bytecode_add_instruction(bc, OP_INSERT, 0);
-                /* discard returned new length */
+                /* dApache-2.0ard returned new length */
                 bytecode_add_instruction(bc, OP_POP, 0);
 
                 /* i++ */
@@ -877,7 +877,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
 
                 /* Append via insert: res.insert(index=len(res), value) */
                 bytecode_add_instruction(bc, OP_INSERT, 0);
-                /* discard returned new length */
+                /* dApache-2.0ard returned new length */
                 bytecode_add_instruction(bc, OP_POP, 0);
 
                 int c1 = bytecode_add_constant(bc, make_int(1));
@@ -1025,6 +1025,39 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "randomInt expects 2 args"); free(name); return 0; }
                 if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "randomInt expects 2 args"); free(name); return 0; }
                 bytecode_add_instruction(bc, OP_RANDOM_INT, 0);
+                free(name);
+                return 1;
+            }
+
+            /* threading */
+            if (strcmp(name, "thread_spawn") == 0) {
+                (*pos)++; /* '(' */
+                /* thread_spawn(fn [, args]) */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "thread_spawn expects function as first arg"); free(name); return 0; }
+                int hasArgs = 0;
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ',') {
+                    (*pos)++;
+                    skip_spaces(src, len, pos);
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "thread_spawn second arg must be array or value"); free(name); return 0; }
+                    hasArgs = 1;
+                }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after thread_spawn args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_THREAD_SPAWN, hasArgs ? 1 : 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "thread_join") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "thread_join expects 1 arg (thread id)"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_THREAD_JOIN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sleep") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "sleep expects 1 arg (milliseconds)"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SLEEP_MS, 0);
                 free(name);
                 return 1;
             }
@@ -2317,7 +2350,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             /* rewind to statement start and emit as expression */
             local_pos = *pos;
             if (emit_expression(bc, src, len, &local_pos)) {
-                bytecode_add_instruction(bc, OP_POP, 0); /* discard return value */
+                bytecode_add_instruction(bc, OP_POP, 0); /* dApache-2.0ard return value */
             }
             *pos = local_pos;
             skip_to_eol(src, len, pos);

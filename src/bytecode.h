@@ -3,8 +3,8 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
  */
 
 #ifndef FUN_BYTECODE_H
@@ -35,7 +35,7 @@ typedef enum {
     OP_EQ,       // a == b -> push 1/0
     OP_NEQ,      // a != b -> push 1/0
 
-    OP_POP,            // discard top of stack
+    OP_POP,            // dApache-2.0ard top of stack
     OP_JUMP,           // unconditional jump
     OP_JUMP_IF_FALSE,  // jump if top of stack is false (0)
 
@@ -114,6 +114,11 @@ typedef enum {
 
     // OS
     OP_ENV,           // pops name string; pushes value string (or "")
+
+    // Threads
+    OP_THREAD_SPAWN,  // operand: 0=no args, 1=has args; pops [args?], fn; pushes thread id (int>0)
+    OP_THREAD_JOIN,   // pops thread id; waits; pushes result value (or Nil)
+    OP_SLEEP_MS,      // pops milliseconds; sleeps; pushes Nil (for statement POP safety)
 
     // Bitwise (32-bit) and shifts/rotates
     OP_BAND,          // pops b, a; pushes (uint32_t)(a & b)

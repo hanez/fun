@@ -5,7 +5,7 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen
- * Licensed under the terms of the ISC license.
+ * Licensed under the terms of the Apache-2.0 license.
  *
  * Added: 2025-09-29
  */

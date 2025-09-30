@@ -3,8 +3,8 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
  */
 
 /* Bring in split-out built-ins without changing the build system yet */
@@ -17,6 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+
+/* Threading internals (registry and platform glue) */
+#include "vm/os/thread_common.c"
 
 /* Track the currently running VM to annotate error messages */
 static VM *g_active_vm = NULL;
@@ -268,7 +271,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/bitwise/shr.c"
             #include "vm/bitwise/rol.c"
             #include "vm/bitwise/ror.c"
-            
+
             #include "vm/core/call.c"
             #include "vm/core/dup.c"
             #include "vm/core/halt.c"
@@ -283,11 +286,10 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/core/store_global.c"
             #include "vm/core/store_local.c"
             #include "vm/core/swap.c"
-            
+
             #include "vm/io/read_file.c"
             #include "vm/io/write_file.c"
-            #include "vm/os/env.c"
-            
+
             #include "vm/logic/and.c"
             #include "vm/logic/eq.c"
             #include "vm/logic/gt.c"
@@ -302,7 +304,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/maps/keys.c"
             #include "vm/maps/make_map.c"
             #include "vm/maps/values.c"
-            
+
             #include "vm/math/abs.c"
             #include "vm/math/clamp.c"
             #include "vm/math/max.c"
@@ -311,6 +313,11 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/math/pow.c"
             #include "vm/math/random_int.c"
             #include "vm/math/random_seed.c"
+
+            #include "vm/os/env.c"
+            #include "vm/os/sleep_ms.c"
+            #include "vm/os/thread_join.c"
+            #include "vm/os/thread_spawn.c"
 
             #include "vm/strings/find.c"
             #include "vm/strings/split.c"

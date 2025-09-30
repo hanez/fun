@@ -3,8 +3,8 @@
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the ISC license.
- * https://opensource.org/license/isc-license-txt
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
  */
 
 #ifndef FUN_VM_H
@@ -34,6 +34,7 @@ static const char *opcode_names[] = {
     "MIN","MAX","CLAMP","ABS","POW","RANDOM_SEED","RANDOM_INT",
     "MAKE_MAP","KEYS","VALUES","HAS_KEY",
     "READ_FILE","WRITE_FILE","ENV",
+    "THREAD_SPAWN","THREAD_JOIN","SLEEP_MS",
     "BAND","BOR","BXOR","BNOT","SHL","SHR","ROTL","ROTR"
 };
 

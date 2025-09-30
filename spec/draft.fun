@@ -6,7 +6,7 @@
    implementation or programming. Just a compiled version of many ideas... ;)
 
    Copyright 2025 Johannes Findeisen <you@hanez.org>
-   License: ISC License, https://opensource.org/license/isc-license-txt
+   License: Apache-2.0 License, https://opensource.org/license/apache-2-0
 
    Birthdate: 2025-09-10
 */
