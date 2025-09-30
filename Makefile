@@ -20,9 +20,11 @@ else
   ifeq ($(UNAME_S),Darwin)
     CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS) -DDEFAULT_LIB_DIR=\\\"/Library/Application Support/fun/lib/\\\""
     CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS) -DDEFAULT_LIB_DIR=\\\"/Library/Application Support/fun/lib/\\\""
+    CMAKE_FLAGS += -DCMAKE_EXE_LINKER_FLAGS="$(CMAKE_EXE_LINKER_FLAGS) -pthread"
   else
     CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS) -DDEFAULT_LIB_DIR=\\\"/usr/share/fun/lib/\\\""
     CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS) -DDEFAULT_LIB_DIR=\\\"/usr/share/fun/lib/\\\""
+    CMAKE_FLAGS += -DCMAKE_EXE_LINKER_FLAGS="$(CMAKE_EXE_LINKER_FLAGS) -pthread"
   endif
 endif
 endif
