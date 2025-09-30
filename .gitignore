@@ -3,6 +3,7 @@
 !.gitignore
 build*
 cmake*
+demo_*
 dist/
 lib/*.so
 out/
