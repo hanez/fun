@@ -10,6 +10,21 @@ CMAKE_FLAGS ?= -DFUN_DEBUG=OFF
 ifneq ($(strip $(DEFAULT_LIB_DIR)),)
 CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS) -DDEFAULT_LIB_DIR=\\\"$(DEFAULT_LIB_DIR)/\\\""
 CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS) -DDEFAULT_LIB_DIR=\\\"$(DEFAULT_LIB_DIR)/\\\""
+else
+# Provide OS-specific defaults for Windows, macOS, Linux/Unix
+ifeq ($(OS),Windows_NT)
+  CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS) -DDEFAULT_LIB_DIR=\\\"C:/Users/Public/fun/lib/\\\""
+  CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS) -DDEFAULT_LIB_DIR=\\\"C:/Users/Public/fun/lib/\\\""
+else
+  UNAME_S := $(shell uname -s)
+  ifeq ($(UNAME_S),Darwin)
+    CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS) -DDEFAULT_LIB_DIR=\\\"/Library/Application Support/fun/lib/\\\""
+    CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS) -DDEFAULT_LIB_DIR=\\\"/Library/Application Support/fun/lib/\\\""
+  else
+    CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS) -DDEFAULT_LIB_DIR=\\\"/usr/share/fun/lib/\\\""
+    CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS) -DDEFAULT_LIB_DIR=\\\"/usr/share/fun/lib/\\\""
+  endif
+endif
 endif
 
 .PHONY: all configure build fun fun_test test_opcodes clean distclean install repl run

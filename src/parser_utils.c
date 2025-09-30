@@ -265,7 +265,7 @@ static char *preprocess_includes_internal(const char *src, int depth) {
 
     /* Build-time default, can be overridden by compiler define -DDEFAULT_LIB_DIR=".../" */
     #ifndef DEFAULT_LIB_DIR
-    #define DEFAULT_LIB_DIR "/usr/lib/fun/"
+    #define DEFAULT_LIB_DIR "/usr/share/fun/lib/"
     #endif
 
     const char *env_lib = getenv("FUN_LIB_DIR");
@@ -316,37 +316,50 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                             char *inc = NULL;
 
                             if (opener == '<') {
-                                /* Attempt environment override if provided */
+                                /* Angle-bracket include resolution order:
+                                 *  1) FUN_LIB_DIR (env), respecting '/' or '\' endings
+                                 *  2) DEFAULT_LIB_DIR (compile-time define)
+                                 *  3) "lib/" under current working directory (developer fallback)
+                                 *
+                                 * Always assign 'resolved' to the last attempted candidate so errors are informative.
+                                 */
+                                resolved[0] = '\0';
+
+                                /* 1) FUN_LIB_DIR */
                                 if (env_lib && env_lib[0]) {
                                     size_t elen = strlen(env_lib);
-                                    int needs_slash = (elen > 0 && env_lib[elen - 1] != '/');
-                                    if (needs_slash)
-                                        snprintf(resolved, sizeof(resolved), "%s/%s", env_lib, path);
+                                    char last = env_lib[elen ? (elen - 1) : 0];
+                                    int needs_sep = !(last == '/' || last == '\\');
+                                    char sep = (last == '\\') ? '\\' : '/';
+                                    if (needs_sep)
+                                        snprintf(resolved, sizeof(resolved), "%s%c%s", env_lib, sep, path);
                                     else
                                         snprintf(resolved, sizeof(resolved), "%s%s", env_lib, path);
                                     inc = read_file_all(resolved, &inc_len);
                                 }
-                                /* Fallback to default lib dir */
+
+                                /* 2) DEFAULT_LIB_DIR */
                                 if (!inc) {
-                                    snprintf(resolved2, sizeof(resolved2), "%s%s", DEFAULT_LIB_DIR, path);
-                                    inc = read_file_all(resolved2, &inc_len);
-                                    if (inc) {
-                                        /* reflect the actual resolved path in annotations */
-                                        strncpy(resolved, resolved2, sizeof(resolved) - 1);
-                                        resolved[sizeof(resolved) - 1] = '\0';
-                                    }
+                                    snprintf(resolved, sizeof(resolved), "%s%s", DEFAULT_LIB_DIR, path);
+                                    inc = read_file_all(resolved, &inc_len);
+                                }
+
+                                /* 3) project-local dev fallback: lib/<path> */
+                                if (!inc) {
+                                    snprintf(resolved, sizeof(resolved), "lib/%s", path);
+                                    inc = read_file_all(resolved, &inc_len);
                                 }
                             } else {
-                                /* quoted include: relative path */
+                                /* quoted include: relative path (cwd) */
                                 snprintf(resolved, sizeof(resolved), "%s", path);
                                 inc = read_file_all(resolved, &inc_len);
                             }
                             free(path);
 
                             if (!inc) {
-                                fprintf(stderr, "Include error: cannot read '%s'\n", resolved);
+                                fprintf(stderr, "Include error: cannot read '%s'\n", resolved[0] ? resolved : "(unresolved)");
                                 sb_append(&out, "// include error: cannot read ");
-                                sb_append(&out, resolved);
+                                sb_append(&out, resolved[0] ? resolved : "(unresolved)");
                                 sb_append(&out, "\n");
                             } else {
                                 char *exp = preprocess_includes_internal(inc, depth + 1);

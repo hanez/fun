@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun VERSION 0.12.6 LANGUAGES C)
+project(fun VERSION 0.13.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -69,7 +69,7 @@ install(TARGETS fun
 
 # Libs
 install(DIRECTORY lib/
-        DESTINATION /usr/lib/fun
+        DESTINATION /usr/share/fun/lib
         FILES_MATCHING PATTERN "*.fun")
 
 # Optionally install example scripts
