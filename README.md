@@ -145,3 +145,6 @@ That's it! For testing it run:
 ```
 ./build/fun ./demo.fun
 ```
+## Author
+
+[Johannes Findeisen](https://hanez.org) <you@hanez.org>

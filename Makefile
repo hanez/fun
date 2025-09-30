@@ -4,6 +4,9 @@ CMAKE ?= cmake
 # Default to a build with extra logging disabled
 CMAKE_FLAGS ?= -DFUN_DEBUG=OFF
 
+# Convenience: default path to bundled stdlib
+FUN_LIB ?= $(CURDIR)/lib
+
 # Optional: override default library directory for #include <...> lookups
 # Usage: make DEFAULT_LIB_DIR=/custom/fun/lib
 # This injects a compiler define: -DDEFAULT_LIB_DIR="/custom/fun/lib/"
@@ -73,8 +76,13 @@ repl: fun
 run: fun
 	./$(BUILD_DIR)/fun $(SCRIPT)
 
+# Run the OO threading demo with FUN_LIB_DIR set
+threads-demo: fun
+	@echo "Running Thread class demo with FUN_LIB_DIR=$(FUN_LIB)"
+	FUN_LIB_DIR="$(FUN_LIB)" ./$(BUILD_DIR)/fun examples/threads_demo.fun
+
 # Additional convenience targets
-.PHONY: verify-ops examples run-examples
+.PHONY: verify-ops examples run-examples threads-demo
 
 # Verify that each OP_* in bytecode.h has a corresponding vm_case_*.inc include in vm.c
 verify-ops:
@@ -82,4 +90,4 @@ verify-ops:
 
 # Build and run all examples (searches for the fun binary automatically)
 examples run-examples: fun
-	@./scripts/run_examples.sh
+	@FUN_LIB_DIR="$(FUN_LIB)" ./scripts/run_examples.sh
