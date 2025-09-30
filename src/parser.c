@@ -40,7 +40,7 @@
  * }
  *
  * @author Johannes Findeisen
- * @date 2025-10-16
+ * @date 2025-09-16
  */
 
 #include "parser.h"
@@ -2422,6 +2422,9 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             }
             int cgi = sym_index(cname);
 
+            /* optional extends Parent */
+            char *parent_name = NULL;
+
             /* Optional typed parameter list: class Name(type ident, ...) */
             char *param_names[64]; int param_kind[64]; int pcount = 0;
             memset(param_names, 0, sizeof(param_names));
@@ -2484,6 +2487,19 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 }
             }
 
+            /* optional 'extends Parent' after parameter list */
+            skip_spaces(src, len, pos);
+            if (starts_with(src, len, *pos, "extends")) {
+                *pos += 7; /* consume 'extends' */
+                skip_spaces(src, len, pos);
+                if (!read_identifier_into(src, len, pos, &parent_name)) {
+                    parser_fail(*pos, "Expected parent class name after 'extends'");
+                    for (int i = 0; i < pcount; ++i) free(param_names[i]);
+                    free(cname);
+                    return;
+                }
+            }
+
             /* end of class header line */
             skip_to_eol(src, len, pos);
 
@@ -2494,6 +2510,9 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             memset(&ctor_env, 0, sizeof(ctor_env));
             LocalEnv *prev_env = g_locals;
             g_locals = &ctor_env;
+
+            /* track if _construct is defined in this class */
+            int ctor_present = 0;
 
             /* Register parameter locals first so args land at 0..pcount-1 */
             for (int i = 0; i < pcount; ++i) {
@@ -2593,6 +2612,78 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             }
             bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
 
+            /* Inheritance: if extends Parent, create Parent(header args...) and merge its keys into this */
+            if (parent_name) {
+                /* parent_inst = Parent(args...) */
+                int parent_gi = sym_index(parent_name);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_GLOBAL, parent_gi);
+                for (int i = 0; i < pcount; ++i) {
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, i);
+                }
+                bytecode_add_instruction(ctor_bc, OP_CALL, pcount);
+                int l_parent = local_add("__parent_inst");
+                bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_parent);
+
+                /* keys = keys(parent_inst) */
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_parent);
+                bytecode_add_instruction(ctor_bc, OP_KEYS, 0);
+                int l_keys = local_add("__parent_keys");
+                bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_keys);
+
+                /* i = 0 */
+                int c0_inh = bytecode_add_constant(ctor_bc, make_int(0));
+                bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, c0_inh);
+                int l_i = local_add("__inh_i");
+                bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_i);
+
+                /* loop: while (i < len(keys)) */
+                int loop_start = ctor_bc->instr_count;
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_i);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_keys);
+                bytecode_add_instruction(ctor_bc, OP_LEN, 0);
+                bytecode_add_instruction(ctor_bc, OP_LT, 0);
+                int jmp_false = bytecode_add_instruction(ctor_bc, OP_JUMP_IF_FALSE, 0);
+
+                /* key = keys[i] */
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_keys);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_i);
+                bytecode_add_instruction(ctor_bc, OP_INDEX_GET, 0);
+                int l_k = local_add("__inh_k");
+                bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_k);
+
+                /* if this has key -> skip set */
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_k);
+                bytecode_add_instruction(ctor_bc, OP_HAS_KEY, 0);
+                int j_skip_set = bytecode_add_instruction(ctor_bc, OP_JUMP_IF_FALSE, 0);
+                /* has key -> nothing to do, jump over set sequence */
+                int j_after_maybe_set = bytecode_add_instruction(ctor_bc, OP_JUMP, 0);
+
+                /* not has key: set this[key] = parent_inst[key] */
+                bytecode_set_operand(ctor_bc, j_skip_set, ctor_bc->instr_count);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_k);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_parent);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_k);
+                bytecode_add_instruction(ctor_bc, OP_INDEX_GET, 0);
+                bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
+
+                /* continue after maybe-set */
+                bytecode_set_operand(ctor_bc, j_after_maybe_set, ctor_bc->instr_count);
+
+                /* i++ */
+                int c1_inh = bytecode_add_constant(ctor_bc, make_int(1));
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_i);
+                bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, c1_inh);
+                bytecode_add_instruction(ctor_bc, OP_ADD, 0);
+                bytecode_add_instruction(ctor_bc, OP_STORE_LOCAL, l_i);
+
+                /* back to loop */
+                bytecode_add_instruction(ctor_bc, OP_JUMP, loop_start);
+                /* end loop */
+                bytecode_set_operand(ctor_bc, jmp_false, ctor_bc->instr_count);
+            }
+
             /* Parse class body at increased indent */
             int body_indent = 0;
             size_t look_body = *pos;
@@ -2628,6 +2719,8 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                             free(cname);
                             return;
                         }
+                        int is_ctor_method = (strcmp(mname, "_construct") == 0);
+
                         skip_spaces(src, len, pos);
                         if (!consume_char(src, len, pos, '(')) {
                             parser_fail(*pos, "Expected '(' after method name");
@@ -2661,7 +2754,11 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                                 }
                                 if (param_count == 0 && strcmp(pname, "this") != 0) {
                                     /* Require explicit 'this' as first parameter */
-                                    parser_fail(*pos, "First parameter of a method must be 'this'");
+                                    if (is_ctor_method) {
+                                        parser_fail(*pos, "Constructor '_construct' must declare 'this' as its first parameter");
+                                    } else {
+                                        parser_fail(*pos, "First parameter of a method must be 'this'");
+                                    }
                                     free(pname);
                                     free(mname);
                                     g_locals = saved;
@@ -2682,7 +2779,11 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                             }
                         } else {
                             /* no params: enforce (this) */
-                            parser_fail(*pos, "Method must declare at least 'this' parameter");
+                            if (is_ctor_method) {
+                                parser_fail(*pos, "Constructor '_construct' must declare 'this' as its first parameter");
+                            } else {
+                                parser_fail(*pos, "Method must declare at least 'this' parameter");
+                            }
                             free(mname);
                             g_locals = saved;
                             g_locals = prev_env;
@@ -2722,6 +2823,11 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                         int mci = bytecode_add_constant(ctor_bc, make_function(m_bc));
                         bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, mci);
                         bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
+
+                        /* mark constructor presence if name matches */
+                        if (strcmp(mname, "_construct") == 0) {
+                            ctor_present = 1;
+                        }
 
                         free(mname);
                         continue;
@@ -2775,6 +2881,28 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 bytecode_add_instruction(ctor_bc, OP_INDEX_SET, 0);
             }
 
+            /* If a constructor exists, invoke: this._construct(this, params...) and drop its return */
+            if (ctor_present) {
+                /* fetch method: duplicate 'this' so we keep it for the call */
+                bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
+                bytecode_add_instruction(ctor_bc, OP_DUP, 0);       /* -> this, this */
+                {
+                    int kci_ctor = bytecode_add_constant(ctor_bc, make_string("_construct"));
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_CONST, kci_ctor);
+                }
+                bytecode_add_instruction(ctor_bc, OP_INDEX_GET, 0); /* -> this, func */
+                bytecode_add_instruction(ctor_bc, OP_SWAP, 0);      /* -> func, this */
+
+                /* push all header parameters as additional args in order */
+                for (int i = 0; i < pcount; ++i) {
+                    bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, i);
+                }
+                /* call with implicit 'this' (+1) plus pcount params */
+                bytecode_add_instruction(ctor_bc, OP_CALL, pcount + 1);
+                /* discard any return value from constructor */
+                bytecode_add_instruction(ctor_bc, OP_POP, 0);
+            }
+
             /* return instance */
             bytecode_add_instruction(ctor_bc, OP_LOAD_LOCAL, l_this);
             bytecode_add_instruction(ctor_bc, OP_RETURN, 0);
@@ -2790,6 +2918,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             G.is_class[cgi] = 1;
 
             for (int i = 0; i < pcount; ++i) free(param_names[i]);
+            if (parent_name) free(parent_name);
             free(cname);
             continue;
         }

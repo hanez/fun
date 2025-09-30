@@ -3,7 +3,7 @@
 // never be executed, but it shows that it is not wrong. 
 
 /*
-* This file is part of the Fun programming language.
+ * This file is part of the Fun programming language.
  * https://hanez.org/project/fun/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
