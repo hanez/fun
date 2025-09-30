@@ -137,7 +137,7 @@ cd fun
 Build:
 
 ```
-make # gmake on FeeBSD
+make # gmake on FreeBSD
 ```
 
 That's it! For testing it run:

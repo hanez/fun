@@ -82,11 +82,14 @@ threads-demo: fun
 	FUN_LIB_DIR="$(FUN_LIB)" ./$(BUILD_DIR)/fun examples/threads_demo.fun
 
 # Additional convenience targets
-.PHONY: verify-ops examples run-examples threads-demo
+.PHONY: verify-ops examples run-examples threads-demo ops ops-quiet
 
-# Verify that each OP_* in bytecode.h has a corresponding vm_case_*.inc include in vm.c
-verify-ops:
+# Shorthand aliases for opcode include check
+ops:
 	@./scripts/check_op_includes.py --verbose
+
+ops-quiet:
+	@./scripts/check_op_includes.py
 
 # Build and run all examples (searches for the fun binary automatically)
 examples run-examples: fun
