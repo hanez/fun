@@ -147,4 +147,4 @@ That's it! For testing it run:
 ```
 ## Author
 
-[Johannes Findeisen](https://hanez.org) <you@hanez.org>
+Johannes Findeisen - you@hanez.org
