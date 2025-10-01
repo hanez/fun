@@ -24,7 +24,7 @@
  * // Stack after: []
  *
  * @author Johannes Findeisen
- * @date 2025-10-16
+ * @date 2025-09-16
  */
 
 case OP_PRINT: {

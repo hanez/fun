@@ -35,3 +35,14 @@ print(sha.sha256_str("6162636465666768696a6b6c6d6e6f707172737475767778797a")) //
 
 print("=== Note ===")
 print("sha256_str(\"616263\") hashes the text 616263; sha256_hex(\"616263\") hashes bytes 0x61 0x62 0x63 (abc).")
+
+/* Expected output:
+=== SHA-256 demo (raw string input via sha256_str) ===
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+3859a4ec00dcbed7c01d4a462d18c1f4097a690a1d4d459be4e5b6f5a594ee68
+faee5966a2c104cf2287085428a183fe58c18afdc5ff261571e8e9c4796ad635
+57aad00934af3b05086a755a1787884f2af6554dce4fc9cab02e7008d31dab44
+a863dce86b2577846b6fd399ae6c9830999b4525c50b74705998f3df852b6d25
+=== Note ===
+sha256_str("616263") hashes the text 616263; sha256_hex("616263") hashes bytes 0x61 0x62 0x63 (abc).
+*/

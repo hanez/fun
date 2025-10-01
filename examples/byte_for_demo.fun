@@ -29,3 +29,26 @@ print(typeof(x))     // -> "String"
 
 // Typed byte must remain numeric (uint8):
 // b = "oops"        // Uncomment to see a runtime type error
+
+/* Expected output:
+=== byte with hex literal and clamping ===
+255
+255
+255
+
+=== for-loop reassigning a byte variable (shows clamping near the top end) ===
+250
+251
+252
+253
+254
+255
+255
+255
+255
+255
+
+=== dynamic vs typed ===
+Number
+String
+*/

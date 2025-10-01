@@ -9,6 +9,8 @@
  * https://opensource.org/license/apache-2-0
  */
 
+include <strings.fun>
+
 fun foo()
   print("Have fun!")
   print("Having fun... forever.")
@@ -16,6 +18,8 @@ fun foo()
 print("Typeof foo(): " + typeof(foo))
 
 print("Yay, the playground for having fun... ;)")
+
+print(string_to_bytes_ascii("Have Fun!"))
 
 number n = 23
 // Every type MUST be lowercase. Sint* must be sint*.
