@@ -1639,9 +1639,58 @@ static int emit_or_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) 
     return 1;
 }
 
+/* conditional operator (ternary) with right associativity:
+   Parses: logical_or ('?' conditional ':' conditional)? */
+static int emit_conditional(Bytecode *bc, const char *src, size_t len, size_t *pos) {
+    /* parse condition (logical OR precedence or higher) */
+    if (!emit_or_expr(bc, src, len, pos)) return 0;
+
+    for (;;) {
+        skip_spaces(src, len, pos);
+        if (!(*pos < len && src[*pos] == '?')) break;
+        (*pos)++; /* consume '?' */
+
+        /* If condition is false -> jump to false arm */
+        int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+        /* true arm (right-assoc: allow nested ternaries) */
+        skip_spaces(src, len, pos);
+        if (!emit_conditional(bc, src, len, pos)) {
+            parser_fail(*pos, "Expected expression after '?'");
+            return 0;
+        }
+
+        /* After true arm, unconditionally skip false arm */
+        int jmp_end = bytecode_add_instruction(bc, OP_JUMP, 0);
+
+        /* false arm label */
+        bytecode_set_operand(bc, jmp_false, bc->instr_count);
+
+        /* require ':' */
+        skip_spaces(src, len, pos);
+        if (!(*pos < len && src[*pos] == ':')) {
+            parser_fail(*pos, "Expected ':' in conditional expression");
+            return 0;
+        }
+        (*pos)++; /* consume ':' */
+
+        /* false arm (right-assoc) */
+        skip_spaces(src, len, pos);
+        if (!emit_conditional(bc, src, len, pos)) {
+            parser_fail(*pos, "Expected expression after ':'");
+            return 0;
+        }
+
+        /* end label */
+        bytecode_set_operand(bc, jmp_end, bc->instr_count);
+        /* loop to allow chaining like a ? b : c ? d : e (right-assoc) */
+    }
+    return 1;
+}
+
 /* top-level expression */
 static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos) {
-    return emit_or_expr(bc, src, len, pos);
+    return emit_conditional(bc, src, len, pos);
 }
 
 /*
@@ -3336,11 +3385,40 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                     int ci = bytecode_add_constant(bc, make_int(0));
                     bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
                 }
-                /* end of condition: ignore any trailing until EOL */
-                skip_to_eol(src, len, pos);
 
-                /* conditional jump over this clause's block */
+                /* Decide between inline single-statement and indented block on next line */
+                size_t ppeek = *pos;
+                /* skip spaces after condition */
+                while (ppeek < len && src[ppeek] == ' ') ppeek++;
+                int inline_stmt = 0;
+                if (ppeek < len) {
+                    if (src[ppeek] == '\r' || src[ppeek] == '\n') {
+                        inline_stmt = 0; /* EOL -> no inline body */
+                    } else if (ppeek + 1 < len && src[ppeek] == '/' && src[ppeek + 1] == '/') {
+                        inline_stmt = 0; /* line comment -> no inline body */
+                    } else if (ppeek + 1 < len && src[ppeek] == '/' && src[ppeek + 1] == '*') {
+                        inline_stmt = 0; /* block comment at EOL -> no inline body */
+                    } else {
+                        inline_stmt = 1; /* there's code after condition on same line */
+                    }
+                }
+
+                /* conditional jump over this clause's inline/body */
                 int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+                if (inline_stmt) {
+                    /* Compile a single inline statement on the same line:
+                       if (cond) <statement> */
+                    *pos = ppeek;
+                    parse_simple_statement(bc, src, len, pos);
+                    /* Skip the inline body when condition is false */
+                    bytecode_set_operand(bc, jmp_false, bc->instr_count);
+                    /* one-liner form has no else/elseif on the same line; end the chain */
+                    break;
+                }
+
+                /* No inline statement on this line: consume up to EOL and parse indented block or else-if/else */
+                skip_to_eol(src, len, pos);
 
                 /* parse nested block if next line is indented */
                 int next_indent = 0;
