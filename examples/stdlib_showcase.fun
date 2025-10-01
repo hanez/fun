@@ -52,3 +52,39 @@ bytes = [0x48,0x65,0x6c,0x6c,0x6f]             // "Hello"
 b64 = b64_encode_bytes(bytes)
 print(b64)                                     // "SGVsbG8="
 print(join(b64_decode_to_bytes(b64), ","))     // "72,101,108,108,111"
+
+/* Expected output:
+=== Arrays ===
+2,2,3
+4,3,2,2,1
+3
+0
+1,2,3,4
+1,2,3,4,5
+=== Strings ===
+[Hello World]
+1
+1
+a|b|c
+baNANA
+fun
+FUN
+hahaha
+=== Math ===
+5
+10
+6
+42
+243
+2
+9
+1
+3
+=== Range ===
+0,1,2,3,4
+3,4,5,6,7
+10,7,4,1
+=== Base64 ===
+SGVsbG8=
+72,101,108,108,111
+*/

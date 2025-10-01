@@ -114,6 +114,7 @@ typedef enum {
 
     // OS
     OP_ENV,           // pops name string; pushes value string (or "")
+    OP_INPUT_LINE,    // operand: 0=no prompt; 1=has prompt. Pops [prompt?]; pushes input string (no trailing newline)
 
     // Threads
     OP_THREAD_SPAWN,  // operand: 0=no args, 1=has args; pops [args?], fn; pushes thread id (int>0)

@@ -14,7 +14,7 @@
 
 // Demonstrates local include:
 // This resolves relative to the current working directory where 'fun' is executed.
-#include "include_local_util.fun"
+#include "examples/include_local_util.fun"
 
 print("== include local demo ==")
 greet("Fun")

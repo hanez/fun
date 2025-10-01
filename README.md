@@ -6,22 +6,22 @@ Fun is a highly strict programming language, but also highly simple. It looks li
 
 Influenced by Bash, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, Go, **[Lua](https://www.lua.org/)**, **[Python](https://www.python.org/)**, and Rust (Most influences came from linked languages).
 
-Fun is and will ever be 100% free under the terms of the [ISC-License](https://opensource.org/license/isc-license-txt).
+Fun is and will ever be 100% free under the terms of the [Apache-2.0-License](https://opensource.org/license/apache-2-0).
 
 ## Idea
 
-* Simplicity
-* Consistency
-* Joy in coding
-* Fun!
+- Simplicity
+- Consistency
+- Joy in coding
+- Fun!
 
 ## Characteristics
 
-* Dynamic and optionally statically typed
-* Type safety
-* Written in C
-* Internal libs are written with no_camel_case even when written in Fun
-* Only a minimal function set is written in C and most other core libraries are implemented in Fun
+- Dynamic and optionally statically typed
+- Type safety
+- Written in C and Fun
+- Internal libs are written with no_camel_case even when written in Fun, except class Names
+- Only a minimal function set is written in C, and most other core functions and libraries are implemented in Fun
 
 ## The Fun Manifesto
 
@@ -65,7 +65,7 @@ Fun may not change the world — but it will make programming a little more fun.
 
 ## Documentation
 
-Actually there does not exist any documenation. In the [examples/](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"} directory should be an example of most Fun features.
+Actually, there does not exist any documentation. In the [examples/](https://git.xw3.org/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
 
 ## Development
 
@@ -103,7 +103,7 @@ This requires Cygwin to be installed and configured. I will not cover this here.
 - Every commit message must contain the version at the end in the following format (1.2.3)
 - Version numbering follows "[Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)"
 
-### Developement systems
+### Development systems
 
 - [GNU](https://gnu.org/)/[Linux](https://kernel.org/) ([Arch](https://archlinux.org/)/[Artix](https://artixlinux.org/), [Debian](https://www.debian.org/)) using [GCC](https://gcc.gnu.org/) and the [GNU C library](https://www.gnu.org/software/libc/) ([glibc](https://en.wikipedia.org/wiki/Glibc))
 - GNU/Linux ([Alpine](https://alpinelinux.org/)) using GCC and the [musl libc](https://musl.libc.org/)
