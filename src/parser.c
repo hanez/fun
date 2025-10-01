@@ -1135,6 +1135,8 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 int gi = sym_index(name);
                 bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
             }
+            /* Track namespace alias only for the initial receiver; after any call it's no longer an alias value */
+            int __ns_ctx = is_ns_alias(name);
             /* parse arguments */
             (*pos)++; /* '(' */
             int argc = 0;
@@ -1213,20 +1215,15 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                             continue;
                         }
 
-                        /* If base identifier is a namespace alias -> treat as plain function call: no implicit 'this' */
-                        int is_ns = is_ns_alias(name);
+                        /* After a function call, the receiver is a value (not a namespace alias);
+                           always treat dot-call as a method with implicit 'this'. */
+                        int is_ns = 0;
 
-                        if (!is_ns) {
-                            /* Method sugar with implicit 'this' */
-                            bytecode_add_instruction(bc, OP_DUP, 0);
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
-                            bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> stack: obj, func */
-                            bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> stack: func, obj (this) */
-                        } else {
-                            /* Plain property function call: obj["mname"] -> func */
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
-                            bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> stack: func */
-                        }
+                        /* Method sugar with implicit 'this' */
+                        bytecode_add_instruction(bc, OP_DUP, 0);
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+                        bytecode_add_instruction(bc, OP_INDEX_GET, 0); /* -> stack: obj, func */
+                        bytecode_add_instruction(bc, OP_SWAP, 0);      /* -> stack: func, obj (this) */
 
                         /* Consume '(' and parse args */
                         *pos = callp + 1;
@@ -1265,6 +1262,8 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 int gi = sym_index(name);
                 bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
             }
+            /* track namespace alias only for the initial receiver; after any call it's no longer an alias value */
+            int __ns_ctx = is_ns_alias(name);
             /* postfix indexing, slice, and dot access/method calls */
             for (;;) {
                 skip_spaces(src, len, pos);
@@ -1318,7 +1317,8 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                             continue;
                         }
 
-                        int is_ns = is_ns_alias(name);
+                        /* Use initial alias context for only the first dot-call; reset after call */
+                        int is_ns = __ns_ctx;
 
                         if (!is_ns) {
                             /* Method sugar with implicit 'this' */
@@ -1345,6 +1345,9 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after arguments"); free(mname); free(name); return 0; }
 
                         bytecode_add_instruction(bc, OP_CALL, is_ns ? argc : (argc + 1));
+                        /* After any call, the receiver is now a value, not a namespace alias */
+                        __ns_ctx = 0;
+
                         free(mname);
                         continue;
                     } else {
