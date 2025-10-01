@@ -12,7 +12,7 @@
  */
 
 // Include the pure Fun SHA-256 library
-include "lib/crypt/sha256.fun"
+include <crypt/sha256.fun>
 
 sha = SHA256()
 

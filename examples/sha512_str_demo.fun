@@ -12,7 +12,7 @@
  */
 
 // Demo: SHA-512 of raw strings (no hex decoding)
-include "lib/crypt/sha512.fun"
+include <crypt/sha512.fun>
 
 sha = SHA512()
 

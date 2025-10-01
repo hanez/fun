@@ -277,6 +277,9 @@ fun md5_hex(hexStr)
 
 // Class wrapper to avoid global name collisions and show class usage
 */
+
+#include <strings.fun>
+
 class MD5()
   // MD5 constants (as fields)
   K = [
@@ -515,5 +518,10 @@ class MD5()
 
   fun md5_hex(this, hexStr)
     bytes = this.from_hex(hexStr)
+    digest = this.md5_bytes(bytes)
+    return this.bytes_to_hex(digest)
+
+  fun md5_str(this, str)
+    bytes = string_to_bytes_ascii(str)
     digest = this.md5_bytes(bytes)
     return this.bytes_to_hex(digest)

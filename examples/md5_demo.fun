@@ -12,7 +12,7 @@
  */
 
 // Include the pure Fun MD5 library
-include "lib/crypt/md5.fun"
+include <crypt/md5.fun>
 
 // create a hasher instance
 md5 = MD5()
@@ -30,5 +30,8 @@ print(md5.md5_hex("6d65737361676520646967657374"))  // -> f96b697d7cb7938d525a2f
 
 // "abcdefghijklmnopqrstuvwxyz"
 print(md5.md5_hex("6162636465666768696a6b6c6d6e6f707172737475767778797a")) // -> c3fcd3d76192e4007dfb496cca67e13b
+
+// "Have Fun!"
+print(md5.md5_str("Have Fun!")) // ->
 
 print("=== Done ===")

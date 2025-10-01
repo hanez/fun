@@ -12,7 +12,7 @@
  */
 
 // Demo: SHA-256 of raw strings (no hex decoding)
-include "lib/crypt/sha256.fun"
+include <crypt/sha256.fun>
 
 sha = SHA256()
 

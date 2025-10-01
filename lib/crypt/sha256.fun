@@ -19,6 +19,8 @@
 // Example:
 //   print(SHA256().sha256_hex("616263"))  // "abc" => ba7816bf...
 
+#include <strings.fun>
+
 class SHA256()
   // 32-bit helpers
   fun u32(this, x)
@@ -260,60 +262,8 @@ class SHA256()
     digest = this.sha256_bytes(bytes)
     return this.bytes_to_hex(digest)
 
-  // Convert a printable ASCII string (0x20..0x7E) to byte array
-  fun string_to_bytes_ascii(this, s)
-    str = to_string(s)
-    out = []
-    number i = 0
-    // ASCII printable ranges
-    P1 = " !\"#$%&'()*+,-./"             // 32..47
-    P2 = "0123456789"                   // 48..57
-    P3 = ":;<=>?@"                      // 58..64
-    P4 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"    // 65..90
-    P5 = "[\\]^_`"                      // 91..96
-    P6 = "abcdefghijklmnopqrstuvwxyz"    // 97..122
-    P7 = "{|}~"                         // 123..126
-    while true
-      ch = substr(str, i, 1)
-      if (typeof(ch) != "String" || ch == "")
-        break
-      number code = -1
-      idx = find(P1, ch)
-      if (idx >= 0)
-        code = 32 + idx
-      else
-        idx = find(P2, ch)
-        if (idx >= 0)
-          code = 48 + idx
-        else
-          idx = find(P3, ch)
-          if (idx >= 0)
-            code = 58 + idx
-          else
-            idx = find(P4, ch)
-            if (idx >= 0)
-              code = 65 + idx
-            else
-              idx = find(P5, ch)
-              if (idx >= 0)
-                code = 91 + idx
-              else
-                idx = find(P6, ch)
-                if (idx >= 0)
-                  code = 97 + idx
-                else
-                  idx = find(P7, ch)
-                  if (idx >= 0)
-                    code = 123 + idx
-                  else
-                    // non-printable -> 0
-                    code = 0
-      push(out, code)
-      i = i + 1
-    return out
-
   // Hash raw string bytes (printable ASCII). Example: sha256_str("616263") -> ee2109...
   fun sha256_str(this, str)
-    bytes = this.string_to_bytes_ascii(str)
+    bytes = string_to_bytes_ascii(str)
     digest = this.sha256_bytes(bytes)
     return this.bytes_to_hex(digest)

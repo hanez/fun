@@ -11,7 +11,7 @@
  * Added: 2025-09-29
  */
 
-include "lib/crypt/sha512.fun"
+include <crypt/sha512.fun>
 
 sha = SHA512()
 
