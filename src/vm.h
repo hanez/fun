@@ -33,7 +33,7 @@ static const char *opcode_names[] = {
     "ENUMERATE","ZIP",
     "MIN","MAX","CLAMP","ABS","POW","RANDOM_SEED","RANDOM_INT",
     "MAKE_MAP","KEYS","VALUES","HAS_KEY",
-    "READ_FILE","WRITE_FILE","ENV","INPUT_LINE",
+    "READ_FILE","WRITE_FILE","ENV","INPUT_LINE","PROC_RUN","PROC_SYSTEM",
     "THREAD_SPAWN","THREAD_JOIN","SLEEP_MS",
     "BAND","BOR","BXOR","BNOT","SHL","SHR","ROTL","ROTR"
 };

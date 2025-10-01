@@ -654,6 +654,22 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "proc_run") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "proc_run expects 1 argument (command string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after proc_run arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PROC_RUN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "system") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "system expects 1 argument (command string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after system arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PROC_SYSTEM, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "env") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "env expects 1 argument"); free(name); return 0; }

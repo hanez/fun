@@ -319,6 +319,8 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/sleep_ms.c"
             #include "vm/os/thread_join.c"
             #include "vm/os/thread_spawn.c"
+            #include "vm/os/proc_run.c"
+            #include "vm/os/proc_system.c"
 
             #include "vm/strings/find.c"
             #include "vm/strings/split.c"
