@@ -9,10 +9,6 @@
  * Added: 2025-10-02
  */
 
-#ifdef __unix__
-#include <sys/wait.h>
-#endif
-
 case OP_PROC_RUN: {
     /* Pops command string; pushes map {"out": string, "code": int} */
     Value cmdv = pop_value(vm);

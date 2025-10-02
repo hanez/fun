@@ -19,6 +19,10 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef __unix__
+#include <sys/wait.h>
+#endif
+
 /* Threading internals (registry and platform glue) */
 #include "vm/os/thread_common.c"
 

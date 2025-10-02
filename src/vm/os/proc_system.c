@@ -9,10 +9,6 @@
  * Added: 2025-10-02
  */
 
-#ifdef __unix__
-#include <sys/wait.h>
-#endif
-
 case OP_PROC_SYSTEM: {
     /* Pops command string; pushes exit code number */
     Value cmdv = pop_value(vm);
