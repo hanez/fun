@@ -108,7 +108,7 @@ This requires Cygwin to be installed and configured. I will not cover this here.
 - [GNU](https://gnu.org/)/[Linux](https://kernel.org/) ([Arch](https://archlinux.org/)/[Artix](https://artixlinux.org/), [Debian](https://www.debian.org/)) using [GCC](https://gcc.gnu.org/) and the [GNU C library](https://www.gnu.org/software/libc/) ([glibc](https://en.wikipedia.org/wiki/Glibc))
 - GNU/Linux ([Alpine](https://alpinelinux.org/)) using GCC and the [musl libc](https://musl.libc.org/)
 - [FreeBSD](https://www.freebsd.org/) using [Clang](https://clang.llvm.org/) and the [BSD libc](https://en.wikipedia.org/wiki/C_standard_library#BSD_libc)
-- [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) using [MinGW](https://en.wikipedia.org/wiki/MinGW)
+- [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows){:class="ext"} using [Cygwin](https://www.cygwin.com/){:class="ext"} and GCC.
 
 ### Other systems
 
