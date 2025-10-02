@@ -1,10 +1,23 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun VERSION 0.16.6 LANGUAGES C)
+project(fun VERSION 0.17.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
+
+# Optional PCSC support (enabled via -DFUN_WITH_PCSC=ON from Makefile)
+option(FUN_WITH_PCSC "Enable PCSC (pcsclite) support" OFF)
+if(FUN_WITH_PCSC)
+    message(STATUS "Building with PCSC support")
+    add_definitions(-DFUN_WITH_PCSC)
+    if(APPLE)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework PCSC")
+    else()
+        include_directories(/usr/include/PCSC)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lpcsclite")
+    endif()
+endif()
 
 # Core VM/library sources
 add_library(fun_core

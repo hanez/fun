@@ -131,7 +131,15 @@ typedef enum {
     OP_SHL,           // pops s, a; pushes (uint32_t)(a << (s&31))
     OP_SHR,           // pops s, a; pushes (uint32_t)(a >> (s&31)) logical
     OP_ROTL,          // pops s, a; pushes rotl32(a, s)
-    OP_ROTR           // pops s, a; pushes rotr32(a, s)
+    OP_ROTR,          // pops s, a; pushes rotr32(a, s)
+
+    // PCSC (smart card) opcodes
+    OP_PCSC_ESTABLISH,    // returns context id (>0) or 0
+    OP_PCSC_RELEASE,      // pops ctx id; returns 1/0
+    OP_PCSC_LIST_READERS, // pops ctx id; returns array of reader names (possibly empty)
+    OP_PCSC_CONNECT,      // pops reader, ctx id; returns handle id (>0) or 0
+    OP_PCSC_DISCONNECT,   // pops handle id; returns 1/0
+    OP_PCSC_TRANSMIT      // pops apdu array, handle id; returns map {"data":[],"sw1":n,"sw2":n,"code":n}
 } OpCode;
 
 typedef struct {

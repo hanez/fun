@@ -35,7 +35,8 @@ static const char *opcode_names[] = {
     "MAKE_MAP","KEYS","VALUES","HAS_KEY",
     "READ_FILE","WRITE_FILE","ENV","INPUT_LINE","PROC_RUN","PROC_SYSTEM",
     "THREAD_SPAWN","THREAD_JOIN","SLEEP_MS",
-    "BAND","BOR","BXOR","BNOT","SHL","SHR","ROTL","ROTR"
+    "BAND","BOR","BXOR","BNOT","SHL","SHR","ROTL","ROTR",
+    "PCSC_ESTABLISH","PCSC_RELEASE","PCSC_LIST_READERS","PCSC_CONNECT","PCSC_DISCONNECT","PCSC_TRANSMIT"
 };
 
 typedef struct {
@@ -78,7 +79,7 @@ void vm_dump_globals(VM *vm);
 void vm_run(VM *vm, Bytecode *entry);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_ROTR;  // all current opcodes
+    return op >= OP_NOP && op <= OP_PCSC_TRANSMIT;  // all current opcodes
 }
 
 #endif

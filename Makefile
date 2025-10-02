@@ -4,6 +4,28 @@ CMAKE ?= cmake
 # Default to a build with extra logging disabled
 CMAKE_FLAGS ?= -DFUN_DEBUG=OFF
 
+# Enable PCSC with: make PCSC=ON
+ifeq ($(PCSC),ON)
+  CMAKE_FLAGS += -DFUN_WITH_PCSC=ON
+  CMAKE_C_FLAGS += -DFUN_WITH_PCSC
+  CMAKE_CXX_FLAGS += -DFUN_WITH_PCSC
+  ifeq ($(OS),Windows_NT)
+    # not supported here
+  else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Darwin)
+      CMAKE_FLAGS += -DCMAKE_EXE_LINKER_FLAGS="$(CMAKE_EXE_LINKER_FLAGS) -framework PCSC"
+    else
+      CMAKE_C_FLAGS += -I/usr/include/PCSC
+      CMAKE_CXX_FLAGS += -I/usr/include/PCSC
+      CMAKE_FLAGS += -DCMAKE_EXE_LINKER_FLAGS="$(CMAKE_EXE_LINKER_FLAGS) -lpcsclite"
+    endif
+  endif
+  # Apply accumulated flags to CMake call
+  CMAKE_FLAGS += -DCMAKE_C_FLAGS="$(CMAKE_C_FLAGS)"
+  CMAKE_FLAGS += -DCMAKE_CXX_FLAGS="$(CMAKE_CXX_FLAGS)"
+endif
+
 # Convenience: default path to bundled stdlib
 FUN_LIB ?= $(CURDIR)/lib
 

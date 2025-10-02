@@ -11,6 +11,7 @@
 #include "iter.c"
 #include "map.c"
 #include "string.c"
+#include "pcsc.c"
 #include "vm.h"
 #include "value.h"
 #include <stdio.h>
@@ -321,6 +322,12 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/thread_spawn.c"
             #include "vm/os/proc_run.c"
             #include "vm/os/proc_system.c"
+            #include "vm/pcsc/establish.c"
+            #include "vm/pcsc/release.c"
+            #include "vm/pcsc/list_readers.c"
+            #include "vm/pcsc/connect.c"
+            #include "vm/pcsc/disconnect.c"
+            #include "vm/pcsc/transmit.c"
 
             #include "vm/strings/find.c"
             #include "vm/strings/split.c"

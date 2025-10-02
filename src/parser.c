@@ -678,6 +678,61 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* PCSC builtins */
+            if (strcmp(name, "pcsc_establish") == 0) {
+                (*pos)++; /* '(' */
+                /* no args */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "pcsc_establish expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCSC_ESTABLISH, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pcsc_release") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_release expects 1 argument (ctx)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcsc_release arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCSC_RELEASE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pcsc_list_readers") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_list_readers expects 1 argument (ctx)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcsc_list_readers arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCSC_LIST_READERS, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pcsc_connect") == 0) {
+                (*pos)++; /* '(' */
+                /* ctx, reader */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_connect expects (ctx, reader)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcsc_connect expects (ctx, reader)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_connect expects (ctx, reader)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcsc_connect args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCSC_CONNECT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pcsc_disconnect") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_disconnect expects 1 argument (handle)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcsc_disconnect arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCSC_DISCONNECT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pcsc_transmit") == 0) {
+                (*pos)++; /* '(' */
+                /* handle, bytes */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_transmit expects (handle, bytes)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcsc_transmit expects (handle, bytes)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_transmit expects (handle, bytes)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcsc_transmit args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCSC_TRANSMIT, 0);
+                free(name);
+                return 1;
+            }
             /* string ops */
             if (strcmp(name, "split") == 0) {
                 (*pos)++; /* '(' */
