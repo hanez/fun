@@ -19,7 +19,7 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0-License](ht
 
 - Dynamic and optionally statically typed
 - Type safety
-- Written in C and Fun
+- Written in C (C11) and Fun
 - Internal libs are written with no_camel_case even when written in Fun, except class Names
 - Only a minimal function set is written in C, and most other core functions and libraries are implemented in Fun
 
@@ -75,27 +75,22 @@ This section is a work in progress... Please excuse the lack of more information
 
 A C compiler, a libc and [Git](https://git-scm.com/).
 
-Actually Fun requires both CMake and Make as build utils. You always can build Fun only using CMake. Make is just used as a wrapper around CMake.
-
 #### FreeBSD
 
 - [CMake](https://cmake.org/)
 - [Clang](https://clang.llvm.org/)
-- [GNU Make](https://www.gnu.org/software/make) (gmake)
 
 #### Linux
 
 - [CMake](https://cmake.org/)
 - [GCC](https://gcc.gnu.org/) (Clang should work here too, not tested!)
-- [GNU make](https://www.gnu.org/software/make) (make)
 
 #### Windows
 
 This requires Cygwin to be installed and configured. I will not cover this here.
 
 - [CMake](https://cmake.org/)
-- [GNU make](https://www.gnu.org/software/make) (make)
-- [MinGW](https://en.wikipedia.org/wiki/MinGW)
+- [Cygwin](https://cygwin.com/) using [GCC](https://gcc.gnu.org/)
 
 ### Rules
 
