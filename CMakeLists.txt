@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun VERSION 0.17.4 LANGUAGES C)
+project(fun VERSION 0.17.6 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -86,12 +86,16 @@ if(Threads_FOUND)
   target_link_libraries(fun_core PUBLIC Threads::Threads)
 endif()
 
-# Playground / interpreter (future /usr/bin/fun)
+# Interpreter /usr/bin/fun
+option(FUN_WITH_REPL "Enable interactive REPL in the fun CLI" OFF)
 add_executable(fun
         src/fun.c
 )
 # Provide version string to the CLI
 target_compile_definitions(fun PRIVATE FUN_VERSION=\"${PROJECT_VERSION}\")
+if(FUN_WITH_REPL)
+  target_compile_definitions(fun PRIVATE FUN_WITH_REPL=0)
+endif()
 target_link_libraries(fun PRIVATE fun_core)
 
 # Internal test programs
@@ -113,12 +117,14 @@ add_custom_target(build
 # Convenience targets: repl, run, threads-demo, ops, examples
 set(FUN_RUN_SCRIPT "" CACHE STRING "Script to run with the 'run' target, e.g. -DFUN_RUN_SCRIPT=examples/strings_test.fun")
 
-add_custom_target(repl
-  COMMAND $<TARGET_FILE:fun>
-  DEPENDS fun
-  USES_TERMINAL
-  COMMENT "Run Fun REPL"
-)
+if(FUN_WITH_REPL)
+  add_custom_target(repl
+    COMMAND $<TARGET_FILE:fun>
+    DEPENDS fun
+    USES_TERMINAL
+    COMMENT "Run Fun REPL"
+  )
+endif()
 
 add_custom_target(run
   COMMAND $<TARGET_FILE:fun> ${FUN_RUN_SCRIPT}

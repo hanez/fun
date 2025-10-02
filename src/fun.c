@@ -710,11 +710,19 @@ static int buffer_looks_incomplete(const char *buf) {
 static void print_usage(const char *prog) {
     printf("Fun %s\n", FUN_VERSION);
     printf("Usage:\n");
+#ifdef FUN_WITH_REPL
     printf("  %s [script.fun]\n", prog ? prog : "fun");
     printf("  %s --help | -h\n", prog ? prog : "fun");
     printf("  %s --version | -V\n", prog ? prog : "fun");
     printf("\n");
     printf("When no script is provided, a REPL starts. Submit an empty line to execute the buffer.\n");
+#else
+    printf("  %s <script.fun>\n", prog ? prog : "fun");
+    printf("  %s --help | -h\n", prog ? prog : "fun");
+    printf("  %s --version | -V\n", prog ? prog : "fun");
+    printf("\n");
+    printf("REPL is disabled in this build. Please provide a script file to run.\n");
+#endif
 }
 
 static void show_repl_help(void) {
@@ -835,6 +843,15 @@ int main(int argc, char **argv) {
             return 0;
         }
     }
+
+#ifndef FUN_WITH_REPL
+    // When REPL is disabled, require a script file argument (allow --help/--version above).
+    if (argc <= 1) {
+        fprintf(stderr, "Error: REPL is disabled. Please provide a script to run.\n");
+        print_usage(argv[0]);
+        return 2;
+    }
+#endif
 
     // If a script path is provided, parse and run it
     if (argc > 1) {
