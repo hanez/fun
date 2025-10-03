@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun VERSION 0.17.6 LANGUAGES C)
+project(fun VERSION 0.17.7 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -94,7 +94,9 @@ add_executable(fun
 # Provide version string to the CLI
 target_compile_definitions(fun PRIVATE FUN_VERSION=\"${PROJECT_VERSION}\")
 if(FUN_WITH_REPL)
-  target_compile_definitions(fun PRIVATE FUN_WITH_REPL=0)
+  # Enable REPL compilation path and add the REPL source
+  target_compile_definitions(fun PRIVATE FUN_WITH_REPL=1)
+  target_sources(fun PRIVATE src/repl.c)
 endif()
 target_link_libraries(fun PRIVATE fun_core)
 
