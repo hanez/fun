@@ -262,7 +262,7 @@ static int complete_load_path(char *buf, size_t *len_io) {
     return 1;
 }
 
-/* Read one line with prompt, handling backspace, Up/Down history and :load path completion */
+/* Read one line with prompt, handling backspace, Up/Down history and :load path completion (now with multi-line editing via Ctrl+O) */
 static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
 #ifdef _WIN32
     if (prompt) fputs(prompt, stdout), fflush(stdout);
@@ -281,15 +281,33 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
     char saved_current[4096];
     int has_saved = 0;
 
-    #define RL_REDRAW_POS() do { \
+    /* How many terminal rows were drawn in the previous repaint (prompt + lines in 'out').
+       We assume no automatic wrapping (only explicit '\n'). */
+    static int prev_rows = 1;
+
+    #define RL_REDRAW() do { \
+        /* Count explicit newlines to estimate rows to draw (prompt line + content lines) */ \
+        int rows = 1; \
+        int has_nl = 0; \
+        for (size_t __i = 0; __i < len; ++__i) { \
+            if (out[__i] == '\n') { rows++; has_nl = 1; } \
+        } \
+        /* Move cursor to the start (top) of the previous render block */ \
+        if (prev_rows > 1) { fprintf(stdout, "\x1b[%dA", prev_rows - 1); } \
         fputc('\r', stdout); \
+        /* Repaint prompt + content */ \
         if (prompt) fputs(prompt, stdout); \
         fwrite(out, 1, len, stdout); \
-        fputs("\x1b[K", stdout); \
-        if (pos < len) { \
+        /* Clear everything below the current cursor (removes remnants of older, longer renders) */ \
+        fputs("\x1b[J", stdout); \
+        /* Cursor policy: keep at end for multi-line; for single-line respect pos */ \
+        if (!has_nl && pos < len) { \
             size_t back = (size_t)(len - pos); \
             if (back > 0) fprintf(stdout, "\x1b[%zuD", back); \
+        } else { \
+            pos = len; \
         } \
+        prev_rows = rows; \
         fflush(stdout); \
     } while(0)
 
@@ -333,6 +351,9 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                     }
                 }
 
+                /* disallow fine-grained horizontal movement in multi-line mode (cursor stays at end) */
+                int has_nl = 0; for (size_t __i = 0; __i < len; ++__i) { if (out[__i] == '\n') { has_nl = 1; break; } }
+
                 if (final == 'A') {
                     if (!has_saved) {
                         size_t sl = len < sizeof(saved_current) - 1 ? len : sizeof(saved_current) - 1;
@@ -349,7 +370,7 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                         out[hl] = '\0';
                         len = hl;
                         pos = len;
-                        RL_REDRAW_POS();
+                        RL_REDRAW();
                     } else {
                         fputc('\a', stdout); fflush(stdout);
                     }
@@ -375,25 +396,27 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                             len = hl;
                         }
                         pos = len;
-                        RL_REDRAW_POS();
+                        RL_REDRAW();
                     } else {
                         fputc('\a', stdout); fflush(stdout);
                     }
                 } else if (final == 'C') {
-                    if (ctrl) {
+                    if (has_nl) { fputc('\a', stdout); fflush(stdout); pos = len; RL_REDRAW(); }
+                    else if (ctrl) {
                         size_t old = pos;
                         rl_word_right(out, len, &pos);
-                        if (pos != old) RL_REDRAW_POS();
+                        if (pos != old) RL_REDRAW();
                         else { fputc('\a', stdout); fflush(stdout); }
                     } else {
                         if (pos < len) { pos++; fputs("\x1b[C", stdout); fflush(stdout); }
                         else { fputc('\a', stdout); fflush(stdout); }
                     }
                 } else if (final == 'D') {
-                    if (ctrl) {
+                    if (has_nl) { fputc('\a', stdout); fflush(stdout); pos = len; RL_REDRAW(); }
+                    else if (ctrl) {
                         size_t old = pos;
                         rl_word_left(out, len, &pos);
-                        if (pos != old) RL_REDRAW_POS();
+                        if (pos != old) RL_REDRAW();
                         else { fputc('\a', stdout); fflush(stdout); }
                     } else {
                         if (pos > 0) { pos--; fputs("\x1b[D", stdout); fflush(stdout); }
@@ -409,7 +432,7 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                 len--;
                 pos--;
                 out[len] = '\0';
-                RL_REDRAW_POS();
+                RL_REDRAW();
             } else {
                 fputc('\a', stdout);
                 fflush(stdout);
@@ -425,7 +448,19 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                     len = newlen;
                     pos = len;
                 }
-                RL_REDRAW_POS();
+                RL_REDRAW();
+            }
+        } else if (ch == 15) { /* Ctrl+O -> insert newline at cursor (multi-line editing) */
+            if (len + 1 < out_cap) {
+                memmove(out + pos + 1, out + pos, len - pos);
+                out[pos] = '\n';
+                len++;
+                pos++;
+                out[len] = '\0';
+                hist_pos = rl_count;
+                RL_REDRAW();
+            } else {
+                fputc('\a', stdout); fflush(stdout);
             }
         } else if (ch >= 32 && ch <= 126) {
             if (len + 1 < out_cap) {
@@ -435,7 +470,7 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
                 pos++;
                 out[len] = '\0';
                 hist_pos = rl_count;
-                RL_REDRAW_POS();
+                RL_REDRAW();
             } else {
                 fputc('\a', stdout);
                 fflush(stdout);
