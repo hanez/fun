@@ -11,14 +11,13 @@
  * Added: 2025-10-02
  */
 
-// __ns_alias__: PCSC
-
 // PCSC stdlib abstraction class wrapping VM opcodes.
 // Provides snake_case methods and hex helpers.
 // All methods are defensive and work even if PCSC is unsupported (returning []/0 or a default map).
 
-#include <hex.fun>
+include <hex.fun>
 
+/*
 class PCSC()
   // ---- hex helpers moved to lib/hex.fun ----
 
@@ -78,3 +77,71 @@ class PCSC()
     m["sw2"] = res["sw2"]
     m["code"] = res["code"]
     return m
+*/
+
+class PCSC()
+  fun get_readers(this)
+    ctx = pcsc_establish()
+    readers = pcsc_list_readers(ctx)
+    _ = pcsc_release(ctx)
+    return readers
+
+  // Transmit a raw hex APDU to the first available reader and print the result map
+  fun transmit(this, hex_apdu)
+    ctx = pcsc_establish()
+    readers = pcsc_list_readers(ctx)
+    if (readers == nil)
+      print([])
+      _ = pcsc_release(ctx)
+      return 0
+    if (len(readers) == 0)
+      print([])
+      _ = pcsc_release(ctx)
+      return 0
+    // Actually selecting the second reader hardcode. This class is not in a very early stage of development. 
+    handle = pcsc_connect(ctx, readers[1])
+    apdu = this.hex_to_bytes(hex_apdu)
+    res = pcsc_transmit(handle, apdu)
+    _ = pcsc_disconnect(handle)
+    _ = pcsc_release(ctx)
+    return res
+
+  fun hex_digit(this, ch)
+    m = {}
+    m["0"] = 0
+    m["1"] = 1
+    m["2"] = 2
+    m["3"] = 3
+    m["4"] = 4
+    m["5"] = 5
+    m["6"] = 6
+    m["7"] = 7
+    m["8"] = 8
+    m["9"] = 9
+    m["a"] = 10
+    m["A"] = 10
+    m["b"] = 11
+    m["B"] = 11
+    m["c"] = 12
+    m["C"] = 12
+    m["d"] = 13
+    m["D"] = 13
+    m["e"] = 14
+    m["E"] = 14
+    m["f"] = 15
+    m["F"] = 15
+    v = m[ch]
+    if v == nil
+      return 0
+    return v
+
+  fun hex_to_bytes(this, hex)
+    s = to_string(hex)
+    out = []
+    number i = 0
+    number n = len(s)
+    while i + 1 < n
+      number b = this.hex_digit(substr(s, i, 1)) * 16 + this.hex_digit(substr(s, i + 1, 1))
+      push(out, b)
+      i = i + 2
+    return out

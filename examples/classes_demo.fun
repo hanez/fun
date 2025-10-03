@@ -80,6 +80,12 @@ print("counter inc -> " + to_string(c.inc()))        // 2
 print("counter add(5) -> " + to_string(c.add(5)))    // 7
 print("counter current value = " + to_string(c["value"]))
 
+class HaveFun()
+  fun have_fun(this)
+    print("Have Fun!")
+
+HaveFun().have_fun()
+
 /* Expected output:
 typeof(Point) = Class
 typeof(p) = Point(10, -2)
@@ -92,4 +98,5 @@ counter inc -> 1
 counter inc -> 2
 counter add(5) -> 7
 counter current value = 7
+Have Fun!
 */
