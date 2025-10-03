@@ -117,6 +117,9 @@ typedef enum {
     OP_INPUT_LINE,    // operand: 0=no prompt; 1=has prompt. Pops [prompt?]; pushes input string (no trailing newline)
     OP_PROC_RUN,      // pops command string; pushes map {"out": string, "code": int}
     OP_PROC_SYSTEM,   // pops command string; pushes exit code number
+    OP_TIME_NOW_MS,   // pushes current wall-clock time in milliseconds since Unix epoch
+    OP_CLOCK_MONO_MS, // pushes monotonic clock in milliseconds (not wall time)
+    OP_DATE_FORMAT,   // pops fmt string, ms epoch (int); pushes formatted date string using strftime
 
     // Threads
     OP_THREAD_SPAWN,  // operand: 0=no args, 1=has args; pops [args?], fn; pushes thread id (int>0)

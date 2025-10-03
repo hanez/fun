@@ -116,6 +116,30 @@ static const char *opcode_name(OpCode op) {
         case OP_HAS_KEY: return "HAS_KEY";
         case OP_READ_FILE: return "READ_FILE";
         case OP_WRITE_FILE: return "WRITE_FILE";
+        case OP_ENV: return "ENV";
+        case OP_INPUT_LINE: return "INPUT_LINE";
+        case OP_PROC_RUN: return "PROC_RUN";
+        case OP_PROC_SYSTEM: return "PROC_SYSTEM";
+        case OP_TIME_NOW_MS: return "TIME_NOW_MS";
+        case OP_CLOCK_MONO_MS: return "CLOCK_MONO_MS";
+        case OP_DATE_FORMAT: return "DATE_FORMAT";
+        case OP_THREAD_SPAWN: return "THREAD_SPAWN";
+        case OP_THREAD_JOIN: return "THREAD_JOIN";
+        case OP_SLEEP_MS: return "SLEEP_MS";
+        case OP_BAND: return "BAND";
+        case OP_BOR: return "BOR";
+        case OP_BXOR: return "BXOR";
+        case OP_BNOT: return "BNOT";
+        case OP_SHL: return "SHL";
+        case OP_SHR: return "SHR";
+        case OP_ROTL: return "ROTL";
+        case OP_ROTR: return "ROTR";
+        case OP_PCSC_ESTABLISH: return "PCSC_ESTABLISH";
+        case OP_PCSC_RELEASE: return "PCSC_RELEASE";
+        case OP_PCSC_LIST_READERS: return "PCSC_LIST_READERS";
+        case OP_PCSC_CONNECT: return "PCSC_CONNECT";
+        case OP_PCSC_DISCONNECT: return "PCSC_DISCONNECT";
+        case OP_PCSC_TRANSMIT: return "PCSC_TRANSMIT";
         default: return "???";
     }
 }

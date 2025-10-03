@@ -670,6 +670,30 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "time_now_ms") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "time_now_ms expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TIME_NOW_MS, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "clock_mono_ms") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "clock_mono_ms expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CLOCK_MONO_MS, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "date_format") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "date_format expects (ms:int, fmt:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "date_format expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "date_format expects (ms:int, fmt:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after date_format args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_DATE_FORMAT, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "env") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "env expects 1 argument"); free(name); return 0; }

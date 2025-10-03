@@ -326,6 +326,10 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/thread_spawn.c"
             #include "vm/os/proc_run.c"
             #include "vm/os/proc_system.c"
+            #include "vm/os/time_now_ms.c"
+            #include "vm/os/clock_mono_ms.c"
+            #include "vm/os/date_format.c"
+
             #include "vm/pcsc/establish.c"
             #include "vm/pcsc/release.c"
             #include "vm/pcsc/list_readers.c"
