@@ -262,6 +262,173 @@ static int complete_load_path(char *buf, size_t *len_io) {
     return 1;
 }
 
+/* ---------- Stdlib symbol completion ---------- */
+static char **g_std_syms = NULL;
+static int g_std_syms_count = 0;
+static int g_std_syms_cap = 0;
+
+static int is_ident_start(int c) { return (c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')); }
+static int is_ident_char(int c) { return is_ident_start(c) || (c >= '0' && c <= '9'); }
+
+static void std_syms_add(const char *name) {
+    if (!name || !*name) return;
+    /* dedupe */
+    for (int i = 0; i < g_std_syms_count; ++i) {
+        if (strcmp(g_std_syms[i], name) == 0) return;
+    }
+    if (g_std_syms_count == g_std_syms_cap) {
+        int ncap = g_std_syms_cap == 0 ? 256 : g_std_syms_cap * 2;
+        char **nn = (char**)realloc(g_std_syms, (size_t)ncap * sizeof(char*));
+        if (!nn) return;
+        g_std_syms = nn;
+        g_std_syms_cap = ncap;
+    }
+    size_t n = strlen(name);
+    char *cpy = (char*)malloc(n + 1);
+    if (!cpy) return;
+    memcpy(cpy, name, n + 1);
+    g_std_syms[g_std_syms_count++] = cpy;
+}
+
+static void scan_symbols_from_file(const char *path) {
+    FILE *f = fopen(path, "r");
+    if (!f) return;
+    char line[4096];
+    while (fgets(line, sizeof(line), f)) {
+        const char *p = line;
+        while (*p == ' ' || *p == '\t') p++;
+        /* Patterns: fun NAME( ; class NAME ; const NAME ; var NAME */
+        const char *kw = NULL;
+        if (strncmp(p, "fun ", 4) == 0) { kw = "fun"; p += 4; }
+        else if (strncmp(p, "class ", 6) == 0) { kw = "class"; p += 6; }
+        else if (strncmp(p, "const ", 6) == 0) { kw = "const"; p += 6; }
+        else if (strncmp(p, "var ", 4) == 0) { kw = "var"; p += 4; }
+        if (!kw) continue;
+        while (*p == ' ' || *p == '\t') p++;
+        if (!is_ident_start((unsigned char)*p)) continue;
+        char name[256];
+        size_t ni = 0;
+        while (is_ident_char((unsigned char)*p) && ni + 1 < sizeof(name)) {
+            name[ni++] = *p++;
+        }
+        name[ni] = '\0';
+        if (ni > 0) std_syms_add(name);
+    }
+    fclose(f);
+}
+
+static void scan_dir_recursive(const char *dir) {
+    DIR *dp = opendir(dir);
+    if (!dp) return;
+    struct dirent *de;
+    char path[PATH_MAX];
+    while ((de = readdir(dp)) != NULL) {
+        const char *n = de->d_name;
+        if (strcmp(n, ".") == 0 || strcmp(n, "..") == 0) continue;
+        snprintf(path, sizeof(path), "%s/%s", dir, n);
+        struct stat st;
+        if (stat(path, &st) != 0) continue;
+        if (S_ISDIR(st.st_mode)) {
+            scan_dir_recursive(path);
+        } else {
+            size_t L = strlen(n);
+            if (L >= 4 && strcmp(n + (L - 4), ".fun") == 0) {
+                scan_symbols_from_file(path);
+            }
+        }
+    }
+    closedir(dp);
+}
+
+static void load_stdlib_symbols(const char *libdir) {
+    if (!libdir || !*libdir) return;
+    scan_dir_recursive(libdir);
+}
+
+static void free_stdlib_symbols(void) {
+    for (int i = 0; i < g_std_syms_count; ++i) free(g_std_syms[i]);
+    free(g_std_syms);
+    g_std_syms = NULL;
+    g_std_syms_count = g_std_syms_cap = 0;
+}
+
+/* Complete the trailing identifier in 'buf' using stdlib symbols.
+   Returns 1 if buffer changed, 2 if a menu was printed, 0 otherwise. */
+static int complete_stdlib_ident(char *buf, size_t *len_io, size_t *pos_io, size_t cap) {
+    size_t len = *len_io;
+    size_t pos = *pos_io;
+    if (pos != len) return 0; /* complete only at end */
+    if (len == 0) return 0;
+
+    /* find start of identifier */
+    size_t start = len;
+    while (start > 0 && is_ident_char((unsigned char)buf[start - 1])) start--;
+    if (start == len) return 0;
+
+    const char *prefix = buf + start;
+    size_t plen = len - start;
+
+    /* collect matches */
+    const char *matches[1024];
+    int mcount = 0;
+    for (int i = 0; i < g_std_syms_count && mcount < (int)(sizeof(matches)/sizeof(matches[0])); ++i) {
+        if (strncmp(g_std_syms[i], prefix, plen) == 0) {
+            matches[mcount++] = g_std_syms[i];
+        }
+    }
+    if (mcount == 0) { fputc('\a', stdout); fflush(stdout); return 0; }
+
+    /* compute longest common extension */
+    size_t lcp = (size_t)-1;
+    for (int i = 0; i < mcount; ++i) {
+        size_t nlen = strlen(matches[i]);
+        size_t cur = 0;
+        while (plen + cur < nlen) {
+            char c = matches[i][plen + cur];
+            int ok = 1;
+            for (int j = 0; j < mcount; ++j) {
+                size_t jlen = strlen(matches[j]);
+                if (plen + cur >= jlen || matches[j][plen + cur] != c) { ok = 0; break; }
+            }
+            if (!ok) break;
+            cur++;
+        }
+        if (lcp == (size_t)-1 || cur < lcp) lcp = cur;
+    }
+    size_t new_pref_len = plen + (lcp == (size_t)-1 ? 0 : lcp);
+
+    /* build completion text */
+    char comp[512];
+    size_t write_len = 0;
+    if (mcount == 1) {
+        snprintf(comp, sizeof(comp), "%s", matches[0]);
+        write_len = strlen(comp);
+    } else if (new_pref_len > plen) {
+        strncpy(comp, prefix, plen);
+        comp[plen] = '\0';
+        strncat(comp, matches[0] + plen, new_pref_len - plen);
+        write_len = strlen(comp);
+    } else {
+        /* list candidates */
+        putchar('\n');
+        for (int i = 0; i < mcount; ++i) {
+            fputs(matches[i], stdout);
+            fputc(((i + 1) % 6 == 0) ? '\n' : '\t', stdout);
+        }
+        if (mcount % 6 != 0) putchar('\n');
+        fflush(stdout);
+        return 2;
+    }
+
+    /* replace tail from 'start' with comp */
+    if (start + write_len >= cap) write_len = cap - 1 - start;
+    memmove(buf + start, comp, write_len);
+    *len_io = start + write_len;
+    buf[*len_io] = '\0';
+    *pos_io = *len_io;
+    return 1;
+}
+
 /* Read one line with prompt, handling backspace, Up/Down history and :load path completion (now with multi-line editing via Ctrl+O) */
 static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
 #ifdef _WIN32
@@ -444,9 +611,21 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
             } else {
                 out[len] = '\0';
                 size_t newlen = len;
-                if (complete_load_path(out, &newlen)) {
+                int changed = complete_load_path(out, &newlen);
+                if (changed) {
                     len = newlen;
                     pos = len;
+                } else {
+                    /* try stdlib symbol completion */
+                    int res = complete_stdlib_ident(out, &newlen, &pos, out_cap);
+                    if (res == 1) {
+                        len = newlen;
+                    } else if (res == 2) {
+                        /* menu printed — do not modify buffer, just redraw prompt+line */
+                    } else {
+                        fputc('\a', stdout);
+                        fflush(stdout);
+                    }
                 }
                 RL_REDRAW();
             }
@@ -751,6 +930,25 @@ int fun_run_repl(VM *vm) {
 
     printf("Fun %s REPL\n", FUN_VERSION);
     printf("Type :help for commands. Submit an empty line to run.\n");
+
+    /* Load stdlib symbols for completion */
+    {
+        char libdir[PATH_MAX];
+        const char *envlib = getenv("FUN_LIB_DIR");
+        if (envlib && *envlib) {
+            snprintf(libdir, sizeof(libdir), "%s", envlib);
+        } else {
+#ifdef DEFAULT_LIB_DIR
+            snprintf(libdir, sizeof(libdir), "%s", DEFAULT_LIB_DIR);
+#else
+            snprintf(libdir, sizeof(libdir), "%s", "lib");
+#endif
+        }
+        /* strip trailing slash if present, not strictly necessary */
+        size_t L = strlen(libdir);
+        if (L > 1 && libdir[L - 1] == '/') libdir[L - 1] = '\0';
+        load_stdlib_symbols(libdir);
+    }
 
     char *buffer = NULL;
     size_t bufcap = 0;
@@ -1143,6 +1341,7 @@ int fun_run_repl(VM *vm) {
     }
 
     if (hist) fclose(hist);
+    free_stdlib_symbols();
     free(buffer);
     return 0;
 }
