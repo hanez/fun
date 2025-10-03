@@ -800,6 +800,39 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* regex ops */
+            if (strcmp(name, "regex_match") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "regex_match expects text"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "regex_match expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "regex_match expects pattern"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after regex_match args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_REGEX_MATCH, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "regex_search") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "regex_search expects text"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "regex_search expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "regex_search expects pattern"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after regex_search args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_REGEX_SEARCH, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "regex_replace") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "regex_replace expects text"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "regex_replace expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "regex_replace expects pattern"); free(name); return 0; }
+                if (*pos < len && src[*pos] == ',') { (*pos)++; skip_spaces(src, len, pos); } else { parser_fail(*pos, "regex_replace expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "regex_replace expects replacement"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after regex_replace args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_REGEX_REPLACE, 0);
+                free(name);
+                return 1;
+            }
             /* array utils */
             if (strcmp(name, "contains") == 0) {
                 (*pos)++; /* '(' */

@@ -338,6 +338,9 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/pcsc/transmit.c"
 
             #include "vm/strings/find.c"
+            #include "vm/strings/regex_match.c"
+            #include "vm/strings/regex_search.c"
+            #include "vm/strings/regex_replace.c"
             #include "vm/strings/split.c"
             #include "vm/strings/substr.c"
 

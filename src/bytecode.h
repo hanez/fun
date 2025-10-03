@@ -84,6 +84,11 @@ typedef enum {
     OP_SUBSTR,        // pops len, start, string; pushes string
     OP_FIND,          // pops needle, haystack; pushes int index or -1
 
+    // regex ops (POSIX)
+    OP_REGEX_MATCH,   // pops pattern, string; pushes 1/0 for full match
+    OP_REGEX_SEARCH,  // pops pattern, string; pushes map {"match":str, "start":int, "end":int, "groups":array}
+    OP_REGEX_REPLACE, // pops repl, pattern, string; pushes string with global replacements
+
     // array utils
     OP_CONTAINS,      // pops value, array; pushes 1/0
     OP_INDEX_OF,      // pops value, array; pushes index or -1

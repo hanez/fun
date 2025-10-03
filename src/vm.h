@@ -29,6 +29,7 @@ static const char *opcode_names[] = {
     "LEN","PUSH","APOP","SET","INSERT","REMOVE","SLICE",
     "TO_NUMBER","TO_STRING","CAST","TYPEOF",
     "SPLIT","JOIN","SUBSTR","FIND",
+    "REGEX_MATCH","REGEX_SEARCH","REGEX_REPLACE",
     "CONTAINS","INDEX_OF","CLEAR",
     "ENUMERATE","ZIP",
     "MIN","MAX","CLAMP","ABS","POW","RANDOM_SEED","RANDOM_INT",

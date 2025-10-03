@@ -98,6 +98,9 @@ static const char *opcode_name(OpCode op) {
         case OP_JOIN: return "JOIN";
         case OP_SUBSTR: return "SUBSTR";
         case OP_FIND: return "FIND";
+        case OP_REGEX_MATCH: return "REGEX_MATCH";
+        case OP_REGEX_SEARCH: return "REGEX_SEARCH";
+        case OP_REGEX_REPLACE: return "REGEX_REPLACE";
         case OP_CONTAINS: return "CONTAINS";
         case OP_INDEX_OF: return "INDEX_OF";
         case OP_CLEAR: return "CLEAR";
