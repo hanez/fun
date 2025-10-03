@@ -3626,6 +3626,89 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             continue;
         }
 
+        /* try/catch/finally (syntax support; runtime exceptions not yet implemented) */
+        if (starts_with(src, len, *pos, "try")) {
+            /* consume 'try' */
+            *pos += 3;
+            /* end of header line */
+            skip_to_eol(src, len, pos);
+
+            /* parse try body at increased indent (if any) */
+            int try_body_indent = 0;
+            size_t look_try = *pos;
+            if (read_line_start(src, len, &look_try, &try_body_indent) && try_body_indent > current_indent) {
+                parse_block(bc, src, len, pos, try_body_indent);
+            } else {
+                /* empty try body allowed */
+            }
+
+            /* Optional: catch and/or finally clauses at same indentation */
+            int seen_catch = 0;
+            int seen_finally = 0;
+            for (;;) {
+                size_t look = *pos;
+                int look_indent = 0;
+                if (!read_line_start(src, len, &look, &look_indent)) break; /* EOF */
+                if (look_indent != current_indent) break; /* different indentation -> stop */
+
+                if (!seen_catch && starts_with(src, len, look, "catch")) {
+                    /* consume 'catch' */
+                    *pos = look + 5;
+                    /* optional variable name */
+                    skip_spaces(src, len, pos);
+                    char *ex_name = NULL;
+                    size_t tmp = *pos;
+                    if (read_identifier_into(src, len, &tmp, &ex_name)) {
+                        *pos = tmp;
+                        free(ex_name);
+                    }
+                    /* end of header line */
+                    skip_to_eol(src, len, pos);
+
+                    /* We currently don't have runtime exceptions: emit an unconditional jump over the catch body (so it's parsed but never executed) */
+                    int j_over = bytecode_add_instruction(bc, OP_JUMP, 0);
+
+                    /* parse catch body at increased indent (if any) */
+                    int catch_indent = 0;
+                    size_t look_catch = *pos;
+                    if (read_line_start(src, len, &look_catch, &catch_indent) && catch_indent > current_indent) {
+                        parse_block(bc, src, len, pos, catch_indent);
+                    } else {
+                        /* empty catch body allowed */
+                    }
+
+                    /* patch jump to here (after catch body) */
+                    bytecode_set_operand(bc, j_over, bc->instr_count);
+
+                    seen_catch = 1;
+                    continue;
+                }
+
+                if (!seen_finally && starts_with(src, len, look, "finally")) {
+                    /* consume 'finally' */
+                    *pos = look + 7;
+                    /* end of header line */
+                    skip_to_eol(src, len, pos);
+
+                    /* parse finally body at increased indent (if any) */
+                    int finally_indent = 0;
+                    size_t look_fin = *pos;
+                    if (read_line_start(src, len, &look_fin, &finally_indent) && finally_indent > current_indent) {
+                        parse_block(bc, src, len, pos, finally_indent);
+                    } else {
+                        /* empty finally body allowed */
+                    }
+
+                    seen_finally = 1;
+                    continue;
+                }
+
+                /* no recognized clause at this indentation */
+                break;
+            }
+            continue;
+        }
+
         /* otherwise: simple statement on this line */
         parse_simple_statement(bc, src, len, pos);
     }
