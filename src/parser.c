@@ -72,6 +72,7 @@ static int g_temp_counter = 0;
 #define TYPE_META_BOOLEAN 10002
 #define TYPE_META_NIL     10003
 #define TYPE_META_CLASS   10004
+#define TYPE_META_FLOAT   10005
 
 static void parser_fail(size_t pos, const char *fmt, ...) {
     g_has_error = 1;
@@ -387,9 +388,45 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         return 1;
     }
 
-    /* number */
+    /* number (prefer float first to consume cases like 1.23 or 1e2) */
     int ok = 0;
     size_t save = *pos;
+    /* float literal */
+    double fval = parse_float_literal_value(src, len, pos, &ok);
+    if (ok) {
+        int ci = bytecode_add_constant(bc, make_float(fval));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+        /* postfix indexing or slice (not typical for floats but keep consistency) */
+        for (;;) {
+            skip_spaces(src, len, pos);
+            if (*pos < len && src[*pos] == '[') {
+                (*pos)++;
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "Expected start expression"); return 0; }
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] == ':') {
+                    (*pos)++;
+                    skip_spaces(src, len, pos);
+                    size_t savep2 = *pos;
+                    if (!emit_expression(bc, src, len, pos)) {
+                        *pos = savep2;
+                        int ci2 = bytecode_add_constant(bc, make_int(-1));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ci2);
+                    }
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after slice"); return 0; }
+                    bytecode_add_instruction(bc, OP_SLICE, 0);
+                    continue;
+                } else {
+                    if (!consume_char(src, len, pos, ']')) { parser_fail(*pos, "Expected ']' after index"); return 0; }
+                    bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+                    continue;
+                }
+            }
+            break;
+        }
+        return 1;
+    }
+    *pos = save;
+    /* integer literal */
     int64_t ival = parse_int_literal_value(src, len, pos, &ok);
     if (ok) {
         int ci = bytecode_add_constant(bc, make_int(ival));
@@ -426,7 +463,6 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         }
         return 1;
     }
-    *pos = save;
 
     /* identifier or keyword */
     char *name = NULL;
@@ -2131,7 +2167,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
            Note: 'number' maps to signed 64-bit here. 'byte' is an alias of unsigned 8-bit. 'Class' restricts to class instances.
          */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0
-            || strcmp(name, "Class") == 0
+            || strcmp(name, "Class") == 0 || strcmp(name, "float") == 0
             || strcmp(name, "byte") == 0
             || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0
             || strcmp(name, "int8") == 0  || strcmp(name, "int16") == 0  || strcmp(name, "int32") == 0  || strcmp(name, "int64") == 0) {
@@ -2140,6 +2176,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             int is_boolean = (strcmp(name, "boolean") == 0);
             int is_nil     = (strcmp(name, "nil") == 0);
             int is_class_tkn = (strcmp(name, "Class") == 0);
+            int is_float_tkn = (strcmp(name, "float") == 0);
             int is_byte    = (strcmp(name, "byte")   == 0);
             int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
             int is_u16     = (strcmp(name, "uint16") == 0);
@@ -2155,7 +2192,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 /* store decl bits with sign encoded: negative means signed (number is signed 64-bit) */
             if (decl_signed) decl_bits = -decl_bits;
 
-            /* declared type metadata: integers use decl_bits; string/boolean/nil/Class use special markers */
+            /* declared type metadata: integers use decl_bits; string/boolean/nil/Class/float use special markers */
             int decl_meta = decl_bits;
             if (is_string) {
                 decl_meta = TYPE_META_STRING;
@@ -2165,6 +2202,8 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 decl_meta = TYPE_META_NIL;
             } else if (is_class_tkn) {
                 decl_meta = TYPE_META_CLASS;
+            } else if (is_float_tkn) {
+                decl_meta = TYPE_META_FLOAT;
             }
 
             free(name);
@@ -2255,6 +2294,23 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     }
                     /* Continue after checks */
                     bytecode_set_operand(bc, j_ok, bc->instr_count);
+                } else if (decl_meta == TYPE_META_FLOAT) {
+                    /* expect Float */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciF = bytecode_add_constant(bc, make_string("Float"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciF);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Float"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
                 } else if (decl_meta == TYPE_META_BOOLEAN) {
                     /* accept Boolean literal or Number; if Number, clamp to 0/1 */
                     /* check if value is Boolean */
@@ -2581,6 +2637,23 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     }
                     /* Continue after checks */
                     bytecode_set_operand(bc, j_ok, bc->instr_count);
+                } else if (meta == TYPE_META_FLOAT) {
+                    /* expect Float */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciF = bytecode_add_constant(bc, make_string("Float"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciF);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Float"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
                 } else if (meta == TYPE_META_BOOLEAN) {
                     /* expect Number then clamp to 1 bit (unsigned) */
                     bytecode_add_instruction(bc, OP_DUP, 0);

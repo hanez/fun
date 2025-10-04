@@ -8,27 +8,22 @@
  */
 
 case OP_UCLAMP: {
-    /* Saturating clamp to unsigned N-bit range: [0 .. 2^N - 1] */
+    /* Unsigned wrap to N bits: mask lower N bits (operand = bits) */
     Value v = pop_value(vm);
     int bits = inst.operand;
     int64_t vi = (v.type == VAL_INT) ? v.i : 0;
 
-    uint64_t umax;
+    uint64_t mask;
     if (bits <= 0) {
-        /* treat as clamp to 0..0 */
-        umax = 0;
+        mask = 0ULL;
     } else if (bits >= 64) {
-        umax = UINT64_MAX;
+        mask = UINT64_MAX;
     } else {
-        umax = (1ULL << bits) - 1ULL;
+        mask = (1ULL << bits) - 1ULL;
     }
 
-    uint64_t u;
-    if (vi < 0) u = 0;
-    else if ((uint64_t)vi > umax) u = umax;
-    else u = (uint64_t)vi;
-
-    push_value(vm, make_int((int64_t)u));
+    uint64_t wrapped = ((uint64_t)vi) & mask;
+    push_value(vm, make_int((int64_t)wrapped));
     free_value(v);
     break;
 }

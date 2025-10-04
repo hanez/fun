@@ -38,11 +38,20 @@
 case OP_ADD: {
     Value b = pop_value(vm);
     Value a = pop_value(vm);
-    if (a.type == VAL_INT && b.type == VAL_INT) {
-        Value res = make_int(a.i + b.i);
-        free_value(a);
-        free_value(b);
-        push_value(vm, res);
+    if ((a.type == VAL_INT || a.type == VAL_FLOAT) && (b.type == VAL_INT || b.type == VAL_FLOAT)) {
+        if (a.type == VAL_FLOAT || b.type == VAL_FLOAT) {
+            double da = (a.type == VAL_FLOAT) ? a.d : (double)a.i;
+            double db = (b.type == VAL_FLOAT) ? b.d : (double)b.i;
+            Value res = make_float(da + db);
+            free_value(a);
+            free_value(b);
+            push_value(vm, res);
+        } else {
+            Value res = make_int(a.i + b.i);
+            free_value(a);
+            free_value(b);
+            push_value(vm, res);
+        }
     } else if (a.type == VAL_STRING && b.type == VAL_STRING) {
         const char *sa = a.s ? a.s : "";
         const char *sb = b.s ? b.s : "";
@@ -68,7 +77,7 @@ case OP_ADD: {
         free_value(b);
         push_value(vm, res);
     } else {
-        fprintf(stderr, "Runtime type error: ADD expects both ints, both strings, or both arrays, got %s and %s\n",
+        fprintf(stderr, "Runtime type error: ADD expects both numbers, both strings, or both arrays, got %s and %s\n",
                 value_type_name(a.type), value_type_name(b.type));
         exit(1);
     }

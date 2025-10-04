@@ -40,3 +40,16 @@ print("u8 after +10 wrap -> " + to_string(u8))
 // 'number' maps to 64-bit unsigned behavior
 number n = -1    // will clamp/wrap to 64-bit (implementation-defined display)
 print("number n = " + to_string(n) + " :: " + typeof(n))
+
+/* Exprected result:
+u8  = 255 :: Number
+u16 = 65535 :: Number
+u32 = 4294967295 :: Number
+u64 = -1 :: Number
+wrap u8  -> 0
+wrap u16 -> 0
+wrap u32 -> 0
+wrap u64 -> 0
+u8 after +10 wrap -> 4
+number n = -1 :: Number
+*/

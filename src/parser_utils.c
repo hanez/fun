@@ -697,3 +697,61 @@ static char *preprocess_includes_internal(const char *src, int depth) {
 static char *preprocess_includes(const char *src) {
     return preprocess_includes_internal(src, 0);
 }
+
+
+/* Float literal parser: supports decimal and scientific notation. Returns parsed double and advances pos on success. */
+static double parse_float_literal_value(const char *src, size_t len, size_t *pos, int *ok) {
+    size_t p = *pos;
+    skip_spaces(src, len, &p);
+    size_t start = p;
+    int saw_digit = 0;
+    int saw_dot = 0;
+    int saw_exp = 0;
+
+    /* optional sign */
+    if (p < len && (src[p] == '+' || src[p] == '-')) p++;
+
+    /* integer part */
+    while (p < len && isdigit((unsigned char)src[p])) { p++; saw_digit = 1; }
+
+    /* fractional part */
+    if (p < len && src[p] == '.') {
+        saw_dot = 1;
+        p++;
+        while (p < len && isdigit((unsigned char)src[p])) { p++; saw_digit = 1; }
+    }
+
+    /* exponent part */
+    if (p < len && (src[p] == 'e' || src[p] == 'E')) {
+        saw_exp = 1;
+        size_t epos = p + 1;
+        if (epos < len && (src[epos] == '+' || src[epos] == '-')) epos++;
+        size_t digits_start = epos;
+        while (epos < len && isdigit((unsigned char)src[epos])) { epos++; }
+        if (epos == digits_start) {
+            /* no digits after exponent -> not a float */
+            *ok = 0; return 0.0;
+        }
+        p = epos;
+    }
+
+    if (!saw_digit || (!saw_dot && !saw_exp)) {
+        *ok = 0; return 0.0;
+    }
+
+    /* Create temporary buffer to parse with strtod safely */
+    size_t n = p - start;
+    char *tmp = (char*)malloc(n + 1);
+    if (!tmp) { *ok = 0; return 0.0; }
+    memcpy(tmp, src + start, n);
+    tmp[n] = '\0';
+
+    char *endp = NULL;
+    double dv = strtod(tmp, &endp);
+    if (!endp || *endp != '\0') { free(tmp); *ok = 0; return 0.0; }
+
+    *pos = p;
+    *ok = 1;
+    free(tmp);
+    return dv;
+}

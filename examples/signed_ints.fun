@@ -11,10 +11,10 @@
 
 // Signed integer type examples with two's complement wrapping
 
-sint8  s8  = -1       // should be -1 within sint8 range
-sint16 s16 = -32768   // min sint16
-sint32 s32 = -2147483648
-sint64 s64 = -9223372036854775808
+int8  s8  = -1       // should be -1 within int8 range
+int16 s16 = -32768   // min int16
+int32 s32 = -2147483648
+int64 s64 = -9223372036854775808
 
 print("s8  = " + to_string(s8)  + " :: " + typeof(s8))
 print("s16 = " + to_string(s16) + " :: " + typeof(s16))
@@ -36,3 +36,15 @@ print("wrap s64 -> " + to_string(s64))
 s8 = -120
 s8 = s8 - 20   // -140 -> wraps into int8 range
 print("s8 after -20 wrap -> " + to_string(s8))
+
+/* Expected output:
+s8  = -1 :: Number
+s16 = -32768 :: Number
+s32 = -2147483648 :: Number
+s64 = -9223372036854775808 :: Number
+wrap s8  -> -126
+wrap s16 -> 4464
+wrap s32 -> 0
+wrap s64 -> 0
+s8 after -20 wrap -> 116
+*/

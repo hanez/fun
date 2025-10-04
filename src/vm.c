@@ -119,6 +119,10 @@ static const char* value_type_name(ValueType t) {
     switch (t) {
         case VAL_FUNCTION: return "function";
         case VAL_INT: return "int";
+        case VAL_FLOAT: return "float";
+        case VAL_BOOL: return "boolean";
+        case VAL_ARRAY: return "array";
+        case VAL_MAP: return "map";
         case VAL_NIL: return "nil";
         case VAL_STRING: return "string";
         default: return "unknown";

@@ -37,6 +37,13 @@ Value make_int(int64_t v) {
     return val;
 }
 
+Value make_float(double v) {
+    Value val;
+    val.type = VAL_FLOAT;
+    val.d = v;
+    return val;
+}
+
 Value make_bool(int v) {
     Value val;
     val.type = VAL_BOOL;
@@ -229,6 +236,9 @@ Value copy_value(const Value *v) {
         case VAL_INT:
             out.i = v->i;
             break;
+        case VAL_FLOAT:
+            out.d = v->d;
+            break;
         case VAL_BOOL:
             out.i = v->i ? 1 : 0;
             break;
@@ -262,6 +272,8 @@ Value deep_copy_value(const Value *v) {
     switch (v->type) {
         case VAL_INT:
             return make_int(v->i);
+        case VAL_FLOAT:
+            return make_float(v->d);
         case VAL_BOOL:
             return make_bool(v->i);
         case VAL_STRING:
@@ -334,6 +346,9 @@ void print_value(const Value *v) {
         case VAL_INT:
             printf("%" PRId64, v->i);
             break;
+        case VAL_FLOAT:
+            printf("%.17g", v->d);
+            break;
         case VAL_STRING:
             printf("%s", v->s ? v->s : "");
             break;
@@ -379,6 +394,8 @@ int value_is_truthy(const Value *v) {
     switch (v->type) {
         case VAL_INT:
             return v->i != 0;
+        case VAL_FLOAT:
+            return v->d != 0.0;
         case VAL_BOOL:
             return v->i != 0;
         case VAL_STRING:
@@ -405,6 +422,11 @@ char *value_to_string_alloc(const Value *v) {
             snprintf(tmp, sizeof(tmp), "%" PRId64, v->i);
             return strdup(tmp);
         }
+        case VAL_FLOAT: {
+            char tmp[64];
+            snprintf(tmp, sizeof(tmp), "%.17g", v->d);
+            return strdup(tmp);
+        }
         case VAL_STRING:
             return strdup(v->s ? v->s : "");
         case VAL_BOOL:
@@ -426,6 +448,12 @@ char *value_to_string_alloc(const Value *v) {
 }
 
 int value_equals(const Value *a, const Value *b) {
+    // Numeric cross-type equality: int vs float compares numerically
+    if ((a->type == VAL_INT || a->type == VAL_FLOAT) && (b->type == VAL_INT || b->type == VAL_FLOAT)) {
+        double da = (a->type == VAL_INT) ? (double)a->i : a->d;
+        double db = (b->type == VAL_INT) ? (double)b->i : b->d;
+        return da == db;
+    }
     if (a->type != b->type) return 0;
     switch (a->type) {
         case VAL_INT: return a->i == b->i;

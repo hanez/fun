@@ -51,13 +51,15 @@ typedef enum {
     VAL_FUNCTION,
     VAL_ARRAY,
     VAL_MAP,
-    VAL_NIL
+    VAL_NIL,
+    VAL_FLOAT
 } ValueType;
 
 typedef struct {
     ValueType type;
     union {
         int64_t i;
+        double d;
         char *s;
         struct Bytecode *fn;
         struct Array *arr;
@@ -71,6 +73,7 @@ Value make_bool(int v);
 Value make_string(const char *s);
 Value make_function(struct Bytecode *fn);
 Value make_nil(void);
+Value make_float(double v);
 
 /* arrays */
 Value make_array_from_values(const Value *vals, int count); /* deep-copies vals */

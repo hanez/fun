@@ -34,14 +34,24 @@
 case OP_SUB: {
     Value b = pop_value(vm);
     Value a = pop_value(vm);
-    if (a.type != VAL_INT || b.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: SUB expects ints, got %s and %s\n",
+    if ((a.type == VAL_INT || a.type == VAL_FLOAT) && (b.type == VAL_INT || b.type == VAL_FLOAT)) {
+        if (a.type == VAL_FLOAT || b.type == VAL_FLOAT) {
+            double da = (a.type == VAL_FLOAT) ? a.d : (double)a.i;
+            double db = (b.type == VAL_FLOAT) ? b.d : (double)b.i;
+            Value res = make_float(da - db);
+            free_value(a);
+            free_value(b);
+            push_value(vm, res);
+        } else {
+            Value res = make_int(a.i - b.i);
+            free_value(a);
+            free_value(b);
+            push_value(vm, res);
+        }
+    } else {
+        fprintf(stderr, "Runtime type error: SUB expects numbers, got %s and %s\n",
                 value_type_name(a.type), value_type_name(b.type));
         exit(1);
     }
-    Value res = make_int(a.i - b.i);
-    free_value(a);
-    free_value(b);
-    push_value(vm, res);
     break;
 }
