@@ -757,6 +757,81 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* Socket builtins */
+            if (strcmp(name, "tcp_listen") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tcp_listen expects (port, backlog)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "tcp_listen expects (port, backlog)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tcp_listen expects (port, backlog)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tcp_listen args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_TCP_LISTEN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tcp_accept") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tcp_accept expects (listen_fd)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tcp_accept arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_TCP_ACCEPT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tcp_connect") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tcp_connect expects (host, port)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "tcp_connect expects (host, port)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tcp_connect expects (host, port)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tcp_connect args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_TCP_CONNECT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sock_send") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sock_send expects (fd, data)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "sock_send expects (fd, data)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sock_send expects (fd, data)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after sock_send args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_SEND, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sock_recv") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sock_recv expects (fd, maxlen)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "sock_recv expects (fd, maxlen)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sock_recv expects (fd, maxlen)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after sock_recv args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_RECV, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sock_close") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sock_close expects (fd)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after sock_close arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_CLOSE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "unix_listen") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "unix_listen expects (path, backlog)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "unix_listen expects (path, backlog)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "unix_listen expects (path, backlog)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after unix_listen args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_UNIX_LISTEN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "unix_connect") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "unix_connect expects (path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after unix_connect arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SOCK_UNIX_CONNECT, 0);
+                free(name);
+                return 1;
+            }
             /* string ops */
             if (strcmp(name, "split") == 0) {
                 (*pos)++; /* '(' */

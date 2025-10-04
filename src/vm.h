@@ -38,7 +38,8 @@ static const char *opcode_names[] = {
     "TIME_NOW_MS","CLOCK_MONO_MS","DATE_FORMAT",
     "THREAD_SPAWN","THREAD_JOIN","SLEEP_MS",
     "BAND","BOR","BXOR","BNOT","SHL","SHR","ROTL","ROTR",
-    "PCSC_ESTABLISH","PCSC_RELEASE","PCSC_LIST_READERS","PCSC_CONNECT","PCSC_DISCONNECT","PCSC_TRANSMIT"
+    "PCSC_ESTABLISH","PCSC_RELEASE","PCSC_LIST_READERS","PCSC_CONNECT","PCSC_DISCONNECT","PCSC_TRANSMIT",
+    "SOCK_TCP_LISTEN","SOCK_TCP_ACCEPT","SOCK_TCP_CONNECT","SOCK_SEND","SOCK_RECV","SOCK_CLOSE","SOCK_UNIX_LISTEN","SOCK_UNIX_CONNECT"
 };
 
 typedef struct {
@@ -81,7 +82,7 @@ void vm_dump_globals(VM *vm);
 void vm_run(VM *vm, Bytecode *entry);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_PCSC_TRANSMIT;  // all current opcodes
+    return op >= OP_NOP && op <= OP_SOCK_UNIX_CONNECT;  // all current opcodes
 }
 
 #endif

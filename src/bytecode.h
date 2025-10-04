@@ -147,7 +147,17 @@ typedef enum {
     OP_PCSC_LIST_READERS, // pops ctx id; returns array of reader names (possibly empty)
     OP_PCSC_CONNECT,      // pops reader, ctx id; returns handle id (>0) or 0
     OP_PCSC_DISCONNECT,   // pops handle id; returns 1/0
-    OP_PCSC_TRANSMIT      // pops apdu array, handle id; returns map {"data":[],"sw1":n,"sw2":n,"code":n}
+    OP_PCSC_TRANSMIT,     // pops apdu array, handle id; returns map {"data":[],"sw1":n,"sw2":n,"code":n}
+
+    // Sockets (UNIX platforms)
+    OP_SOCK_TCP_LISTEN,    // pops backlog, port; returns listen fd (>0) or 0
+    OP_SOCK_TCP_ACCEPT,    // pops listen fd; returns client fd (>0) or 0
+    OP_SOCK_TCP_CONNECT,   // pops port, host; returns fd (>0) or 0
+    OP_SOCK_SEND,          // pops data string, fd; returns bytes sent (>=0) or -1
+    OP_SOCK_RECV,          // pops maxlen, fd; returns data string ("" on EOF/error)
+    OP_SOCK_CLOSE,         // pops fd; returns 1/0
+    OP_SOCK_UNIX_LISTEN,   // pops backlog, path; returns listen fd (>0) or 0
+    OP_SOCK_UNIX_CONNECT   // pops path; returns fd (>0) or 0
 } OpCode;
 
 typedef struct {

@@ -329,6 +329,16 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/time_now_ms.c"
             #include "vm/os/clock_mono_ms.c"
             #include "vm/os/date_format.c"
+            
+            /* Socket ops */
+            #include "vm/os/socket_tcp_listen.c"
+            #include "vm/os/socket_tcp_accept.c"
+            #include "vm/os/socket_tcp_connect.c"
+            #include "vm/os/socket_send.c"
+            #include "vm/os/socket_recv.c"
+            #include "vm/os/socket_close.c"
+            #include "vm/os/socket_unix_listen.c"
+            #include "vm/os/socket_unix_connect.c"
 
             #include "vm/pcsc/establish.c"
             #include "vm/pcsc/release.c"
