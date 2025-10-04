@@ -53,6 +53,7 @@
 #include <stdarg.h>
 
 /* ---- parser error state ---- */
+static const char *g_current_source_path = NULL; /* for propagating filename into nested bytecodes */
 static int g_has_error = 0;
 static size_t g_err_pos = 0;
 static char g_err_msg[256];
@@ -2792,6 +2793,13 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
             /* Build factory function: Name(...) -> instance map with fields and methods */
             Bytecode *ctor_bc = bytecode_new();
+                        /* set debug metadata for class factory */
+                        if (ctor_bc) {
+                            if (ctor_bc->name) free((void*)ctor_bc->name);
+                            ctor_bc->name = strdup(cname);
+                            if (ctor_bc->source_file) free((void*)ctor_bc->source_file);
+                            if (g_current_source_path) ctor_bc->source_file = strdup(g_current_source_path);
+                        }
             /* local env for the factory to allow temp locals */
             LocalEnv ctor_env;
             memset(&ctor_env, 0, sizeof(ctor_env));
@@ -3019,6 +3027,18 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
                         /* Build method function bytecode */
                         Bytecode *m_bc = bytecode_new();
+                                                if (m_bc) {
+                                                    if (m_bc->name) free((void*)m_bc->name);
+                                                    /* method qualified name: Class.method */
+                                                    size_t qlen = strlen(cname) + 1 + strlen(mname) + 1;
+                                                    char *q = (char*)malloc(qlen);
+                                                    if (q) {
+                                                        snprintf(q, qlen, "%s.%s", cname, mname);
+                                                        m_bc->name = q;
+                                                    }
+                                                    if (m_bc->source_file) free((void*)m_bc->source_file);
+                                                    if (g_current_source_path) m_bc->source_file = strdup(g_current_source_path);
+                                                }
                         LocalEnv m_env;
                         memset(&m_env, 0, sizeof(m_env));
                         LocalEnv *saved = g_locals;
@@ -3267,6 +3287,12 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
             /* compile body into separate Bytecode */
             Bytecode *fn_bc = bytecode_new();
+                        if (fn_bc) {
+                            if (fn_bc->name) free((void*)fn_bc->name);
+                            fn_bc->name = strdup(fname);
+                            if (fn_bc->source_file) free((void*)fn_bc->source_file);
+                            if (g_current_source_path) fn_bc->source_file = strdup(g_current_source_path);
+                        }
 
             /* parse body at increased indent if present */
             int body_indent = 0;
@@ -3906,7 +3932,22 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     g_err_line = 0;
     g_err_col  = 0;
 
-    Bytecode *bc = compile_minimal(compile_src, compile_len);
+    /* Set current source path for nested bytecodes to inherit */
+        const char *prev_source = g_current_source_path;
+        g_current_source_path = path;
+        Bytecode *bc = compile_minimal(compile_src, compile_len);
+        /* assign debug metadata to module bytecode */
+        if (bc) {
+            if (bc->source_file) free((void*)bc->source_file);
+            bc->source_file = path ? strdup(path) : strdup("<input>");
+            if (bc->name) free((void*)bc->name);
+            /* derive name from basename of path */
+            const char *bn = path ? strrchr(path, '/') : NULL;
+            const char *base = bn ? bn + 1 : (path ? path : "<input>");
+            bc->name = strdup(base);
+        }
+        /* restore previous */
+        g_current_source_path = prev_source;
 
     if (g_has_error) {
         int line = 1, col = 1;
@@ -3984,7 +4025,17 @@ Bytecode *parse_string_to_bytecode(const char *source) {
     g_err_line = 0;
     g_err_col  = 0;
 
+    /* Set current source path to <input> for nested bytecodes */
+    const char *prev_src = g_current_source_path;
+    g_current_source_path = NULL;
     Bytecode *bc = compile_minimal(compile_src, len);
+    if (bc) {
+        if (bc->source_file) free((void*)bc->source_file);
+        bc->source_file = strdup("<input>");
+        if (bc->name) free((void*)bc->name);
+        bc->name = strdup("<input>");
+    }
+    g_current_source_path = prev_src;
 
     if (g_has_error) {
         int line = 1, col = 1;

@@ -46,8 +46,22 @@ static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
                 }
             }
         }
-        fprintf(stream == stderr ? stderr : stream, " (line %d, op %s @ip %d)\n",
-                g_active_vm->current_line, opname, ip);
+        const char *fname = NULL;
+        const char *sfile = NULL;
+        if (g_active_vm->fp >= 0) {
+            Frame *f = &g_active_vm->frames[g_active_vm->fp];
+            if (f->fn) {
+                fname = f->fn->name;
+                sfile = f->fn->source_file;
+            }
+        }
+        fprintf(stream == stderr ? stderr : stream,
+                " (at %s:%d in %s, op %s @ip %d)\n",
+                sfile ? sfile : "<unknown>",
+                g_active_vm->current_line,
+                fname ? fname : "<entry>",
+                opname,
+                ip);
     }
     return written;
 }
@@ -183,6 +197,7 @@ void vm_init(VM *vm) {
     vm->output_count = 0;
     vm->instr_count = 0;
     vm->exit_code = 0;
+    vm->trace_enabled = 0;
     for (int i = 0; i < MAX_GLOBALS; ++i)
         vm->globals[i] = make_nil();
 }
@@ -246,6 +261,24 @@ void vm_run(VM *vm, Bytecode *entry) {
 
         Instruction inst = f->fn->instructions[f->ip++];
         vm->instr_count++; /* count each executed instruction */
+
+        if (vm->trace_enabled) {
+            const char *opname = (inst.op >= 0 && inst.op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0])))
+                                 ? opcode_names[inst.op] : "???";
+            const char *fname = f->fn && f->fn->name ? f->fn->name : "<entry>";
+            const char *sfile = f->fn && f->fn->source_file ? f->fn->source_file : "<unknown>";
+            /* Dump up to top 4 stack values */
+            int count = vm->sp + 1;
+            int start = count - 4; if (start < 0) start = 0;
+            fprintf(stdout, "TRACE %s:%d %s ip=%d %-14s %d | stack[%d]=[", sfile, vm->current_line, fname, f->ip - 1, opname, inst.operand, count);
+            for (int i = start; i < count; ++i) {
+                char *sv = value_to_string_alloc(&vm->stack[i]);
+                if (!sv) sv = strdup("<oom>");
+                fprintf(stdout, "%s%s", sv, (i == count - 1 ? "" : ", "));
+                free(sv);
+            }
+            fprintf(stdout, "]\n");
+        }
 
         switch (inst.op) {
             /* All opcode handlers as .c includes */

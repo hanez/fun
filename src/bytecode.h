@@ -174,6 +174,10 @@ typedef struct Bytecode {
 
     Value *constants;
     int const_count;
+
+    /* debug metadata */
+    const char *name;        /* function or module name (optional) */
+    const char *source_file; /* originating source filename (optional) */
 } Bytecode;
 
 // constructors / manipulation

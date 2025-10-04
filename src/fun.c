@@ -24,16 +24,18 @@ static void print_usage(const char *prog) {
     printf("Fun %s\n", FUN_VERSION);
     printf("Usage:\n");
 #ifdef FUN_WITH_REPL
-    printf("  %s [script.fun]\n", prog ? prog : "fun");
+    printf("  %s [--trace|-t] [script.fun]\n", prog ? prog : "fun");
     printf("  %s --help | -h\n", prog ? prog : "fun");
     printf("  %s --version | -V\n", prog ? prog : "fun");
     printf("\n");
+    printf("Options:\n  --trace, -t   Print executed ops and stack tops during run\n\n");
     printf("When no script is provided, a REPL starts. Submit an empty line to execute the buffer.\n");
 #else
-    printf("  %s <script.fun>\n", prog ? prog : "fun");
+    printf("  %s [--trace|-t] <script.fun>\n", prog ? prog : "fun");
     printf("  %s --help | -h\n", prog ? prog : "fun");
     printf("  %s --version | -V\n", prog ? prog : "fun");
     printf("\n");
+    printf("Options:\n  --trace, -t   Print executed ops and stack tops during run\n\n");
     printf("REPL is disabled in this build. Please provide a script file to run.\n");
 #endif
 }
@@ -42,8 +44,9 @@ int main(int argc, char **argv) {
     VM vm;
     vm_init(&vm);
 
-    if (argc > 1) {
-        const char *arg = argv[1];
+    int argi = 1;
+    for (; argi < argc; ++argi) {
+        const char *arg = argv[argi];
         if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
             print_usage(argv[0]);
             return 0;
@@ -52,18 +55,24 @@ int main(int argc, char **argv) {
             printf("Fun %s\n", FUN_VERSION);
             return 0;
         }
+        if (strcmp(arg, "--trace") == 0 || strcmp(arg, "-t") == 0) {
+            vm.trace_enabled = 1;
+            continue;
+        }
+        /* first non-option assumed to be script path */
+        break;
     }
 
 #ifndef FUN_WITH_REPL
-    if (argc <= 1) {
+    if (argi >= argc) {
         fprintf(stderr, "Error: REPL is disabled. Please provide a script to run.\n");
         print_usage(argv[0]);
         return 2;
     }
 #endif
 
-    if (argc > 1) {
-        const char *path = argv[1];
+    if (argi < argc) {
+        const char *path = argv[argi];
         Bytecode *bc = parse_file_to_bytecode(path);
         if (!bc) {
             fprintf(stderr, "Failed to compile script: %s\n", path);

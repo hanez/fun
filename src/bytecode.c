@@ -17,6 +17,8 @@ Bytecode *bytecode_new(void) {
     bc->instr_count = 0;
     bc->constants = NULL;
     bc->const_count = 0;
+    bc->name = NULL;
+    bc->source_file = NULL;
     return bc;
 }
 
@@ -46,6 +48,8 @@ void bytecode_free(Bytecode *bc) {
     }
     free(bc->constants);
     free(bc->instructions);
+    if (bc->name) free((void*)bc->name);
+    if (bc->source_file) free((void*)bc->source_file);
     free(bc);
 }
 
