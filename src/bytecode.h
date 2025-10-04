@@ -157,7 +157,10 @@ typedef enum {
     OP_SOCK_RECV,          // pops maxlen, fd; returns data string ("" on EOF/error)
     OP_SOCK_CLOSE,         // pops fd; returns 1/0
     OP_SOCK_UNIX_LISTEN,   // pops backlog, path; returns listen fd (>0) or 0
-    OP_SOCK_UNIX_CONNECT   // pops path; returns fd (>0) or 0
+    OP_SOCK_UNIX_CONNECT,  // pops path; returns fd (>0) or 0
+
+    // process control
+    OP_EXIT                // pops code (or uses operand) and terminates script with exit code
 } OpCode;
 
 typedef struct {

@@ -139,6 +139,8 @@ void vm_reset(VM *vm) {
     }
     // Clear output buffer
     vm_clear_output(vm);
+    // Reset exit code
+    vm->exit_code = 0;
 }
 
 void vm_dump_globals(VM *vm) {
@@ -180,6 +182,7 @@ void vm_init(VM *vm) {
     vm->fp = -1;
     vm->output_count = 0;
     vm->instr_count = 0;
+    vm->exit_code = 0;
     for (int i = 0; i < MAX_GLOBALS; ++i)
         vm->globals[i] = make_nil();
 }
@@ -280,6 +283,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/core/call.c"
             #include "vm/core/dup.c"
             #include "vm/core/halt.c"
+            #include "vm/core/exit.c"
             #include "vm/core/jump.c"
             #include "vm/core/jump_if_false.c"
             #include "vm/core/load_const.c"

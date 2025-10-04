@@ -2070,6 +2070,25 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             return;
         }
 
+        /* exit statement: exit [expr]? */
+        if (strcmp(name, "exit") == 0) {
+            free(name);
+            skip_spaces(src, len, &local_pos);
+            size_t save_pos = local_pos;
+            if (emit_expression(bc, src, len, &local_pos)) {
+                /* expression result already on stack */
+            } else {
+                /* default exit code 0 */
+                local_pos = save_pos;
+                int ci = bytecode_add_constant(bc, make_int(0));
+                bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+            }
+            bytecode_add_instruction(bc, OP_EXIT, 0);
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+
         /* break / continue */
         if (strcmp(name, "break") == 0) {
             free(name);

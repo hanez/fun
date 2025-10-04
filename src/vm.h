@@ -39,7 +39,8 @@ static const char *opcode_names[] = {
     "THREAD_SPAWN","THREAD_JOIN","SLEEP_MS",
     "BAND","BOR","BXOR","BNOT","SHL","SHR","ROTL","ROTR",
     "PCSC_ESTABLISH","PCSC_RELEASE","PCSC_LIST_READERS","PCSC_CONNECT","PCSC_DISCONNECT","PCSC_TRANSMIT",
-    "SOCK_TCP_LISTEN","SOCK_TCP_ACCEPT","SOCK_TCP_CONNECT","SOCK_SEND","SOCK_RECV","SOCK_CLOSE","SOCK_UNIX_LISTEN","SOCK_UNIX_CONNECT"
+    "SOCK_TCP_LISTEN","SOCK_TCP_ACCEPT","SOCK_TCP_CONNECT","SOCK_SEND","SOCK_RECV","SOCK_CLOSE","SOCK_UNIX_LISTEN","SOCK_UNIX_CONNECT",
+    "EXIT"
 };
 
 typedef struct {
@@ -63,6 +64,8 @@ typedef struct {
     long long instr_count; // executed instructions in the last vm_run
 
     int current_line; // last executed source line (debug)
+
+    int exit_code; // process exit code set by OP_EXIT
 } VM;
 
 // initialize VM (zero state)
@@ -82,7 +85,7 @@ void vm_dump_globals(VM *vm);
 void vm_run(VM *vm, Bytecode *entry);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_SOCK_UNIX_CONNECT;  // all current opcodes
+    return op >= OP_NOP && op <= OP_EXIT;  // all current opcodes
 }
 
 #endif

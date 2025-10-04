@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
         vm_print_output(&vm);
         vm_clear_output(&vm);
         bytecode_free(bc);
-        return 0;
+        return vm.exit_code;
     }
 
 #ifdef FUN_WITH_REPL
