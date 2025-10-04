@@ -432,7 +432,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
     char *name = NULL;
     if (read_identifier_into(src, len, pos, &name)) {
         if (strcmp(name, "true") == 0 || strcmp(name, "false") == 0) {
-            int ci = bytecode_add_constant(bc, make_int(strcmp(name, "true") == 0 ? 1 : 0));
+            int ci = bytecode_add_constant(bc, make_bool(strcmp(name, "true") == 0 ? 1 : 0));
             free(name);
             bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
             return 1;
@@ -1775,7 +1775,7 @@ static int emit_and_expr(Bytecode *bc, const char *src, size_t len, size_t *pos)
         }
 
         /* all were truthy -> result true */
-        int c1 = bytecode_add_constant(bc, make_int(1));
+        int c1 = bytecode_add_constant(bc, make_bool(1));
         bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
         int j_end = bytecode_add_instruction(bc, OP_JUMP, 0);
 
@@ -1784,7 +1784,7 @@ static int emit_and_expr(Bytecode *bc, const char *src, size_t len, size_t *pos)
         for (int i = 0; i < jf_count; ++i) {
             bytecode_set_operand(bc, jf_idxs[i], l_false);
         }
-        int c0 = bytecode_add_constant(bc, make_int(0));
+        int c0 = bytecode_add_constant(bc, make_bool(0));
         bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
 
         /* end */
@@ -1813,8 +1813,8 @@ static int emit_or_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         /* if current value is false -> proceed to next; else -> result true */
         int jf_proceed = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
 
-        /* true path: push 1 and jump to end */
-        int c1 = bytecode_add_constant(bc, make_int(1));
+        /* true path: push true and jump to end */
+        int c1 = bytecode_add_constant(bc, make_bool(1));
         bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
         if (tj_count < (int)(sizeof(true_jumps) / sizeof(true_jumps[0]))) {
             true_jumps[tj_count++] = bytecode_add_instruction(bc, OP_JUMP, 0);
@@ -2256,7 +2256,18 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     /* Continue after checks */
                     bytecode_set_operand(bc, j_ok, bc->instr_count);
                 } else if (decl_meta == TYPE_META_BOOLEAN) {
-                    /* expect Number then clamp to 1 bit (unsigned) */
+                    /* accept Boolean literal or Number; if Number, clamp to 0/1 */
+                    /* check if value is Boolean */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciBool = bytecode_add_constant(bc, make_string("Boolean"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciBool);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_not_bool = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    /* it is Boolean -> OK, skip number check */
+                    int j_done = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    /* not Boolean: check Number */
+                    bytecode_set_operand(bc, j_not_bool, bc->instr_count);
                     bytecode_add_instruction(bc, OP_DUP, 0);
                     bytecode_add_instruction(bc, OP_TYPEOF, 0);
                     int ciNum = bytecode_add_constant(bc, make_string("Number"));
@@ -2266,14 +2277,16 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
                     bytecode_set_operand(bc, j_to_error, bc->instr_count);
                     {
-                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Number for boolean"));
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Boolean or Number for boolean"));
                         bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
                         bytecode_add_instruction(bc, OP_PRINT, 0);
                         bytecode_add_instruction(bc, OP_HALT, 0);
                     }
                     bytecode_set_operand(bc, j_skip_err, bc->instr_count);
-                    /* clamp to 0/1 */
+                    /* if Number, clamp to 0/1 */
                     bytecode_add_instruction(bc, OP_UCLAMP, 1);
+                    /* common continuation */
+                    bytecode_set_operand(bc, j_done, bc->instr_count);
                 } else if (decl_meta == TYPE_META_NIL) {
                     /* expect Nil */
                     bytecode_add_instruction(bc, OP_DUP, 0);
@@ -2331,8 +2344,11 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 } else if (is_class_tkn) {
                     /* Class-typed variable defaults to Nil until assigned an instance */
                     ci = bytecode_add_constant(bc, make_nil());
-                } else if (is_number || is_boolean || (decl_bits != 0)) {
-                    /* integers/booleans default to 0 */
+                } else if (is_boolean) {
+                    /* booleans default to false */
+                    ci = bytecode_add_constant(bc, make_bool(0));
+                } else if (is_number || (decl_bits != 0)) {
+                    /* integers default to 0 */
                     ci = bytecode_add_constant(bc, make_int(0));
                 }
                 if (ci >= 0) {

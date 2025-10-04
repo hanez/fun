@@ -37,6 +37,6 @@ case OP_AND: {
     int res = value_is_truthy(&a) && value_is_truthy(&b);
     free_value(a);
     free_value(b);
-    push_value(vm, make_int(res));
+    push_value(vm, make_bool(res));
     break;
 }

@@ -46,6 +46,7 @@ struct Map;      /* forward */
 
 typedef enum {
     VAL_INT,
+    VAL_BOOL,
     VAL_STRING,
     VAL_FUNCTION,
     VAL_ARRAY,
@@ -66,6 +67,7 @@ typedef struct {
 
 /* constructors / helpers */
 Value make_int(int64_t v);
+Value make_bool(int v);
 Value make_string(const char *s);
 Value make_function(struct Bytecode *fn);
 Value make_nil(void);

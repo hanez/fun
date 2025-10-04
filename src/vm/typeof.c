@@ -12,6 +12,7 @@ case OP_TYPEOF: {
     const char *tname = "Unknown";
     switch (v.type) {
         case VAL_INT:      tname = "Number";   break;
+        case VAL_BOOL:     tname = "Boolean";  break;
         case VAL_STRING:   tname = "String";   break;
         case VAL_FUNCTION: tname = "Function"; break;
         case VAL_ARRAY:    tname = "Array";    break;

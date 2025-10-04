@@ -37,6 +37,13 @@ Value make_int(int64_t v) {
     return val;
 }
 
+Value make_bool(int v) {
+    Value val;
+    val.type = VAL_BOOL;
+    val.i = v ? 1 : 0;
+    return val;
+}
+
 Value make_string(const char *s) {
     Value val;
     val.type = VAL_STRING;
@@ -222,6 +229,9 @@ Value copy_value(const Value *v) {
         case VAL_INT:
             out.i = v->i;
             break;
+        case VAL_BOOL:
+            out.i = v->i ? 1 : 0;
+            break;
         case VAL_STRING:
             out.s = v->s ? strdup(v->s) : strdup("");
             break;
@@ -252,6 +262,8 @@ Value deep_copy_value(const Value *v) {
     switch (v->type) {
         case VAL_INT:
             return make_int(v->i);
+        case VAL_BOOL:
+            return make_bool(v->i);
         case VAL_STRING:
             return make_string(v->s ? v->s : "");
         case VAL_FUNCTION:
@@ -325,6 +337,9 @@ void print_value(const Value *v) {
         case VAL_STRING:
             printf("%s", v->s ? v->s : "");
             break;
+        case VAL_BOOL:
+            printf("%s", v->i ? "true" : "false");
+            break;
         case VAL_FUNCTION:
             printf("<function@%p>", (void*)v->fn);
             break;
@@ -364,6 +379,8 @@ int value_is_truthy(const Value *v) {
     switch (v->type) {
         case VAL_INT:
             return v->i != 0;
+        case VAL_BOOL:
+            return v->i != 0;
         case VAL_STRING:
             return v->s && v->s[0] != '\0';
         case VAL_FUNCTION:
@@ -390,6 +407,8 @@ char *value_to_string_alloc(const Value *v) {
         }
         case VAL_STRING:
             return strdup(v->s ? v->s : "");
+        case VAL_BOOL:
+            return strdup(v->i ? "true" : "false");
         case VAL_FUNCTION: {
             snprintf(buf, sizeof(buf), "<function@%p>", (void*)v->fn);
             return strdup(buf);
@@ -410,6 +429,7 @@ int value_equals(const Value *a, const Value *b) {
     if (a->type != b->type) return 0;
     switch (a->type) {
         case VAL_INT: return a->i == b->i;
+        case VAL_BOOL: return (a->i != 0) == (b->i != 0);
         case VAL_STRING: {
             const char *sa = a->s ? a->s : "";
             const char *sb = b->s ? b->s : "";
