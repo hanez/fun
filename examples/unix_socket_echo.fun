@@ -17,6 +17,8 @@
  * - On Windows: prints a friendly message and exits (since AF_UNIX is not available here).
  */
 
+#include <io/socket.fun>
+
 fun server_thread(listen_fd)
   // Accept a single client, read message, echo back, close.
   cfd = tcp_accept(to_number(listen_fd))
@@ -48,16 +50,16 @@ else
     // Small delay to ensure the server is accepting
     sleep(50)
 
-    // Create a client using raw built-ins (no stdlib dependency)
-    cfd = unix_connect(path)
-    if (cfd <= 0)
+    // Create a client using the UnixClient from stdlib
+    uc = UnixClient()
+    if (!uc.connect(path))
       print("unix_connect failed")
     else
       // Send a message and read the reply
-      _ = sock_send(cfd, "hello over AF_UNIX")
-      reply = sock_recv(cfd, 4096)
+      _ = uc.send("hello over AF_UNIX")
+      reply = uc.recv(4096)
       print(reply)
-      _ = sock_close(cfd)
+      _ = uc.close()
 
     // Join the server thread and close the listening socket
     _ = thread_join(tid)
