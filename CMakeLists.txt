@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(fun VERSION 0.24.0 LANGUAGES C)
+project(fun VERSION 0.25.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -101,12 +101,12 @@ endif()
 target_link_libraries(fun PRIVATE fun_core)
 
 # Internal test programs
-add_executable(fun_test 
+add_executable(fun_test
         src/fun_test.c
 )
 target_link_libraries(fun_test PRIVATE fun_core)
 
-add_executable(test_opcodes 
+add_executable(test_opcodes
         src/test_opcodes.c
 )
 target_link_libraries(test_opcodes PRIVATE fun_core)

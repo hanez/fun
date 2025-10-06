@@ -49,7 +49,7 @@ typedef struct {
     Value locals[MAX_FRAME_LOCALS];
 } Frame;
 
-typedef struct {
+struct VM {
     Value stack[STACK_SIZE];
     int sp;
 
@@ -68,7 +68,11 @@ typedef struct {
     int exit_code; // process exit code set by OP_EXIT
 
     int trace_enabled; // when non-zero, print executed ops and stack
-} VM;
+    int repl_on_error; // when non-zero, enter REPL on runtime error (preserve stack)
+    int (*on_error_repl)(struct VM *vm); // optional hook to run REPL on error
+};
+
+typedef struct VM VM;
 
 // initialize VM (zero state)
 void vm_init(VM *vm);

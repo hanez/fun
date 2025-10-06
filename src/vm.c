@@ -77,6 +77,27 @@ static int fun_vm_fprintf(FILE *stream, const char *fmt, ...) {
 /* Redirect fprintf within this translation unit so opcode handlers use our wrapper */
 #define fprintf fun_vm_fprintf
 
+/* Intercept exit() in this translation unit so VM errors don't terminate the process outright */
+#include <setjmp.h>
+
+static jmp_buf g_vm_err_jmp;
+
+static void fun_vm_exit(int code) {
+    if (g_active_vm && g_active_vm->repl_on_error) {
+        /* Jump back to vm_run to allow dropping into the REPL with intact VM state */
+        longjmp(g_vm_err_jmp, code ? code : 1);
+    }
+    /* Fallback: terminate immediately if not in REPL-on-error mode */
+#ifdef _WIN32
+    _exit(code);
+#else
+    _Exit(code);
+#endif
+}
+
+/* Redirect exit inside this TU (affects included opcode handlers) */
+#define exit(code) fun_vm_exit(code)
+
 /*
 Opcode case include index (vm_case_*.inc):
 - Core/stack/frame:
@@ -202,6 +223,8 @@ void vm_init(VM *vm) {
     vm->instr_count = 0;
     vm->exit_code = 0;
     vm->trace_enabled = 0;
+    vm->repl_on_error = 0;
+    vm->on_error_repl = NULL;
     for (int i = 0; i < MAX_GLOBALS; ++i)
         vm->globals[i] = make_nil();
 }
@@ -248,6 +271,20 @@ void vm_run(VM *vm, Bytecode *entry) {
     vm->instr_count = 0;
     vm->current_line = 1;
     g_active_vm = vm;
+
+    /* set error trap if REPL-on-error is enabled */
+    if (vm->repl_on_error) {
+        int jcode = setjmp(g_vm_err_jmp);
+        if (jcode != 0) {
+            /* We got here from a trapped exit() in an error path */
+            fprintf(stderr, "Entering REPL due to runtime error (code %d)\n", jcode);
+            if (vm->on_error_repl) {
+                vm->on_error_repl(vm);
+            }
+            g_active_vm = NULL;
+            return;
+        }
+    }
 
     /* start with entry frame (no args) */
     vm_push_frame(vm, entry, 0, NULL);

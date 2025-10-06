@@ -845,6 +845,9 @@ static void show_repl_help(void) {
     printf("  :history [N]           Show last N lines of history (default 50)\n");
     printf("  :time on|off|toggle    Toggle/enable/disable timing\n");
     printf("  :env [NAME[=VALUE]]    Get or set environment variable\n");
+    printf("  :backtrace | :bt       Show backtrace of VM frames (most recent first)\n");
+    printf("  :stack [N]             Show top N (default all) stack values\n");
+    printf("  :locals [FRAME]        Show locals of frame (default: current top frame)\n");
 }
 
 static char *read_entire_file(const char *path, size_t *out_len) {
@@ -1252,6 +1255,54 @@ int fun_run_repl(VM *vm) {
                     const char *val = eq + 1;
                     env_set(name, val);
                 }
+                continue;
+            } else if (strcmp(cmd, "backtrace") == 0 || strcmp(cmd, "bt") == 0) {
+                if (vm->fp < 0) { printf("(no frames)\n"); continue; }
+                printf("Backtrace (most recent call first):\n");
+                for (int i = vm->fp; i >= 0; --i) {
+                    Frame *f = &vm->frames[i];
+                    const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
+                    const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : "<unknown>";
+                    int ip = f->ip - 1;
+                    printf("  #%d %s at %s ip=%d line=%d\n", i, fname, sfile, ip, vm->current_line);
+                }
+                continue;
+            } else if (strcmp(cmd, "stack") == 0) {
+                int n = -1;
+                const char *p = lstrip(arg);
+                if (p && *p) n = atoi(p);
+                int count = vm->sp + 1;
+                if (count <= 0) { printf("(stack empty)\n"); continue; }
+                int start = 0;
+                if (n > 0 && n < count) start = count - n;
+                printf("Stack size=%d\n", count);
+                for (int i = start; i < count; ++i) {
+                    char *sv = value_to_string_alloc(&vm->stack[i]);
+                    printf("[%d] %s\n", i, sv ? sv : "nil");
+                    free(sv);
+                }
+                continue;
+            } else if (strcmp(cmd, "locals") == 0) {
+                int idx = vm->fp;
+                const char *p = lstrip(arg);
+                if (p && *p) {
+                    int v = atoi(p);
+                    if (v >= 0 && v <= vm->fp) idx = v;
+                }
+                if (idx < 0) { printf("(no current frame)\n"); continue; }
+                Frame *f = &vm->frames[idx];
+                const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
+                printf("Locals in frame #%d (%s):\n", idx, fname);
+                int any = 0;
+                for (int i = 0; i < MAX_FRAME_LOCALS; ++i) {
+                    if (f->locals[i].type != VAL_NIL) {
+                        char *sv = value_to_string_alloc(&f->locals[i]);
+                        printf("  %d: %s\n", i, sv ? sv : "nil");
+                        free(sv);
+                        any = 1;
+                    }
+                }
+                if (!any) printf("  (no non-nil locals)\n");
                 continue;
             } else {
                 printf("Unknown command. Use :help\n");

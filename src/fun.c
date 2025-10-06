@@ -24,11 +24,13 @@ static void print_usage(const char *prog) {
     printf("Fun %s\n", FUN_VERSION);
     printf("Usage:\n");
 #ifdef FUN_WITH_REPL
-    printf("  %s [--trace|-t] [script.fun]\n", prog ? prog : "fun");
+    printf("  %s [--trace|-t] [--repl-on-error] [script.fun]\n", prog ? prog : "fun");
     printf("  %s --help | -h\n", prog ? prog : "fun");
     printf("  %s --version | -V\n", prog ? prog : "fun");
     printf("\n");
-    printf("Options:\n  --trace, -t   Print executed ops and stack tops during run\n\n");
+    printf("Options:\n");
+    printf("  --trace, -t       Print executed ops and stack tops during run\n");
+    printf("  --repl-on-error   Enter interactive REPL on runtime error with stack preserved\n\n");
     printf("When no script is provided, a REPL starts. Submit an empty line to execute the buffer.\n");
 #else
     printf("  %s [--trace|-t] <script.fun>\n", prog ? prog : "fun");
@@ -59,6 +61,13 @@ int main(int argc, char **argv) {
             vm.trace_enabled = 1;
             continue;
         }
+#ifdef FUN_WITH_REPL
+        if (strcmp(arg, "--repl-on-error") == 0) {
+            vm.repl_on_error = 1;
+            vm.on_error_repl = fun_run_repl; /* provide REPL entry to core VM */
+            continue;
+        }
+#endif
         /* first non-option assumed to be script path */
         break;
     }
