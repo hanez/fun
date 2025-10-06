@@ -998,7 +998,7 @@ int fun_run_repl(VM *vm) {
 
         char prompt[64];
         if (buflen == 0) {
-            snprintf(prompt, sizeof(prompt), "fun> ");
+            snprintf(prompt, sizeof(prompt), "fun: ");
         } else if (indent_debt > 0) {
             snprintf(prompt, sizeof(prompt), "... %d> ", indent_debt);
         } else {
