@@ -829,25 +829,38 @@ static int buffer_looks_incomplete(const char *buf) {
 
 static void show_repl_help(void) {
     printf("Commands:\n");
-    printf("  :help                  Show this help\n");
-    printf("  :quit | :q | :exit     Exit the REPL\n");
-    printf("  :reset                 Reset VM state (clears globals)\n");
-    printf("  :dump  | :globals      Dump current globals\n");
-    printf("  :globals [pattern]     Dump globals filtering by value substring\n");
-    printf("  :vars [pattern]        Alias for :globals\n");
-    printf("  :clear                 Clear current input buffer\n");
-    printf("  :print                 Show current buffer\n");
-    printf("  :run                   Execute current buffer immediately\n");
-    printf("  :profile               Execute buffer and show timing + instruction count\n");
-    printf("  :save <file>           Save current buffer to file\n");
-    printf("  :load <file>           Load file into buffer (does not run)\n");
-    printf("  :paste [run]           Enter paste mode; end with a single '.' line (optional 'run')\n");
-    printf("  :history [N]           Show last N lines of history (default 50)\n");
-    printf("  :time on|off|toggle    Toggle/enable/disable timing\n");
-    printf("  :env [NAME[=VALUE]]    Get or set environment variable\n");
-    printf("  :backtrace | :bt       Show backtrace of VM frames (most recent first)\n");
-    printf("  :stack [N]             Show top N (default all) stack values\n");
-    printf("  :locals [FRAME]        Show locals of frame (default: current top frame)\n");
+    printf("  :help                    Show this help\n");
+    printf("  :quit | :q | :exit       Exit the REPL\n");
+    printf("  :reset                   Reset VM state (clears globals)\n");
+    printf("  :dump  | :globals        Dump current globals\n");
+    printf("  :globals [pattern]       Dump globals filtering by value substring\n");
+    printf("  :vars [pattern]          Alias for :globals\n");
+    printf("  :clear                   Clear current input buffer\n");
+    printf("  :print                   Show current buffer\n");
+    printf("  :run                     Execute current buffer immediately\n");
+    printf("  :profile                 Execute buffer and show timing + instruction count\n");
+    printf("  :save <file>             Save current buffer to file\n");
+    printf("  :load <file>             Load file into buffer (does not run)\n");
+    printf("  :paste [run]             Enter paste mode; end with a single '.' line (optional 'run')\n");
+    printf("  :history [N]             Show last N lines of history (default 50)\n");
+    printf("  :time on|off|toggle      Toggle/enable/disable timing\n");
+    printf("  :env [NAME[=VALUE]]      Get or set environment variable\n");
+    printf("  :backtrace | :bt         Show backtrace of VM frames (most recent first)\n");
+    printf("  :frame N                 Select frame N for :locals/:list/:disas (default: top)\n");
+    printf("  :list [±K]               Show K lines of source around current frame line (default 5)\n");
+    printf("  :disas [±N]              Disassemble around current frame ip (default 5)\n");
+    printf("  :stack [N]               Show top N (default all) stack values\n");
+    printf("  :top                     Show the top of the VM stack\n");
+    printf("  :locals [FRAME]          Show locals of frame (default: selected frame)\n");
+    printf("  :printv WHAT             Print value: local[i] | stack[i] | global[i]\n");
+    printf("  :break [file:]line       Set a breakpoint (default file = current frame file)\n");
+    printf("  :info breaks             List breakpoints\n");
+    printf("  :delete ID               Delete breakpoint by ID\n");
+    printf("  :clear breaks            Remove all breakpoints\n");
+    printf("  :cont                    Continue execution (exit REPL if in debug stop)\n");
+    printf("  :step                    Step one instruction\n");
+    printf("  :next                    Step over (current frame)\n");
+    printf("  :finish                  Run until the current frame returns\n");
 }
 
 static char *read_entire_file(const char *path, size_t *out_len) {
@@ -930,6 +943,7 @@ static void env_set(const char *name, const char *value) {
 
 int fun_run_repl(VM *vm) {
     int repl_timing = 0;
+    int selected_frame = -1; /* -1 means use current top frame */
 
     printf("Fun %s REPL\n", FUN_VERSION);
     printf("Type :help for commands. Submit an empty line to run.\n");
@@ -1283,7 +1297,7 @@ int fun_run_repl(VM *vm) {
                 }
                 continue;
             } else if (strcmp(cmd, "locals") == 0) {
-                int idx = vm->fp;
+                int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
                 const char *p = lstrip(arg);
                 if (p && *p) {
                     int v = atoi(p);
@@ -1303,6 +1317,174 @@ int fun_run_repl(VM *vm) {
                     }
                 }
                 if (!any) printf("  (no non-nil locals)\n");
+                continue;
+            } else if (strcmp(cmd, "frame") == 0) {
+                const char *p = lstrip(arg);
+                if (!p || !*p) { printf("Usage: :frame N\n"); continue; }
+                int v = atoi(p);
+                if (v < 0 || v > vm->fp) { printf("Invalid frame index. Current top is %d\n", vm->fp); continue; }
+                selected_frame = v;
+                Frame *f = &vm->frames[selected_frame];
+                const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
+                const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : "<unknown>";
+                printf("Selected frame #%d: %s (%s)\n", selected_frame, fname, sfile);
+                continue;
+            } else if (strcmp(cmd, "list") == 0) {
+                int k = 5;
+                const char *p = lstrip(arg);
+                if (p && *p) k = atoi(p);
+                if (k <= 0) k = 5;
+                int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+                if (idx < 0) { printf("(no current frame)\n"); continue; }
+                Frame *f = &vm->frames[idx];
+                if (!f->fn || !f->fn->source_file) { printf("(no source info)\n"); continue; }
+                /* derive current line for this frame by scanning LINE markers up to ip-1 */
+                int line = vm->current_line;
+                int upto = f->ip - 1;
+                if (upto < 0) upto = 0;
+                for (int i = 0; i <= upto && i < f->fn->instr_count; ++i) {
+                    Instruction ins = f->fn->instructions[i];
+                    if (ins.op == OP_LINE) line = ins.operand;
+                }
+                const char *path = f->fn->source_file;
+                size_t flen = 0;
+                char *src = read_entire_file(path, &flen);
+                if (!src) { printf("Unable to read %s\n", path); continue; }
+                int start = line - k; if (start < 1) start = 1;
+                int end = line + k;
+                int cur = 1;
+                const char *s = src;
+                while (*s && cur <= end) {
+                    const char *ls = s;
+                    while (*s && *s != '\n') s++;
+                    int print = (cur >= start && cur <= end);
+                    if (print) {
+                        printf("%c %5d | ", (cur == line ? '>' : ' '), cur);
+                        fwrite(ls, 1, (size_t)(s - ls), stdout);
+                        printf("\n");
+                    }
+                    if (*s == '\n') s++;
+                    cur++;
+                }
+                free(src);
+                continue;
+            } else if (strcmp(cmd, "disas") == 0 || strcmp(cmd, "disassemble") == 0) {
+                int n = 5;
+                const char *p = lstrip(arg);
+                if (p && *p) n = atoi(p);
+                if (n <= 0) n = 5;
+                int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+                if (idx < 0) { printf("(no current frame)\n"); continue; }
+                Frame *f = &vm->frames[idx];
+                if (!f->fn) { printf("(no function)\n"); continue; }
+                int curip = f->ip - 1; if (curip < 0) curip = 0;
+                int from = curip - n; if (from < 0) from = 0;
+                int to = curip + n; if (to >= f->fn->instr_count) to = f->fn->instr_count - 1;
+                for (int i = from; i <= to; ++i) {
+                    Instruction ins = f->fn->instructions[i];
+                    const char *opname = (ins.op >= 0 && ins.op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0])))
+                                         ? opcode_names[ins.op] : "???";
+                    printf("%c %6d: %-14s %d\n", (i == curip ? '>' : ' '), i, opname, ins.operand);
+                }
+                continue;
+            } else if (strcmp(cmd, "printv") == 0) {
+                const char *spec = lstrip(arg);
+                if (!spec || !*spec) { printf("Usage: :printv local[i] | stack[i] | global[i]\n"); continue; }
+                int idx = -1;
+                if (sscanf(spec, "local[%d]", &idx) == 1) {
+                    int fidx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+                    if (fidx < 0 || idx < 0 || idx >= MAX_FRAME_LOCALS) { printf("(out of range)\n"); continue; }
+                    Frame *f = &vm->frames[fidx];
+                    char *sv = value_to_string_alloc(&f->locals[idx]);
+                    printf("%s\n", sv ? sv : "nil");
+                    free(sv);
+                } else if (sscanf(spec, "stack[%d]", &idx) == 1) {
+                    if (idx < 0 || idx > vm->sp) { printf("(out of range)\n"); continue; }
+                    char *sv = value_to_string_alloc(&vm->stack[idx]);
+                    printf("%s\n", sv ? sv : "nil");
+                    free(sv);
+                } else if (sscanf(spec, "global[%d]", &idx) == 1) {
+                    if (idx < 0 || idx >= MAX_GLOBALS) { printf("(out of range)\n"); continue; }
+                    char *sv = value_to_string_alloc(&vm->globals[idx]);
+                    printf("%s\n", sv ? sv : "nil");
+                    free(sv);
+                } else {
+                    printf("Usage: :printv local[i] | stack[i] | global[i]\n");
+                }
+                continue;
+            } else if (strcmp(cmd, "top") == 0) {
+                if (vm->sp < 0) { printf("(stack empty)\n"); continue; }
+                char *sv = value_to_string_alloc(&vm->stack[vm->sp]);
+                printf("%s\n", sv ? sv : "nil");
+                free(sv);
+                continue;
+            } else if (strcmp(cmd, "break") == 0) {
+                const char *p = lstrip(arg);
+                if (!p || !*p) { printf("Usage: :break [file:]line\n"); continue; }
+                const char *colon = strchr(p, ':');
+                char filebuf[1024];
+                int line = 0;
+                if (colon) {
+                    size_t fl = (size_t)(colon - p);
+                    if (fl >= sizeof(filebuf)) fl = sizeof(filebuf) - 1;
+                    memcpy(filebuf, p, fl);
+                    filebuf[fl] = '\0';
+                    line = atoi(colon + 1);
+                } else {
+                    int idxf = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+                    if (idxf < 0) { printf("(no current frame)\n"); continue; }
+                    Frame *f = &vm->frames[idxf];
+                    const char *sf = (f->fn && f->fn->source_file) ? f->fn->source_file : NULL;
+                    if (!sf) { printf("(no current source file)\n"); continue; }
+                    snprintf(filebuf, sizeof(filebuf), "%s", sf);
+                    line = atoi(p);
+                }
+                if (line <= 0) { printf("Invalid line\n"); continue; }
+                int id = vm_debug_add_breakpoint(vm, filebuf, line);
+                if (id >= 0) printf("Breakpoint %d set at %s:%d\n", id, filebuf, line);
+                else printf("Failed to set breakpoint\n");
+                continue;
+            } else if (strcmp(cmd, "info") == 0) {
+                const char *what = lstrip(arg);
+                if (what && strcmp(what, "breaks") == 0) {
+                    vm_debug_list_breakpoints(vm);
+                } else {
+                    printf("Usage: :info breaks\n");
+                }
+                continue;
+            } else if (strcmp(cmd, "delete") == 0) {
+                int id = atoi(lstrip(arg));
+                if (vm_debug_delete_breakpoint(vm, id)) printf("Deleted breakpoint %d\n", id);
+                else printf("No such breakpoint %d\n", id);
+                continue;
+            } else if (strcmp(cmd, "clear") == 0) {
+                const char *what = lstrip(arg);
+                if (what && strcmp(what, "breaks") == 0) {
+                    vm_debug_clear_breakpoints(vm);
+                    printf("Cleared all breakpoints\n");
+                } else {
+                    printf("Usage: :clear breaks\n");
+                }
+                continue;
+            } else if (strcmp(cmd, "cont") == 0 || strcmp(cmd, "continue") == 0) {
+                vm_debug_request_continue(vm);
+                printf("Continuing...\n");
+                if (vm->on_error_repl) return 0; /* exit REPL to continue execution */
+                continue;
+            } else if (strcmp(cmd, "step") == 0) {
+                vm_debug_request_step(vm);
+                printf("Stepping one instruction...\n");
+                if (vm->on_error_repl) return 0;
+                continue;
+            } else if (strcmp(cmd, "next") == 0) {
+                vm_debug_request_next(vm);
+                printf("Stepping over...\n");
+                if (vm->on_error_repl) return 0;
+                continue;
+            } else if (strcmp(cmd, "finish") == 0) {
+                vm_debug_request_finish(vm);
+                printf("Running until current frame returns...\n");
+                if (vm->on_error_repl) return 0;
                 continue;
             } else {
                 printf("Unknown command. Use :help\n");

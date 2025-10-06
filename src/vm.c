@@ -180,6 +180,9 @@ void vm_reset(VM *vm) {
     vm_clear_output(vm);
     // Reset exit code
     vm->exit_code = 0;
+
+    // Reset debugger state (breakpoints, stepping)
+    vm_debug_reset(vm);
 }
 
 void vm_dump_globals(VM *vm) {
@@ -192,6 +195,88 @@ void vm_dump_globals(VM *vm) {
         }
     }
     printf("===============\n");
+}
+
+/* --- Debugger API impl --- */
+
+void vm_debug_reset(VM *vm) {
+    for (int i = 0; i < vm->break_count; ++i) {
+        if (vm->breakpoints[i].file) {
+            free(vm->breakpoints[i].file);
+            vm->breakpoints[i].file = NULL;
+        }
+        vm->breakpoints[i].active = 0;
+        vm->breakpoints[i].line = 0;
+    }
+    vm->break_count = 0;
+    vm->debug_step_mode = 0;
+    vm->debug_step_target_fp = -1;
+    vm->debug_step_start_ic = vm->instr_count;
+    vm->debug_stop_requested = 0;
+}
+
+int vm_debug_add_breakpoint(VM *vm, const char *file, int line) {
+    if (!file || line <= 0) return -1;
+    if (vm->break_count >= (int)(sizeof(vm->breakpoints)/sizeof(vm->breakpoints[0]))) return -1;
+    int id = vm->break_count++;
+    vm->breakpoints[id].file = strdup(file);
+    vm->breakpoints[id].line = line;
+    vm->breakpoints[id].active = 1;
+    return id;
+}
+
+int vm_debug_delete_breakpoint(VM *vm, int id) {
+    if (id < 0 || id >= vm->break_count) return 0;
+    if (vm->breakpoints[id].file) free(vm->breakpoints[id].file);
+    for (int i = id + 1; i < vm->break_count; ++i) {
+        vm->breakpoints[i - 1] = vm->breakpoints[i];
+    }
+    vm->break_count--;
+    if (vm->break_count >= 0) {
+        vm->breakpoints[vm->break_count].file = NULL;
+        vm->breakpoints[vm->break_count].line = 0;
+        vm->breakpoints[vm->break_count].active = 0;
+    }
+    return 1;
+}
+
+void vm_debug_clear_breakpoints(VM *vm) {
+    vm_debug_reset(vm);
+}
+
+void vm_debug_list_breakpoints(VM *vm) {
+    if (vm->break_count <= 0) {
+        printf("(no breakpoints)\n");
+        return;
+    }
+    for (int i = 0; i < vm->break_count; ++i) {
+        if (!vm->breakpoints[i].active) continue;
+        printf("  [%d] %s:%d\n", i, vm->breakpoints[i].file ? vm->breakpoints[i].file : "<unknown>", vm->breakpoints[i].line);
+    }
+}
+
+void vm_debug_request_step(VM *vm) {
+    vm->debug_step_mode = 1; // step
+    vm->debug_step_start_ic = vm->instr_count;
+    vm->debug_stop_requested = 0;
+}
+
+void vm_debug_request_next(VM *vm) {
+    vm->debug_step_mode = 2; // next (step over)
+    vm->debug_step_target_fp = vm->fp;
+    vm->debug_step_start_ic = vm->instr_count;
+    vm->debug_stop_requested = 0;
+}
+
+void vm_debug_request_finish(VM *vm) {
+    vm->debug_step_mode = 3; // finish (until return)
+    vm->debug_step_target_fp = vm->fp;
+    vm->debug_stop_requested = 0;
+}
+
+void vm_debug_request_continue(VM *vm) {
+    vm->debug_step_mode = 0;
+    vm->debug_stop_requested = 0;
 }
 
 static void push_value(VM *vm, Value v) {
@@ -225,6 +310,19 @@ void vm_init(VM *vm) {
     vm->trace_enabled = 0;
     vm->repl_on_error = 0;
     vm->on_error_repl = NULL;
+
+    /* Debugger state */
+    vm->debug_step_mode = 0;
+    vm->debug_step_target_fp = -1;
+    vm->debug_step_start_ic = 0;
+    vm->debug_stop_requested = 0;
+    vm->break_count = 0;
+    for (int i = 0; i < (int)(sizeof(vm->breakpoints)/sizeof(vm->breakpoints[0])); ++i) {
+        vm->breakpoints[i].file = NULL;
+        vm->breakpoints[i].line = 0;
+        vm->breakpoints[i].active = 0;
+    }
+
     for (int i = 0; i < MAX_GLOBALS; ++i)
         vm->globals[i] = make_nil();
 }
@@ -292,6 +390,31 @@ void vm_run(VM *vm, Bytecode *entry) {
     while (vm->fp >= 0) {
         Frame *f = &vm->frames[vm->fp];
 
+        /* Stop conditions at top of loop (stepping/finish) */
+        if (vm->on_error_repl) {
+            int should_stop = 0;
+            if (vm->debug_stop_requested) {
+                should_stop = 1;
+            } else if (vm->debug_step_mode == 1 && vm->instr_count > vm->debug_step_start_ic) { /* step */
+                should_stop = 1;
+                vm->debug_step_mode = 0;
+            } else if (vm->debug_step_mode == 2 && vm->instr_count > vm->debug_step_start_ic && vm->fp <= vm->debug_step_target_fp) { /* next */
+                should_stop = 1;
+                vm->debug_step_mode = 0;
+            } else if (vm->debug_step_mode == 3 && vm->fp < vm->debug_step_target_fp) { /* finish */
+                should_stop = 1;
+                vm->debug_step_mode = 0;
+            }
+            if (should_stop) {
+                vm->debug_stop_requested = 0;
+                fprintf(stderr, "Paused (debug)\n");
+                vm->on_error_repl(vm);
+                /* Frame pointer might have changed (reset/cont); refresh f */
+                if (vm->fp < 0) break;
+                f = &vm->frames[vm->fp];
+            }
+        }
+
         if (f->ip < 0 || f->ip >= f->fn->instr_count) {
             /* no more instructions in this frame -> implicit return nil */
             Value nilv = make_nil();
@@ -319,6 +442,24 @@ void vm_run(VM *vm, Bytecode *entry) {
                 free(sv);
             }
             fprintf(stdout, "]\n");
+        }
+
+        /* Breakpoint hit detection: breakpoints are set on source_file:line via LINE markers */
+        if (vm->on_error_repl && inst.op == OP_LINE && vm->break_count > 0) {
+            const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : NULL;
+            int line = inst.operand;
+            for (int bi = 0; bi < vm->break_count; ++bi) {
+                if (!vm->breakpoints[bi].active) continue;
+                if (vm->breakpoints[bi].line != line) continue;
+                if (!sfile || !vm->breakpoints[bi].file) continue;
+                if (strcmp(vm->breakpoints[bi].file, sfile) != 0) continue;
+                fprintf(stderr, "Breakpoint %d hit at %s:%d\n", bi, sfile, line);
+                vm->on_error_repl(vm);
+                /* After returning, refresh frame pointer and frame */
+                if (vm->fp < 0) break;
+                f = &vm->frames[vm->fp];
+                break;
+            }
         }
 
         switch (inst.op) {

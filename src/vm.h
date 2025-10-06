@@ -70,6 +70,19 @@ struct VM {
     int trace_enabled; // when non-zero, print executed ops and stack
     int repl_on_error; // when non-zero, enter REPL on runtime error (preserve stack)
     int (*on_error_repl)(struct VM *vm); // optional hook to run REPL on error
+
+    /* --- Debugger state --- */
+    int debug_step_mode;        // 0 none, 1 step, 2 next, 3 finish
+    int debug_step_target_fp;   // target frame pointer for next/finish
+    long long debug_step_start_ic; // instruction count snapshot when step/next requested
+    int debug_stop_requested;   // force a pause at loop top
+
+    struct {
+        char *file;             // strdup'ed file path
+        int line;               // 1-based line
+        int active;             // 1 if active
+    } breakpoints[64];
+    int break_count;            // number of active breakpoints
 };
 
 typedef struct VM VM;
@@ -89,6 +102,17 @@ void vm_reset(VM *vm);
 void vm_dump_globals(VM *vm);
 // run entry Bytecode (pushes first frame)
 void vm_run(VM *vm, Bytecode *entry);
+
+/* --- Debugger API --- */
+void vm_debug_reset(VM *vm);
+int  vm_debug_add_breakpoint(VM *vm, const char *file, int line); // returns id >=0 or -1
+int  vm_debug_delete_breakpoint(VM *vm, int id);                   // returns 1 on success
+void vm_debug_clear_breakpoints(VM *vm);
+void vm_debug_list_breakpoints(VM *vm);
+void vm_debug_request_step(VM *vm);
+void vm_debug_request_next(VM *vm);
+void vm_debug_request_finish(VM *vm);
+void vm_debug_request_continue(VM *vm);
 
 static inline int opcode_is_valid(int op) {
     return op >= OP_NOP && op <= OP_EXIT;  // all current opcodes
