@@ -138,7 +138,7 @@ cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON
 That's it! For testing it, run:
 
 ```bash
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
 ```
 
 To see what's going on, run:
