@@ -1,4 +1,4 @@
-# Fun
+# Fun ([https://fun-lang.xyz](https://fun-lang.xyz))
 
 ## What is Fun?
 
@@ -119,27 +119,51 @@ Linux/UNIX only covered here for now.
 
 Clone repository:
 
-```
+```bash
 git clone https://git.xw3.org/fun/fun.git
 ```
 
 Change directory:
 
-```
+```bash
 cd fun
 ```
 
 Build:
 
-```
-make # gmake on FreeBSD
+```bash
+cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON
 ```
 
-That's it! For testing it run:
+That's it! For testing it, run:
 
+```bash
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
 ```
-./build/fun ./demo.fun
+
+To see what's going on, run:
+
+```bash
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun --trace ./demo.fun
 ```
+
+To switch into the REPL after an error, run:
+
+```bash
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
+```
+
+Both --repl-on-error and --trace are optional but can always be combined. To get 
+more debug information, you need to build Fun with -DFUN_DEBUG=ON.
+
+To directly run the REPL, you have to run:
+
+```bash
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun
+```
+
+But be sure to build Fun with -DFUN_WITH_REPL=ON.
+
 ## Author
 
 Johannes Findeisen - you@hanez.org
