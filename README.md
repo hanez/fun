@@ -179,6 +179,15 @@ cmake --build build --target fun
 sudo cmake --build build --target install
 ```
 
+### Usage
+
+Now without prefixed FUN_LIB_DIR="$(pwd)/lib" because libs are installed to the 
+system default lib directory (/usr/share/fun/lib).
+
+```bash
+fun ./demo.fun
+```
+
 ## Author
 
 Johannes Findeisen - you@hanez.org
