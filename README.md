@@ -165,6 +165,20 @@ FUN_LIB_DIR="$(pwd)/lib" ./build/fun
 
 But be sure to build Fun with -DFUN_WITH_REPL=ON.
 
+## Installation
+
+I do not recommend installing Fun on your system because it is in a very early 
+stage of development, but I can say that I have Fun installed on my system. If 
+you want to do that too, type:
+
+```bash
+git clone https://git.xw3.org/fun/fun.git
+cd fun
+cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON
+cmake --build build --target fun
+sudo cmake --build build --target install
+```
+
 ## Author
 
 Johannes Findeisen - you@hanez.org
