@@ -9,6 +9,14 @@
  * Added: 2025-10-02
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+  #define popen  _popen
+  #define pclose _pclose
+#endif
+
 case OP_PROC_RUN: {
     /* Pops command string; pushes map {"out": string, "code": int} */
     Value cmdv = pop_value(vm);
