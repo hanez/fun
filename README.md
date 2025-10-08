@@ -20,7 +20,7 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0-License](ht
 - Dynamic and optionally statically typed
 - Type safety
 - Written in C (C11) and Fun
-- Internal libs are written with no_camel_case even when written in Fun, except class Names
+- Internal libs are written with no_camel_case even when written in Fun, except class names
 - Only a minimal function set is written in C, and most other core functions and libraries are implemented in Fun
 
 ## The Fun Manifesto
@@ -154,7 +154,7 @@ To switch into the REPL after an error, run:
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
 ```
 
-Both --repl-on-error and --trace are optional but can always be combined. To get 
+Both --repl-on-error and --trace are optional but can always be combined. To get
 more debug information, you need to build Fun with -DFUN_DEBUG=ON.
 
 To directly run the REPL, you have to run:
@@ -167,8 +167,8 @@ But be sure to build Fun with -DFUN_WITH_REPL=ON.
 
 ## Installation
 
-I do not recommend installing Fun on your system because it is in a very early 
-stage of development, but I can say that I have Fun installed on my system. If 
+I do not recommend installing Fun on your system because it is in a very early
+stage of development, but I can say that I have Fun installed on my system. If
 you want to do that too, type:
 
 ```bash
@@ -181,7 +181,7 @@ sudo cmake --build build --target install
 
 ### Usage
 
-Now run Fun without prefixed FUN_LIB_DIR="$(pwd)/lib" because libs are installed to the 
+Now run Fun without prefixed FUN_LIB_DIR="$(pwd)/lib" because libs are installed to the
 system default lib directory (/usr/share/fun/lib).
 
 ```bash
