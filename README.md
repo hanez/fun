@@ -57,6 +57,8 @@ Fun is not about being the fastest or the most feature-rich. It’s about sharin
 
 Like the name says: Fun Unites Nerds.
 
+Please visit the [Fun Community Page](https://fun-lang.xyz/community/) to get in touch.
+
 ## The Goal
 
 A language that feels like home for developers who:
@@ -71,9 +73,9 @@ Fun may not change the world — but it will make programming a little more fun.
 
 I am writing documentation only actually, but this is work in progress, since debugging and bug fixing includes this task.
 
-Current documentation is only found in the [Fun Handbook](/fun/fun/src/branch/main/docs/handbook.md).
+Current documentation is only found in the [Fun Handbook](https://fun-lang.xyz//fun/fun/src/branch/main/docs/handbook.md).
 
-In the [examples/](/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
+In the [examples/](https://fun-lang.xyz//fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
 
 A complete API documentation will follow.
 
@@ -156,4 +158,5 @@ But be sure to build Fun with -DFUN_WITH_REPL=ON.
 
 ## Author
 
-Johannes Findeisen - you@hanez.org
+Johannes Findeisen <you@hanez.org>
+
