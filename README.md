@@ -69,32 +69,17 @@ Fun may not change the world — but it will make programming a little more fun.
 
 ## Documentation
 
-Actually, there does not exist any documentation. In the [examples/](https://git.xw3.org/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
+I am writing documentation only actually, but this is work in progress, since debugging and bug fixing includes this task.
+
+Current documentation is only found in the [Fun Handbook](/fun/fun/src/branch/main/docs/handbook.md).
+
+In the [examples/](/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
+
+A complete API documentation will follow.
 
 ## Development
 
 This section is a work in progress... Please excuse the lack of more information. There are daily updates here.
-
-### Requirements
-
-A C compiler, a libc and [Git](https://git-scm.com/).
-
-#### FreeBSD
-
-- [CMake](https://cmake.org/)
-- [Clang](https://clang.llvm.org/)
-
-#### Linux
-
-- [CMake](https://cmake.org/)
-- [GCC](https://gcc.gnu.org/) (Clang should work here too, not tested!)
-
-#### Windows
-
-This requires Cygwin to be installed and configured. I will not cover this here.
-
-- [CMake](https://cmake.org/)
-- [Cygwin](https://cygwin.com/) using [GCC](https://gcc.gnu.org/)
 
 ### Rules
 
@@ -168,29 +153,6 @@ FUN_LIB_DIR="$(pwd)/lib" ./build/fun
 ```
 
 But be sure to build Fun with -DFUN_WITH_REPL=ON.
-
-## Installation
-
-I do not recommend installing Fun on your system because it is in a very early
-stage of development, but I can say that I have Fun installed on my system. If
-you want to do that too, type:
-
-```bash
-git clone https://git.xw3.org/fun/fun.git
-cd fun
-cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON
-cmake --build build --target fun
-sudo cmake --build build --target install
-```
-
-### Usage
-
-Now run Fun without prefixed FUN_LIB_DIR="$(pwd)/lib" because libs are installed to the
-system default lib directory (/usr/share/fun/lib).
-
-```bash
-fun ./demo.fun
-```
 
 ## Author
 
