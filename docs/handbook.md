@@ -46,7 +46,7 @@ cd fun
 Build:
 
 ```bash
-cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON &&
+cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON
 cmake --build build --target fun
 ```
 
