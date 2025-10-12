@@ -9,14 +9,6 @@
  * Added: 2025-10-04
  */
 
-#include <string.h>
-#ifdef __unix__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
-#endif
-
 case OP_SOCK_UNIX_LISTEN: {
     /* Pops backlog, path; returns listen fd (>0) or 0 */
     Value backlogv = pop_value(vm);

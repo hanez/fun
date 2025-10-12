@@ -9,17 +9,6 @@
  * Added: 2025-10-04
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
-#ifdef __unix__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#endif
-
 case OP_SOCK_TCP_LISTEN: {
     /* Pops backlog, port; pushes listen fd (>0) or 0 */
     Value backlogv = pop_value(vm);

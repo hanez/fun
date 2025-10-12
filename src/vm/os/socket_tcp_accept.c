@@ -9,12 +9,6 @@
  * Added: 2025-10-04
  */
 
-#ifdef __unix__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#endif
-
 case OP_SOCK_TCP_ACCEPT: {
     /* Pops listen fd; pushes client fd (>0) or 0 */
     Value fdv = pop_value(vm);

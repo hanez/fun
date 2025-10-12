@@ -9,14 +9,6 @@
  * Added: 2025-10-04
  */
 
-#include <stdlib.h>
-
-#ifdef __unix__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#endif
-
 case OP_SOCK_RECV: {
     /* Pops maxlen, fd; pushes data string ("" on EOF/error) */
     Value maxv = pop_value(vm);

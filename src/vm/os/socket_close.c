@@ -9,10 +9,6 @@
  * Added: 2025-10-04
  */
 
-#ifdef __unix__
-#include <unistd.h>
-#endif
-
 case OP_SOCK_CLOSE: {
     /* Pops fd; returns 1/0 */
     Value fdv = pop_value(vm);

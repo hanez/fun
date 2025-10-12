@@ -9,14 +9,6 @@
  * Added: 2025-10-04
  */
 
-#include <string.h>
-
-#ifdef __unix__
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#endif
-
 case OP_SOCK_SEND: {
     /* Pops data string, fd; pushes bytes sent (>=0) or -1 */
     Value datav = pop_value(vm);
