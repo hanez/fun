@@ -83,8 +83,8 @@ This section is a work in progress... Please excuse the lack of more information
 
 ### Rules
 
-- Every commit requires a version incremantion in CMakeLists.txt before committing
 - Every commit message must contain the version at the end in the following format (1.2.3)
+- Every commit requires a version incrementation in CMakeLists.txt before committing. Documentation updates do not increment the version but must contain the version in each commit message.
 - Version numbering follows "[Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)"
 
 ### Development systems

@@ -29,7 +29,7 @@ This requires Cygwin to be installed and configured. I will not cover this here.
 
 ### Build Fun
 
-Linux/UNIX only covered here for now.
+Linux/UNIX and Cygwin only covered here for now.
 
 Clone repository:
 
