@@ -25,7 +25,6 @@
  *     print(resp)
  *     c.close()
  */
-
 class TcpClient()
   // file descriptor or 0 if not connected
   fd = 0
@@ -71,6 +70,48 @@ class TcpClient()
       sock_close(this.fd)
       this.fd = 0
     return 1
+
+// TcpServer: simple wrapper around TCP socket built-ins.
+// Exposes listen(), accept(), echo_once(maxlen), serve_forever(maxlen), close().
+class TcpServer(number port, number backlog)
+
+  fun _construct(this, port, backlog)
+    this.port = port
+    this.backlog = backlog
+    this.listen_fd = 0
+
+  fun listen(this)
+    this.listen_fd = tcp_listen(this.port, this.backlog)
+    return this.listen_fd
+
+  fun accept(this)
+    return tcp_accept(this.listen_fd)
+
+  fun close(this)
+    if (this.listen_fd > 0)
+      sock_close(this.listen_fd)
+      this.listen_fd = 0
+
+  fun echo_once(this, maxlen)
+    c = this.accept()
+    if (c <= 0)
+      return 0
+
+    data = sock_recv(c, maxlen)
+    if (len(data) > 0)
+      sock_send(c, data)
+
+    sock_close(c)
+    return 1
+
+  fun serve_forever(this, maxlen)
+    if (this.listen_fd <= 0)
+      if (this.listen() <= 0)
+        print("TcpServer: listen failed on port " + to_string(this.port))
+        return 0
+      print("TcpServer: listening on port " + to_string(this.port))
+    while (true)
+      this.echo_once(maxlen)
 
 class UnixClient()
   fd = 0
