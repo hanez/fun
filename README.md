@@ -17,7 +17,9 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](ht
 
 ### Extras
 
-- PC/SC smart card support builtin (optional)
+- [PC/SC](https://pcsclite.apdu.fr/) smart card support builtin (optional, in progress)
+- [SQLite](https://sqlite.org/) support builtin (optional, planned)
+- Some [GUI/Widget toolkit](https://en.wikipedia.org/wiki/Widget_toolkit) (optional, planned and in evaluation)
 
 ## Characteristics
 
