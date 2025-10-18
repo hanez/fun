@@ -694,7 +694,7 @@ static char *preprocess_includes_internal(const char *src, int depth) {
     return out.buf;
 }
 
-static char *preprocess_includes(const char *src) {
+char *preprocess_includes(const char *src) {
     return preprocess_includes_internal(src, 0);
 }
 

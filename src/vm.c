@@ -19,6 +19,10 @@
 #include <string.h>
 #include <stdarg.h>
 
+/* forward declarations for include mapping used in error reporting */
+extern char *preprocess_includes(const char *src);
+static int map_expanded_line_to_include(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line);
+
 #ifdef __unix__
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -66,6 +70,15 @@ static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
                 }
                 /* fallback to VM's last recorded line if no marker found */
                 if (line <= 0) line = g_active_vm->current_line > 0 ? g_active_vm->current_line : 1;
+
+                /* If this function was compiled from an include-expanded source, map to the included file */
+                if (sfile && line > 0) {
+                    char mapped_path[1024]; int mapped_line = line;
+                    if (map_expanded_line_to_include(sfile, line, mapped_path, sizeof(mapped_path), &mapped_line)) {
+                        sfile = strdup(mapped_path); /* leak on purpose for simplicity; this is rare */
+                        line = mapped_line;
+                    }
+                }
             }
         }
         fprintf(stream == stderr ? stderr : stream,
@@ -85,6 +98,74 @@ static int fun_vm_fprintf(FILE *stream, const char *fmt, ...) {
     int r = fun_vm_vfprintf(stream, fmt, ap);
     va_end(ap);
     return r;
+}
+
+/* Helper: try to map expanded source line to included file:line using preprocessor markers */
+static int map_expanded_line_to_include(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line) {
+    if (!path || line <= 0 || !out_path || out_path_cap == 0 || !out_line) return 0;
+    out_path[0] = '\0';
+    *out_line = line;
+
+    /* read original file */
+    FILE *f = fopen(path, "rb");
+    if (!f) return 0;
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    if (sz < 0) { fclose(f); return 0; }
+    rewind(f);
+    char *buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) { fclose(f); return 0; }
+    size_t n = fread(buf, 1, (size_t)sz, f);
+    fclose(f);
+    buf[n] = '\0';
+
+    char *prep = preprocess_includes(buf);
+    free(buf);
+    if (!prep) return 0;
+
+    /* find start offset of requested 1-based line */
+    size_t len = strlen(prep);
+    size_t pos = 0; int cur = 1;
+    while (pos < len && cur < line) {
+        if (prep[pos] == '\n') cur++;
+        pos++;
+    }
+    if (cur != line) { free(prep); return 0; }
+
+    /* scan backward to find last include marker line */
+    const char *marker = "// __include_begin__: ";
+    size_t mlen = strlen(marker);
+    size_t scan = pos;
+    while (scan > 0) {
+        /* find start of this line */
+        size_t ls = scan;
+        while (ls > 0 && prep[ls - 1] != '\n') ls--;
+        /* check marker */
+        if (ls + mlen <= len && strncmp(prep + ls, marker, mlen) == 0) {
+            /* extract included path up to EOL or ' as ' */
+            size_t p = ls + mlen;
+            size_t pe = p;
+            while (pe < len && prep[pe] != '\n' && !(prep[pe] == ' ' && pe + 3 < len && strncmp(prep + pe, " as ", 4) == 0)) pe++;
+            size_t copy = (pe - p) < (out_path_cap - 1) ? (pe - p) : (out_path_cap - 1);
+            memcpy(out_path, prep + p, copy);
+            out_path[copy] = '\0';
+            /* compute inner line as number of newlines from end of marker line to current pos */
+            int inner = 1;
+            size_t q = pe;
+            /* skip to next line start */
+            while (q < len && prep[q] != '\n') q++;
+            if (q < len && prep[q] == '\n') q++;
+            while (q < pos) { if (prep[q] == '\n') inner++; q++; }
+            *out_line = inner;
+            free(prep);
+            return 1;
+        }
+        if (ls == 0) break;
+        scan = (ls > 0) ? (ls - 1) : 0;
+    }
+
+    free(prep);
+    return 0;
 }
 
 /* Redirect fprintf within this translation unit so opcode handlers use our wrapper */

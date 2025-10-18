@@ -93,11 +93,22 @@ class PCSC()
     if (readers == nil)
       print([])
       _ = pcsc_release(ctx)
-      return 0
+      // return a default result map instead of 0, so callers can index fields safely
+      m = {}
+      m["data"] = []
+      m["sw1"] = -1
+      m["sw2"] = -1
+      m["code"] = -2
+      return m
     if (len(readers) == 0)
       print([])
       _ = pcsc_release(ctx)
-      return 0
+      m = {}
+      m["data"] = []
+      m["sw1"] = -1
+      m["sw2"] = -1
+      m["code"] = -2
+      return m
     // Actually selecting the second reader hardcode. This class is not in a very early stage of development. 
     handle = pcsc_connect(ctx, readers[1])
     apdu = this.hex_to_bytes(hex_apdu)
