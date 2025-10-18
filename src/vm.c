@@ -39,33 +39,39 @@ static VM *g_active_vm = NULL;
 /* fprintf wrapper that appends source line info for stderr messages */
 static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
     int written = vfprintf(stream, fmt, ap);
-    if (stream == stderr && g_active_vm && g_active_vm->current_line > 0) {
-        /* Append more context: line number, opcode name, and ip */
+    if (stream == stderr && g_active_vm) {
+        /* Determine current frame and instruction pointer of the faulting op */
         const char *opname = "unknown";
-        int ip = -1;
-        if (g_active_vm->fp >= 0) {
-            Frame *f = &g_active_vm->frames[g_active_vm->fp];
-            ip = f->ip - 1;
-            if (f->fn && ip >= 0 && ip < f->fn->instr_count) {
-                int op = f->fn->instructions[ip].op;
-                if (op >= 0 && op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0]))) {
-                    opname = opcode_names[op];
-                }
-            }
-        }
         const char *fname = NULL;
         const char *sfile = NULL;
+        int ip = -1;
+        int line = -1;
         if (g_active_vm->fp >= 0) {
             Frame *f = &g_active_vm->frames[g_active_vm->fp];
+            ip = f->ip - 1; /* last executed instruction */
             if (f->fn) {
                 fname = f->fn->name;
                 sfile = f->fn->source_file;
+                /* derive opcode name */
+                if (ip >= 0 && ip < f->fn->instr_count) {
+                    int op = f->fn->instructions[ip].op;
+                    if (op >= 0 && op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0]))) {
+                        opname = opcode_names[op];
+                    }
+                }
+                /* derive source line by scanning back to the most recent OP_LINE marker */
+                for (int i = ip; i >= 0; --i) {
+                    Instruction prev = f->fn->instructions[i];
+                    if (prev.op == OP_LINE) { line = prev.operand; break; }
+                }
+                /* fallback to VM's last recorded line if no marker found */
+                if (line <= 0) line = g_active_vm->current_line > 0 ? g_active_vm->current_line : 1;
             }
         }
         fprintf(stream == stderr ? stderr : stream,
                 " (at %s:%d in %s, op %s @ip %d)\n",
                 sfile ? sfile : "<unknown>",
-                g_active_vm->current_line,
+                line > 0 ? line : 1,
                 fname ? fname : "<entry>",
                 opname,
                 ip);
