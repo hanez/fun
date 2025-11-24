@@ -141,6 +141,12 @@ typedef enum {
     OP_ROTL,          // pops s, a; pushes rotl32(a, s)
     OP_ROTR,          // pops s, a; pushes rotr32(a, s)
 
+    // JSON (json-c)
+    OP_JSON_PARSE,       // pops text string; pushes value (or Nil on error)
+    OP_JSON_STRINGIFY,   // pops pretty(bool), value; pushes string
+    OP_JSON_FROM_FILE,   // pops path string; pushes value (or Nil)
+    OP_JSON_TO_FILE,     // pops pretty(bool), value, path; pushes 1/0
+
     // PCSC (smart card) opcodes
     OP_PCSC_ESTABLISH,    // returns context id (>0) or 0
     OP_PCSC_RELEASE,      // pops ctx id; returns 1/0

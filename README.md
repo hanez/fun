@@ -127,9 +127,17 @@ cd fun
 Build:
 
 ```bash
-cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON
+# Note: Every -D flag must be of the form NAME=VALUE (e.g., -DFUN_WITH_REPL=ON)
+cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_JSON=ON
 cmake --build build --target fun
 ```
+
+CMake options you can toggle (all require NAME=VALUE):
+
+- FUN_DEBUG=ON|OFF — verbose debug logging in the VM (default OFF)
+- FUN_WITH_REPL=ON|OFF — enable building the interactive REPL (default ON)
+- FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card support (default OFF)
+- FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default ON)
 
 That's it! For testing it, run:
 
@@ -159,6 +167,15 @@ FUN_LIB_DIR="$(pwd)/lib" ./build/fun
 ```
 
 But be sure to build Fun with -DFUN_WITH_REPL=ON.
+
+Tip: If you saw an error like this when configuring with CMake:
+
+  CMake Error: Parse error in command line argument: FUN_WITH_JSON
+  Should be: VAR:type=value
+
+it means a -D flag was passed without a value. Always specify options as -DNAME=VALUE, for example:
+
+  -DFUN_WITH_JSON=ON
 
 ## Author
 

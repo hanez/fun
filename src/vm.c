@@ -12,6 +12,7 @@
 #include "map.c"
 #include "string.c"
 #include "pcsc.c"
+#include "jsonc.c"
 #include "vm.h"
 #include "value.h"
 #include <stdio.h>
@@ -659,6 +660,12 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/pcsc/connect.c"
             #include "vm/pcsc/disconnect.c"
             #include "vm/pcsc/transmit.c"
+
+            /* JSON ops (implemented in jsonc.c, included above) */
+            #include "vm/json/parse.c"
+            #include "vm/json/stringify.c"
+            #include "vm/json/from_file.c"
+            #include "vm/json/to_file.c"
 
             #include "vm/strings/find.c"
             #include "vm/strings/regex_match.c"

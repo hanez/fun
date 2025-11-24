@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.27.2 LANGUAGES C)
+project(fun VERSION 0.28.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -44,6 +44,27 @@ if(FUN_WITH_PCSC)
     endif()
 endif()
 
+# Optional JSON (json-c) support
+option(FUN_WITH_JSON "Enable JSON (json-c) support" OFF)
+set(JSONC_INCLUDE_DIRS "")
+set(JSONC_LINK_LIBS "")
+if(FUN_WITH_JSON)
+  message(STATUS "Building with JSON (json-c) support")
+  add_definitions(-DFUN_WITH_JSON)
+  find_package(PkgConfig QUIET)
+  if(PKG_CONFIG_FOUND)
+    pkg_check_modules(JSONC QUIET json-c)
+  endif()
+  if(JSONC_FOUND)
+    list(APPEND JSONC_INCLUDE_DIRS ${JSONC_INCLUDE_DIRS} ${JSONC_INCLUDE_DIRS})
+    list(APPEND JSONC_LINK_LIBS ${JSONC_LINK_LIBS} ${JSONC_LIBRARIES})
+    include_directories(${JSONC_INCLUDE_DIRS})
+  else()
+    # Fallback: try plain -ljson-c
+    list(APPEND JSONC_LINK_LIBS json-c)
+  endif()
+endif()
+
 # Debug option to enable verbose parser/VM logging
 option(FUN_DEBUG "Enable extra debug logging in Fun" OFF)
 
@@ -79,6 +100,14 @@ if(PCSC_INCLUDE_DIRS)
 endif()
 if(PCSC_LINK_LIBS)
   target_link_libraries(fun_core PUBLIC ${PCSC_LINK_LIBS})
+endif()
+
+# json-c include and link (if enabled)
+if(JSONC_INCLUDE_DIRS)
+  target_include_directories(fun_core PRIVATE ${JSONC_INCLUDE_DIRS})
+endif()
+if(JSONC_LINK_LIBS)
+  target_link_libraries(fun_core PUBLIC ${JSONC_LINK_LIBS})
 endif()
 
 # Link threads if available on UNIX

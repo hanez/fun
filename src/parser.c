@@ -739,6 +739,45 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* JSON builtins */
+            if (strcmp(name, "json_parse") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_parse expects (text)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after json_parse arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_JSON_PARSE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "json_stringify") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_stringify expects (value, pretty)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "json_stringify expects (value, pretty)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_stringify expects (value, pretty)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after json_stringify args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_JSON_STRINGIFY, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "json_from_file") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_from_file expects (path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after json_from_file arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_JSON_FROM_FILE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "json_to_file") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_to_file expects (path, value, pretty)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "json_to_file expects (path, value, pretty)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_to_file expects (path, value, pretty)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "json_to_file expects (path, value, pretty)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_to_file expects (path, value, pretty)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after json_to_file args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_JSON_TO_FILE, 0);
+                free(name);
+                return 1;
+            }
             /* PCSC builtins */
             if (strcmp(name, "pcsc_establish") == 0) {
                 (*pos)++; /* '(' */
