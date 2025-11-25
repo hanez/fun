@@ -137,7 +137,7 @@ CMake options you can toggle (all require NAME=VALUE):
 - FUN_DEBUG=ON|OFF — verbose debug logging in the VM (default OFF)
 - FUN_WITH_REPL=ON|OFF — enable building the interactive REPL (default ON)
 - FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card support (default OFF)
-- FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default ON)
+- FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default OFF)
 
 That's it! For testing it, run:
 
