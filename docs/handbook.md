@@ -47,7 +47,7 @@ Build:
 
 ```bash
 # Note: Every -D flag must be of the form NAME=VALUE (e.g., -DFUN_WITH_REPL=ON)
-cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_JSON=ON
+cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_JSON=ON -DFUN_WITH_PCRE2=ON
 cmake --build build --target fun
 ```
 
@@ -86,6 +86,7 @@ All CMake options must be passed as -DNAME=VALUE:
 
 - FUN_DEBUG=ON|OFF — verbose debug logging in the VM (default OFF)
 - FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default ON)
+- FUN_WITH_PCRE2=ON|OFF — enable PCRE2 Perl-Compatible Regular Expressions support (default OFF)
 - FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card support (default OFF)
 - FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default OFF)
 

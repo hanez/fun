@@ -151,6 +151,9 @@ static const char *opcode_name(OpCode op) {
         case OP_PCSC_CONNECT: return "PCSC_CONNECT";
         case OP_PCSC_DISCONNECT: return "PCSC_DISCONNECT";
         case OP_PCSC_TRANSMIT: return "PCSC_TRANSMIT";
+        case OP_PCRE2_TEST: return "PCRE2_TEST";
+        case OP_PCRE2_MATCH: return "PCRE2_MATCH";
+        case OP_PCRE2_FINDALL: return "PCRE2_FINDALL";
         default: return "???";
     }
 }

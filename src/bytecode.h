@@ -155,6 +155,11 @@ typedef enum {
     OP_PCSC_DISCONNECT,   // pops handle id; returns 1/0
     OP_PCSC_TRANSMIT,     // pops apdu array, handle id; returns map {"data":[],"sw1":n,"sw2":n,"code":n}
 
+    // PCRE2 regex ops (optional)
+    OP_PCRE2_TEST,        // pops flags, text, pattern; pushes 1/0
+    OP_PCRE2_MATCH,       // pops flags, text, pattern; pushes match map or Nil
+    OP_PCRE2_FINDALL,     // pops flags, text, pattern; pushes array of match maps
+
     // Sockets (UNIX platforms)
     OP_SOCK_TCP_LISTEN,    // pops backlog, port; returns listen fd (>0) or 0
     OP_SOCK_TCP_ACCEPT,    // pops listen fd; returns client fd (>0) or 0

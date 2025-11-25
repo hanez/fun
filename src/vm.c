@@ -20,6 +20,18 @@
 #include <string.h>
 #include <stdarg.h>
 
+/* Ensure PCRE2 is configured consistently across the whole translation unit.
+ * vm.c includes many opcode implementation .c files; some use PCRE2. For PCRE2
+ * headers to expose the correct typedefs (e.g., pcre2_code, PCRE2_SPTR), the
+ * PCRE2_CODE_UNIT_WIDTH macro must be defined before the first inclusion of
+ * <pcre2.h>. We do this once here when PCRE2 support is enabled. */
+#ifdef FUN_WITH_PCRE2
+#ifndef PCRE2_CODE_UNIT_WIDTH
+#define PCRE2_CODE_UNIT_WIDTH 8
+#endif
+#include <pcre2.h>
+#endif
+
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
 static int map_expanded_line_to_include(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line);
@@ -666,6 +678,11 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/json/stringify.c"
             #include "vm/json/from_file.c"
             #include "vm/json/to_file.c"
+
+            /* PCRE2 ops */
+            #include "vm/pcre2/test.c"
+            #include "vm/pcre2/match.c"
+            #include "vm/pcre2/findall.c"
 
             #include "vm/strings/find.c"
             #include "vm/strings/regex_match.c"

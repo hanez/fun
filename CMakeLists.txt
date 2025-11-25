@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.28.0 LANGUAGES C)
+project(fun VERSION 0.29.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -65,6 +65,28 @@ if(FUN_WITH_JSON)
   endif()
 endif()
 
+# Optional PCRE2 support
+option(FUN_WITH_PCRE2 "Enable PCRE2 (Perl Compatible Regular Expressions) support" OFF)
+set(PCRE2_INCLUDE_DIRS "")
+set(PCRE2_LINK_LIBS "")
+if(FUN_WITH_PCRE2)
+  message(STATUS "Building with PCRE2 support")
+  add_definitions(-DFUN_WITH_PCRE2)
+  # Try pkg-config first
+  find_package(PkgConfig QUIET)
+  if(PKG_CONFIG_FOUND)
+    pkg_check_modules(PCRE2 QUIET libpcre2-8)
+  endif()
+  if(PCRE2_FOUND)
+    list(APPEND PCRE2_INCLUDE_DIRS ${PCRE2_INCLUDE_DIRS} ${PCRE2_INCLUDE_DIRS})
+    list(APPEND PCRE2_LINK_LIBS ${PCRE2_LINK_LIBS} ${PCRE2_LIBRARIES})
+    include_directories(${PCRE2_INCLUDE_DIRS})
+  else()
+    # Fallback: common defaults
+    list(APPEND PCRE2_LINK_LIBS pcre2-8)
+  endif()
+endif()
+
 # Debug option to enable verbose parser/VM logging
 option(FUN_DEBUG "Enable extra debug logging in Fun" OFF)
 
@@ -108,6 +130,14 @@ if(JSONC_INCLUDE_DIRS)
 endif()
 if(JSONC_LINK_LIBS)
   target_link_libraries(fun_core PUBLIC ${JSONC_LINK_LIBS})
+endif()
+
+# pcre2 include and link (if enabled)
+if(PCRE2_INCLUDE_DIRS)
+  target_include_directories(fun_core PRIVATE ${PCRE2_INCLUDE_DIRS})
+endif()
+if(PCRE2_LINK_LIBS)
+  target_link_libraries(fun_core PUBLIC ${PCRE2_LINK_LIBS})
 endif()
 
 # Link threads if available on UNIX

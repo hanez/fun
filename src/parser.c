@@ -787,6 +787,44 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* PCRE2 builtins */
+            if (strcmp(name, "pcre2_test") == 0) {
+                (*pos)++; /* '(' */
+                /* (pattern, text, flags) */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_test expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcre2_test expects (pattern, text, flags)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_test expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcre2_test expects (pattern, text, flags)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_test expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcre2_test args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCRE2_TEST, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pcre2_match") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_match expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcre2_match expects (pattern, text, flags)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_match expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcre2_match expects (pattern, text, flags)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_match expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcre2_match args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCRE2_MATCH, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "pcre2_findall") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_findall expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcre2_findall expects (pattern, text, flags)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_findall expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "pcre2_findall expects (pattern, text, flags)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcre2_findall expects (pattern, text, flags)" ); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after pcre2_findall args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_PCRE2_FINDALL, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "pcsc_release") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_release expects 1 argument (ctx)"); free(name); return 0; }
