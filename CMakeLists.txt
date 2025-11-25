@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.29.0 LANGUAGES C)
+project(fun VERSION 0.30.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -87,6 +87,26 @@ if(FUN_WITH_PCRE2)
   endif()
 endif()
 
+# Optional CURL (libcurl) support
+option(FUN_WITH_CURL "Enable libcurl HTTP client support" OFF)
+set(CURL_INCLUDE_DIRS "")
+set(CURL_LINK_LIBS "")
+if(FUN_WITH_CURL)
+  message(STATUS "Building with libcurl support")
+  add_definitions(-DFUN_WITH_CURL)
+  find_package(PkgConfig QUIET)
+  if(PKG_CONFIG_FOUND)
+    pkg_check_modules(LIBCURL QUIET libcurl)
+  endif()
+  if(LIBCURL_FOUND)
+    list(APPEND CURL_INCLUDE_DIRS ${LIBCURL_INCLUDE_DIRS})
+    list(APPEND CURL_LINK_LIBS ${LIBCURL_LIBRARIES})
+    include_directories(${CURL_INCLUDE_DIRS})
+  else()
+    list(APPEND CURL_LINK_LIBS curl)
+  endif()
+endif()
+
 # Debug option to enable verbose parser/VM logging
 option(FUN_DEBUG "Enable extra debug logging in Fun" OFF)
 
@@ -138,6 +158,14 @@ if(PCRE2_INCLUDE_DIRS)
 endif()
 if(PCRE2_LINK_LIBS)
   target_link_libraries(fun_core PUBLIC ${PCRE2_LINK_LIBS})
+endif()
+
+# libcurl include and link (if enabled)
+if(CURL_INCLUDE_DIRS)
+  target_include_directories(fun_core PRIVATE ${CURL_INCLUDE_DIRS})
+endif()
+if(CURL_LINK_LIBS)
+  target_link_libraries(fun_core PUBLIC ${CURL_LINK_LIBS})
 endif()
 
 # Link threads if available on UNIX

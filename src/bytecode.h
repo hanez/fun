@@ -147,6 +147,11 @@ typedef enum {
     OP_JSON_FROM_FILE,   // pops path string; pushes value (or Nil)
     OP_JSON_TO_FILE,     // pops pretty(bool), value, path; pushes 1/0
 
+    // CURL (libcurl)
+    OP_CURL_GET,         // pops [headers map?], url; pushes response string (or "")
+    OP_CURL_POST,        // pops [headers map?], body string, url; pushes response string (or "")
+    OP_CURL_DOWNLOAD,    // pops [headers map?], path, url; pushes 1/0
+
     // PCSC (smart card) opcodes
     OP_PCSC_ESTABLISH,    // returns context id (>0) or 0
     OP_PCSC_RELEASE,      // pops ctx id; returns 1/0

@@ -778,6 +778,35 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* CURL builtins (minimal interface like JSON) */
+            if (strcmp(name, "curl_get") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "curl_get expects (url)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after curl_get arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CURL_GET, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "curl_post") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "curl_post expects (url, body)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "curl_post expects (url, body)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "curl_post expects (url, body)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after curl_post args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CURL_POST, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "curl_download") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "curl_download expects (url, path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "curl_download expects (url, path)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "curl_download expects (url, path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after curl_download args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CURL_DOWNLOAD, 0);
+                free(name);
+                return 1;
+            }
             /* PCSC builtins */
             if (strcmp(name, "pcsc_establish") == 0) {
                 (*pos)++; /* '(' */

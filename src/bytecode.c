@@ -145,6 +145,9 @@ static const char *opcode_name(OpCode op) {
         case OP_JSON_STRINGIFY: return "JSON_STRINGIFY";
         case OP_JSON_FROM_FILE: return "JSON_FROM_FILE";
         case OP_JSON_TO_FILE: return "JSON_TO_FILE";
+        case OP_CURL_GET: return "CURL_GET";
+        case OP_CURL_POST: return "CURL_POST";
+        case OP_CURL_DOWNLOAD: return "CURL_DOWNLOAD";
         case OP_PCSC_ESTABLISH: return "PCSC_ESTABLISH";
         case OP_PCSC_RELEASE: return "PCSC_RELEASE";
         case OP_PCSC_LIST_READERS: return "PCSC_LIST_READERS";

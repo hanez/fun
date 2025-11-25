@@ -32,6 +32,25 @@
 #include <pcre2.h>
 #endif
 
+/* Ensure libcurl headers and helpers are defined at file scope (not inside vm_run) */
+#ifdef FUN_WITH_CURL
+#include <curl/curl.h>
+typedef struct { char *d; size_t n; } FunCurlBuf;
+static size_t fun_curl_write_cb(void *ptr, size_t sz, size_t nm, void *ud) {
+    size_t add = sz * nm;
+    FunCurlBuf *b = (FunCurlBuf*)ud;
+    char *p = (char*)realloc(b->d, b->n + add + 1);
+    if (!p) return 0;
+    memcpy(p + b->n, ptr, add);
+    b->d = p; b->n += add; b->d[b->n] = '\0';
+    return add;
+}
+static size_t fun_curl_file_write_cb(void *ptr, size_t sz, size_t nm, void *ud) {
+    FILE *f = (FILE*)ud;
+    return fwrite(ptr, sz, nm, f);
+}
+#endif
+
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
 static int map_expanded_line_to_include(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line);
@@ -678,6 +697,11 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/json/stringify.c"
             #include "vm/json/from_file.c"
             #include "vm/json/to_file.c"
+
+            /* CURL ops */
+            #include "vm/curl/get.c"
+            #include "vm/curl/post.c"
+            #include "vm/curl/download.c"
 
             /* PCRE2 ops */
             #include "vm/pcre2/test.c"

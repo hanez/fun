@@ -85,10 +85,11 @@ But be sure to build Fun with -DFUN_WITH_REPL=ON.
 All CMake options must be passed as -DNAME=VALUE:
 
 - FUN_DEBUG=ON|OFF — verbose debug logging in the VM (default OFF)
-- FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default ON)
-- FUN_WITH_PCRE2=ON|OFF — enable PCRE2 Perl-Compatible Regular Expressions support (default OFF)
-- FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card support (default OFF)
+- FUN_WITH_CURL=ON|OFF — enable CURL support using libcurl (default OFF)
 - FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default OFF)
+- FUN_WITH_PCRE2=ON|OFF — enable PCRE2 Perl-Compatible Regular Expressions support (default OFF)
+- FUN_WITH_PCSC=ON|OFF — enable PCSC smart card support (default OFF)
+- FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default ON)
 
 If you encounter an error such as:
 
