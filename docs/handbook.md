@@ -47,7 +47,7 @@ Build:
 
 ```bash
 # Note: Every -D flag must be of the form NAME=VALUE (e.g., -DFUN_WITH_REPL=ON)
-cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_JSON=ON -DFUN_WITH_PCRE2=ON
+cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_JSON=ON -DFUN_WITH_PCRE2=ON -DFUN_WITH_CURL=ON
 cmake --build build --target fun
 ```
 
@@ -136,6 +136,7 @@ fun ./demo.fun
   - arrays, strings, maps helpers (hex, range)
 - Extra libraries
   - JSON (via json-c)
+  - CURL (via libcurl)
   - PCSC (PC/SC smart card)
 - Examples reference (what each example does)
 
@@ -162,7 +163,7 @@ Key VM concepts (non-exhaustive):
 - Math misc: OP_MIN/MAX/CLAMP/ABS/POW/RANDOM_SEED/RANDOM_INT.
 - Iteration helpers: OP_ENUMERATE, OP_ZIP.
 - OS/IO/network: socket ops, file ops, process execution, environment, threads, etc., implemented as built-ins.
-- Optional features: JSON opcodes (OP_JSON_PARSE and friends in src/vm/json/*) are compiled in only if -DFUN_WITH_JSON=ON. PCSC opcodes are available if -DFUN_WITH_PCSC=ON.
+- Optional features: JSON opcodes (OP_JSON_PARSE and friends in src/vm/json/*) are compiled in only if -DFUN_WITH_JSON=ON. CURL builtins (curl_get/curl_post/curl_download) are available if -DFUN_WITH_CURL=ON. PCSC opcodes are available if -DFUN_WITH_PCSC=ON.
 
 Error handling and debugging:
 - Build with FUN_DEBUG=ON for verbose VM traces.
@@ -378,6 +379,24 @@ Example walkthrough (examples/json_showcase.fun):
 - Attempts to read a non-existent file to show defensive behavior.
 - Loads examples/data/complex.json, accesses nested fields, constructs a summary map, and writes pretty JSON to /tmp.
 
+### CURL (optional)
+
+Build flag: -DFUN_WITH_CURL=ON. Requires libcurl (development headers) available on your system. If built without CURL, the functions below still exist but safely degrade: they return an empty string "" (for curl_get/curl_post) or 0 (for curl_download).
+
+VM functions (minimal interface similar to JSON builtins):
+- curl_get(url) -> string response body, or "" on error.
+- curl_post(url, body) -> string response body, or "" on error. Body is sent as the raw POST body; for form-encoded data provide "key=value&..." yourself.
+- curl_download(url, path) -> 1 on success, 0 on failure; saves response to the given file path.
+
+Notes:
+- Redirects are followed automatically (CURLOPT_FOLLOWLOCATION=1L).
+- TLS/HTTPS handling, proxies, etc., are handled by libcurl defaults. This minimal interface does not expose custom headers or advanced options.
+
+Examples:
+- examples/curl_get_json.fun — GETs JSON from httpbin and parses it with json_parse when JSON is enabled.
+- examples/curl_post.fun — POSTs simple form data to httpbin and prints the echoed response.
+- examples/curl_download.fun — Downloads an image to ./downloaded.png and reports success.
+
 ### PCSC (optional)
 
 Build flag: -DFUN_WITH_PCSC=ON. Requires PC/SC (e.g., pcsc-lite on Unix) and a reader. VM opcodes are wrapped by global functions as listed under Built-ins.
@@ -431,6 +450,9 @@ Below is a catalog of the examples folder with brief explanations of what happen
 - inheritance_demo.fun — Class inheritance patterns and method overriding.
 - input_example.fun — Reading from stdin using Console.ask/prompt.
 - json_showcase.fun — Comprehensive demo of JSON.parse/stringify/from_file/to_file; prints nested values and writes to /tmp.
+- curl_get_json.fun — Fetches JSON over HTTP using curl_get and parses it with json_parse if available.
+- curl_post.fun — Sends a POST request and prints the raw response; parses headers when JSON is enabled.
+- curl_download.fun — Downloads a file to disk and prints whether it succeeded.
 - loops_break_continue.fun — Shows break and continue in loops and their effects on control flow.
 - md5_demo.fun — Hashing data using lib/crypt/md5.fun and printing the digest.
 - namespaced_mod.fun — Module used by include_namespace.fun to demonstrate namespacing.
