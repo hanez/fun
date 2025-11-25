@@ -23,6 +23,8 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](ht
 - [SQLite](https://sqlite.org/) support builtin (optional) <span style="color:red;font-weight:bold;">&#9744;</span>
 - [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) <span style="color:red;font-weight:bold;">&#9744;</span>
 
+<span style="color:green;font-weight:bold;">&#9745;</span> = Done / <span style="color:red;font-weight:bold;">&#9744;</span> = Planned or in progress.
+
 ## Characteristics
 
 - Dynamic and optionally statically typed
