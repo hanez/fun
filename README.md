@@ -20,6 +20,7 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](ht
 - [JSON](https://www.json.org/) support builtin using [json-c](https://github.com/json-c/json-c) (optional) &#9745;
 - [ODBC](https://learn.microsoft.com/en-us/sql/odbc/reference/odbc-overview?view=sql-server-ver16) support builtin for flexible database connectivity using [unixODBC](https://www.unixodbc.org/) (optional) &#9744;
 - [PC/SC](https://pcscworkgroup.com/) smart card support builtin using [PCSC lite](https://pcsclite.apdu.fr/) (optional) &#9745;
+- [PCRE2](https://pcre2project.github.io/pcre2/) support builtin for Perl-Compatible Regular Expressions (optional) &#9744;
 - [SQLite](https://sqlite.org/) support builtin (optional) &#9744;
 - [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) &#9744;
 
