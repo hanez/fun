@@ -441,6 +441,15 @@ char *value_to_string_alloc(const Value *v) {
             snprintf(buf, sizeof(buf), "[array n=%d]", n);
             return strdup(buf);
         }
+        case VAL_MAP: {
+            int n = 0;
+            if (v->type == VAL_MAP && v->map) {
+                const Map *m = (const Map*)v->map;
+                n = m ? m->count : 0;
+            }
+            snprintf(buf, sizeof(buf), "{map n=%d}", n);
+            return strdup(buf);
+        }
         case VAL_NIL:
         default:
             return strdup("nil");

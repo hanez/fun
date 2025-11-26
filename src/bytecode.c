@@ -148,6 +148,10 @@ static const char *opcode_name(OpCode op) {
         case OP_CURL_GET: return "CURL_GET";
         case OP_CURL_POST: return "CURL_POST";
         case OP_CURL_DOWNLOAD: return "CURL_DOWNLOAD";
+        case OP_SQLITE_OPEN: return "SQLITE_OPEN";
+        case OP_SQLITE_CLOSE: return "SQLITE_CLOSE";
+        case OP_SQLITE_EXEC: return "SQLITE_EXEC";
+        case OP_SQLITE_QUERY: return "SQLITE_QUERY";
         case OP_PCSC_ESTABLISH: return "PCSC_ESTABLISH";
         case OP_PCSC_RELEASE: return "PCSC_RELEASE";
         case OP_PCSC_LIST_READERS: return "PCSC_LIST_READERS";

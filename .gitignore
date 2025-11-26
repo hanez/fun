@@ -13,3 +13,4 @@ out/
 src/*.o
 *.swp
 tmp*
+todo.sqlite

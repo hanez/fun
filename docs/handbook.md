@@ -1,122 +1,145 @@
-# Fun Handbook
+# Fun Handbook (Second Edition)
+
+This is a refreshed, de-duplicated, and fully up-to-date handbook for the Fun programming language and its virtual machine (VM). It keeps the same section layout as the original handbook while consolidating repeated content and documenting all currently available features, including the latest SQLite support.
 
 ## Overview
 
+Fun is a small, strict, and simple programming language executed by a stack-based virtual machine. Most of the ecosystem is written in Fun itself; only a minimal core is implemented in C. The design focuses on simplicity, consistency, and joy in coding.
+
 ## Introduction
+
+- Dynamic and optionally statically typed
+- Type safety
+- Written in C (C99) and Fun
+- Minimal C core; most core functions and libraries implemented in Fun
+- Internal libraries use snake_case for functions even when written in Fun; class names are CamelCase
 
 ## Installation
 
 ### Requirements
 
-A C compiler, a libc and [Git](https://git-scm.com/).
+- A C compiler, a libc, and Git
 
-#### FreeBSD
+FreeBSD:
+- CMake
+- Clang
 
-- [CMake](https://cmake.org/)
-- [Clang](https://clang.llvm.org/)
+Linux:
+- CMake
+- GCC (Clang should also work)
 
-#### Linux
-
-- [CMake](https://cmake.org/)
-- [GCC](https://gcc.gnu.org/) (Clang should work here too, not tested!)
-
-#### Windows
-
-This requires Cygwin to be installed and configured. I will not cover this here.
-
-- [CMake](https://cmake.org/)
-- [Cygwin](https://cygwin.com/) using [GCC](https://gcc.gnu.org/)
+Windows:
+- Cygwin (not covered in detail here)
+- CMake
+- GCC via Cygwin
 
 ### Build Fun
 
-Linux/UNIX and Cygwin only covered here for now.
+Linux/UNIX and Cygwin are covered here.
 
 Clone repository:
 
-```bash
-git clone https://git.xw3.org/fun/fun.git
 ```
-
-Change directory:
-
-```bash
+git clone https://git.xw3.org/fun/fun.git
 cd fun
 ```
 
-Build:
+Configure and build (examples shown with several optional features enabled):
 
-```bash
-# Note: Every -D flag must be of the form NAME=VALUE (e.g., -DFUN_WITH_REPL=ON)
-cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_JSON=ON -DFUN_WITH_PCRE2=ON -DFUN_WITH_CURL=ON
+```
+# Every -D flag must be NAME=VALUE (e.g., -DFUN_WITH_REPL=ON)
+cmake -S . -B build \
+  -DFUN_DEBUG=OFF \
+  -DFUN_WITH_REPL=ON \
+  -DFUN_WITH_JSON=ON \
+  -DFUN_WITH_PCRE2=ON \
+  -DFUN_WITH_CURL=ON \
+  -DFUN_WITH_PCSC=OFF \
+  -DFUN_WITH_SQLITE=OFF
 cmake --build build --target fun
 ```
 
-That's it! For testing it, run:
+Run the demo (without installing):
 
-```bash
+```
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
 ```
 
-To see what's going on, run:
+Tracing execution:
 
-```bash
+```
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun --trace ./demo.fun
 ```
 
-To switch into the REPL after an error, run:
+Drop into the REPL when an error occurs:
 
-```bash
+```
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
 ```
 
-Both --repl-on-error and --trace are optional but can always be combined. To get
-more debug information, you need to build Fun with -DFUN_DEBUG=ON.
+Start the REPL directly (build with -DFUN_WITH_REPL=ON):
 
-To directly run the REPL, you have to run:
-
-```bash
+```
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun
 ```
 
-But be sure to build Fun with -DFUN_WITH_REPL=ON.
-
 #### CMake options
 
-All CMake options must be passed as -DNAME=VALUE:
+Pass all options as -DNAME=VALUE. The most relevant toggles are:
 
-- FUN_DEBUG=ON|OFF — verbose debug logging in the VM (default OFF)
-- FUN_WITH_CURL=ON|OFF — enable CURL support using libcurl (default OFF)
+- FUN_DEBUG=ON|OFF — verbose VM debug logging (default OFF)
+- FUN_WITH_CURL=ON|OFF — enable CURL support via libcurl (default OFF)
 - FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default OFF)
-- FUN_WITH_PCRE2=ON|OFF — enable PCRE2 Perl-Compatible Regular Expressions support (default OFF)
-- FUN_WITH_PCSC=ON|OFF — enable PCSC smart card support (default OFF)
-- FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default ON)
+- FUN_WITH_PCRE2=ON|OFF — enable PCRE2 (Perl-Compatible Regular Expressions) (default OFF)
+- FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card support (default OFF)
+- FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
+- FUN_WITH_SQLITE=ON|OFF — enable SQLite (sqlite3) support (default OFF)
 
-If you encounter an error such as:
+You can also set the default search path for the bundled stdlib with DEFAULT_LIB_DIR:
+
+```
+cmake -S . -B build -DDEFAULT_LIB_DIR="/usr/share/fun/lib" -DFUN_WITH_REPL=ON
+```
+
+If you encounter a CMake error such as:
 
   CMake Error: Parse error in command line argument: FUN_WITH_JSON
   Should be: VAR:type=value
 
-then a -D option was given without a value. Always use -DNAME=VALUE, for example -DFUN_WITH_JSON=ON.
+it means you passed a -D option without a value. Always use the form -DNAME=VALUE (e.g., -DFUN_WITH_JSON=ON).
 
-### Install Fun to OS
+#### SQLite example (optional feature)
 
-I do not recommend installing Fun on your system because it is in a very early
-stage of development, but I can say that I have Fun installed on my system. If
-you want to do that too, type:
+SQLite support is optional and disabled by default. To build with it and run the example:
 
-```bash
+```
+cmake -S . -B build -DFUN_WITH_SQLITE=ON
+cmake --build build --target fun
+
+# Create the sample database (requires the sqlite3 CLI):
+sqlite3 ./todo.sqlite < ./examples/data/todo.sql
+
+# Run the example
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlite_example.fun
+```
+
+### Install Fun to the OS (optional)
+
+Not recommended during early development, but supported:
+
+```
 sudo cmake --build build --target install
 ```
 
-Now run Fun without prefixed FUN_LIB_DIR="$(pwd)/lib" because libs are installed to the
-system default lib directory (/usr/share/fun/lib).
+After installation, FUN_LIB_DIR usually isn’t needed because libs are placed in the system default directory (e.g., /usr/share/fun/lib).
 
 ## Usage
 
-```bash
+Run a script:
+
+```
 fun ./demo.fun
 ```
-
 
 ## Table of contents
 
@@ -138,172 +161,171 @@ fun ./demo.fun
   - JSON (via json-c)
   - CURL (via libcurl)
   - PCSC (PC/SC smart card)
-- Examples reference (what each example does)
+  - SQLite (sqlite3)
+- Examples reference
 
 ---
 
 ## Language overview and VM internals
 
-Fun is a small imperative language executed by a register-less stack-based virtual machine (VM). Source files are compiled to bytecode; the VM executes opcodes that work on a value stack. Functions and methods push/pop their arguments and return values on that stack.
+Fun compiles .fun source files to bytecode and executes them on a stack-based VM. Functions and methods push/pop their arguments and return values on a value stack.
 
 High-level architecture:
-- Front-end: parses .fun files, handles includes and constant folding, emits bytecode with debug markers (OP_LINE) for tracing and REPL-on-error.
-- VM core: runs a loop over opcodes (see src/bytecode.h). Values include numbers (integers), strings, arrays, maps, booleans (0/1), functions, and nil.
-- Built-ins: I/O, strings, arrays, regex, date/time, OS, networking, threading, optional JSON and PC/SC. Many are exposed as opcodes with friendly global functions in the language.
+- Front-end: parses .fun files, handles includes and constant folding, emits bytecode with debug markers (OP_LINE) used by tracing and REPL-on-error.
+- VM core: runs a loop over opcodes (see src/bytecode.h). Values include numbers (integers), strings, arrays, maps, booleans (1/0), functions, and nil.
+- Built-ins: I/O, strings, arrays, regex, date/time, OS, networking, threading, and optional JSON/PCRE2/CURL/PCSC/SQLite.
 
-Key VM concepts (non-exhaustive):
-- Control flow: OP_JUMP, OP_JUMP_IF_FALSE, OP_RETURN.
-- Arithmetic and logic: OP_ADD/SUB/MUL/DIV, OP_MOD, comparisons (OP_LT, OP_LTE, OP_GT, OP_GTE, OP_EQ, OP_NEQ), logical OP_AND/OR/NOT.
-- Stack helpers: OP_DUP, OP_SWAP, OP_POP.
-- Arrays: OP_MAKE_ARRAY, OP_INDEX_GET/SET, OP_LEN, OP_PUSH, OP_APOP (pop last), OP_INSERT/REMOVE, OP_SLICE.
-- Strings: OP_SUBSTR, OP_SPLIT, OP_JOIN, OP_FIND.
-- Maps: OP_MAKE_MAP and index ops reuse array/map machinery; you can index with string keys.
-- Conversion and typing: OP_TO_NUMBER, OP_TO_STRING, OP_CAST, OP_TYPEOF, unsigned/signed clamps (OP_UCLAMP/OP_SCLAMP).
-- Regex: OP_REGEX_MATCH/SEARCH/REPLACE.
-- Math misc: OP_MIN/MAX/CLAMP/ABS/POW/RANDOM_SEED/RANDOM_INT.
-- Iteration helpers: OP_ENUMERATE, OP_ZIP.
-- OS/IO/network: socket ops, file ops, process execution, environment, threads, etc., implemented as built-ins.
-- Optional features: JSON opcodes (OP_JSON_PARSE and friends in src/vm/json/*) are compiled in only if -DFUN_WITH_JSON=ON. CURL builtins (curl_get/curl_post/curl_download) are available if -DFUN_WITH_CURL=ON. PCSC opcodes are available if -DFUN_WITH_PCSC=ON.
+Selected VM concepts (non-exhaustive):
+- Control flow: OP_JUMP, OP_JUMP_IF_FALSE, OP_RETURN
+- Arithmetic/logic: OP_ADD/SUB/MUL/DIV, OP_MOD, OP_LT/LTE/GT/GTE, OP_EQ/NEQ, OP_AND/OR/NOT
+- Stack helpers: OP_DUP, OP_SWAP, OP_POP
+- Arrays: OP_MAKE_ARRAY, OP_INDEX_GET/SET, OP_LEN, OP_PUSH, OP_APOP, OP_INSERT/REMOVE, OP_SLICE
+- Strings: OP_SUBSTR, OP_SPLIT, OP_JOIN, OP_FIND
+- Maps: OP_MAKE_MAP; index ops shared with arrays
+- Conversion/typing: OP_TO_NUMBER, OP_TO_STRING, OP_CAST, OP_TYPEOF, OP_UCLAMP/OP_SCLAMP
+- Regex: OP_REGEX_MATCH/SEARCH/REPLACE (requires PCRE2 when built)
+- Math: OP_MIN/MAX/CLAMP/ABS/POW, OP_RANDOM_SEED/RANDOM_INT
+- Iteration helpers: OP_ENUMERATE, OP_ZIP
+- OS/IO/network: sockets, files, processes, environment, threads, etc.
+- Optional features: JSON (src/vm/json/*), CURL, PCSC, SQLite (src/vm/sqlite/*)
 
 Error handling and debugging:
-- Build with FUN_DEBUG=ON for verbose VM traces.
-- Run with --trace to print executed lines and opcodes.
-- Run with --repl-on-error to drop into an interactive REPL when a runtime error occurs, allowing inspection of variables and stepping.
+- Build with FUN_DEBUG=ON for verbose traces
+- Run with --trace to print executed lines/opcodes
+- Run with --repl-on-error to drop into an interactive REPL when a runtime error occurs
 
 ## Command line interface and REPL
 
-Running a script:
-- fun path/to/script.fun
-- Options: --trace, --repl-on-error (can combine), see build section for REPL availability.
-
-REPL:
-- Launch with fun (no script) when built with FUN_WITH_REPL=ON.
-- In trace/REPL-on-error mode, the VM annotates output with file:line and function names to aid debugging (see examples/debug_reporting.fun and examples/repl_on_error.fun).
+- Run a script: fun path/to/script.fun
+- Common options: --trace, --repl-on-error (can be combined). REPL requires FUN_WITH_REPL=ON at build time.
+- In trace/REPL-on-error modes, the VM annotates output with file:line and function names for easier debugging (see examples/debug_reporting.fun).
 
 ## Core types and operations
 
 Types:
-- number: signed integer. Conversions: to_number(x). Bitwise ops exist via bnot, band, bor, bxor, shl, shr, rol, ror in stdlib/VM.
-- string: immutable sequence of bytes; length via len(s); concatenate via join([a,b], ""). Substring: substr(s, start, len). Find: find(haystack, needle) returns index or -1.
-- array: ordered list. Create with [a, b, c] or built-ins. len(a), push(a, v) appends, apop(a) removes last, insert(a, idx, v), remove(a, idx), slice(a, start, end).
-- map: associative dictionary with string keys typically: m = {}; m["key"] = value; keys can be strings and sometimes numbers.
-- boolean: represented as number 1 (true) or 0 (false). Logical operators: &&, ||, !.
-- nil: absence of value. Many defensive stdlib wrappers return [] or {} or nil defaults on errors.
+- number: signed integer (with helpers for unsigned behavior)
+- string: immutable bytes; len(s), join, split, substr, find
+- array: ordered list; len, push, apop, insert, remove, slice
+- map: associative dictionary typically keyed by strings
+- boolean: represented as 1 (true) or 0 (false); operators &&, ||, !
+- nil: absence of value
 
 Control flow:
-- if/else, while loops, for-like range utilities (see utils.range in stdlib), break/continue (see examples/loops_break_continue.fun).
+- if/else, while; range helpers in utils.range
 
 Functions and classes:
-- Define a function with fun name(args) ...
-- Define a class with class Name(constructor params) and methods fun method(this, ...) ...; _construct is called as a constructor if present.
-- Methods use explicit this.
+- Define a function: fun name(args) ...
+- Define a class: class Name(constructor params) with method definitions fun method(this, ...)
+- _construct acts as the constructor if present; methods use explicit this
 
 Modules and includes:
-- Use #include <path/to/module.fun> to include from FUN_LIB_DIR.
-- Use #include "relative/path.fun" to include a file relative to your script.
-- You can alias includes with "as" to create namespaces: #include <utils/math.fun> as m; then call m.add(...).
+- #include <path/to/module.fun> for libs under FUN_LIB_DIR
+- #include "relative/path.fun" for local includes
+- Namespacing via as: #include <utils/math.fun> as m; then call m.add(...)
 
 ## Built-ins overview
 
 Console and I/O:
-- print(x): prints a value with a trailing newline. input(prompt): returns a line as string without trailing newline.
+- print(x) — prints value plus newline
+- input(prompt) — read line from stdin
 
 Strings and arrays:
-- len(x), join(array, sep), split(string, sep), substr(string, start, len), find(haystack, needle), push(array, value), apop(array), insert(array, idx, value), remove(array, idx), slice(array, start, end).
+- len(x), join(array, sep), split(text, sep), substr(text, start, len), find(text, needle)
+- push(array, v), apop(array), insert(array, i, v), remove(array, i), slice(array, start, end)
 
 Conversion and type:
-- to_number(x), to_string(x), cast(value, typeName), typeof(x), uclamp(number, bits), sclamp(number, bits).
+- to_number(x), to_string(x), cast(value, typeName), typeof(x)
+- uclamp(number, bits), sclamp(number, bits)
 
 Math and random:
-- min(a,b), max(a,b), clamp(x, lo, hi), abs(x), pow(a,b), random_seed(seed), random_int(lo, hiExclusive).
+- min(a,b), max(a,b), clamp(x, lo, hi), abs(x), pow(a,b), random_seed(seed), random_int(lo, hiExclusive)
 
-Regex:
-- regex_match(text, pattern) -> 1/0 full match
-- regex_search(text, pattern) -> map {"match", "start", "end", "groups"}
-- regex_replace(text, pattern, repl) -> string with global replacements
+Regex (requires PCRE2 when enabled):
+- regex_match(text, pattern) -> 1/0
+- regex_search(text, pattern) -> map { match, start, end, groups }
+- regex_replace(text, pattern, repl) -> string
 
 OS and processes:
-- proc_run(cmd) -> map {"out": string, "code": number}
-- system(cmd) -> exit code number
-- env_get(name)/env_set(name, value) – see examples/os_env.fun
+- proc_run(cmd) -> { out: string, code: number }
+- system(cmd) -> exit code
+- env_get(name), env_set(name, value)
 
 Networking and sockets:
 - tcp_connect(host, port) -> fd (>0) or 0
-- sock_send(fd, string) -> bytes sent or -1, sock_recv(fd, maxlen) -> string, sock_close(fd)
-- tcp_listen(port, backlog) -> listen fd, tcp_accept(listenFd) -> client fd
-- unix_connect(path) -> fd for UNIX domain sockets
+- sock_send(fd, data) -> bytes or -1; sock_recv(fd, maxlen) -> string; sock_close(fd)
+- tcp_listen(port, backlog) -> listen fd; tcp_accept(listenFd) -> client fd
+- unix_connect(path) -> fd
 
 Threads:
 - thread_spawn(func, args) -> thread id; thread_join(id) -> return value
 
 Date and time:
-- time_now_ms() -> epoch ms; clock_mono_ms() -> monotonic ms; date_format(ms, fmt) -> string
+- time_now_ms(), clock_mono_ms(), date_format(ms, fmt)
 
 JSON (optional):
-- json_parse(text) -> Fun value (maps/arrays/numbers/strings/1/nil)
-- json_stringify(value, prettyFlag) -> string; prettyFlag: 0/1
-- json_from_file(path) -> value or nil; json_to_file(path, value, prettyFlag) -> 1/0
+- json_parse(text) -> value or nil
+- json_stringify(value, prettyFlag) -> string
+- json_from_file(path) -> value or nil
+- json_to_file(path, value, prettyFlag) -> 1/0
 
 PC/SC (optional):
 - pcsc_establish() -> context id (>0) or 0
-- pcsc_list_readers(ctx) -> array of reader names (strings) or nil
+- pcsc_list_readers(ctx) -> array of reader names or nil
 - pcsc_connect(ctx, readerName) -> handle id (>0) or 0
 - pcsc_disconnect(handle) -> 1/0
-- pcsc_transmit(handle, bytesArray) -> map {"data": array of numbers, "sw1": n, "sw2": n, "code": n}
+- pcsc_transmit(handle, bytesArray) -> { data, sw1, sw2, code }
 
-Note: Optional feature availability depends on your CMake flags at build time.
+SQLite (optional):
+- sqlite_open(path) -> handle (>0) or 0 on error
+- sqlite_exec(handle, sql) -> rc (0 = SQLITE_OK)
+- sqlite_query(handle, sql) -> array of row maps (string keys)
+- sqlite_close(handle) -> nil
+
+Note: Optional features depend on the CMake flags used when building.
 
 ---
 
 ## Standard library APIs
 
-The stdlib provides small, defensive wrappers around VM built-ins, typically with class-based APIs to avoid global name collisions and to offer sensible defaults.
+The stdlib provides small wrappers around VM built-ins, typically organized in classes to avoid global name collisions and to offer sensible defaults.
 
 ### io.console
 
 Class Console (lib/io/console.fun):
-- prompt(text) -> string: print text and read a line.
-- ask(question) -> string: prints "question: " and reads a line.
-- ask_yes_no(question) -> 1/0: loops until user answers y/yes or n/no (case-insensitive).
+- prompt(text) -> string
+- ask(question) -> string
+- ask_yes_no(question) -> 1/0 (y/yes vs n/no)
 
-Example:
-- See examples/input_example.fun
+Example: examples/input_example.fun
 
 ### io.process
 
 Class Process (lib/io/process.fun):
-- run(cmd) -> { out, code }: captures stdout and exit code.
-- run_merge_stderr(cmd) -> { out, code }: appends "2>&1" to merge stderr.
-- system(cmd) -> number: exit code.
-- check_call(cmd) -> 1/0: 1 if exit code is 0.
+- run(cmd) -> { out, code }
+- run_merge_stderr(cmd) -> { out, code }
+- system(cmd) -> number
+- check_call(cmd) -> 1/0
 
-Examples:
-- examples/process_example.fun
+Example: examples/process_example.fun
 
 ### io.socket
 
 Provides TcpClient, TcpServer, UnixClient (lib/io/socket.fun).
 
-Class TcpClient:
-- connect(host, port) -> 1/0
-- is_connected() -> 1/0
-- send(data) -> bytes or -1
-- recv(maxlen) -> string
-- recv_all(chunk_size) -> string: keeps reading until EOF or partial chunk.
-- close() -> 1
-
-Class TcpServer(port, backlog):
-- listen() -> listen fd or 0
-- accept() -> client fd
-- echo_once(maxlen) -> 1 on handled client
-- serve_forever(maxlen) -> never returns; minimal echo server
+TcpClient:
+- connect(host, port) -> 1/0; is_connected() -> 1/0
+- send(data) -> bytes or -1; recv(maxlen) -> string; recv_all(chunk_size) -> string
 - close()
 
-Class UnixClient:
+TcpServer(port, backlog):
+- listen() -> listen fd or 0; accept() -> client fd
+- echo_once(maxlen) -> 1 when handled; serve_forever(maxlen) -> never returns
+- close()
+
+UnixClient:
 - connect(path), is_connected(), send(data), recv(maxlen), close()
 
-Examples:
-- examples/tcp_http_get.fun, examples/tcp_http_get_class.fun, examples/unix_socket_echo.fun, examples/extra/tcp_echo_server_class.fun
+Examples: tcp_http_get.fun, tcp_http_get_class.fun, unix_socket_echo.fun, extra/tcp_echo_server_class.fun
 
 ### io.thread
 
@@ -311,47 +333,40 @@ Class Thread (lib/io/thread.fun):
 - spawn(func, args) -> thread id; join(id) -> return value
 - Aliases: start(func, args), wait(id)
 
-Examples:
-- examples/threads_demo.fun, examples/thread_class_example.fun
+Examples: threads_demo.fun, thread_class_example.fun
 
 ### utils.datetime
 
 Class DateTime (lib/utils/datetime.fun):
-- now_ms() -> current epoch milliseconds
-- mono_ms() -> monotonic clock ms
-- format(ms, fmt) -> string using strftime-like fmt
-- iso_now() -> "YYYY-MM-DDTHH:MM:SS"
+- now_ms(), mono_ms(), format(ms, fmt), iso_now()
 
-Example:
-- examples/datetime_basic.fun
+Example: datetime_basic.fun
 
 ### regex
 
 Class Regex (lib/regex.fun):
-- match(text, pattern) -> 1/0 full match
-- search(text, pattern) -> map { match, start, end, groups }
-- replace(text, pattern, repl) -> string (global)
+- match(text, pattern) -> 1/0
+- search(text, pattern) -> { match, start, end, groups }
+- replace(text, pattern, repl) -> string
 
-Examples:
-- examples/regex_demo.fun, examples/regex_procedural.fun
+Examples: regex_demo.fun, regex_procedural.fun
 
 ### crypt
 
-MD5 (lib/crypt/md5.fun): Pure Fun implementation with class MD5 and helper md5_hex(hexStr). See examples/md5_demo.fun.
-
-SHA family (lib/crypt/sha1.fun, sha256.fun, sha384.fun, sha512.fun): class wrappers SHA1/SHA256/SHA384/SHA512 with methods digest_hex_of_string(str) and helpers as documented in files. Examples: sha1_demo.fun, sha256_demo.fun, sha256_str_demo.fun, sha384_example.fun, sha512_demo.fun, sha512_str_demo.fun.
+MD5 (lib/crypt/md5.fun) and SHA family (sha1/sha256/sha384/sha512) provide digest classes and helpers.
+Examples: md5_demo.fun, sha1_demo.fun, sha256_demo.fun, sha256_str_demo.fun, sha384_example.fun, sha512_demo.fun, sha512_str_demo.fun
 
 ### encoding.base64
 
-Module lib/encoding/base64.fun provides base64_encode(string) and base64_decode(string) helpers (see file for exact APIs). Used in some examples.
+Module lib/encoding/base64.fun: base64_encode(string), base64_decode(string)
 
 ### arrays, strings, maps helpers
 
-- lib/arrays.fun: helper functions for common array patterns.
-- lib/strings.fun: string helpers like str_to_lower/upper and more; used by several stdlib modules.
-- lib/hex.fun: bytes_to_hex(arrayOfNumbers) and hex_to_bytes(hexString) helpers as used by PCSC.
-- lib/utils/range.fun: utilities for building numeric ranges; see for_range_test.fun.
-- lib/utils/math.fun and lib/math.fun: higher-level math helpers.
+- lib/arrays.fun — array helpers
+- lib/strings.fun — string helpers (lower/upper, etc.)
+- lib/hex.fun — bytes_to_hex, hex_to_bytes
+- lib/utils/range.fun — numeric ranges
+- lib/utils/math.fun and lib/math.fun — math helpers
 
 ---
 
@@ -359,55 +374,44 @@ Module lib/encoding/base64.fun provides base64_encode(string) and base64_decode(
 
 ### JSON (optional)
 
-Build flag: -DFUN_WITH_JSON=ON. Requires json-c available on your system. Internals are in src/vm/json/ and wrap json-c to convert between json_object and Fun values.
-
-VM functions:
-- json_parse(text) -> value or nil on parse error.
-- json_stringify(value, pretty) -> string; pretty is 0/1.
-- json_from_file(path) -> value or nil if file missing/unreadable.
-- json_to_file(path, value, pretty) -> 1 on success else 0.
-
-Stdlib wrapper class JSON (lib/io/json.fun):
-- parse(text)
-- stringify(value, pretty=0)
-- from_file(path)
-- to_file(path, value, pretty=0)
-
-Example walkthrough (examples/json_showcase.fun):
-- Parses a JSON string into a map/array structure; demonstrates indexing (obj["name"]).
-- Pretty prints the object with json.stringify(obj, 1).
-- Attempts to read a non-existent file to show defensive behavior.
-- Loads examples/data/complex.json, accesses nested fields, constructs a summary map, and writes pretty JSON to /tmp.
+Build flag: -DFUN_WITH_JSON=ON; requires json-c. VM functions: json_parse, json_stringify, json_from_file, json_to_file. Stdlib class JSON wraps these with light ergonomics. Example: examples/json_showcase.fun.
 
 ### CURL (optional)
 
-Build flag: -DFUN_WITH_CURL=ON. Requires libcurl (development headers) available on your system. If built without CURL, the functions below still exist but safely degrade: they return an empty string "" (for curl_get/curl_post) or 0 (for curl_download).
+Build flag: -DFUN_WITH_CURL=ON; requires libcurl. VM provides:
+- curl_get(url) -> string ("" on error)
+- curl_post(url, body) -> string ("" on error)
+- curl_download(url, path) -> 1/0
 
-VM functions (minimal interface similar to JSON builtins):
-- curl_get(url) -> string response body, or "" on error.
-- curl_post(url, body) -> string response body, or "" on error. Body is sent as the raw POST body; for form-encoded data provide "key=value&..." yourself.
-- curl_download(url, path) -> 1 on success, 0 on failure; saves response to the given file path.
-
-Notes:
-- Redirects are followed automatically (CURLOPT_FOLLOWLOCATION=1L).
-- TLS/HTTPS handling, proxies, etc., are handled by libcurl defaults. This minimal interface does not expose custom headers or advanced options.
-
-Examples:
-- examples/curl_get_json.fun — GETs JSON from httpbin and parses it with json_parse when JSON is enabled.
-- examples/curl_post.fun — POSTs simple form data to httpbin and prints the echoed response.
-- examples/curl_download.fun — Downloads an image to ./downloaded.png and reports success.
+Examples: curl_get_json.fun, curl_post.fun, curl_download.fun
 
 ### PCSC (optional)
 
-Build flag: -DFUN_WITH_PCSC=ON. Requires PC/SC (e.g., pcsc-lite on Unix) and a reader. VM opcodes are wrapped by global functions as listed under Built-ins.
+Build flag: -DFUN_WITH_PCSC=ON; provides pcsc_* built-ins and a stdlib wrapper class PCSC. Example: pcsc_example.fun.
 
-Stdlib wrapper class PCSC (lib/io/pcsc.fun):
-- get_readers() -> array of reader names.
-- transmit(hex_apdu) -> map result by establishing context, selecting a reader, connecting, transmitting, and disconnecting. It returns a map with keys data (array), sw1, sw2, code. The wrapper includes defensive defaults when no reader exists.
-- There is also a commented-out full-featured variant exposing establish/release/connect/disconnect/transmit_bytes/transmit_hex for advanced use.
+### SQLite (optional)
 
-Example:
-- examples/pcsc_example.fun: shows establishing and transmitting an APDU, or printing []/default map if no readers present.
+Build flag: -DFUN_WITH_SQLITE=ON; requires sqlite3 development headers.
+
+VM API:
+- sqlite_open(path) -> handle (>0) or 0
+- sqlite_exec(handle, sql) -> rc (0 = SQLITE_OK)
+- sqlite_query(handle, sql) -> array of maps (columns as string keys)
+- sqlite_close(handle) -> nil
+
+Result mapping notes:
+- INTEGER -> number
+- FLOAT -> number (floating point)
+- TEXT -> string
+- NULL -> nil
+- BLOB is currently not returned (mapped to nil)
+
+Example flow (examples/sqlite_example.fun):
+1) h = sqlite_open("./todo.sqlite")
+2) rows = sqlite_query(h, "SELECT id, title, done, created_at FROM tasks ORDER BY id;")
+3) rc = sqlite_exec(h, "INSERT INTO tasks (title, done) VALUES ('Try Fun + SQLite', 0);")
+4) rows2 = sqlite_query(h, "SELECT count(*) AS cnt FROM tasks;")
+5) sqlite_close(h)
 
 ---
 
@@ -417,196 +421,69 @@ You can run examples without installing by pointing FUN_LIB_DIR to the repositor
 
   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/<name>.fun
 
-Below is a catalog of the examples folder with brief explanations of what happens in each file:
-
-- arrays.fun — Basic array creation, indexing, push/apop, insert/remove, slice; prints intermediate states and lengths.
-- arrays_advanced.fun — More complex array transformations, enumerate/zip patterns.
-- arrays_iter.fun — Iterating arrays with indices and values; demonstrates for/while patterns.
-- boolean_decl.fun — Declaring and using booleans, truthy/falsey checks.
-- booleans.fun — First-class booleans with logical operators and short-circuit behavior.
-- builtins_conversions.fun — Using to_number, to_string, cast, typeof, uclamp/sclamp.
-- builtins_extended.fun — Showcases extended built-ins like min/max/clamp/abs/pow/random.
-- builtins_maps_and_more.fun — Demonstrates map creation, assignment, and index operations.
-- byte_for_demo.fun — Demonstrates bitwise ops (bnot/band/bor/bxor/shl/shr/rol/ror) and numeric behavior.
-- cast_demo.fun — Casting values and type checking via typeof and cast.
-- class_constructor.fun — Using _construct in classes and field initialization.
-- classes_demo.fun — Class definition, methods, and instances interacting.
-- datetime_basic.fun — Uses utils.datetime to print now_ms, mono_ms, and formatted timestamps.
-- debug_reporting.fun — Shows how --repl-on-error and trace annotate crashes with file:line and stack info.
-- exit_example.fun — Demonstrates exiting a program early and exit codes.
-- expressions_test.fun — Demonstrates operator precedence and expression evaluations.
-- fail.fun — Purposefully triggers an error to see runtime behavior.
-- file_io.fun — Reading/writing files with built-ins; prints file contents.
-- file_print_for_file_line_by_line.fun — Iterates through file lines, printing them.
-- floats.fun — Demonstrates float-like operations if represented via numbers; shows division behavior.
-- for_range_test.fun — Uses utils.range to iterate over numeric ranges.
-- functions_test.fun — Function definitions, higher-order usage, and composition.
-- have_fun.fun — A fun greeting and minimal example to verify environment.
-- have_fun_function.fun — Extracted function used by have_fun.fun.
-- if_else_test.fun — Conditional branching and nesting.
-- include_lib.fun — Using #include <...> from FUN_LIB_DIR.
-- include_local.fun — Using #include "..." relative path includes and shared helpers.
-- include_namespace.fun — Namespaced includes with "as" and usage examples.
-- inheritance_demo.fun — Class inheritance patterns and method overriding.
-- input_example.fun — Reading from stdin using Console.ask/prompt.
-- json_showcase.fun — Comprehensive demo of JSON.parse/stringify/from_file/to_file; prints nested values and writes to /tmp.
-- curl_get_json.fun — Fetches JSON over HTTP using curl_get and parses it with json_parse if available.
-- curl_post.fun — Sends a POST request and prints the raw response; parses headers when JSON is enabled.
-- curl_download.fun — Downloads a file to disk and prints whether it succeeded.
-- loops_break_continue.fun — Shows break and continue in loops and their effects on control flow.
-- md5_demo.fun — Hashing data using lib/crypt/md5.fun and printing the digest.
-- namespaced_mod.fun — Module used by include_namespace.fun to demonstrate namespacing.
-- nested_loops.fun — Nested iteration and control flow.
-- objects_basic.fun — Creating and manipulating maps as objects with fields.
-- objects_more.fun — More advanced object/map patterns.
-- os_env.fun — Getting/setting environment variables.
-- pcsc_example.fun — Establishing PC/SC context, listing readers, transmitting a sample APDU if hardware present.
-- process_example.fun — Running external commands with Process.run/system and handling exit codes.
-- regex_demo.fun — Using Regex class for match/search/replace; prints results and groups.
-- regex_procedural.fun — Direct usage of regex_* built-ins without the class wrapper.
-- repl_on_error.fun — Forces an error to enter REPL when run with --repl-on-error.
-- sha1_demo.fun — Hashing using SHA1 helper; prints digest.
-- sha256_demo.fun — SHA-256 hashing demonstration over file/string inputs.
-- sha256_str_demo.fun — String-only SHA-256 hashing convenience.
-- sha384_example.fun — SHA-384 hashing demonstration.
-- sha512_demo.fun — SHA-512 hashing demonstration over data; prints digest.
-- sha512_str_demo.fun — String-only SHA-512 hashing convenience.
-- short_circuit_test.fun — Demonstrates && and || short-circuit semantics.
-- signed_ints.fun — Two's complement wrapping and signed integer behavior.
-- stdlib_showcase.fun — A tour of several stdlib modules in one file.
-- strings_test.fun — String slicing, joining, splitting, find, and case transforms.
-- tcp_http_get.fun — Minimal HTTP GET over TCP using built-ins; prints the response.
-- tcp_http_get_class.fun — Same as above using the TcpClient class.
-- thread_class_example.fun — Spawning and joining threads via the Thread class methods.
-- threads_demo.fun — Multiple threads and returning values with thread_join.
-- try_catch_finally.fun — Error handling with try/catch/finally constructs.
-- try_catch_with_error.fun — Catching and inspecting errors thrown inside code.
-- typeof_features.fun — Shows typeof on many values and casting behavior.
-- typeof.fun — Basic typeof usage.
-- type_safety_fails.fun — Examples that should fail type safety checks at runtime.
-- type_safety.fun — Properly typed examples that run without errors.
-- types_integers.fun — Integer type features, comparisons, and arithmetic.
-- types_overview.fun — Overview of values and literal syntax.
-- uint_types.fun — Unsigned integer helpers and clamping.
-- unix_socket_echo.fun — UNIX domain socket echo client/server demo.
-- while_test.fun — While loops, counters, and loop termination conditions.
+Highlights (not exhaustive):
+- arrays.fun, arrays_advanced.fun, arrays_iter.fun — array operations
+- booleans.fun, boolean_decl.fun — boolean basics
+- builtins_conversions.fun, builtins_extended.fun — conversions and math helpers
+- builtins_maps_and_more.fun — maps and indexing
+- byte_for_demo.fun — bitwise operations
+- class_constructor.fun, classes_demo.fun, inheritance_demo.fun — classes
+- datetime_basic.fun — date/time utilities
+- debug_reporting.fun, repl_on_error.fun — tracing and REPL-on-error
+- exit_example.fun — exit codes
+- expressions_test.fun — operators
+- file_io.fun, file_print_for_file_line_by_line.fun — file I/O
+- for_range_test.fun — numeric ranges
+- functions_test.fun — functions and higher-order usage
+- have_fun.fun — quick sanity check
+- if_else_test.fun — branching
+- include_lib.fun, include_local.fun, include_namespace.fun — includes and namespacing
+- input_example.fun — console input
+- json_showcase.fun — JSON usage
+- curl_get_json.fun, curl_post.fun, curl_download.fun — HTTP via CURL
+- loops_break_continue.fun, nested_loops.fun, while_test.fun — loops
+- md5_demo.fun, sha1_demo.fun, sha256_demo.fun, sha256_str_demo.fun, sha384_example.fun, sha512_demo.fun, sha512_str_demo.fun — hashing
+- objects_basic.fun, objects_more.fun — map/object patterns
+- os_env.fun — environment variables
+- pcsc_example.fun — smart card demo
+- process_example.fun — running external commands
+- regex_demo.fun, regex_procedural.fun — regex usage
+- stdlib_showcase.fun — tour through stdlib
+- strings_test.fun — string operations
+- tcp_http_get.fun, tcp_http_get_class.fun — TCP client demos
+- thread_class_example.fun, threads_demo.fun — threading
+- try_catch_finally.fun, try_catch_with_error.fun — error handling
+- typeof.fun, typeof_features.fun — types and casting
+- type_safety.fun, type_safety_fails.fun — type safety
+- types_integers.fun, signed_ints.fun, uint_types.fun — integers
+- unix_socket_echo.fun — UNIX domain sockets
+- sqlite_example.fun — SQLite usage
 
 Notes:
-- Some examples are platform-dependent (PCSC, UNIX sockets) or rely on optional features (JSON). They degrade gracefully when unavailable, printing empty arrays or default maps.
+- Some examples rely on optional features (JSON, CURL, PCSC, SQLite) and degrade gracefully when disabled.
 
 ---
 
-## Internals notes for JSON
+## Internals notes (selected)
 
-Fun wraps json-c. See src/vm/json/parse.c, stringify.c, from_file.c, to_file.c. For parsing, OP_JSON_PARSE converts the input string into a json_object using a tokener and then converts to Fun values via json_to_fun. On error or when JSON is compiled out, the VM returns nil. The stdlib JSON class converts arguments defensively (to_string) and provides default pretty=0.
+JSON: src/vm/json/* wraps json-c. OP_JSON_PARSE and friends convert json_object to Fun values and back; stdlib JSON class adds ergonomics.
 
-## Internals notes for PCSC
+PCSC: The VM interfaces with pcsc-lite/WinSCard and returns maps with data and status words. The stdlib wrapper handles absent hardware defensively.
 
-The PCSC functions in the VM interface with pcsc-lite/WinSCard. Transmit returns a map with raw data bytes and status words (sw1, sw2) and a code field. The stdlib wrapper in lib/io/pcsc.fun demonstrates defensive patterns: when no readers are found, it returns a default map so that indexing like res["sw1"] is always safe.
+SQLite: src/vm/sqlite/* implements open/exec/query/close using a simple handle registry. Query prepares a statement, steps rows, maps columns by name to values, and returns an array of row maps.
 
 ---
 
 ## Development
 
-This section is a work in progress... Please excuse the lack of more information. There are daily updates here.
-
-### Rules
-
-- Every commit message must contain the version at the end in the following format (1.2.3)
-- Every commit requires a version incrementation in CMakeLists.txt before committing. Documentation updates do not increment the version but must contain the current version in each commit message.
-- Version numbering follows "[Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)"
+This project follows Semantic Versioning. Commit messages include the version (e.g., 1.2.3). Version bumps are made in CMakeLists.txt for code changes; documentation-only commits include the current version in the message but do not bump it.
 
 ### Development systems
 
-- [GNU](https://gnu.org/)/[Linux](https://kernel.org/) ([Arch](https://archlinux.org/)/[Artix](https://artixlinux.org/), [Debian](https://www.debian.org/)) using [GCC](https://gcc.gnu.org/) and the [GNU C library](https://www.gnu.org/software/libc/) ([glibc](https://en.wikipedia.org/wiki/Glibc))
-- GNU/Linux ([Alpine](https://alpinelinux.org/)) using GCC and the [musl libc](https://musl.libc.org/)
-- [FreeBSD](https://www.freebsd.org/) using [Clang](https://clang.llvm.org/) and the [BSD libc](https://en.wikipedia.org/wiki/C_standard_library#BSD_libc)
-- [Windows](https://en.wikipedia.org/wiki/Microsoft_Windows) using [Cygwin](https://www.cygwin.com/) and GCC.
+- GNU/Linux (glibc, musl), FreeBSD (Clang), Windows (Cygwin + GCC). Other Unix-like systems likely work but are untested.
 
-### Other systems
+### Contributing and further reading
 
-- [macOS](https://en.wikipedia.org/wiki/MacOS), [NetBSD](https://netbsd.org/), [OpenBSD](https://www.openbsd.org/), etc. should fully work, but I don't know. I do not use these systems actually. You wanna try and report?
-
-### To Do
-
-Everything... ;) No, a lot of stuff works already, but only a tiny set of functionality is available in the Fun programming language. It grows from day to day...
-
-### Build Fun
-
-Linux/UNIX only covered here for now.
-
-Clone repository:
-
-```bash
-git clone https://git.xw3.org/fun/fun.git
-```
-
-Change directory:
-
-```bash
-cd fun
-```
-
-Build:
-
-```bash
-# Note: Every -D flag must be of the form NAME=VALUE (e.g., -DFUN_WITH_REPL=ON)
-cmake -S . -B build -DFUN_DEBUG=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_JSON=ON
-cmake --build build --target fun
-```
-
-CMake options you can toggle (all require NAME=VALUE):
-
-- FUN_DEBUG=ON|OFF — verbose debug logging in the VM (default OFF)
-- FUN_WITH_CURL=ON|OFF — enable CURL support using libcurl (default OFF)
-- FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default OFF)
-- FUN_WITH_PCRE2=ON|OFF — enable PCRE2 Perl-Compatible Regular Expressions support (default OFF)
-- FUN_WITH_PCSC=ON|OFF — enable PCSC smart card support (default OFF)
-- FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default ON)
-
-That's it! For testing it, run:
-
-```bash
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
-```
-
-To see what's going on, run:
-
-```bash
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun --trace ./demo.fun
-```
-
-To switch into the REPL after an error, run:
-
-```bash
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
-```
-
-Both --repl-on-error and --trace are optional but can always be combined. To get
-more debug information, you need to build Fun with -DFUN_DEBUG=ON.
-
-To directly run the REPL, you have to run:
-
-```bash
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun
-```
-
-But be sure to build Fun with -DFUN_WITH_REPL=ON.
-
-Tip: If you saw an error like this when configuring with CMake:
-
-  CMake Error: Parse error in command line argument: FUN_WITH_JSON
-  Should be: VAR:type=value
-
-it means a -D flag was passed without a value. Always specify options as -DNAME=VALUE, for example:
-
-  -DFUN_WITH_JSON=ON
-
----
-
-## Contributing and further reading
-
-- Browse lib/ for up-to-date stdlib APIs; many files document their own public interfaces in comments at the top.
-- src/bytecode.h lists all opcodes supported by the VM. The corresponding implementations live under src/vm/.
-- examples/ are the best starting point to learn by doing.
-
+- Browse lib/ for stdlib APIs (files often document their own interfaces)
+- src/bytecode.h lists supported opcodes; implementations live under src/vm/
+- examples/ are the best starting point to learn by doing

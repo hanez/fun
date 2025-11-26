@@ -787,6 +787,43 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* SQLite builtins */
+            if (strcmp(name, "sqlite_open") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sqlite_open expects (path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after sqlite_open arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SQLITE_OPEN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sqlite_close") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sqlite_close expects (handle)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after sqlite_close arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SQLITE_CLOSE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sqlite_exec") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sqlite_exec expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "sqlite_exec expects (handle, sql)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sqlite_exec expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after sqlite_exec args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SQLITE_EXEC, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sqlite_query") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sqlite_query expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "sqlite_query expects (handle, sql)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "sqlite_query expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after sqlite_query args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SQLITE_QUERY, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "curl_post") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "curl_post expects (url, body)"); free(name); return 0; }

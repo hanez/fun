@@ -13,6 +13,10 @@
 #include "string.c"
 #include "pcsc.c"
 #include "jsonc.c"
+#ifdef FUN_WITH_SQLITE
+#include <sqlite3.h>
+#include "vm/sqlite/common.c"
+#endif
 #include "vm.h"
 #include "value.h"
 #include <stdio.h>
@@ -702,6 +706,12 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/curl/get.c"
             #include "vm/curl/post.c"
             #include "vm/curl/download.c"
+
+            /* SQLite ops */
+            #include "vm/sqlite/open.c"
+            #include "vm/sqlite/close.c"
+            #include "vm/sqlite/exec.c"
+            #include "vm/sqlite/query.c"
 
             /* PCRE2 ops */
             #include "vm/pcre2/test.c"

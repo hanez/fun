@@ -152,6 +152,12 @@ typedef enum {
     OP_CURL_POST,        // pops [headers map?], body string, url; pushes response string (or "")
     OP_CURL_DOWNLOAD,    // pops [headers map?], path, url; pushes 1/0
 
+    // SQLite (optional)
+    OP_SQLITE_OPEN,      // pops path; pushes handle (>0) or 0
+    OP_SQLITE_CLOSE,     // pops handle; pushes Nil
+    OP_SQLITE_EXEC,      // pops sql, handle; pushes sqlite rc (0=OK)
+    OP_SQLITE_QUERY,     // pops sql, handle; pushes array<map>
+
     // PCSC (smart card) opcodes
     OP_PCSC_ESTABLISH,    // returns context id (>0) or 0
     OP_PCSC_RELEASE,      // pops ctx id; returns 1/0
