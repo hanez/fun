@@ -1,3 +1,5 @@
+#!/usr/bin/env fun
+
 /*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
@@ -11,9 +13,9 @@
 
 // Prepare sample DB from SQL if needed (requires sqlite3 CLI installed)
 // Create it once with:
-// sqlite3 todo.sqlite < ./examples/data/todo.sql
+// sqlite3 ./database.sqlite < ./examples/data/database.sql
 
-string db_path = "./todo.sqlite"
+string db_path = "./database.sqlite"
 
 number h = sqlite_open(db_path)
 if h == 0
@@ -35,3 +37,12 @@ rows2 = sqlite_query(h, "SELECT count(*) AS cnt FROM tasks;")
 print("Total tasks now: " + to_string(rows2[0]["cnt"]))
 
 sqlite_close(h)
+
+/* Example output:
+Tasks (3):
+- [✔] (#1) Write Fun + SQLite example — 2025-11-26 23:22:04
+- [✘] (#2) Ship optional feature flag — 2025-11-26 23:22:04
+- [✘] (#3) Celebrate with coffee — 2025-11-26 23:22:04
+Insert rc=0
+Total tasks now: 4
+*/

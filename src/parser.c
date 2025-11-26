@@ -824,6 +824,43 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* libsql builtins (independent extension) */
+            if (strcmp(name, "libsql_open") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "libsql_open expects (url_or_path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after libsql_open arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LIBSQL_OPEN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "libsql_close") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "libsql_close expects (handle)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after libsql_close arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LIBSQL_CLOSE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "libsql_exec") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "libsql_exec expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "libsql_exec expects (handle, sql)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "libsql_exec expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after libsql_exec args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LIBSQL_EXEC, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "libsql_query") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "libsql_query expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "libsql_query expects (handle, sql)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "libsql_query expects (handle, sql)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after libsql_query args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LIBSQL_QUERY, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "curl_post") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "curl_post expects (url, body)"); free(name); return 0; }

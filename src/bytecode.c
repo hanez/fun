@@ -152,6 +152,10 @@ static const char *opcode_name(OpCode op) {
         case OP_SQLITE_CLOSE: return "SQLITE_CLOSE";
         case OP_SQLITE_EXEC: return "SQLITE_EXEC";
         case OP_SQLITE_QUERY: return "SQLITE_QUERY";
+        case OP_LIBSQL_OPEN: return "LIBSQL_OPEN";
+        case OP_LIBSQL_CLOSE: return "LIBSQL_CLOSE";
+        case OP_LIBSQL_EXEC: return "LIBSQL_EXEC";
+        case OP_LIBSQL_QUERY: return "LIBSQL_QUERY";
         case OP_PCSC_ESTABLISH: return "PCSC_ESTABLISH";
         case OP_PCSC_RELEASE: return "PCSC_RELEASE";
         case OP_PCSC_LIST_READERS: return "PCSC_LIST_READERS";

@@ -17,6 +17,10 @@
 #include <sqlite3.h>
 #include "vm/sqlite/common.c"
 #endif
+#ifdef FUN_WITH_LIBSQL
+#include <sqlite3.h> /* libsql exposes sqlite3-compatible C API */
+#include "vm/libsql/common.c"
+#endif
 #include "vm.h"
 #include "value.h"
 #include <stdio.h>
@@ -712,6 +716,12 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/sqlite/close.c"
             #include "vm/sqlite/exec.c"
             #include "vm/sqlite/query.c"
+
+            /* libsql ops (independent) */
+            #include "vm/libsql/open.c"
+            #include "vm/libsql/close.c"
+            #include "vm/libsql/exec.c"
+            #include "vm/libsql/query.c"
 
             /* PCRE2 ops */
             #include "vm/pcre2/test.c"

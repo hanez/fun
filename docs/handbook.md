@@ -90,6 +90,7 @@ Pass all options as -DNAME=VALUE. The most relevant toggles are:
 - FUN_DEBUG=ON|OFF — verbose VM debug logging (default OFF)
 - FUN_WITH_CURL=ON|OFF — enable CURL support via libcurl (default OFF)
 - FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default OFF)
+- FUN_WITH_LIBSQL=ON|OFF — enable libSQL (Turso) client support (default OFF)
 - FUN_WITH_PCRE2=ON|OFF — enable PCRE2 (Perl-Compatible Regular Expressions) (default OFF)
 - FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card support (default OFF)
 - FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
@@ -117,11 +118,32 @@ cmake -S . -B build -DFUN_WITH_SQLITE=ON
 cmake --build build --target fun
 
 # Create the sample database (requires the sqlite3 CLI):
-sqlite3 ./todo.sqlite < ./examples/data/todo.sql
+sqlite3 ./database.sqlite < ./examples/data/database.sql
 
 # Run the example
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlite_example.fun
 ```
+
+#### libSQL example (optional feature)
+
+libSQL support is optional and disabled by default. It is implemented as an independent extension and can coexist with SQLite. To build with it and run the example:
+
+```
+cmake -S . -B build -DFUN_WITH_LIBSQL=ON
+cmake --build build --target fun
+
+# Create the sample database using the sqlite3 CLI (libSQL implements the sqlite C API)
+sqlite3 ./database.sqlite < ./examples/data/database.sql
+
+# Run the libSQL example
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/libsql_example.fun
+```
+
+Available builtins when built with -DFUN_WITH_LIBSQL=ON:
+- libsql_open(path_or_url) -> handle (>0) or 0 on error
+- libsql_close(handle) -> Nil
+- libsql_exec(handle, sql) -> rc (0 on success)
+- libsql_query(handle, sql) -> array of map rows
 
 ### Install Fun to the OS (optional)
 

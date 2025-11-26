@@ -5,6 +5,7 @@ CMakeCache.txt
 .venv
 build*
 cmake*
+database.sqlite
 demo_*
 dist/
 downloaded.png
@@ -13,4 +14,3 @@ out/
 src/*.o
 *.swp
 tmp*
-todo.sqlite
