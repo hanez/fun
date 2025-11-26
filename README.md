@@ -23,6 +23,8 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](ht
 - [PCRE2](https://pcre2project.github.io/pcre2/) support builtin for Perl-Compatible Regular Expressions (optional) &#9745;
 - [SQLite](https://sqlite.org/) support builtin (optional) &#9744;
 - [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) &#9744;
+- [XML](https://www.w3.org/XML/) support builtin using [libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home) (optional) &#9744;
+- [YAML](https://yaml.org/) support builtin using [libfyaml](https://github.com/pantoniou/libfyaml) (optional) &#9744;
 
 &#9745; = Done / &#9744; = Planned or in progress.
 

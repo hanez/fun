@@ -79,6 +79,7 @@ class PCSC()
     return m
 */
 
+// This class is in a very early stage of development. 
 class PCSC()
   fun get_readers(this)
     ctx = pcsc_establish()
@@ -109,7 +110,7 @@ class PCSC()
       m["sw2"] = -1
       m["code"] = -2
       return m
-    // Actually selecting the second reader hardcode. This class is not in a very early stage of development. 
+    // Actually selecting the second reader hardcoded.
     handle = pcsc_connect(ctx, readers[1])
     apdu = this.hex_to_bytes(hex_apdu)
     res = pcsc_transmit(handle, apdu)
