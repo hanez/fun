@@ -15,8 +15,6 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](ht
 - Joy in coding
 - Fun!
 
-&#9745; = Done / &#9744; = Planned or in progress.
-
 ## Characteristics
 
 - Dynamic and optionally statically typed
@@ -78,7 +76,9 @@ Fun may not change the world — but it will make programming a little more fun.
 - [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) &#9744;
 - [XML](https://www.w3.org/XML/) support builtin using [libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home) (optional) &#9744;
 - [YAML](https://yaml.org/) support builtin using [libfyaml](https://github.com/pantoniou/libfyaml) (optional) &#9744;
-- 
+
+&#9745; = Done / &#9744; = Planned or in progress.
+
 ## Documentation
 
 I am writing documentation only actually, but this is work in progress, since debugging and bug fixing includes this task.
