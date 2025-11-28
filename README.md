@@ -98,7 +98,7 @@ Fun may not change the world — but it will make programming a little more fun.
 
 Note: Not all of the above features will be implemented. Those who are marked "Done" will probaly remain in Fun, but I don't know actually... ;)
 
-There are some libs written in Fun available at the [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) diretory. In the future most Fun enhancements should be written in Fun itself.
+There are some libs written in Fun available in the [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) diretory. In the future most Fun enhancements should be written in Fun itself.
 
 ## Documentation
 
