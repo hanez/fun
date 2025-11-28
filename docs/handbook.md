@@ -1,3 +1,23 @@
+---
+layout: page
+published: true
+noToc: true
+noComments: true
+title: /handbook/index.fun
+subtitle:
+description: Handbook
+permalink: /handbook/
+lang: en
+tags:
+- handbook
+- installation
+- usage
+- introduction
+- help
+- guide
+- howto
+---
+
 # Fun Handbook (Second Edition)
 
 This is a refreshed, de-duplicated, and fully up-to-date handbook for the Fun programming language and its virtual machine (VM). It keeps the same section layout as the original handbook while consolidating repeated content and documenting all currently available features, including the latest SQLite support.
@@ -88,11 +108,11 @@ FUN_LIB_DIR="$(pwd)/lib" ./build/fun
 Pass all options as -DNAME=VALUE. The most relevant toggles are:
 
 - FUN_DEBUG=ON|OFF — verbose VM debug logging (default OFF)
-- FUN_WITH_CURL=ON|OFF — enable CURL support via libcurl (default OFF)
-- FUN_WITH_JSON=ON|OFF — enable JSON support via json-c (default OFF)
+- FUN_WITH_CURL=ON|OFF — enable CURL (libcurl) support (default OFF)
+- FUN_WITH_JSON=ON|OFF — enable JSON (json-c) support  (default OFF)
 - FUN_WITH_LIBSQL=ON|OFF — enable libSQL (Turso) client support (default OFF)
 - FUN_WITH_PCRE2=ON|OFF — enable PCRE2 (Perl-Compatible Regular Expressions) (default OFF)
-- FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card support (default OFF)
+- FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card (PCSC lite) support (default OFF)
 - FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
 - FUN_WITH_SQLITE=ON|OFF — enable SQLite (sqlite3) support (default OFF)
 

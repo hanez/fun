@@ -2,9 +2,11 @@
 
 ## What is Fun?
 
+Fun is an experiment, just for fun, but Fun works!
+
 Fun is a highly strict programming language, but also highly simple. It looks like Python (My favorite language), but there are differences.
 
-Influenced by **[Bash](https://www.gnu.org/software/bash/)**, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, Go, **[Lua](https://www.lua.org/)**, **[Python](https://www.python.org/)**, and Rust (Most influences came from linked languages).
+Influenced by **[Bash](https://www.gnu.org/software/bash/)**, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, **[Lua](https://www.lua.org/)**, PHP, **[Python](https://www.python.org/)**, and Rust (Most influences came from linked languages).
 
 Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](https://opensource.org/license/apache-2-0).
 
@@ -67,25 +69,48 @@ Fun may not change the world — but it will make programming a little more fun.
 
 ## Features
 
+### Core
+
+- functions/classes/objects
+- if/else if/else
+- try/catch/finally
+
+### Lib
+
+...
+
+### Extensions
+
+- [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) &#9744;
 - [cURL](https://curl.se/) support builtin using [libcurl](https://curl.se/libcurl/) (optional) &#9745;
+- [INI](https://en.wikipedia.org/wiki/INI_file) support builtin using [iniparser](https://gitlab.com/iniparser/iniparser/) (optional) &#9744;
 - [JSON](https://www.json.org/) support builtin using [json-c](https://github.com/json-c/json-c) (optional) &#9745;
 - [libSQL](https://github.com/tursodatabase/libsql) support builtin (optional) &#9745;
 - [PCRE2](https://pcre2project.github.io/pcre2/) support builtin for Perl-Compatible Regular Expressions (optional) &#9745;
 - [PCSC](https://pcscworkgroup.com/) smart card support builtin using [PCSC lite](https://pcsclite.apdu.fr/) (optional) &#9745;
 - [SQLite](https://sqlite.org/) support builtin (optional) &#9745;
 - [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) &#9744;
+- [TOML](https://en.wikipedia.org/wiki/TOML) support builtin using [tomlc99](https://github.com/cktan/tomlc99) (optional) &#9744;
 - [XML](https://www.w3.org/XML/) support builtin using [libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home) (optional) &#9744;
 - [YAML](https://yaml.org/) support builtin using [libfyaml](https://github.com/pantoniou/libfyaml) (optional) &#9744;
 
 &#9745; = Done / &#9744; = Planned or in progress.
 
+Note: Not all of the above features will be implemented. Those who are marked "Done" will probaly remain in Fun, but I don't know actually... ;)
+
+There are some libs written in Fun available at the [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) diretory. In the future most Fun enhancements should be written in Fun itself.
+
 ## Documentation
 
-I am writing documentation only actually, but this is work in progress, since debugging and bug fixing includes this task.
+This is actually a work in progress...
 
 Current documentation is only found in the [Fun Handbook](https://git.xw3.org/fun/fun/src/branch/main/docs/handbook.md).
 
-In the [examples/](https://git.xw3.org/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
+In the [./examples/](https://git.xw3.org/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
+
+Fun internals are found directly in the [./src/](https://git.xw3.org/fun/fun/src/branch/main/src) diretory. Fun [Opcodes](https://en.wikipedia.org/wiki/Opcode) are found in [./src/vm/](https://git.xw3.org/fun/fun/src/branch/main/src/vm).
+
+Since things are actually changing sometimes, I will not write the documentation for this as of now.
 
 Complete API documentation will follow.
 
