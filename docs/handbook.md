@@ -1,23 +1,3 @@
----
-layout: page
-published: true
-noToc: true
-noComments: true
-title: /handbook/index.fun
-subtitle:
-description: Handbook
-permalink: /handbook/
-lang: en
-tags:
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
----
-
 # Fun Handbook (Second Edition)
 
 This is a refreshed, de-duplicated, and fully up-to-date handbook for the Fun programming language and its virtual machine (VM). It keeps the same section layout as the original handbook while consolidating repeated content and documenting all currently available features, including the latest SQLite support.
@@ -40,15 +20,18 @@ Fun is a small, strict, and simple programming language executed by a stack-base
 
 - A C compiler, a libc, and Git
 
-FreeBSD:
+#### FreeBSD:
+
 - CMake
 - Clang
 
-Linux:
+#### Linux:
+
 - CMake
 - GCC (Clang should also work)
 
-Windows:
+#### Windows:
+
 - Cygwin (not covered in detail here)
 - CMake
 - GCC via Cygwin
