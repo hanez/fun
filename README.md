@@ -104,7 +104,7 @@ There are some libs written in Fun available at the [./lib/](https://git.xw3.org
 
 This is actually a work in progress...
 
-Current documentation is only found in the [Fun Handbook](https://git.xw3.org/fun/fun/src/branch/main/docs/handbook.md).
+Current documentation is only found in the [Fun Handbook](https://fun-lang.xyz/handbook/).
 
 In the [./examples/](https://git.xw3.org/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
 
