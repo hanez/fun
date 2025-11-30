@@ -165,6 +165,15 @@ static const char *opcode_name(OpCode op) {
         case OP_PCRE2_TEST: return "PCRE2_TEST";
         case OP_PCRE2_MATCH: return "PCRE2_MATCH";
         case OP_PCRE2_FINDALL: return "PCRE2_FINDALL";
+        case OP_INI_LOAD: return "INI_LOAD";
+        case OP_INI_FREE: return "INI_FREE";
+        case OP_INI_GET_STRING: return "INI_GET_STRING";
+        case OP_INI_GET_INT: return "INI_GET_INT";
+        case OP_INI_GET_DOUBLE: return "INI_GET_DOUBLE";
+        case OP_INI_GET_BOOL: return "INI_GET_BOOL";
+        case OP_INI_SET: return "INI_SET";
+        case OP_INI_UNSET: return "INI_UNSET";
+        case OP_INI_SAVE: return "INI_SAVE";
         default: return "???";
     }
 }

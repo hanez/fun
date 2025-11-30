@@ -13,6 +13,23 @@
 #include "string.c"
 #include "pcsc.c"
 #include "jsonc.c"
+#ifdef FUN_WITH_INI
+#if defined(__has_include)
+#  if __has_include(<iniparser/iniparser.h>)
+#    include <iniparser/iniparser.h>
+#    include <iniparser/dictionary.h>
+#  elif __has_include(<iniparser.h>)
+#    include <iniparser.h>
+#    include <dictionary.h>
+#  else
+#    error "iniparser headers not found"
+#  endif
+#else
+#  include <iniparser/iniparser.h>
+#  include <iniparser/dictionary.h>
+#endif
+#include "vm/ini/handles.h"
+#endif
 #ifdef FUN_WITH_SQLITE
 #include <sqlite3.h>
 #include "vm/sqlite/common.c"
@@ -705,6 +722,14 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/json/stringify.c"
             #include "vm/json/from_file.c"
             #include "vm/json/to_file.c"
+
+            /* INI ops (iniparser 4.2.6) */
+            #ifdef FUN_WITH_INI
+            #include "vm/ini/load.c"
+            #include "vm/ini/free.c"
+            #include "vm/ini/getters.c"
+            #include "vm/ini/set_unset_save.c"
+            #endif
 
             /* CURL ops */
             #include "vm/curl/get.c"

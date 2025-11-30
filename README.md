@@ -83,7 +83,7 @@ Fun may not change the world — but it will make programming a little more fun.
 
 - [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) &#9744;
 - [cURL](https://curl.se/) support builtin using [libcurl](https://curl.se/libcurl/) (optional) &#9745;
-- [INI](https://en.wikipedia.org/wiki/INI_file) support builtin using [iniparser](https://gitlab.com/iniparser/iniparser/) (optional) &#9744;
+- [INI](https://en.wikipedia.org/wiki/INI_file) support builtin using [iniparser](https://gitlab.com/iniparser/iniparser/) (optional) &#9745;
 - [JSON](https://www.json.org/) support builtin using [json-c](https://github.com/json-c/json-c) (optional) &#9745;
 - [libSQL](https://github.com/tursodatabase/libsql) support builtin (optional) &#9745;
 - [PCRE2](https://pcre2project.github.io/pcre2/) support builtin for Perl-Compatible Regular Expressions (optional) &#9745;

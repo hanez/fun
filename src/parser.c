@@ -778,6 +778,115 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* INI (iniparser 4.2.6) builtins */
+            if (strcmp(name, "ini_load") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_load expects (path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_load arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_LOAD, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_free") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_free expects (handle)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_free arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_FREE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_get_string") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_string expects (handle, section, key, default)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_string expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_string expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_string expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_string expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_string expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_string expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_get_string args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_GET_STRING, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_get_int") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_int expects (handle, section, key, default)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_int expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_int expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_int expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_int expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_int expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_int expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_get_int args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_GET_INT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_get_double") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_double expects (handle, section, key, default)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_double expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_double expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_double expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_double expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_double expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_double expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_get_double args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_GET_DOUBLE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_get_bool") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_bool expects (handle, section, key, default)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_bool expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_bool expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_bool expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_bool expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_get_bool expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_get_bool expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_get_bool args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_GET_BOOL, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_set") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_set expects (handle, section, key, value)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_set expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_set expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_set expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_set expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_set expects 4 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_set expects 4 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_set args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_SET, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_unset") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_unset expects (handle, section, key)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_unset expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_unset expects 3 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_unset expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_unset expects 3 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_unset args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_UNSET, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ini_save") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_save expects (handle, path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "ini_save expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "ini_save expects 2 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after ini_save args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_INI_SAVE, 0);
+                free(name);
+                return 1;
+            }
             /* CURL builtins (minimal interface like JSON) */
             if (strcmp(name, "curl_get") == 0) {
                 (*pos)++; /* '(' */
