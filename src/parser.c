@@ -791,6 +791,50 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* Tk (GUI) builtins (no raw Tcl exposed) */
+            if (strcmp(name, "tk_loop") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "tk_loop expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_LOOP, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tk_title") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_title expects (title:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tk_title arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_WM_TITLE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tk_label") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_label expects (id:string, text:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "tk_label expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_label expects (id:string, text:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tk_label args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_LABEL, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tk_button") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_button expects (id:string, text:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "tk_button expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_button expects (id:string, text:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tk_button args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_BUTTON, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tk_pack") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_pack expects (id:string)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tk_pack arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_PACK, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "json_from_file") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_from_file expects (path)"); free(name); return 0; }

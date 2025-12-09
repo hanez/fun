@@ -194,6 +194,15 @@ typedef enum {
     OP_XML_NAME,          // pops node handle; pushes string (node name)
     OP_XML_TEXT,          // pops node handle; pushes string (node text)
 
+    // Tk (Tcl/Tk) optional minimal API
+    OP_TK_EVAL,           // pops script string; pushes int rc (0 = OK)
+    OP_TK_RESULT,         // pushes string: last Tcl result
+    OP_TK_LOOP,           // enters Tk event loop; pushes Nil when done
+    OP_TK_WM_TITLE,       // pops title string; sets window title; pushes rc
+    OP_TK_LABEL,          // pops text, id; creates/updates label .id; pushes rc
+    OP_TK_BUTTON,         // pops text, id; creates/updates button .id; pushes rc
+    OP_TK_PACK,           // pops id; packs .id; pushes rc
+
     // Sockets (UNIX platforms)
     OP_SOCK_TCP_LISTEN,    // pops backlog, port; returns listen fd (>0) or 0
     OP_SOCK_TCP_ACCEPT,    // pops listen fd; returns client fd (>0) or 0

@@ -7,12 +7,23 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/* Ensure POSIX prototypes (nanosleep, clock_gettime, localtime_r, etc.) are available
+ * before any system headers are included by amalgamated .c files. */
+#ifndef _WIN32
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+#endif
+#include <time.h>
+
 /* Bring in split-out built-ins without changing the build system yet */
 #include "iter.c"
 #include "map.c"
 #include "string.c"
 #include "pcsc.c"
 #include "jsonc.c"
+/* Embedded Tcl/Tk helpers (provide stubs when FUN_WITH_TCLTK is off) */
+#include "tk_embed.c"
 #ifdef FUN_WITH_XML2
 #include "vm/xml/handles.h"
 #endif
@@ -746,6 +757,15 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/curl/get.c"
             #include "vm/curl/post.c"
             #include "vm/curl/download.c"
+
+            /* Tk (Tcl/Tk) ops */
+            #include "vm/tk/eval.c"
+            #include "vm/tk/result.c"
+            #include "vm/tk/loop.c"
+            #include "vm/tk/wm_title.c"
+            #include "vm/tk/label.c"
+            #include "vm/tk/button.c"
+            #include "vm/tk/pack.c"
 
             /* SQLite ops */
             #include "vm/sqlite/open.c"

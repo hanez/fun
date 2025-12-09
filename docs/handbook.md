@@ -99,6 +99,7 @@ Pass all options as -DNAME=VALUE. The most relevant toggles are:
 - FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card (PCSC lite) support (default OFF)
 - FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
 - FUN_WITH_SQLITE=ON|OFF — enable SQLite (sqlite3) support (default OFF)
+- FUN_WITH_TCLTK=ON|OFF — enable Tk (GUI via Tcl/Tk) support (default OFF)
 
 You can also set the default search path for the bundled stdlib with DEFAULT_LIB_DIR:
 
@@ -192,6 +193,52 @@ else
 Notes:
 - Handles are simple integers managed by the VM; nodes are owned by their document.
 - This initial integration focuses on parsing and basic navigation. Attributes, children iteration, and XPath may be added later.
+
+#### Tk GUI example (optional feature)
+
+Tk GUI support is optional and disabled by default. It embeds a Tcl/Tk interpreter and exposes a small, Tk-only API to Fun code (no raw Tcl required).
+
+To build with Tk and run the example:
+
+```
+cmake -S . -B build -DFUN_WITH_TCLTK=ON
+cmake --build build --target fun
+
+# Run the example
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/tk_hello.fun
+```
+
+Available VM builtins when built with -DFUN_WITH_TCLTK=ON:
+- tk_title(title: string) -> rc
+- tk_label(id: string, text: string) -> rc
+- tk_button(id: string, text: string) -> rc
+- tk_pack(id: string) -> rc
+- tk_loop() -> Nil (enters event loop until the window is closed)
+
+Standard library wrapper (lib/ui/tk.fun):
+- class TK
+  - title(title: string): int
+  - label(id: string, text: string): int
+  - button(id: string, text: string): int
+  - pack(id: string): int
+  - loop(): Nil
+
+Example Fun code:
+```
+include <ui/tk.fun>
+
+tk = TK()
+tk.title("Fun + Tk GUI")
+tk.label("hello", "Hello, world!")
+tk.pack("hello")
+tk.button("ok", "OK")
+tk.pack("ok")
+tk.loop()
+```
+
+Notes:
+- Ensure Tcl/Tk is installed (8.6+). On Linux install tcl/tk packages; on macOS install Homebrew tcl-tk; on Windows ensure the DLLs are available.
+- The Fun process terminates when the main window is closed or when the example's OK button is clicked.
 
 ### Install Fun to the OS (optional)
 

@@ -178,6 +178,13 @@ static const char *opcode_name(OpCode op) {
         case OP_XML_ROOT: return "XML_ROOT";
         case OP_XML_NAME: return "XML_NAME";
         case OP_XML_TEXT: return "XML_TEXT";
+        case OP_TK_EVAL: return "TK_EVAL";
+        case OP_TK_RESULT: return "TK_RESULT";
+        case OP_TK_LOOP: return "TK_LOOP";
+        case OP_TK_WM_TITLE: return "TK_WM_TITLE";
+        case OP_TK_LABEL: return "TK_LABEL";
+        case OP_TK_BUTTON: return "TK_BUTTON";
+        case OP_TK_PACK: return "TK_PACK";
         default: return "???";
     }
 }
