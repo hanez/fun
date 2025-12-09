@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns:library xmlns:ns="http://example.org/ns/library" xmlns:bk="http://example.org/ns/book">
+  <bk:book id="B-1">
+    <bk:title>The Art of Fun</bk:title>
+    <bk:author>J. Findeisen</bk:author>
+  </bk:book>
+  <bk:book id="B-2">
+    <bk:title>Minimal VM Design</bk:title>
+    <bk:author>A. Dev</bk:author>
+  </bk:book>
+</ns:library>

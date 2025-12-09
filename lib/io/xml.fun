@@ -37,3 +37,21 @@ class XML()
   // Get node concatenated text content as string.
   fun text(this, node)
     return xml_text(node)
+
+  // Utility: return substring of s between delimiters a and b.
+  // - If a is not found, returns "".
+  // - If b is an empty string, returns everything after the first occurrence of a.
+  // - If b is not found after a, returns "".
+  fun between(this, s, a, b)
+    i = find(s, a)
+    if (i < 0)
+      return ""
+    i = i + len(a)
+    rest = substr(s, i, len(s) - i)
+    if (len(b) == 0)
+      return rest
+    j = find(rest, b)
+    if (j < 0)
+      return ""
+    return substr(rest, 0, j)
+
