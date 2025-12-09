@@ -174,6 +174,10 @@ static const char *opcode_name(OpCode op) {
         case OP_INI_SET: return "INI_SET";
         case OP_INI_UNSET: return "INI_UNSET";
         case OP_INI_SAVE: return "INI_SAVE";
+        case OP_XML_PARSE: return "XML_PARSE";
+        case OP_XML_ROOT: return "XML_ROOT";
+        case OP_XML_NAME: return "XML_NAME";
+        case OP_XML_TEXT: return "XML_TEXT";
         default: return "???";
     }
 }

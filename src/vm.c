@@ -13,6 +13,9 @@
 #include "string.c"
 #include "pcsc.c"
 #include "jsonc.c"
+#ifdef FUN_WITH_XML2
+#include "vm/xml/handles.h"
+#endif
 #ifdef FUN_WITH_INI
 #if defined(__has_include)
 #  if __has_include(<iniparser/iniparser.h>)
@@ -722,6 +725,14 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/json/stringify.c"
             #include "vm/json/from_file.c"
             #include "vm/json/to_file.c"
+
+            /* XML ops (libxml2) */
+            #ifdef FUN_WITH_XML2
+            #include "vm/xml/parse.c"
+            #include "vm/xml/root.c"
+            #include "vm/xml/name.c"
+            #include "vm/xml/text.c"
+            #endif
 
             /* INI ops (iniparser 4.2.6) */
             #ifdef FUN_WITH_INI

@@ -748,6 +748,39 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* XML builtins (minimal) */
+            if (strcmp(name, "xml_parse") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "xml_parse expects (text)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after xml_parse arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_XML_PARSE, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "xml_root") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "xml_root expects (doc_handle)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after xml_root arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_XML_ROOT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "xml_name") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "xml_name expects (node_handle)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after xml_name arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_XML_NAME, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "xml_text") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "xml_text expects (node_handle)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after xml_text arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_XML_TEXT, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "json_stringify") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "json_stringify expects (value, pretty)"); free(name); return 0; }

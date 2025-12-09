@@ -90,7 +90,7 @@ Fun may not change the world — but it will make programming a little more fun.
 - [PCSC](https://pcscworkgroup.com/) smart card support builtin using [PCSC lite](https://pcsclite.apdu.fr/) (optional) &#9745;
 - [SQLite](https://sqlite.org/) support builtin (optional) &#9745;
 - [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) &#9744;
-- [XML](https://www.w3.org/XML/) support builtin using [libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home) (optional) &#9744;
+- [XML](https://www.w3.org/XML/) support builtin using [libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home) (optional) &#9745;
 
 &#9745; = Done / &#9744; = Planned or in progress.
 
@@ -114,5 +114,5 @@ Complete API documentation will follow.
 
 ## Author
 
-Johannes Findeisen <you@hanez.org>
+Johannes Findeisen - <you@hanez.org>
 

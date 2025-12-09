@@ -94,6 +94,7 @@ Pass all options as -DNAME=VALUE. The most relevant toggles are:
 - FUN_WITH_CURL=ON|OFF — enable CURL (libcurl) support (default OFF)
 - FUN_WITH_JSON=ON|OFF — enable JSON (json-c) support  (default OFF)
 - FUN_WITH_LIBSQL=ON|OFF — enable libSQL (Turso) client support (default OFF)
+- FUN_WITH_XML2=ON|OFF — enable XML (libxml2) support (default OFF)
 - FUN_WITH_PCRE2=ON|OFF — enable PCRE2 (Perl-Compatible Regular Expressions) (default OFF)
 - FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card (PCSC lite) support (default OFF)
 - FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
@@ -147,6 +148,50 @@ Available builtins when built with -DFUN_WITH_LIBSQL=ON:
 - libsql_close(handle) -> Nil
 - libsql_exec(handle, sql) -> rc (0 on success)
 - libsql_query(handle, sql) -> array of map rows
+
+#### XML example (optional feature)
+
+XML support (via libxml2) is optional and disabled by default. To build with it and run the example:
+
+```
+cmake -S . -B build -DFUN_WITH_XML2=ON
+cmake --build build --target fun
+
+# Run the example using the stdlib XML class wrapper
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/xml_class_example.fun
+```
+
+Available VM builtins when built with -DFUN_WITH_XML2=ON:
+- xml_parse(text: string) -> doc_handle (int > 0) or 0 on error
+- xml_root(doc_handle: int) -> node_handle (int > 0) or 0 if missing
+- xml_name(node_handle: int) -> string (node tag name)
+- xml_text(node_handle: int) -> string (concatenated text of subtree)
+
+Standard library wrapper (lib/io/xml.fun):
+- class XML
+  - parse(text: string): int (doc handle)
+  - from_file(path: string): int (doc handle)
+  - root(doc: int): int (node handle)
+  - name(node: int): string
+  - text(node: int): string
+
+Example Fun code:
+```
+include <io/xml.fun>
+
+xml = XML()
+doc = xml.from_file("./examples/data/example.xml")
+if (doc == 0)
+  print("Failed to load XML file")
+else
+  root = xml.root(doc)
+  print(xml.name(root))
+  print(xml.text(root))
+```
+
+Notes:
+- Handles are simple integers managed by the VM; nodes are owned by their document.
+- This initial integration focuses on parsing and basic navigation. Attributes, children iteration, and XPath may be added later.
 
 ### Install Fun to the OS (optional)
 

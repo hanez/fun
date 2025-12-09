@@ -188,6 +188,12 @@ typedef enum {
     OP_INI_UNSET,         // pops key, section, handle; pushes 1/0
     OP_INI_SAVE,          // pops path, handle; pushes 1/0
 
+    // XML (libxml2) optional minimal API
+    OP_XML_PARSE,         // pops text string; pushes doc handle (>0) or 0
+    OP_XML_ROOT,          // pops doc handle; pushes node handle (>0) or 0
+    OP_XML_NAME,          // pops node handle; pushes string (node name)
+    OP_XML_TEXT,          // pops node handle; pushes string (node text)
+
     // Sockets (UNIX platforms)
     OP_SOCK_TCP_LISTEN,    // pops backlog, port; returns listen fd (>0) or 0
     OP_SOCK_TCP_ACCEPT,    // pops listen fd; returns client fd (>0) or 0
