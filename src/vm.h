@@ -22,7 +22,7 @@ static const char *opcode_names[] = {
     "NOP","LOAD_CONST","LOAD_LOCAL","STORE_LOCAL",
     "LOAD_GLOBAL","STORE_GLOBAL","ADD","SUB","MUL","DIV",
     "LT","LTE","GT","GTE","EQ","NEQ","POP","JUMP",
-    "JUMP_IF_FALSE","CALL","RETURN","PRINT","HALT",
+    "JUMP_IF_FALSE","CALL","RETURN","PRINT","ECHO","HALT",
     "LINE",
     "MOD","AND","OR","NOT","DUP","SWAP",
     "MAKE_ARRAY","INDEX_GET","INDEX_SET",

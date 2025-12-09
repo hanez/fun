@@ -77,6 +77,7 @@ static const char *opcode_name(OpCode op) {
         case OP_CALL: return "CALL";
         case OP_RETURN: return "RETURN";
         case OP_PRINT: return "PRINT";
+        case OP_ECHO: return "ECHO";
         case OP_HALT: return "HALT";
         case OP_MOD: return "MOD";
         case OP_AND: return "AND";

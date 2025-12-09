@@ -794,6 +794,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/len.c"
             #include "vm/line.c"
             #include "vm/print.c"
+            #include "vm/echo.c"
             #include "vm/to_number.c"
             #include "vm/to_string.c"
             #include "vm/cast.c"

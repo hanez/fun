@@ -2806,6 +2806,21 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             return;
         }
 
+        if (strcmp(name, "echo") == 0) {
+            free(name);
+            skip_spaces(src, len, &local_pos);
+            (void)consume_char(src, len, &local_pos, '(');
+            if (emit_expression(bc, src, len, &local_pos)) {
+                (void)consume_char(src, len, &local_pos, ')');
+                bytecode_add_instruction(bc, OP_ECHO, 0);
+            } else {
+                (void)consume_char(src, len, &local_pos, ')');
+            }
+            *pos = local_pos;
+            skip_to_eol(src, len, pos);
+            return;
+        }
+
         /* assignment or simple call */
         int lidx = local_find(name);
         int gi = (lidx < 0) ? sym_index(name) : -1;
@@ -3113,6 +3128,21 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         if (emit_expression(bc, src, len, pos)) {
             (void)consume_char(src, len, pos, ')');
             bytecode_add_instruction(bc, OP_PRINT, 0);
+        } else {
+            (void)consume_char(src, len, pos, ')');
+        }
+        skip_to_eol(src, len, pos);
+        return;
+    }
+
+    /* echo(expr): like print but does not add a newline (immediate output) */
+    if (starts_with(src, len, *pos, "echo")) {
+        *pos += 4;
+        skip_spaces(src, len, pos);
+        (void)consume_char(src, len, pos, '(');
+        if (emit_expression(bc, src, len, pos)) {
+            (void)consume_char(src, len, pos, ')');
+            bytecode_add_instruction(bc, OP_ECHO, 0);
         } else {
             (void)consume_char(src, len, pos, ')');
         }

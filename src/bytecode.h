@@ -43,6 +43,7 @@ typedef enum {
     OP_RETURN,         // pop optional return value and return to caller
 
     OP_PRINT,
+    OP_ECHO,         // like print but does not append a newline; prints immediately
     OP_HALT,
 
     OP_LINE,         // operand = source line number (debug marker)
