@@ -85,7 +85,7 @@ Fun may not change the world — but it will make programming a little more fun.
 - [cURL](https://curl.se/) support builtin using [libcurl](https://curl.se/libcurl/) (optional) &#9745;
 - [INI](https://en.wikipedia.org/wiki/INI_file) support builtin using [iniparser](https://gitlab.com/iniparser/iniparser/) (optional) &#9745;
 - [JSON](https://www.json.org/) support builtin using [json-c](https://github.com/json-c/json-c) (optional) &#9745;
-- [libSQL](https://github.com/tursodatabase/libsql) support builtin (optional) &#9745;
+- [libSQL](https://github.com/tursodatabase/libsql) support builtin as a compatible alternative to SQLite (optional) &#9745;
 - [PCRE2](https://pcre2project.github.io/pcre2/) support builtin for Perl-Compatible Regular Expressions (optional) &#9745;
 - [PCSC](https://pcscworkgroup.com/) smart card support builtin using [PCSC lite](https://pcsclite.apdu.fr/) (optional) &#9745;
 - [SQLite](https://sqlite.org/) support builtin (optional) &#9745;
