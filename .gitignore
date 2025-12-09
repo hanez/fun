@@ -9,6 +9,7 @@ database.sqlite
 demo_*
 dist/
 downloaded.png
+json.xml
 lib/*.so
 out/
 src/*.o

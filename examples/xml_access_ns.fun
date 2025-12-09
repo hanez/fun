@@ -1,3 +1,5 @@
+#!/usr/bin/env fun
+
 /*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
