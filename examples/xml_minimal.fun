@@ -17,3 +17,8 @@ doc = xml_parse("<root><item id=\"1\">a</item><item id=\"2\">b</item></root>")
 print("doc handle=\(doc)")
 root = xml_root(doc)
 print("root name=\(xml_name(root)) text=\(xml_text(root))")
+
+/* Expected output:
+doc handle=(doc)
+root name=(xml_name(root)) text=(xml_text(root))
+*/

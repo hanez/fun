@@ -44,3 +44,38 @@ else
   print(role)
   print("Email: ")
   print(email)
+
+/* Expected output:
+Root element: 
+<?xml version="1.0" encoding="UTF-8"?>
+<company>
+  <department name="Engineering">
+    <employee id="E-100">
+      <name>Alice Doe</name>
+      <role>Senior Developer</role>
+      <email>alice@example.com</email>
+    </employee>
+    <employee id="E-101">
+      <name>Bob Roe</name>
+      <role>DevOps Engineer</role>
+      <email>bob@example.com</email>
+    </employee>
+  </department>
+  <department name="Sales">
+    <employee id="S-200">
+      <name>Carol Smith</name>
+      <role>Account Executive</role>
+      <email>carol@example.com</email>
+    </employee>
+  </department>
+</company>
+
+First employee id: 
+E-100
+Name: 
+Alice Doe
+Role: 
+Senior Developer
+Email: 
+alice@example.com
+*/

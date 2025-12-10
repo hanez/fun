@@ -52,3 +52,46 @@ else
     print(currency)
     print(" ")
   print(price_text)
+
+/* Expected output:
+Root element: 
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <product id="SKU-1001">
+    <name>Wireless Keyboard</name>
+    <category>Peripherals</category>
+    <price currency="USD">39.99</price>
+    <specs>
+      <layout>US</layout>
+      <connection>Bluetooth</connection>
+      <battery>AA</battery>
+    </specs>
+  </product>
+  <product id="SKU-2002">
+    <name>27" Monitor</name>
+    <category>Displays</category>
+    <price currency="USD">199.00</price>
+    <specs>
+      <resolution>2560x1440</resolution>
+      <panel>IPS</panel>
+      <refresh>75Hz</refresh>
+    </specs>
+  </product>
+  <product id="SKU-3003">
+    <name>USB-C Dock</name>
+    <category>Peripherals</category>
+    <price currency="USD">89.50</price>
+    <specs>
+      <ports>2xHDMI, 3xUSB-A, 1xUSB-C PD</ports>
+      <pd>65W</pd>
+    </specs>
+  </product>
+</catalog>
+
+First product name: 
+Wireless Keyboard
+First price: 
+USD
+ 
+39.99
+*/

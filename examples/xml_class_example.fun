@@ -27,3 +27,84 @@ else
   print(xml.name(root))
   print("root text:")
   print(xml.text(root))
+
+/* Expected output:
+doc handle:
+<?xml version="1.0" encoding="UTF-8"?>
+<company name="Acme Corp">
+  <departments>
+    <department id="eng" name="Engineering">
+      <team name="Platform">
+        <member id="u1">Alice</member>
+        <member id="u2">Bob</member>
+      </team>
+      <team name="Product">
+        <member id="u3">Carol</member>
+      </team>
+    </department>
+    <department id="ops" name="Operations">
+      <team name="SRE">
+        <member id="u4">Dave</member>
+      </team>
+    </department>
+  </departments>
+  <offices>
+    <office city="Berlin" country="DE"/>
+    <office city="Paris" country="FR"/>
+  </offices>
+  <note>Welcome to Acme!</note>
+</company>
+
+root name:
+<?xml version="1.0" encoding="UTF-8"?>
+<company name="Acme Corp">
+  <departments>
+    <department id="eng" name="Engineering">
+      <team name="Platform">
+        <member id="u1">Alice</member>
+        <member id="u2">Bob</member>
+      </team>
+      <team name="Product">
+        <member id="u3">Carol</member>
+      </team>
+    </department>
+    <department id="ops" name="Operations">
+      <team name="SRE">
+        <member id="u4">Dave</member>
+      </team>
+    </department>
+  </departments>
+  <offices>
+    <office city="Berlin" country="DE"/>
+    <office city="Paris" country="FR"/>
+  </offices>
+  <note>Welcome to Acme!</note>
+</company>
+
+root text:
+<?xml version="1.0" encoding="UTF-8"?>
+<company name="Acme Corp">
+  <departments>
+    <department id="eng" name="Engineering">
+      <team name="Platform">
+        <member id="u1">Alice</member>
+        <member id="u2">Bob</member>
+      </team>
+      <team name="Product">
+        <member id="u3">Carol</member>
+      </team>
+    </department>
+    <department id="ops" name="Operations">
+      <team name="SRE">
+        <member id="u4">Dave</member>
+      </team>
+    </department>
+  </departments>
+  <offices>
+    <office city="Berlin" country="DE"/>
+    <office city="Paris" country="FR"/>
+  </offices>
+  <note>Welcome to Acme!</note>
+</company>
+
+*/
