@@ -749,8 +749,13 @@ void vm_run(VM *vm, Bytecode *entry) {
             #ifdef FUN_WITH_INI
             #include "vm/ini/load.c"
             #include "vm/ini/free.c"
-            #include "vm/ini/getters.c"
-            #include "vm/ini/set_unset_save.c"
+            #include "vm/ini/get_string.c"
+            #include "vm/ini/get_int.c"
+            #include "vm/ini/get_double.c"
+            #include "vm/ini/get_bool.c"
+            #include "vm/ini/set.c"
+            #include "vm/ini/unset.c"
+            #include "vm/ini/save.c"
             #endif
 
             /* CURL ops */
