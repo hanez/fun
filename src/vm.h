@@ -47,13 +47,17 @@ static const char *opcode_names[] = {
     "INI_LOAD","INI_FREE","INI_GET_STRING","INI_GET_INT","INI_GET_DOUBLE","INI_GET_BOOL","INI_SET","INI_UNSET","INI_SAVE",
     "XML_PARSE","XML_ROOT","XML_NAME","XML_TEXT",
     "SOCK_TCP_LISTEN","SOCK_TCP_ACCEPT","SOCK_TCP_CONNECT","SOCK_SEND","SOCK_RECV","SOCK_CLOSE","SOCK_UNIX_LISTEN","SOCK_UNIX_CONNECT",
-    "EXIT"
+    "EXIT",
+    "TRY_PUSH","TRY_POP","THROW"
 };
 
 typedef struct {
     Bytecode *fn;
     int ip;
     Value locals[MAX_FRAME_LOCALS];
+    /* exception handling (per-frame) */
+    int try_stack[16];
+    int try_sp; /* -1 when empty */
 } Frame;
 
 struct VM {
@@ -122,7 +126,7 @@ void vm_debug_request_finish(VM *vm);
 void vm_debug_request_continue(VM *vm);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_EXIT;  // all current opcodes
+    return op >= OP_NOP && op <= OP_THROW;  // all current opcodes
 }
 
 #endif

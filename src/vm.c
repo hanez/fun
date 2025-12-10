@@ -22,11 +22,69 @@
 #include "string.c"
 #include "pcsc.c"
 #include "jsonc.c"
-/* Embedded Tcl/Tk helpers (provide stubs when FUN_WITH_TCLTK is off) */
-#include "tk_embed.c"
-#ifdef FUN_WITH_XML2
-#include "vm/xml/handles.h"
+
+#include "value.h"
+#include "vm.h"
+
+#ifdef FUN_WITH_TCLTK
+#include <tcl.h>
+#include <tk.h>
+static Tcl_Interp* g_fun_tcl_interp = NULL;
+
+static void fun_tk_init_once(void) {
+    if (g_fun_tcl_interp) return;
+    Tcl_FindExecutable(NULL);
+    g_fun_tcl_interp = Tcl_CreateInterp();
+    if (!g_fun_tcl_interp) return;
+    if (Tcl_Init(g_fun_tcl_interp) != TCL_OK) {
+        fprintf(stderr, "Tcl_Init failed: %s\n", Tcl_GetStringResult(g_fun_tcl_interp));
+    }
+    if (Tk_Init(g_fun_tcl_interp) != TCL_OK) {
+        fprintf(stderr, "Tk_Init failed: %s\n", Tcl_GetStringResult(g_fun_tcl_interp));
+    }
+    /* Ensure the app terminates if the main window is closed via window manager */
+    /* Best-effort: set WM_DELETE_WINDOW handler to exit the process. */
+    Tcl_Eval(g_fun_tcl_interp, "wm protocol . WM_DELETE_WINDOW {exit 0}");
+}
+
+static int fun_tk_eval_script(const char *script) {
+    fun_tk_init_once();
+    if (!g_fun_tcl_interp) return -1;
+    int rc = Tcl_Eval(g_fun_tcl_interp, script ? script : "");
+    return rc; /* TCL_OK = 0 */
+}
+
+static const char* fun_tk_get_result(void) {
+    fun_tk_init_once();
+    if (!g_fun_tcl_interp) return "";
+    return Tcl_GetStringResult(g_fun_tcl_interp);
+}
+
+static void fun_tk_loop(void) {
+    fun_tk_init_once();
+    if (!g_fun_tcl_interp) return;
+    /* Drive Tk event loop until all main windows are closed */
+    while (Tk_GetNumMainWindows() > 0) {
+        while (Tcl_DoOneEvent(0)) {}
+        /* tiny sleep to avoid busy spin */
+#ifdef _WIN32
+        #include <windows.h>
+        Sleep(1);
+#else
+        #include <time.h>
+        struct timespec ts = {0, 1000000}; /* 1 ms */
+        nanosleep(&ts, NULL);
 #endif
+    }
+}
+#else
+/* Stubs when Tcl/Tk is disabled */
+static void fun_tk_init_once(void) { (void)0; }
+static int fun_tk_eval_script(const char *script) { (void)script; return -1; }
+static const char* fun_tk_get_result(void) { return ""; }
+static void fun_tk_loop(void) { (void)0; }
+#endif
+
 #ifdef FUN_WITH_INI
 #if defined(__has_include)
 #  if __has_include(<iniparser/iniparser.h>)
@@ -44,10 +102,12 @@
 #endif
 #include "vm/ini/handles.h"
 #endif
+
 #ifdef FUN_WITH_SQLITE
 #include <sqlite3.h>
 #include "vm/sqlite/common.c"
 #endif
+
 #ifdef FUN_WITH_LIBSQL
 #include <sqlite3.h> /* libsql exposes sqlite3-compatible C API */
 #include "vm/libsql/common.c"
@@ -89,6 +149,53 @@ static size_t fun_curl_file_write_cb(void *ptr, size_t sz, size_t nm, void *ud) 
     return fwrite(ptr, sz, nm, f);
 }
 #endif
+
+#ifdef FUN_WITH_XML2
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+typedef struct { xmlDocPtr doc; int in_use; } XmlDocSlot;
+typedef struct { xmlNodePtr node; int in_use; } XmlNodeSlot;
+
+static XmlDocSlot g_xml_docs[64];
+static XmlNodeSlot g_xml_nodes[256];
+
+static int xml_doc_alloc(xmlDocPtr d) {
+    for (int i = 1; i < (int)(sizeof(g_xml_docs)/sizeof(g_xml_docs[0])); ++i) {
+        if (!g_xml_docs[i].in_use) { g_xml_docs[i].in_use = 1; g_xml_docs[i].doc = d; return i; }
+    }
+    return 0;
+}
+static xmlDocPtr xml_doc_get(int h) {
+    if (h > 0 && h < (int)(sizeof(g_xml_docs)/sizeof(g_xml_docs[0])) && g_xml_docs[h].in_use) return g_xml_docs[h].doc;
+    return NULL;
+}
+static int xml_doc_free_handle(int h) {
+    if (h <= 0 || h >= (int)(sizeof(g_xml_docs)/sizeof(g_xml_docs[0])) || !g_xml_docs[h].in_use) return 0;
+    if (g_xml_docs[h].doc) xmlFreeDoc(g_xml_docs[h].doc);
+    g_xml_docs[h].doc = NULL;
+    g_xml_docs[h].in_use = 0;
+    return 1;
+}
+
+static int xml_node_alloc(xmlNodePtr n) {
+    for (int i = 1; i < (int)(sizeof(g_xml_nodes)/sizeof(g_xml_nodes[0])); ++i) {
+        if (!g_xml_nodes[i].in_use) { g_xml_nodes[i].in_use = 1; g_xml_nodes[i].node = n; return i; }
+    }
+    return 0;
+}
+static xmlNodePtr xml_node_get(int h) {
+    if (h > 0 && h < (int)(sizeof(g_xml_nodes)/sizeof(g_xml_nodes[0])) && g_xml_nodes[h].in_use) return g_xml_nodes[h].node;
+    return NULL;
+}
+static int xml_node_free_handle(int h) {
+    if (h <= 0 || h >= (int)(sizeof(g_xml_nodes)/sizeof(g_xml_nodes[0])) || !g_xml_nodes[h].in_use) return 0;
+    /* nodes are owned by their document; do not free here */
+    g_xml_nodes[h].node = NULL;
+    g_xml_nodes[h].in_use = 0;
+    return 1;
+}
+#endif /* FUN_WITH_XML2 */
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
@@ -464,6 +571,7 @@ static void frame_init(Frame *f) {
     f->fn = NULL;
     f->ip = 0;
     for (int i = 0; i < MAX_FRAME_LOCALS; ++i) f->locals[i] = make_nil();
+    f->try_sp = -1;
 }
 
 void vm_init(VM *vm) {
@@ -662,8 +770,8 @@ void vm_run(VM *vm, Bytecode *entry) {
 
             #include "vm/core/call.c"
             #include "vm/core/dup.c"
-            #include "vm/core/halt.c"
             #include "vm/core/exit.c"
+            #include "vm/core/halt.c"
             #include "vm/core/jump.c"
             #include "vm/core/jump_if_false.c"
             #include "vm/core/load_const.c"
@@ -675,6 +783,9 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/core/store_global.c"
             #include "vm/core/store_local.c"
             #include "vm/core/swap.c"
+            #include "vm/core/throw.c"
+            #include "vm/core/try_pop.c"
+            #include "vm/core/try_push.c"
 
             #include "vm/io/read_file.c"
             #include "vm/io/write_file.c"
@@ -724,18 +835,22 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/socket_unix_listen.c"
             #include "vm/os/socket_unix_connect.c"
 
+            #ifdef FUN_WITH_PCSC
             #include "vm/pcsc/establish.c"
             #include "vm/pcsc/release.c"
             #include "vm/pcsc/list_readers.c"
             #include "vm/pcsc/connect.c"
             #include "vm/pcsc/disconnect.c"
             #include "vm/pcsc/transmit.c"
+            #endif
 
             /* JSON ops (implemented in jsonc.c, included above) */
+            #ifdef FUN_WITH_JSON
             #include "vm/json/parse.c"
             #include "vm/json/stringify.c"
             #include "vm/json/from_file.c"
             #include "vm/json/to_file.c"
+            #endif
 
             /* XML ops (libxml2) */
             #ifdef FUN_WITH_XML2
@@ -759,11 +874,14 @@ void vm_run(VM *vm, Bytecode *entry) {
             #endif
 
             /* CURL ops */
+            #ifdef FUN_WITH_CURL
             #include "vm/curl/get.c"
             #include "vm/curl/post.c"
             #include "vm/curl/download.c"
+            #endif
 
             /* Tk (Tcl/Tk) ops */
+            #ifdef FUN_WITH_TCLTK
             #include "vm/tk/eval.c"
             #include "vm/tk/result.c"
             #include "vm/tk/loop.c"
@@ -771,23 +889,30 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/tk/label.c"
             #include "vm/tk/button.c"
             #include "vm/tk/pack.c"
+            #endif
 
             /* SQLite ops */
+            #ifdef FUN_WITH_SQLITE
             #include "vm/sqlite/open.c"
             #include "vm/sqlite/close.c"
             #include "vm/sqlite/exec.c"
             #include "vm/sqlite/query.c"
+            #endif
 
             /* libsql ops (independent) */
+            #ifdef FUN_WITH_LIBSQL
             #include "vm/libsql/open.c"
             #include "vm/libsql/close.c"
             #include "vm/libsql/exec.c"
             #include "vm/libsql/query.c"
+            #endif
 
             /* PCRE2 ops */
+            #ifdef FUN_WITH_PCRE2
             #include "vm/pcre2/test.c"
             #include "vm/pcre2/match.c"
             #include "vm/pcre2/findall.c"
+            #endif
 
             #include "vm/strings/find.c"
             #include "vm/strings/regex_match.c"

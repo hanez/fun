@@ -215,7 +215,12 @@ typedef enum {
     OP_SOCK_UNIX_CONNECT,  // pops path; returns fd (>0) or 0
 
     // process control
-    OP_EXIT                // pops code (or uses operand) and terminates script with exit code
+    OP_EXIT,               // pops code (or uses operand) and terminates script with exit code
+
+    // exceptions (minimal)
+    OP_TRY_PUSH,           // operand = handler ip; push handler onto try-stack
+    OP_TRY_POP,            // pop current handler
+    OP_THROW               // pops error value; if handler -> jump to it (push err), else print and terminate
 } OpCode;
 
 typedef struct {

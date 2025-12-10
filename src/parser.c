@@ -2727,7 +2727,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     }
                     bytecode_set_operand(bc, j_skip_err, bc->instr_count);
                 } else {
-                    /* integer widths: expect Number then clamp */
+                    /* integer widths: expect Number then range-check */
                     int abs_bits = decl_bits < 0 ? -decl_bits : decl_bits;
                     if (abs_bits > 0) {
                         /* typeof == Number */
@@ -2747,7 +2747,53 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                         }
                         bytecode_set_operand(bc, j_skip_err, bc->instr_count);
 
-                        bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
+                        /* range check instead of clamp */
+                        int64_t minV = 0, maxV = 0;
+                        if (decl_bits < 0) {
+                            /* signed */
+                            if (abs_bits >= 64) { minV = INT64_MIN; maxV = INT64_MAX; }
+                            else { maxV = (1LL << (abs_bits - 1)) - 1; minV = - (1LL << (abs_bits - 1)); }
+                        } else {
+                            /* unsigned */
+                            if (abs_bits >= 63) { minV = 0; maxV = INT64_MAX; }
+                            else { minV = 0; maxV = (1LL << abs_bits) - 1; }
+                        }
+                        int ciMin = bytecode_add_constant(bc, make_int(minV));
+                        int ciMax = bytecode_add_constant(bc, make_int(maxV));
+
+                        /* if (v < min) -> error */
+                        bytecode_add_instruction(bc, OP_DUP, 0);
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMin);
+                        bytecode_add_instruction(bc, OP_LT, 0);
+                        int j_after_min = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                        {
+                            const char *tname = (decl_bits < 0)
+                                ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
+                                : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
+                            char buf[128];
+                            snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
+                            int ciMsg = bytecode_add_constant(bc, make_string(buf));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                            bytecode_add_instruction(bc, OP_THROW, 0);
+                        }
+                        bytecode_set_operand(bc, j_after_min, bc->instr_count);
+
+                        /* if (v > max) -> error */
+                        bytecode_add_instruction(bc, OP_DUP, 0);
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMax);
+                        bytecode_add_instruction(bc, OP_GT, 0);
+                        int j_after_max = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                        {
+                            const char *tname = (decl_bits < 0)
+                                ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
+                                : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
+                            char buf[128];
+                            snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
+                            int ciMsg = bytecode_add_constant(bc, make_string(buf));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                            bytecode_add_instruction(bc, OP_THROW, 0);
+                        }
+                        bytecode_set_operand(bc, j_after_max, bc->instr_count);
                     }
                 }
 
@@ -3071,7 +3117,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     }
                     bytecode_set_operand(bc, j_skip_err, bc->instr_count);
                 } else if (meta != 0) {
-                    /* integer widths: expect Number then clamp to declared width */
+                    /* integer widths: expect Number then range-check to declared width */
                     int abs_bits = meta < 0 ? -meta : meta;
                     /* typeof == Number */
                     bytecode_add_instruction(bc, OP_DUP, 0);
@@ -3090,7 +3136,49 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     }
                     bytecode_set_operand(bc, j_skip_err, bc->instr_count);
 
-                    bytecode_add_instruction(bc, (meta < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
+                    /* range check instead of clamp */
+                    int64_t minV = 0, maxV = 0;
+                    if (meta < 0) {
+                        if (abs_bits >= 64) { minV = INT64_MIN; maxV = INT64_MAX; }
+                        else { maxV = (1LL << (abs_bits - 1)) - 1; minV = - (1LL << (abs_bits - 1)); }
+                    } else {
+                        if (abs_bits >= 63) { minV = 0; maxV = INT64_MAX; }
+                        else { minV = 0; maxV = (1LL << abs_bits) - 1; }
+                    }
+                    int ciMin = bytecode_add_constant(bc, make_int(minV));
+                    int ciMax = bytecode_add_constant(bc, make_int(maxV));
+
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciMin);
+                    bytecode_add_instruction(bc, OP_LT, 0);
+                    int j_after_min = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    {
+                        const char *tname = (meta < 0)
+                            ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
+                            : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
+                        char buf[128];
+                        snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
+                        int ciMsg2 = bytecode_add_constant(bc, make_string(buf));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg2);
+                        bytecode_add_instruction(bc, OP_THROW, 0);
+                    }
+                    bytecode_set_operand(bc, j_after_min, bc->instr_count);
+
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciMax);
+                    bytecode_add_instruction(bc, OP_GT, 0);
+                    int j_after_max = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    {
+                        const char *tname = (meta < 0)
+                            ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
+                            : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
+                        char buf[128];
+                        snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
+                        int ciMsg3 = bytecode_add_constant(bc, make_string(buf));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg3);
+                        bytecode_add_instruction(bc, OP_THROW, 0);
+                    }
+                    bytecode_set_operand(bc, j_after_max, bc->instr_count);
                 }
                 /* dynamic (meta==0): no enforcement */
 
@@ -4288,12 +4376,15 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
             continue;
         }
 
-        /* try/catch/finally (syntax support; runtime exceptions not yet implemented) */
+        /* try/catch/finally */
         if (starts_with(src, len, *pos, "try")) {
             /* consume 'try' */
             *pos += 3;
             /* end of header line */
             skip_to_eol(src, len, pos);
+
+            /* Install a handler placeholder; will be patched to catch label (or a rethrow stub) */
+            int try_push_idx = bytecode_add_instruction(bc, OP_TRY_PUSH, 0);
 
             /* parse try body at increased indent (if any) */
             int try_body_indent = 0;
@@ -4304,9 +4395,16 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 /* empty try body allowed */
             }
 
+            /* After try body, pop handler for normal (non-exceptional) flow */
+            bytecode_add_instruction(bc, OP_TRY_POP, 0);
+
+            /* on normal completion, jump over catch body */
+            int jmp_over_catch_finally = bytecode_add_instruction(bc, OP_JUMP, 0);
+
             /* Optional: catch and/or finally clauses at same indentation */
             int seen_catch = 0;
             int seen_finally = 0;
+            int catch_label = -1;
             for (;;) {
                 size_t look = *pos;
                 int look_indent = 0;
@@ -4320,15 +4418,34 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                     skip_spaces(src, len, pos);
                     char *ex_name = NULL;
                     size_t tmp = *pos;
+                    int have_name = 0;
                     if (read_identifier_into(src, len, &tmp, &ex_name)) {
                         *pos = tmp;
-                        free(ex_name);
+                        have_name = 1;
                     }
                     /* end of header line */
                     skip_to_eol(src, len, pos);
 
-                    /* We currently don't have runtime exceptions: emit an unconditional jump over the catch body (so it's parsed but never executed) */
-                    int j_over = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    /* Mark catch label and patch try handler target */
+                    catch_label = bc->instr_count;
+                    bytecode_set_operand(bc, try_push_idx, catch_label);
+
+                    /* On entering catch, the thrown error is on stack. Bind to name if provided, else pop. */
+                    if (have_name) {
+                        int lidx = -1, gi = -1;
+                        if (g_locals) {
+                            int existing = local_find(ex_name);
+                            if (existing >= 0) lidx = existing; else lidx = local_add(ex_name);
+                        } else {
+                            gi = sym_index(ex_name);
+                        }
+                        if (lidx >= 0) bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+                        else if (gi >= 0) bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+                        else bytecode_add_instruction(bc, OP_POP, 0);
+                    } else {
+                        bytecode_add_instruction(bc, OP_POP, 0);
+                    }
+                    if (ex_name) free(ex_name);
 
                     /* parse catch body at increased indent (if any) */
                     int catch_indent = 0;
@@ -4338,10 +4455,6 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                     } else {
                         /* empty catch body allowed */
                     }
-
-                    /* patch jump to here (after catch body) */
-                    bytecode_set_operand(bc, j_over, bc->instr_count);
-
                     seen_catch = 1;
                     continue;
                 }
@@ -4368,6 +4481,17 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
                 /* no recognized clause at this indentation */
                 break;
             }
+
+            /* If no catch clause was present, make handler rethrow */
+            if (!seen_catch) {
+                int rethrow_label = bc->instr_count;
+                bytecode_set_operand(bc, try_push_idx, rethrow_label);
+                /* at handler: immediately rethrow the incoming error */
+                bytecode_add_instruction(bc, OP_THROW, 0);
+            }
+
+            /* patch normal-flow jump to here (after catch/finally) */
+            bytecode_set_operand(bc, jmp_over_catch_finally, bc->instr_count);
             continue;
         }
 
