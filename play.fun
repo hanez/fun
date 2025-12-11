@@ -1,74 +1,153 @@
 #!/usr/bin/env fun
 
 /*
- * This file is part of the Fun programming language.
- * https://fun-lang.xyz/
- *
- * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the Apache-2.0 license.
- * https://opensource.org/license/apache-2-0
+ * Interactive demo runner for all examples in ./examples
+ * - Asks y/n before running each feature demo
+ * - Executes each example as a subprocess
  */
 
-include <strings.fun>
+#include <io/console.fun>
 
-fun foo()
-  print("Have fun!")
-  print("Having fun... forever.")
+fun pick_fun_bin()
+  // Prefer an explicit FUN_BIN override; otherwise rely on PATH
+  b = env("FUN_BIN")
+  if b != ""
+    return b
+  return "fun"
 
-print("Typeof foo(): " + typeof(foo))
+fun run_example(bin, path)
+  // Ensure examples can locate stdlib when run from repo root.
+  // We execute via the shell so env assignment + redirection works.
+  cmd = join(["sh -c '\nFUN_LIB_DIR=./lib ", bin, " ", path, " 2>&1\n'"], "")
+  print("-- output begin --")
+  code = system(cmd)
+  print("-- output end --")
+  print(join(["exit code: ", to_string(code)], ""))
+  return code
 
-print("Yay, the playground for having fun... ;)")
+fun main()
+  c = Console()
+  bin = pick_fun_bin()
 
-print(string_to_bytes_ascii("Have Fun!"))
+  print("=== Fun language feature showcase (interactive) ===")
+  print(join(["Using interpreter: ", bin], ""))
+  print("Tip: set FUN_BIN=/path/to/fun to override. Stdlib is passed via FUN_LIB_DIR=./lib\n")
 
-number n = 23
-// Every type MUST be lowercase. Sint* must be sint*.
-print(n)
+  // List of example scripts. Keep paths relative to repo root where this demo resides.
+  // If you add/remove examples, update this list.
+  files = [
+    "examples/arrays.fun",
+    "examples/arrays_advanced.fun",
+    "examples/arrays_iter.fun",
+    "examples/boolean_decl.fun",
+    "examples/booleans.fun",
+    "examples/builtins_conversions.fun",
+    "examples/builtins_extended.fun",
+    "examples/builtins_maps_and_more.fun",
+    "examples/byte_for_demo.fun",
+    "examples/byte_overflow_try_catch.fun",
+    "examples/cast_demo.fun",
+    "examples/class_constructor.fun",
+    "examples/classes_demo.fun",
+    "examples/crc32_example.fun",
+    "examples/crc32c_example.fun",
+    "examples/curl_download.fun",
+    "examples/curl_get_json.fun",
+    "examples/curl_post.fun",
+    "examples/datetime_basic.fun",
+    "examples/datetime_extended.fun",
+    "examples/datetime_timer.fun",
+    "examples/debug_reporting.fun",
+    "examples/echo_example.fun",
+    "examples/exit_example.fun",
+    "examples/expressions_test.fun",
+    "examples/fail.fun",
+    "examples/file_io.fun",
+    "examples/file_print_for_file_line_by_line.fun",
+    "examples/floats.fun",
+    "examples/for_range_test.fun",
+    "examples/functions_test.fun",
+    "examples/have_fun.fun",
+    "examples/have_fun_function.fun",
+    "examples/if_else_test.fun",
+    "examples/include_lib.fun",
+    "examples/include_local.fun",
+    "examples/include_local_util.fun",
+    "examples/include_namespace.fun",
+    "examples/inheritance_demo.fun",
+    "examples/ini_class_demo.fun",
+    "examples/ini_complex.fun",
+    "examples/ini_demo.fun",
+    "examples/ini_subsections.fun",
+    "examples/input_example.fun",
+    "examples/json_showcase.fun",
+    "examples/libsql_example.fun",
+    "examples/loops_break_continue.fun",
+    "examples/md5_demo.fun",
+    "examples/namespaced_mod.fun",
+    "examples/nested_loops.fun",
+    "examples/objects_basic.fun",
+    "examples/objects_more.fun",
+    "examples/os_env.fun",
+    "examples/pcre2_opcodes.fun",
+    "examples/pcre2_showcase.fun",
+    "examples/pcsc_example.fun",
+    "examples/process_example.fun",
+    "examples/regex_demo.fun",
+    "examples/regex_procedural.fun",
+    "examples/repl_on_error.fun",
+    "examples/sha1_demo.fun",
+    "examples/sha256_demo.fun",
+    "examples/sha256_str_demo.fun",
+    "examples/sha384_example.fun",
+    "examples/sha512_demo.fun",
+    "examples/sha512_str_demo.fun",
+    "examples/short_circuit_test.fun",
+    "examples/signed_ints.fun",
+    "examples/sqlite_example.fun",
+    "examples/stdlib_showcase.fun",
+    "examples/strings_test.fun",
+    "examples/tcp_http_get.fun",
+    "examples/tcp_http_get_class.fun",
+    "examples/thread_class_example.fun",
+    "examples/threads_demo.fun",
+    "examples/tk_hello.fun",
+    "examples/try_catch_finally.fun",
+    "examples/try_catch_with_error.fun",
+    "examples/typeof.fun",
+    "examples/typeof_features.fun",
+    "examples/type_safety.fun",
+    "examples/type_safety_fails.fun",
+    "examples/types_integers.fun",
+    "examples/types_overview.fun",
+    "examples/uint_types.fun",
+    "examples/unix_socket_echo.fun",
+    "examples/while_test.fun",
+    "examples/xml_access_catalog.fun",
+    "examples/xml_access_employees.fun",
+    "examples/xml_access_ns.fun",
+    "examples/xml_class_example.fun",
+    "examples/xml_minimal.fun"
+  ]
 
-// This MUST fail because n is of type number and can not become a string or function. Setting it to 0 is not an option.
-n = "FooBar"
-print(n)
-print("Typeof n: " + typeof(n))
+  failures = []
 
-n = 100
-print(n)
-print("Typeof n: " + typeof(n))
+  for f in files
+    q = join(["Run ", f, "?"], "")
+    if c.ask_yes_no(q)
+      print(join(["=== Running: ", f, " ==="], ""))
+      code = run_example(bin, f)
+      if code != 0
+        failures.push(f)
+      print("")
+    else
+      print(join(["Skipped: ", f], ""))
 
-fun n(num)
-  print("n(" + to_string(num) + ")")
-n(42)
-// Typeof n MUST be of type Function here... Not Sint64.
-print("Typeof n: " + typeof(n))
+  if len(failures) == 0
+    print("All selected examples completed successfully.")
+  else
+    print("Some selected examples failed:")
+    for ff in failures
+      print(join([" - ", ff], ""))
 
-n = 2342
-print(n)
-print("Typeof n: " + typeof(n))
-
-x = 42
-print (x)
-
-x = "BarFoo"
-print(x)
-
-// Arrays must be declared with an "array" identifier if not beeing dynamicly typed. We need the "array" type."
-a = [23, 42]
-print(a)
-print(a[0])
-
-// Why this is possible? Setting n to a string, sets n to 0. Setting an array to 1 works...? This must fail when an a is of type "array", not in this case!
-a = 1
-print(a)
-
-string s = 'Have\n"fun!"'
-  print(s)
-
-print("\'" + " Fun")
-print('\'' + " \'Fun\'")
-print('\'' + " \"Fun\"")
-print('\'' + " \n\"Fun\"")
-print('\'' + " \n\t\"Fun\"")
-
-print("Running foo() 2 times...")
-foo()
-// We need arguments to functions...
-foo()
+main()
