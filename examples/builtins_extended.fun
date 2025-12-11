@@ -45,9 +45,9 @@ print(max(5, 9))                         // -> 9
 print(clamp(15, 0, 10))                  // -> 10
 print(abs(-7))                           // -> 7
 print(pow(2, 8))                         // -> 256
-random(123)                              // seed RNG
-print(randomInt(0, 3))                   // -> 0..2 (deterministic for seed 123)
-print(randomInt(5, 6))                   // -> 5
+random_seed(123)                              // seed RNG
+print(random_int(0, 3))                   // -> 0..2 (deterministic for seed 123)
+print(random_int(5, 6))                   // -> 5
 
 /* Expected output:
 a-b-c

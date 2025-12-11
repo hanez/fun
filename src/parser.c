@@ -1632,17 +1632,18 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
-            if (strcmp(name, "random") == 0) {
+
+            if (strcmp(name, "random_seed") == 0) {
                 (*pos)++; /* '(' */
-                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "random expects 1 arg"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "random_seed expects 1 arg"); free(name); return 0; }
                 bytecode_add_instruction(bc, OP_RANDOM_SEED, 0);
                 free(name);
                 return 1;
             }
-            if (strcmp(name, "randomInt") == 0) {
+            if (strcmp(name, "random_int") == 0) {
                 (*pos)++; /* '(' */
-                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "randomInt expects 2 args"); free(name); return 0; }
-                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "randomInt expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "random_int expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "random_int expects 2 args"); free(name); return 0; }
                 bytecode_add_instruction(bc, OP_RANDOM_INT, 0);
                 free(name);
                 return 1;
