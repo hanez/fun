@@ -14,351 +14,12 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 #endif
-#include <time.h>
 
-/* Bring in split-out built-ins without changing the build system yet */
-#include "iter.c"
-#include "map.c"
-#include "string.c"
-#include "value.h"
-#include "vm.h"
-
-#ifdef FUN_WITH_PCSC 
- /* PCSC helpers: registries and helper functions.
-  * Included at file scope from vm.c. */
-  #if defined(__has_include)
-    #if __has_include(<PCSC/winscard.h>)
-      #include <PCSC/winscard.h>
-      #include <PCSC/wintypes.h>
-    #elif __has_include(<winscard.h>)
-      #include <winscard.h>
-    #else
-      #error "FUN_WITH_PCSC is enabled but PCSC headers were not found"
-    #endif
-  #else
-    #include <PCSC/winscard.h>
-    #include <PCSC/wintypes.h>
-  #endif
-  #include <string.h>
-
-  typedef struct {
-      SCARDCONTEXT ctx;
-      int in_use;
-  } pcsc_ctx_entry;
-
-  typedef struct {
-      SCARDHANDLE h;
-      DWORD proto;
-      int in_use;
-  } pcsc_card_entry;
-
-  static pcsc_ctx_entry g_pcsc_ctx[8];
-  static pcsc_card_entry g_pcsc_card[32];
-
-  static int pcsc_alloc_ctx_slot(void) {
-      for (int i = 0; i < (int)(sizeof(g_pcsc_ctx)/sizeof(g_pcsc_ctx[0])); ++i) {
-          if (!g_pcsc_ctx[i].in_use) { g_pcsc_ctx[i].in_use = 1; g_pcsc_ctx[i].ctx = 0; return i + 1; }
-      }
-      return 0;
-  }
-
-  static int pcsc_alloc_card_slot(void) {
-      for (int i = 0; i < (int)(sizeof(g_pcsc_card)/sizeof(g_pcsc_card[0])); ++i) {
-          if (!g_pcsc_card[i].in_use) { g_pcsc_card[i].in_use = 1; g_pcsc_card[i].h = 0; g_pcsc_card[i].proto = 0; return i + 1; }
-      }
-      return 0;
-  }
-
-  static pcsc_ctx_entry* pcsc_get_ctx(int id) {
-      if (id <= 0) return NULL;
-      int idx = id - 1;
-      if (idx < 0 || idx >= (int)(sizeof(g_pcsc_ctx)/sizeof(g_pcsc_ctx[0]))) return NULL;
-      if (!g_pcsc_ctx[idx].in_use) return NULL;
-      return &g_pcsc_ctx[idx];
-  }
-
-  static pcsc_card_entry* pcsc_get_card(int id) {
-      if (id <= 0) return NULL;
-      int idx = id - 1;
-      if (idx < 0 || idx >= (int)(sizeof(g_pcsc_card)/sizeof(g_pcsc_card[0]))) return NULL;
-      if (!g_pcsc_card[idx].in_use) return NULL;
-      return &g_pcsc_card[idx];
-  }
-#endif
-
-#ifdef FUN_WITH_JSON
-/* json-c helpers and VM opcode cases (included from vm.c) */
-
-#include "value.h"
-#include "vm.h"
-
-#include <json-c/json.h>
-#include <string.h>
-
-/* --- Conversion helpers between json-c and Fun Value --- */
-static Value json_to_fun(json_object *j) {
-    if (!j) return make_nil();
-    enum json_type t = json_object_get_type(j);
-    switch (t) {
-        case json_type_null: return make_nil();
-        case json_type_boolean: return make_bool(json_object_get_boolean(j));
-        case json_type_double: return make_float(json_object_get_double(j));
-        case json_type_int: return make_int((int64_t)json_object_get_int64(j));
-        case json_type_string: return make_string(json_object_get_string(j));
-        case json_type_array: {
-            size_t n = json_object_array_length(j);
-            if (n == 0) {
-                return make_array_from_values(NULL, 0);
-            }
-            Value *vals = (Value*)malloc(sizeof(Value) * n);
-            if (!vals) return make_array_from_values(NULL, 0);
-            for (size_t i = 0; i < n; ++i) {
-                json_object *item = json_object_array_get_idx(j, (int)i);
-                vals[i] = json_to_fun(item);
-            }
-            Value arr = make_array_from_values(vals, (int)n);
-            for (size_t i = 0; i < n; ++i) free_value(vals[i]);
-            free(vals);
-            return arr;
-        }
-        case json_type_object: {
-            Value map = make_map_empty();
-            json_object_object_foreach(j, key, val) {
-                (void)map_set(&map, key, json_to_fun(val));
-            }
-            return map;
-        }
-        default:
-            return make_nil();
-    }
-}
-
-static json_object* fun_to_json(const Value *v) {
-    switch (v->type) {
-        case VAL_NIL: return json_object_new_null();
-        case VAL_BOOL: return json_object_new_boolean(v->i ? 1 : 0);
-        case VAL_INT: return json_object_new_int64(v->i);
-        case VAL_FLOAT: return json_object_new_double(v->d);
-        case VAL_STRING: return json_object_new_string(v->s ? v->s : "");
-        case VAL_ARRAY: {
-            json_object *arr = json_object_new_array();
-            int n = array_length(v);
-            for (int i = 0; i < n; ++i) {
-                Value item;
-                if (array_get_copy(v, i, &item)) {
-                    json_object_array_add(arr, fun_to_json(&item));
-                    free_value(item);
-                } else {
-                    json_object_array_add(arr, json_object_new_null());
-                }
-            }
-            return arr;
-        }
-        case VAL_MAP: {
-            json_object *obj = json_object_new_object();
-            /* We don't have an iterator API; use keys() helper */
-            Value keys = map_keys_array(v);
-            int kn = array_length(&keys);
-            for (int i = 0; i < kn; ++i) {
-                Value k;
-                if (!array_get_copy(&keys, i, &k)) continue;
-                if (k.type == VAL_STRING && k.s) {
-                    Value val;
-                    if (map_get_copy(v, k.s, &val)) {
-                        json_object_object_add(obj, k.s, fun_to_json(&val));
-                        free_value(val);
-                    } else {
-                        json_object_object_add(obj, k.s, json_object_new_null());
-                    }
-                }
-                free_value(k);
-            }
-            free_value(keys);
-            return obj;
-        }
-        default:
-            /* Fallback: stringify unsupported types */
-            return json_object_new_string("<unsupported>");
-    }
-}
-
-/* Note: The VM opcode case handlers are included from vm/vm switch via vm/json/ops.c */
-#endif
-
-#ifdef FUN_WITH_TCLTK
-#include <tcl.h>
-#include <tk.h>
-static Tcl_Interp* g_fun_tcl_interp = NULL;
-
-static void fun_tk_init_once(void) {
-    if (g_fun_tcl_interp) return;
-    Tcl_FindExecutable(NULL);
-    g_fun_tcl_interp = Tcl_CreateInterp();
-    if (!g_fun_tcl_interp) return;
-    if (Tcl_Init(g_fun_tcl_interp) != TCL_OK) {
-        fprintf(stderr, "Tcl_Init failed: %s\n", Tcl_GetStringResult(g_fun_tcl_interp));
-    }
-    if (Tk_Init(g_fun_tcl_interp) != TCL_OK) {
-        fprintf(stderr, "Tk_Init failed: %s\n", Tcl_GetStringResult(g_fun_tcl_interp));
-    }
-    /* Ensure the app terminates if the main window is closed via window manager */
-    /* Best-effort: set WM_DELETE_WINDOW handler to exit the process. */
-    Tcl_Eval(g_fun_tcl_interp, "wm protocol . WM_DELETE_WINDOW {exit 0}");
-}
-
-static int fun_tk_eval_script(const char *script) {
-    fun_tk_init_once();
-    if (!g_fun_tcl_interp) return -1;
-    int rc = Tcl_Eval(g_fun_tcl_interp, script ? script : "");
-    return rc; /* TCL_OK = 0 */
-}
-
-static const char* fun_tk_get_result(void) {
-    fun_tk_init_once();
-    if (!g_fun_tcl_interp) return "";
-    return Tcl_GetStringResult(g_fun_tcl_interp);
-}
-
-static void fun_tk_loop(void) {
-    fun_tk_init_once();
-    if (!g_fun_tcl_interp) return;
-    /* Drive Tk event loop until all main windows are closed */
-    while (Tk_GetNumMainWindows() > 0) {
-        while (Tcl_DoOneEvent(0)) {}
-        /* tiny sleep to avoid busy spin */
-#ifdef _WIN32
-        #include <windows.h>
-        Sleep(1);
-#else
-        #include <time.h>
-        struct timespec ts = {0, 1000000}; /* 1 ms */
-        nanosleep(&ts, NULL);
-#endif
-    }
-}
-#else
-/* Stubs when Tcl/Tk is disabled */
-static void fun_tk_init_once(void) { (void)0; }
-static int fun_tk_eval_script(const char *script) { (void)script; return -1; }
-static const char* fun_tk_get_result(void) { return ""; }
-static void fun_tk_loop(void) { (void)0; }
-#endif
-
-#ifdef FUN_WITH_INI
-#if defined(__has_include)
-#  if __has_include(<iniparser/iniparser.h>)
-#    include <iniparser/iniparser.h>
-#    include <iniparser/dictionary.h>
-#  elif __has_include(<iniparser.h>)
-#    include <iniparser.h>
-#    include <dictionary.h>
-#  else
-#    error "iniparser headers not found"
-#  endif
-#else
-#  include <iniparser/iniparser.h>
-#  include <iniparser/dictionary.h>
-#endif
-#include "vm/ini/handles.h"
-#endif
-
-#ifdef FUN_WITH_SQLITE
-#include <sqlite3.h>
-#include "vm/sqlite/common.c"
-#endif
-
-#ifdef FUN_WITH_LIBSQL
-#include <sqlite3.h> /* libsql exposes sqlite3-compatible C API */
-#include "vm/libsql/common.c"
-#endif
-#include "vm.h"
-#include "value.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-
-/* Ensure PCRE2 is configured consistently across the whole translation unit.
- * vm.c includes many opcode implementation .c files; some use PCRE2. For PCRE2
- * headers to expose the correct typedefs (e.g., pcre2_code, PCRE2_SPTR), the
- * PCRE2_CODE_UNIT_WIDTH macro must be defined before the first inclusion of
- * <pcre2.h>. We do this once here when PCRE2 support is enabled. */
-#ifdef FUN_WITH_PCRE2
-#ifndef PCRE2_CODE_UNIT_WIDTH
-#define PCRE2_CODE_UNIT_WIDTH 8
-#endif
-#include <pcre2.h>
-#endif
-
-/* Ensure libcurl headers and helpers are defined at file scope (not inside vm_run) */
-#ifdef FUN_WITH_CURL
-#include <curl/curl.h>
-typedef struct { char *d; size_t n; } FunCurlBuf;
-static size_t fun_curl_write_cb(void *ptr, size_t sz, size_t nm, void *ud) {
-    size_t add = sz * nm;
-    FunCurlBuf *b = (FunCurlBuf*)ud;
-    char *p = (char*)realloc(b->d, b->n + add + 1);
-    if (!p) return 0;
-    memcpy(p + b->n, ptr, add);
-    b->d = p; b->n += add; b->d[b->n] = '\0';
-    return add;
-}
-static size_t fun_curl_file_write_cb(void *ptr, size_t sz, size_t nm, void *ud) {
-    FILE *f = (FILE*)ud;
-    return fwrite(ptr, sz, nm, f);
-}
-#endif
-
-#ifdef FUN_WITH_XML2
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-
-typedef struct { xmlDocPtr doc; int in_use; } XmlDocSlot;
-typedef struct { xmlNodePtr node; int in_use; } XmlNodeSlot;
-
-static XmlDocSlot g_xml_docs[64];
-static XmlNodeSlot g_xml_nodes[256];
-
-static int xml_doc_alloc(xmlDocPtr d) {
-    for (int i = 1; i < (int)(sizeof(g_xml_docs)/sizeof(g_xml_docs[0])); ++i) {
-        if (!g_xml_docs[i].in_use) { g_xml_docs[i].in_use = 1; g_xml_docs[i].doc = d; return i; }
-    }
-    return 0;
-}
-static xmlDocPtr xml_doc_get(int h) {
-    if (h > 0 && h < (int)(sizeof(g_xml_docs)/sizeof(g_xml_docs[0])) && g_xml_docs[h].in_use) return g_xml_docs[h].doc;
-    return NULL;
-}
-static int xml_doc_free_handle(int h) {
-    if (h <= 0 || h >= (int)(sizeof(g_xml_docs)/sizeof(g_xml_docs[0])) || !g_xml_docs[h].in_use) return 0;
-    if (g_xml_docs[h].doc) xmlFreeDoc(g_xml_docs[h].doc);
-    g_xml_docs[h].doc = NULL;
-    g_xml_docs[h].in_use = 0;
-    return 1;
-}
-
-static int xml_node_alloc(xmlNodePtr n) {
-    for (int i = 1; i < (int)(sizeof(g_xml_nodes)/sizeof(g_xml_nodes[0])); ++i) {
-        if (!g_xml_nodes[i].in_use) { g_xml_nodes[i].in_use = 1; g_xml_nodes[i].node = n; return i; }
-    }
-    return 0;
-}
-static xmlNodePtr xml_node_get(int h) {
-    if (h > 0 && h < (int)(sizeof(g_xml_nodes)/sizeof(g_xml_nodes[0])) && g_xml_nodes[h].in_use) return g_xml_nodes[h].node;
-    return NULL;
-}
-static int xml_node_free_handle(int h) {
-    if (h <= 0 || h >= (int)(sizeof(g_xml_nodes)/sizeof(g_xml_nodes[0])) || !g_xml_nodes[h].in_use) return 0;
-    /* nodes are owned by their document; do not free here */
-    g_xml_nodes[h].node = NULL;
-    g_xml_nodes[h].in_use = 0;
-    return 1;
-}
-#endif /* FUN_WITH_XML2 */
-
-/* forward declarations for include mapping used in error reporting */
-extern char *preprocess_includes(const char *src);
-static int map_expanded_line_to_include(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line);
+#include <time.h>
 
 #ifdef __unix__
 #include <sys/wait.h>
@@ -368,8 +29,30 @@ static int map_expanded_line_to_include(const char *path, int line, char *out_pa
 #include <netdb.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+//#include <arpa/inet.h>
 #endif
+
+/* Bring in split-out built-ins without changing the build system yet */
+#include "iter.c"
+#include "map.c"
+#include "string.c"
+#include "value.h"
+#include "vm.h"
+
+// Optional by extensions commonly used code. #ifdef's are in each single file.
+#include "ext/curl.c"
+#include "ext/ini.c"
+#include "ext/json.c"
+#include "ext/libsql.c"
+#include "ext/pcsc.c"
+#include "ext/pcre2.c"
+#include "ext/sqlite.c"
+#include "ext/tcltk.c"
+#include "ext/xml2.c"
+
+/* forward declarations for include mapping used in error reporting */
+extern char *preprocess_includes(const char *src);
+static int map_expanded_line_to_include(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line);
 
 /* Threading internals (registry and platform glue) */
 #include "vm/os/thread_common.c"
@@ -983,7 +666,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/time_now_ms.c"
             #include "vm/os/clock_mono_ms.c"
             #include "vm/os/date_format.c"
-            
+
             /* Socket ops */
             #include "vm/os/socket_tcp_listen.c"
             #include "vm/os/socket_tcp_accept.c"

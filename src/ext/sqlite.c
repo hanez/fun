@@ -6,7 +6,7 @@
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
  *
- * Added: 2025-11-26
+ * Added: 2025-12-11 (2025-12-11 migrated from src/vm/sqlite/common.c)
  */
 
 /**

@@ -6,7 +6,7 @@
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
  *
- * Added: 2025-11-26
+ * Added: 2025-11-26 (2025-12-11 migrated from src/vm/libsql/common.c)
  */
 
 #ifdef FUN_WITH_LIBSQL
@@ -52,4 +52,4 @@ static void libsql_reg_del(int id) {
         pp = &((*pp)->next);
     }
 }
-#endif /* FUN_WITH_LIBSQL */
+#endif
