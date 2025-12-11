@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.37.7 LANGUAGES C)
+project(fun VERSION 0.37.8 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -23,6 +23,34 @@ if(NOT DEFINED DEFAULT_LIB_DIR OR DEFAULT_LIB_DIR STREQUAL "")
   set(DEFAULT_LIB_DIR "${_FUN_DEFAULT_LIB_DIR}" CACHE PATH "Default library directory for Fun stdlib (override with -DDEFAULT_LIB_DIR=...)" FORCE)
 else()
   set(DEFAULT_LIB_DIR "${DEFAULT_LIB_DIR}" CACHE PATH "Default library directory for Fun stdlib (override with -DDEFAULT_LIB_DIR=...)" FORCE)
+endif()
+
+# Optional: build using musl libc instead of glibc on Linux (OFF by default)
+# Note: Switching CMAKE_C_COMPILER must happen before the first project() call.
+option(FUN_USE_MUSL "Use musl libc toolchain when available (Linux only)" OFF)
+
+if(FUN_USE_MUSL AND UNIX AND NOT APPLE)
+    # Try to find a musl toolchain wrapper
+    find_program(_FUN_MUSL_CC NAMES musl-gcc musl-clang)
+    if(_FUN_MUSL_CC)
+        message(STATUS "FUN_USE_MUSL=ON: using musl toolchain: ${_FUN_MUSL_CC}")
+        # Force C compiler to musl wrapper before project() so the whole toolchain is configured accordingly
+        set(CMAKE_C_COMPILER "${_FUN_MUSL_CC}" CACHE FILEPATH "C compiler" FORCE)
+        set(FUN_LIBC "musl" CACHE STRING "Selected C library")
+    else()
+        message(WARNING "FUN_USE_MUSL=ON but no musl toolchain (musl-gcc or musl-clang) found. Falling back to default compiler (likely glibc).")
+        set(FUN_LIBC "glibc" CACHE STRING "Selected C library")
+    endif()
+else()
+    # Default remains the system toolchain (typically glibc on Linux)
+    set(FUN_LIBC "glibc" CACHE STRING "Selected C library")
+endif()
+
+# Expose a preprocessor macro indicating selected C library
+if(FUN_LIBC STREQUAL "musl")
+    add_definitions(-DFUN_LIBC_MUSL)
+else()
+    add_definitions(-DFUN_LIBC_GLIBC)
 endif()
 
 # Optional: build statically linked executables
@@ -256,7 +284,7 @@ option(FUN_WITH_LIBSQL "Enable libsql (Turso) client support" OFF)
 set(LIBSQL_INCLUDE_DIRS "")
 set(LIBSQL_LINK_LIBS "")
 if(FUN_WITH_LIBSQL)
-  message(STATUS "Building with libsql support")
+  message(STATUS "Building with libSQL support")
   add_definitions(-DFUN_WITH_LIBSQL)
   # Try pkg-config for libsql first; some systems expose libsql-client
   find_package(PkgConfig QUIET)
