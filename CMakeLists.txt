@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.37.6 LANGUAGES C)
+project(fun VERSION 0.37.7 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -23,6 +23,44 @@ if(NOT DEFINED DEFAULT_LIB_DIR OR DEFAULT_LIB_DIR STREQUAL "")
   set(DEFAULT_LIB_DIR "${_FUN_DEFAULT_LIB_DIR}" CACHE PATH "Default library directory for Fun stdlib (override with -DDEFAULT_LIB_DIR=...)" FORCE)
 else()
   set(DEFAULT_LIB_DIR "${DEFAULT_LIB_DIR}" CACHE PATH "Default library directory for Fun stdlib (override with -DDEFAULT_LIB_DIR=...)" FORCE)
+endif()
+
+# Optional: build statically linked executables
+# When enabled, prefer static libraries for all dependencies and request
+# fully static linking for executables where the platform/toolchain allows it.
+option(FUN_LINK_STATIC "Link fun and tests fully static where possible" OFF)
+
+if(FUN_LINK_STATIC)
+  message(STATUS "Building Fun statically linked")
+  # Prefer static libraries for all add_library without explicit type
+  set(BUILD_SHARED_LIBS OFF)
+
+  # Make pkg-config choose static libs
+  set(PKG_CONFIG_USE_STATIC_LIBS ON)
+
+  # Hint find_library to choose static archives first on Unix (not macOS)
+  # Prefer .a but still allow falling back to shared if static is unavailable.
+  if(UNIX AND NOT APPLE)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .a;.so;.so.0;.so.1)
+  endif()
+
+  # Toolchain-specific static link flags
+  # Use a "mostly static" approach by default to avoid requiring static
+  # variants of every system/third-party library. This keeps libgcc and
+  # libstdc++ static while allowing shared deps when needed.
+  if(UNIX AND NOT APPLE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    set(_FUN_STATIC_LINK_FLAGS -static-libgcc -static-libstdc++)
+  endif()
+
+  # On MSVC, prefer the static runtime
+  if(MSVC)
+    foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+                    CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL)
+      if(DEFINED ${flag_var})
+        string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+      endif()
+    endforeach()
+  endif()
 endif()
 
 # Optional Tcl/Tk GUI support (embedded interpreter)
@@ -424,6 +462,15 @@ add_executable(test_opcodes
         src/test_opcodes.c
 )
 target_link_libraries(test_opcodes PRIVATE fun_core)
+
+# If static linking is requested, apply linker flags to executables
+if(FUN_LINK_STATIC AND DEFINED _FUN_STATIC_LINK_FLAGS)
+  foreach(tgt fun fun_test test_opcodes)
+    if(TARGET ${tgt})
+      target_link_options(${tgt} PRIVATE ${_FUN_STATIC_LINK_FLAGS})
+    endif()
+  endforeach()
+endif()
 
 # Convenience aggregate target (like 'build' in Makefile)
 add_custom_target(build
