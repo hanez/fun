@@ -50,6 +50,14 @@ if [[ ! -x "$BIN" ]]; then
   exit 2
 fi
 
+# Ensure stdlib is discoverable for examples unless user already set it
+if [[ -z "${FUN_LIB_DIR:-}" ]]; then
+  export FUN_LIB_DIR="$ROOT/lib"
+fi
+
+# Ensure error bucket exists
+mkdir -p "$EX_DIR/error"
+
 shopt -s nullglob
 files=("$EX_DIR"/*.fun)
 shopt -u nullglob
@@ -64,6 +72,14 @@ for f in "${files[@]}"; do
   echo "=== Running: ${f#$ROOT/} ==="
   if ! "$BIN" "$f"; then
     echo "FAILED: ${f#$ROOT/}"
+    base="$(basename "$f")"
+    dest="$EX_DIR/error/$base"
+    # Move the failing example to the error folder
+    if mv -f "$f" "$dest"; then
+      echo "Moved to: examples/error/$base"
+    else
+      echo "warning: failed to move $base to examples/error/" >&2
+    fi
     rc=1
   fi
 done
