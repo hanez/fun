@@ -153,4 +153,13 @@ elif [ "$target" = "repl" ]; then
     && cmake --build build --target fun
 else
   echo "Build target $target not found... aborting!";
+  echo "Available targets:";
+  echo " - all";
+  echo " - alpine";
+  echo " - debug";
+  echo " - debug_all";
+  echo " - freebsd";
+  echo " - minimal";
+  echo " - musl";
+  echo " - repl";
 fi
