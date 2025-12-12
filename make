@@ -1,0 +1,156 @@
+#!/bin/bash
+
+# This file is part of the Fun programming language.
+# https://fun-lang.xyz/
+#
+# Copyright 2025 Johannes Findeisen <you@hanez.org>
+# Licensed under the terms of the Apache-2.0 license.
+# https://opensource.org/license/apache-2-0
+#
+# Added: 2025-12-12
+
+if [ -z "$1" ]; then
+  echo "Build target is unset, using 'minimal'";
+  target="minimal";
+else
+  echo "Build target is set to '$1'";
+  target=$1;
+fi
+
+if [ "$target" = "all" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=ON \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=ON \
+      -DFUN_WITH_SQLITE=ON \
+      -DFUN_WITH_CURL=ON \
+      -DFUN_WITH_PCRE2=ON \
+      -DFUN_WITH_XML2=ON \
+      -DFUN_WITH_JSON=ON \
+      -DFUN_WITH_TCLTK=ON \
+      -DFUN_WITH_INI=ON \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=OFF \
+      -DFUN_DEBUG=OFF \
+    && cmake --build build --target fun
+elif [ "$target" = "alpine" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=OFF \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=ON \
+      -DFUN_WITH_SQLITE=ON \
+      -DFUN_WITH_CURL=ON \
+      -DFUN_WITH_PCRE2=ON \
+      -DFUN_WITH_XML2=ON \
+      -DFUN_WITH_JSON=ON \
+      -DFUN_WITH_TCLTK=OFF \
+      -DFUN_WITH_INI=ON \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_DEBUG=OFF \
+    && cmake --build build --target fun
+elif [ "$target" = "debug" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=OFF \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=OFF \
+      -DFUN_WITH_SQLITE=OFF \
+      -DFUN_WITH_CURL=OFF \
+      -DFUN_WITH_PCRE2=OFF \
+      -DFUN_WITH_XML2=OFF \
+      -DFUN_WITH_JSON=OFF \
+      -DFUN_WITH_TCLTK=OFF \
+      -DFUN_WITH_INI=OFF \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=OFF \
+      -DFUN_DEBUG=ON \
+    && cmake --build build --target fun
+elif [ "$target" = "debug_all" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=ON \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=ON \
+      -DFUN_WITH_SQLITE=ON \
+      -DFUN_WITH_CURL=ON \
+      -DFUN_WITH_PCRE2=ON \
+      -DFUN_WITH_XML2=ON \
+      -DFUN_WITH_JSON=ON \
+      -DFUN_WITH_TCLTK=ON \
+      -DFUN_WITH_INI=ON \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=OFF \
+      -DFUN_DEBUG=ON \
+    && cmake --build build --target fun
+elif [ "$target" = "freebsd" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=OFF \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=OFF \
+      -DFUN_WITH_SQLITE=OFF \
+      -DFUN_WITH_CURL=OFF \
+      -DFUN_WITH_PCRE2=OFF \
+      -DFUN_WITH_XML2=OFF \
+      -DFUN_WITH_JSON=OFF \
+      -DFUN_WITH_TCLTK=OFF \
+      -DFUN_WITH_INI=OFF \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_DEBUG=OFF \
+    && cmake --build build --target fun
+elif [ "$target" = "minimal" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=OFF \
+      -DFUN_WITH_REPL=OFF \
+      -DFUN_WITH_LIBSQL=OFF \
+      -DFUN_WITH_SQLITE=OFF \
+      -DFUN_WITH_CURL=OFF \
+      -DFUN_WITH_PCRE2=OFF \
+      -DFUN_WITH_XML2=OFF \
+      -DFUN_WITH_JSON=OFF \
+      -DFUN_WITH_TCLTK=OFF \
+      -DFUN_WITH_INI=OFF \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=OFF \
+      -DFUN_DEBUG=OFF \
+    && cmake --build build --target fun
+elif [ "$target" = "musl" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=OFF \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=OFF \
+      -DFUN_WITH_SQLITE=OFF \
+      -DFUN_WITH_CURL=OFF \
+      -DFUN_WITH_PCRE2=OFF \
+      -DFUN_WITH_XML2=OFF \
+      -DFUN_WITH_JSON=OFF \
+      -DFUN_WITH_TCLTK=OFF \
+      -DFUN_WITH_INI=OFF \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=ON \
+      -DFUN_DEBUG=OFF \
+    && cmake --build build --target fun
+elif [ "$target" = "repl" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=OFF \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=OFF \
+      -DFUN_WITH_SQLITE=OFF \
+      -DFUN_WITH_CURL=OFF \
+      -DFUN_WITH_PCRE2=OFF \
+      -DFUN_WITH_XML2=OFF \
+      -DFUN_WITH_JSON=OFF \
+      -DFUN_WITH_TCLTK=OFF \
+      -DFUN_WITH_INI=OFF \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=OFF \
+      -DFUN_DEBUG=OFF \
+    && cmake --build build --target fun
+else
+  echo "Build target $target not found... aborting!";
+fi
