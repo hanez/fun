@@ -134,6 +134,7 @@ static const char *opcode_name(OpCode op) {
         case OP_THREAD_SPAWN: return "THREAD_SPAWN";
         case OP_THREAD_JOIN: return "THREAD_JOIN";
         case OP_SLEEP_MS: return "SLEEP_MS";
+        case OP_RANDOM_NUMBER: return "RANDOM_NUMBER";
         case OP_BAND: return "BAND";
         case OP_BOR: return "BOR";
         case OP_BXOR: return "BXOR";

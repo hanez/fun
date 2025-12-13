@@ -34,6 +34,23 @@ if [ "$target" = "all" ]; then
       -DFUN_USE_MUSL=OFF \
       -DFUN_DEBUG=OFF \
     && cmake --build build --target fun
+elif [ "$target" = "all_debug" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=ON \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=ON \
+      -DFUN_WITH_SQLITE=ON \
+      -DFUN_WITH_CURL=ON \
+      -DFUN_WITH_PCRE2=ON \
+      -DFUN_WITH_XML2=ON \
+      -DFUN_WITH_JSON=ON \
+      -DFUN_WITH_TCLTK=ON \
+      -DFUN_WITH_INI=ON \
+      -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=OFF \
+      -DFUN_DEBUG=ON \
+    && cmake --build build --target fun
 elif [ "$target" = "alpine" ]; then
   rm -rf build \
     && cmake -S . -B build \
@@ -63,23 +80,6 @@ elif [ "$target" = "debug" ]; then
       -DFUN_WITH_JSON=OFF \
       -DFUN_WITH_TCLTK=OFF \
       -DFUN_WITH_INI=OFF \
-      -DFUN_LINK_STATIC=OFF \
-      -DFUN_USE_MUSL=OFF \
-      -DFUN_DEBUG=ON \
-    && cmake --build build --target fun
-elif [ "$target" = "debug_all" ]; then
-  rm -rf build \
-    && cmake -S . -B build \
-      -DFUN_WITH_PCSC=ON \
-      -DFUN_WITH_REPL=ON \
-      -DFUN_WITH_LIBSQL=ON \
-      -DFUN_WITH_SQLITE=ON \
-      -DFUN_WITH_CURL=ON \
-      -DFUN_WITH_PCRE2=ON \
-      -DFUN_WITH_XML2=ON \
-      -DFUN_WITH_JSON=ON \
-      -DFUN_WITH_TCLTK=ON \
-      -DFUN_WITH_INI=ON \
       -DFUN_LINK_STATIC=OFF \
       -DFUN_USE_MUSL=OFF \
       -DFUN_DEBUG=ON \
@@ -155,9 +155,9 @@ else
   echo "Build target $target not found... aborting!";
   echo "Available targets:";
   echo " - all";
+  echo " - all_debug";
   echo " - alpine";
   echo " - debug";
-  echo " - debug_all";
   echo " - freebsd";
   echo " - minimal";
   echo " - musl";

@@ -131,6 +131,7 @@ typedef enum {
     OP_THREAD_SPAWN,  // operand: 0=no args, 1=has args; pops [args?], fn; pushes thread id (int>0)
     OP_THREAD_JOIN,   // pops thread id; waits; pushes result value (or Nil)
     OP_SLEEP_MS,      // pops milliseconds; sleeps; pushes Nil (for statement POP safety)
+    OP_RANDOM_NUMBER, // pops length; pushes hex string of that length from OS RNG (hex-encoded)
 
     // Bitwise (32-bit) and shifts/rotates
     OP_BAND,          // pops b, a; pushes (uint32_t)(a & b)

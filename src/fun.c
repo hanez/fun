@@ -5,12 +5,11 @@
  */
 
 #include "bytecode.h"
-#include "value.h"
 #include "vm.h"
 #include "parser.h"
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 #ifdef FUN_WITH_REPL
 #include "repl.h"

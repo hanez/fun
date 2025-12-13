@@ -666,6 +666,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/time_now_ms.c"
             #include "vm/os/clock_mono_ms.c"
             #include "vm/os/date_format.c"
+            #include "vm/os/random_number.c"
 
             /* Socket ops */
             #include "vm/os/socket_tcp_listen.c"
