@@ -269,6 +269,8 @@ void vm_clear_output(VM *vm) {
         free_value(vm->output[i]);
     }
     vm->output_count = 0;
+    // reset partial flags
+    for (int i = 0; i < OUTPUT_SIZE; ++i) vm->output_is_partial[i] = 0;
 }
 
 void vm_free(VM *vm) {
@@ -420,6 +422,7 @@ void vm_init(VM *vm) {
     vm->sp = -1;
     vm->fp = -1;
     vm->output_count = 0;
+    for (int i = 0; i < OUTPUT_SIZE; ++i) vm->output_is_partial[i] = 0;
     vm->instr_count = 0;
     vm->exit_code = 0;
     vm->trace_enabled = 0;
@@ -475,6 +478,12 @@ static void vm_pop_frame(VM *vm) {
 void vm_print_output(VM *vm) {
     for (int i = 0; i < vm->output_count; ++i) {
         print_value(&vm->output[i]);
+        if (!vm->output_is_partial[i]) {
+            printf("\n");
+        }
+    }
+    /* If the last item was partial (from echo), terminate the line for cleanliness */
+    if (vm->output_count > 0 && vm->output_is_partial[vm->output_count - 1]) {
         printf("\n");
     }
 }

@@ -32,7 +32,10 @@ case OP_PRINT: {
     Value snap = deep_copy_value(&v);
     free_value(v);
     if (vm->output_count < OUTPUT_SIZE) {
-        vm->output[vm->output_count++] = snap;
+        int idx = vm->output_count;
+        vm->output[idx] = snap;
+        vm->output_is_partial[idx] = 0; // PRINT terminates the line
+        vm->output_count++;
     } else {
         free_value(snap);
         fprintf(stderr, "Runtime error: output buffer overflow\n");

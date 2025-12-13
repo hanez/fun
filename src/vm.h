@@ -72,6 +72,7 @@ struct VM {
 
     Value output[OUTPUT_SIZE]; // store printed values
     int output_count;
+    int output_is_partial[OUTPUT_SIZE]; // 1 when the corresponding output entry should not end with newline (echo)
 
     long long instr_count; // executed instructions in the last vm_run
 
