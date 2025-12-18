@@ -87,3 +87,15 @@ fun hex_to_dec(hex)
     res = res * 16 + hex_val(substr(s, i, 1))
     i = i + 1
   return res
+
+fun dec_to_hex(n)
+  number val = n
+  if (val == 0)
+    return "0"
+  hexd = "0123456789abcdef"
+  res = ""
+  while val > 0
+    number m = val % 16
+    res = substr(hexd, m, 1) + res
+    val = val / 16
+  return res

@@ -32,7 +32,7 @@ print("Hex bytes array:")
 bytes = hex_to_bytes(hexstr)
 print(to_string(bytes))
 
-echo("Hex dump to bytes:")
+print("Hex dump to bytes:")
 print(bytes)
 
 print("Back to hex from bytes:")
@@ -43,6 +43,12 @@ print(to_string(hex_to_dec(substr(hexstr, 0, 8))))
 
 print("Hex as decimal (all bytes):")
 print(to_string(hex_to_dec(hexstr)))
+
+print("Decimal to hex (4135093009263527588):")
+print(dec_to_hex(4135093009263527588))
+
+print("Decimal to hex (1353150228):")
+print(dec_to_hex(1353150228))
 
 /* Expected output:
 --- Hex utility demo (fixed values) ---
@@ -59,4 +65,8 @@ Hex as decimal (first 4 bytes - 0x50a76f14):
 1353150228
 Hex as decimal (all bytes):
 4135093009263527588
+Decimal to hex (4135093009263527588):
+3962cd2eea5a86a4
+Decimal to hex (1353150228):
+50a76f14
 */
