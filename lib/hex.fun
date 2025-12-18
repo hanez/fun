@@ -77,3 +77,13 @@ fun bytes_to_hex(arr)
     res = res + two_hex(arr[i])
     i = i + 1
   return res
+
+fun hex_to_dec(hex)
+  s = to_string(hex)
+  number res = 0
+  number i = 0
+  number n = len(s)
+  while i < n
+    res = res * 16 + hex_val(substr(s, i, 1))
+    i = i + 1
+  return res
