@@ -30,3 +30,30 @@ if obj != nil
 
 if obj != nil
   print("Origin: " + to_string(obj["origin"]))
+
+/* Possible output:
+Response: {
+  "args": {},
+  "data": "",
+  "files": {},
+  "form": {
+    "lang": "fun",
+    "name": "Fun"
+  },
+  "headers": {
+    "Accept": "*/*",
+    "Content-Length": "17",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Host": "httpbin.org",
+    "X-Amzn-Trace-Id": "Root=1-6944834b-74f499e251c322713e7dd9a8"
+  },
+  "json": null,
+  "origin": "5.252.226.107",
+  "url": "https://httpbin.org/post"
+}
+
+Content-Type: application/x-www-form-urlencoded
+Host: httpbin.org
+Origin: 5.252.226.107
+*/
+

@@ -44,3 +44,15 @@ ok = ini.save(nil)
 print("saved=" + to_string(ok))
 
 ini.close()
+
+/* Expected output:
+[app]
+  name=FunApp
+  version=1.2.3
+  debug=1
+[database]
+  host=localhost
+  port=5432
+saved=1
+*/
+

@@ -159,7 +159,7 @@ static int read_identifier_into(const char *src, size_t len, size_t *pos, char *
     return 0;
 }
 
-static int64_t parse_int_literal_value(const char *src, size_t len, size_t *pos, int *ok) {
+static uint64_t parse_int_literal_value(const char *src, size_t len, size_t *pos, int *ok) {
     size_t p = *pos;
     skip_spaces(src, len, &p);
     int sign = 1;
@@ -173,31 +173,31 @@ static int64_t parse_int_literal_value(const char *src, size_t len, size_t *pos,
     if ((p + 1) < len && src[p] == '0' && (src[p + 1] == 'x' || src[p + 1] == 'X')) {
         p += 2;
         if (p >= len || !isxdigit((unsigned char)src[p])) { *ok = 0; return 0; }
-        int64_t val = 0;
+        uint64_t val = 0;
         while (p < len && isxdigit((unsigned char)src[p])) {
             char c = src[p];
             int d = (c >= '0' && c <= '9') ? (c - '0')
                   : (c >= 'a' && c <= 'f') ? (c - 'a' + 10)
                   : (c >= 'A' && c <= 'F') ? (c - 'A' + 10)
                   : 0;
-            val = (val << 4) + d;
+            val = (val << 4) + (uint64_t)d;
             p++;
         }
         *pos = p;
         *ok = 1;
-        return sign * val;
+        return (uint64_t)((int64_t)sign * (int64_t)val);
     }
 
     /* Decimal fallback */
     if (!isdigit((unsigned char)src[p])) { *ok = 0; return 0; }
-    int64_t val = 0;
+    uint64_t val = 0;
     while (p < len && isdigit((unsigned char)src[p])) {
-        val = val * 10 + (src[p] - '0');
+        val = val * 10 + (uint64_t)(src[p] - '0');
         p++;
     }
     *pos = p;
     *ok = 1;
-    return sign * val;
+    return (uint64_t)((int64_t)sign * (int64_t)val);
 }
 
 /* === Include preprocessor ===

@@ -11,7 +11,7 @@
 
 // Demonstrates system library includes after installation to /usr/lib/fun
 
-// includes can also be done with a leading # like in C, but some programmers maybe like more clean code without a 
+// includes can also be done with a leading # like in C, but some programmers maybe like more clean code without a
 // leading #.
 include <hello.fun>
 include <utils/math.fun>
@@ -24,3 +24,10 @@ number y = 32
 
 print("add(" + to_string(x) + ", " + to_string(y) + ") = " + to_string(add(x, y)))
 print("times(" + to_string(x) + ", " + to_string(y) + ") = " + to_string(times(x, y)))
+
+/* Expected output:
+== include lib demo ==
+Hello from system lib!
+add(10, 32) = 42
+times(10, 32) = 320
+*/

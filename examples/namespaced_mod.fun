@@ -1,6 +1,6 @@
 #!/usr/bin/env fun
-// The shebang line makes no sense here because this is a library which will 
-// never be executed, but it shows that it is not wrong. 
+// The shebang line makes no sense here because this is a library which will
+// never be executed, but it shows that it is not wrong.
 
 /*
  * This file is part of the Fun programming language.
@@ -23,3 +23,8 @@ class Greeter(string prefix)
   // Methods must declare 'this' as the first parameter
   fun say(this, name)
     print(this.prefix + " " + to_string(name))
+
+/* Expected output:
+None, it's a lib.
+*/
+

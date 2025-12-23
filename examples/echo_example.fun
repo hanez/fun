@@ -19,5 +19,7 @@ echo("Hello, ")
 echo("world")
 print("!")
 
-// Expected output:
-// Hello, world!
+/* Expected output:
+Hello, world!
+*/
+

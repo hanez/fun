@@ -12,7 +12,7 @@
 // Have fun in Fun
 
 string s = "Have fun!"
- 
+
 fun have_fun()
   print("Have fun!")
   print(s)
@@ -20,3 +20,13 @@ fun have_fun()
   print(n)
 
 have_fun()
+
+print("Have fun!")
+
+/* Expected output:
+Have fun!
+Have fun!
+10
+Have fun!
+*/
+

@@ -27,3 +27,8 @@ tk.pack("ok")
 
 // Enter GUI loop (no-op if built without FUN_WITH_TCLTK)
 tk.loop()
+
+/* Expected output:
+A GUI... ;)
+*/
+

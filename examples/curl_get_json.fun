@@ -23,3 +23,9 @@ print("Raw length: " + to_string(len(resp)))
 obj = json_parse(resp)
 if obj != nil
   print("Title: " + obj["slideshow"]["title"])
+
+/* Expected output:
+Raw length: 429
+Title: Sample Slide Show
+*/
+

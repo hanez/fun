@@ -25,3 +25,11 @@ fun greet()
   else
     print("Hello, " + user + "!")
 greet()
+
+/* Possible output:
+HOME=/home/hanez
+SHELL=/bin/zsh
+FUN_NOT_SET=
+Hello, hanez!
+*/
+

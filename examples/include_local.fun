@@ -27,3 +27,9 @@ print("sum(" + to_string(a) + ", " + to_string(b) + ") = " + to_string(sum(a, b)
 // To include from the system library directory (/usr/lib/fun), use angle brackets:
 //   #include <some_lib.fun>
 
+/* Expected output:
+== include local demo ==
+Hello, Fun
+sum(2, 3) = 5
+*/
+

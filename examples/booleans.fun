@@ -52,3 +52,25 @@ if f
   print("if f: branch taken (unexpected)")
 else
   print("if f: else branch taken")
+
+/* Expected output:
+typeof(t) => Boolean
+typeof(f) => Boolean
+t literal => true
+f literal => false
+true && true  => true
+true && false => false
+false || true => 1
+false || false => 0
+!true => false
+!false => true
+true == true => true
+true != false => true
+true == 1 => true
+false == 0 => true
+1 == true => true
+0 != true => true
+if t: branch taken
+if f: else branch taken
+*/
+

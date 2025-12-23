@@ -24,3 +24,10 @@ catch err
 finally
   print("finally always runs (syntactically)")
 print("after try")
+
+/* Expected output:
+before try
+inside try body
+after try
+*/
+

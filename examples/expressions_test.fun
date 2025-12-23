@@ -59,3 +59,20 @@ print(a < b && n >= 10)          // expect 1
 print((a + b) == 5 && flag)      // expect 1
 
 print("=== Expressions test end ===")
+
+/* Expected output:
+=== Expressions test start ===
+16
+10
+-10
+1
+true
+false
+true
+1
+true
+true
+true
+=== Expressions test end ===
+*/
+

@@ -8,7 +8,7 @@
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
  */
- 
+
 // Short-circuit demo for || and &&
 
 print("=== short-circuit demo ===")
@@ -43,3 +43,15 @@ else
   print(0)
 
 print("=== end ===")
+
+/* Expected output:
+=== short-circuit demo ===
+1
+0
+OR-NEEDED
+1
+AND-NEEDED
+1
+=== end ===
+*/
+

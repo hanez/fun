@@ -28,3 +28,9 @@ else
   if ok
     ini_save(h, path)
   ini_free(h)
+
+/* Expected output:
+user=����U
+retries=3
+ssl=1
+*/

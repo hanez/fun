@@ -70,3 +70,24 @@ print("ui8 value = " + to_string(ui8) + ", typeof(ui8) = " + typeof(ui8)) // Uin
 
 si8 = si8 - 5
 print("si8 value = " + to_string(si8) + ", typeof(si8) = " + typeof(si8)) // Sint8
+
+/* Expected output:
+typeof(si8)  = Sint8
+typeof(si16) = Sint16
+typeof(si32) = Sint32
+typeof(si64) = Sint64
+typeof(ui8)  = Uint8
+typeof(ui16) = Uint16
+typeof(ui32) = Uint32
+typeof(ui64) = Uint64
+typeof(n)    = Sint64
+typeof(s)    = String
+typeof(arr)  = Array
+typeof(m)    = Map
+typeof(f)    = Function
+typeof(x)    = Nil
+typeof(ui8 + 1) = Number
+typeof(si16 - 2) = Number
+ui8 value = 9, typeof(ui8) = Uint8
+si8 value = -6, typeof(si8) = Sint8
+*/

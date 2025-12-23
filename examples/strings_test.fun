@@ -8,7 +8,7 @@
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
  */
- 
+
 // Strings test: concatenation with variables and literals, functions returning strings
 
 print("=== strings test start ===")
@@ -42,3 +42,16 @@ if (a != "")
   print("a is non-empty")
 
 print("=== strings test end ===")
+
+/* Expected output:
+=== strings test start ===
+Hello, World!
+Hi there
+x
+x
+Hello, Fun
+Hi, Hello, You
+a is non-empty
+=== strings test end ===
+*/
+

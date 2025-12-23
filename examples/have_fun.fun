@@ -14,3 +14,8 @@
  */
 
 print("Have fun!")
+
+/* Expected output:
+Have fun!
+*/
+

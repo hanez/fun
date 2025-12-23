@@ -73,3 +73,32 @@ print("pt['y'] = " + to_string(pt["y"]) + " :: " + typeof(pt["y"]))
 // Conversions
 print("to_string(123) => " + to_string(123))
 print("to_number(\"456\") => " + to_string(to_number("456")))
+
+/* Expected output:
+a = 42 :: Sint64
+b = -7 :: Sint64
+zero = 0 :: Sint64
+sum (a + b) = 35
+diff (a - b) = 49
+prod (a * 3) = 126
+quot (a / 2) = 21
+rem (a % 5) = 2
+a > b = 1
+a >= b = 1
+a < b = 0
+a <= b = 0
+a == b = false
+a != b = true
+t = true :: Boolean
+f = false :: Boolean
+t && (a > 0) = true
+f || (a < 0) = 0
+sum 1..5 = 15
+nums length = 5
+nums[2] = 3
+pt['x'] = 10 :: Number
+pt['y'] = -3 :: Number
+to_string(123) => 123
+to_number("456") => 456
+*/
+

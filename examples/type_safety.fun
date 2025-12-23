@@ -70,3 +70,32 @@ print(typeof(nn))   // -> "Nil"
 
 print("")
 print("Done. Uncomment lines above to see type errors in action.")
+
+/* Expected output:
+== Dynamic variable (untyped) ==
+Number
+100
+String
+hello
+
+== Typed variables remain type-stable ==
+String
+hello
+Number
+0
+0
+Sint64
+456
+
+== Integer width clamping ==
+-126
+56
+255
+44
+
+== Nil-typed variables must stay Nil ==
+Nil
+
+Done. Uncomment lines above to see type errors in action.
+*/
+

@@ -22,3 +22,8 @@ if ok == 1
   print("Downloaded to " + path)
 else
   print("Download failed")
+
+/* Expected output:
+Downloaded to ./downloaded.png
+*/
+

@@ -568,19 +568,35 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
             }
             if (strcmp(name, "typeof") == 0) {
                 (*pos)++; /* '(' */
-                /* Disable compile-time shortcut for typeof(<identifier>); always evaluate at runtime */
+                /* Special handling for typeof(<identifier>) to return declared subtype for integers */
                 size_t peek = *pos;
                 char *vname = NULL;
                 int handled = 0;
                 if (read_identifier_into(src, len, &peek, &vname)) {
-                    /* allow spaces before ')' */
                     skip_spaces(src, len, &peek);
                     if (peek < len && src[peek] == ')') {
-                        /* Fall back to runtime evaluation path */
+                        int meta = 0;
+                        int lidx = local_find(vname);
+                        if (lidx >= 0) {
+                            meta = g_locals->types[lidx];
+                        } else {
+                            int gi = sym_index(vname);
+                            if (gi >= 0) meta = G.types[gi];
+                        }
+
+                        if (meta != 0 && meta != TYPE_META_STRING && meta != TYPE_META_BOOLEAN && meta != TYPE_META_NIL && meta != TYPE_META_CLASS && meta != TYPE_META_FLOAT) {
+                            /* Integer subtype: ±bits */
+                            int abs_bits = meta < 0 ? -meta : meta;
+                            const char *tname = (meta < 0)
+                                ? (abs_bits==64? "Sint64" : (abs_bits==32? "Sint32" : (abs_bits==16? "Sint16" : "Sint8")))
+                                : (abs_bits==64? "Uint64" : (abs_bits==32? "Uint32" : (abs_bits==16? "Uint16" : "Uint8")));
+                            int ci = bytecode_add_constant(bc, make_string(tname));
+                            bytecode_add_instruction(bc, OP_LOAD_CONST, ci);
+                            *pos = peek + 1; /* consume name and ')' */
+                            handled = 1;
+                        }
                         free(vname);
-                        /* handled remains 0 so we go to general-case below */
                     } else {
-                        /* not a simple identifier-only typeof */
                         free(vname);
                     }
                 }
@@ -628,6 +644,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                         int ciMap2 = bytecode_add_constant(bc, make_string("Map"));
                         bytecode_add_instruction(bc, OP_LOAD_CONST, ciMap2); /* ["Map"] */
                     }
+                    int j_end2 = bytecode_add_instruction(bc, OP_JUMP, 0);
                     int after_map = bc->instr_count;
 
                     /* not map: compute typeof(v) */
@@ -636,6 +653,7 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
 
                     /* end */
                     bytecode_set_operand(bc, j_end, bc->instr_count);
+                    bytecode_set_operand(bc, j_end2, bc->instr_count);
                 }
 
                 free(name);
@@ -2758,53 +2776,9 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                         }
                         bytecode_set_operand(bc, j_skip_err, bc->instr_count);
 
-                        /* range check instead of clamp */
-                        int64_t minV = 0, maxV = 0;
-                        if (decl_bits < 0) {
-                            /* signed */
-                            if (abs_bits >= 64) { minV = INT64_MIN; maxV = INT64_MAX; }
-                            else { maxV = (1LL << (abs_bits - 1)) - 1; minV = - (1LL << (abs_bits - 1)); }
-                        } else {
-                            /* unsigned */
-                            if (abs_bits >= 63) { minV = 0; maxV = INT64_MAX; }
-                            else { minV = 0; maxV = (1LL << abs_bits) - 1; }
+                        if (abs_bits > 0) {
+                            bytecode_add_instruction(bc, (decl_bits < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
                         }
-                        int ciMin = bytecode_add_constant(bc, make_int(minV));
-                        int ciMax = bytecode_add_constant(bc, make_int(maxV));
-
-                        /* if (v < min) -> error */
-                        bytecode_add_instruction(bc, OP_DUP, 0);
-                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMin);
-                        bytecode_add_instruction(bc, OP_LT, 0);
-                        int j_after_min = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-                        {
-                            const char *tname = (decl_bits < 0)
-                                ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
-                                : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
-                            char buf[128];
-                            snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
-                            int ciMsg = bytecode_add_constant(bc, make_string(buf));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
-                            bytecode_add_instruction(bc, OP_THROW, 0);
-                        }
-                        bytecode_set_operand(bc, j_after_min, bc->instr_count);
-
-                        /* if (v > max) -> error */
-                        bytecode_add_instruction(bc, OP_DUP, 0);
-                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMax);
-                        bytecode_add_instruction(bc, OP_GT, 0);
-                        int j_after_max = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-                        {
-                            const char *tname = (decl_bits < 0)
-                                ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
-                                : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
-                            char buf[128];
-                            snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
-                            int ciMsg = bytecode_add_constant(bc, make_string(buf));
-                            bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
-                            bytecode_add_instruction(bc, OP_THROW, 0);
-                        }
-                        bytecode_set_operand(bc, j_after_max, bc->instr_count);
                     }
                 }
 
@@ -3147,50 +3121,10 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     }
                     bytecode_set_operand(bc, j_skip_err, bc->instr_count);
 
-                    /* range check instead of clamp */
-                    int64_t minV = 0, maxV = 0;
-                    if (meta < 0) {
-                        if (abs_bits >= 64) { minV = INT64_MIN; maxV = INT64_MAX; }
-                        else { maxV = (1LL << (abs_bits - 1)) - 1; minV = - (1LL << (abs_bits - 1)); }
-                    } else {
-                        if (abs_bits >= 63) { minV = 0; maxV = INT64_MAX; }
-                        else { minV = 0; maxV = (1LL << abs_bits) - 1; }
+                        if (abs_bits > 0) {
+                            bytecode_add_instruction(bc, (meta < 0) ? OP_SCLAMP : OP_UCLAMP, abs_bits);
+                        }
                     }
-                    int ciMin = bytecode_add_constant(bc, make_int(minV));
-                    int ciMax = bytecode_add_constant(bc, make_int(maxV));
-
-                    bytecode_add_instruction(bc, OP_DUP, 0);
-                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciMin);
-                    bytecode_add_instruction(bc, OP_LT, 0);
-                    int j_after_min = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-                    {
-                        const char *tname = (meta < 0)
-                            ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
-                            : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
-                        char buf[128];
-                        snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
-                        int ciMsg2 = bytecode_add_constant(bc, make_string(buf));
-                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg2);
-                        bytecode_add_instruction(bc, OP_THROW, 0);
-                    }
-                    bytecode_set_operand(bc, j_after_min, bc->instr_count);
-
-                    bytecode_add_instruction(bc, OP_DUP, 0);
-                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciMax);
-                    bytecode_add_instruction(bc, OP_GT, 0);
-                    int j_after_max = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
-                    {
-                        const char *tname = (meta < 0)
-                            ? (abs_bits==64? "int64" : (abs_bits==32? "int32" : (abs_bits==16? "int16" : "int8")))
-                            : (abs_bits==64? "uint64" : (abs_bits==32? "uint32" : (abs_bits==16? "uint16" : "uint8")));
-                        char buf[128];
-                        snprintf(buf, sizeof(buf), "OverflowError: value out of range for %s", tname);
-                        int ciMsg3 = bytecode_add_constant(bc, make_string(buf));
-                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg3);
-                        bytecode_add_instruction(bc, OP_THROW, 0);
-                    }
-                    bytecode_set_operand(bc, j_after_max, bc->instr_count);
-                }
                 /* dynamic (meta==0): no enforcement */
 
                 if (lidx >= 0) {

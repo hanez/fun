@@ -78,7 +78,7 @@ for x in range(1, 3)
 
 print("=== for/range test end ===")
 
-/*
+/* Expected output:
 === for/range test start ===
 0
 1
@@ -112,3 +112,4 @@ print("=== for/range test end ===")
 4
 === for/range test end ===
 */
+

@@ -52,3 +52,26 @@ print(typeof(cast(42, "Function")))   // -> "Nil"
 print(cast(cast("42", "Number"), "String"))  // -> "42"
 
 print("=== Done ===")
+
+/* Expected output:
+=== CAST demo ===
+123
+0
+42
+100
+String
+0
+1
+Array
+1
+42
+String
+0
+Nil
+Function
+Nil
+42
+=== Done ===
+*/
+
+

@@ -19,3 +19,12 @@ print("Now trying to assign a number to a string variable...")
 s = 42             // Runtime TypeError: expected String (assignment rejected)
 
 print("This line will not execute due to the type error")
+
+/* Expected output:
+Reassigning typed variables to another type should fail
+String
+hello
+Now trying to assign a number to a string variable...
+TypeError: expected String
+*/
+

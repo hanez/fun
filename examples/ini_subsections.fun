@@ -68,3 +68,26 @@ else
   print("  max_files=" + to_string(logs_max_files))
 
   ini_free(h)
+
+/* Expected output:
+[server]
+  host=example.org
+  port=8080
+[server.tls]
+  enabled=1
+  version=1.3
+  ciphers=TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256
+[users.admin]
+  name=alice
+  active=1
+  quota_gb=100
+[users.guest]
+  name=bob
+  active=0
+  quota_gb=5
+[paths.logs]
+  dir=./var/log/fun
+  rotate=1
+  max_files=7
+*/
+

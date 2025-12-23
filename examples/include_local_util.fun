@@ -14,3 +14,8 @@ fun greet(name)
 
 fun sum(a, b)
   return a + b
+
+/* Expected output:
+None, it's a lib...
+*/
+

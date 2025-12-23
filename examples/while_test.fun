@@ -8,7 +8,7 @@
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
  */
- 
+
 // While loops feature test: simple loops, nested with if/else, and functions
 
 print("=== while test start ===")
@@ -42,3 +42,21 @@ fun countdown(n)
 print(countdown(3)) // expect: 3,2,1 then 0
 
 print("=== while test end ===")
+
+/* Expected output:
+=== while test start ===
+0
+1
+2
+3
+4
+3
+99
+1
+3
+2
+1
+0
+=== while test end ===
+*/
+

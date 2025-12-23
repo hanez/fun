@@ -57,3 +57,17 @@ number n = 5
 print(add(n, 10))            // expect 15
 
 print("=== Functions test end ===")
+
+/* Expected output:
+=== Functions test start ===
+5
+7
+7
+4
+6
+6
+42
+15
+=== Functions test end ===
+*/
+

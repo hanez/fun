@@ -77,3 +77,45 @@ print(typeof(p))         // -> "Class"
 
 print("")
 print("=== Done ===")
+
+/* Expected output:
+=== Dynamic (untyped) ===
+Number
+String
+
+=== Numbers and integer subtypes ===
+Sint64
+42
+-126
+4464
+255
+0
+
+=== Strings ===
+String
+hello
+
+=== Nil ===
+Nil
+nil
+
+=== Arrays ===
+Array
+3
+2
+[1, 2]
+
+=== Maps ===
+Map
+v
+
+=== Functions ===
+Function
+12
+
+=== Classes and Class-typed variables ===
+Class
+
+=== Done ===
+*/
+

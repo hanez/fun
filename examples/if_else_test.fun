@@ -41,3 +41,12 @@ if (n >= 10)
     print("answer")   // expect: answer
 
 print("=== if/else-if/else done ===")
+
+/* Expected output:
+=== if/else-if/else test ===
+big
+42
+answer
+=== if/else-if/else done ===
+*/
+

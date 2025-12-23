@@ -73,3 +73,28 @@ else
 
   // Clean up
   ini_free(h)
+
+/* Expected output:
+[app]
+  name=FunApp
+  version=1.2.3
+  debug=1
+[database]
+  host=localhost
+  port=5432
+  user=fun
+  pass=secret
+  pool_size=8
+  timeout=2.5
+[network]
+  ssl=1
+  retries=3
+  base_url=https://api.example.com
+[features]
+  feature_x=0
+  feature_y=0
+[paths]
+  data_dir=./data
+  log_file=./logs/app.log
+*/
+
