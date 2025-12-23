@@ -757,6 +757,14 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "os_list_dir") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "os_list_dir expects (path)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after os_list_dir arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_OS_LIST_DIR, 0);
+                free(name);
+                return 1;
+            }
             /* JSON builtins */
             if (strcmp(name, "json_parse") == 0) {
                 (*pos)++; /* '(' */
@@ -850,6 +858,33 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_pack expects (id:string)"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tk_pack arg"); free(name); return 0; }
                 bytecode_add_instruction(bc, OP_TK_PACK, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tk_bind") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_bind expects (id, event, cmd)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "tk_bind expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_bind expects 3 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "tk_bind expects 3 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_bind expects 3 args"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tk_bind args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_BIND, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tk_eval") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "tk_eval expects (script)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after tk_eval arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_EVAL, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tk_result") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "tk_result expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TK_RESULT, 0);
                 free(name);
                 return 1;
             }

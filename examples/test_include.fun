@@ -12,6 +12,7 @@
  */
 
 #include <hex.fun>
+
 print(dec_to_hex(255))
 
 /* Expected output:

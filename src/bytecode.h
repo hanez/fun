@@ -35,7 +35,7 @@ typedef enum {
     OP_EQ,       // a == b -> push 1/0
     OP_NEQ,      // a != b -> push 1/0
 
-    OP_POP,            // dApache-2.0ard top of stack
+    OP_POP,            // discard top of stack
     OP_JUMP,           // unconditional jump
     OP_JUMP_IF_FALSE,  // jump if top of stack is false (0)
 
@@ -196,15 +196,6 @@ typedef enum {
     OP_XML_NAME,          // pops node handle; pushes string (node name)
     OP_XML_TEXT,          // pops node handle; pushes string (node text)
 
-    // Tk (Tcl/Tk) optional minimal API
-    OP_TK_EVAL,           // pops script string; pushes int rc (0 = OK)
-    OP_TK_RESULT,         // pushes string: last Tcl result
-    OP_TK_LOOP,           // enters Tk event loop; pushes Nil when done
-    OP_TK_WM_TITLE,       // pops title string; sets window title; pushes rc
-    OP_TK_LABEL,          // pops text, id; creates/updates label .id; pushes rc
-    OP_TK_BUTTON,         // pops text, id; creates/updates button .id; pushes rc
-    OP_TK_PACK,           // pops id; packs .id; pushes rc
-
     // Sockets (UNIX platforms)
     OP_SOCK_TCP_LISTEN,    // pops backlog, port; returns listen fd (>0) or 0
     OP_SOCK_TCP_ACCEPT,    // pops listen fd; returns client fd (>0) or 0
@@ -217,6 +208,21 @@ typedef enum {
 
     // process control
     OP_EXIT,               // pops code (or uses operand) and terminates script with exit code
+
+    // OS additions
+    OP_OS_LIST_DIR,        // pops path string; pushes array of strings
+
+    // Tk additions
+    OP_TK_BIND,            // pops command, event, id; binds event to command
+
+    // Tk (Tcl/Tk) optional minimal API
+    OP_TK_EVAL,           // pops script string; pushes int rc (0 = OK)
+    OP_TK_RESULT,         // pushes string: last Tcl result
+    OP_TK_LOOP,           // enters Tk event loop; pushes Nil when done
+    OP_TK_WM_TITLE,       // pops title string; sets window title; pushes rc
+    OP_TK_LABEL,          // pops text, id; creates/updates label .id; pushes rc
+    OP_TK_BUTTON,         // pops text, id; creates/updates button .id; pushes rc
+    OP_TK_PACK,           // pops id; packs .id; pushes rc
 
     // exceptions (minimal)
     OP_TRY_PUSH,           // operand = handler ip; push handler onto try-stack

@@ -31,6 +31,30 @@ class TK()
   fun pack(this, id)
     return tk_pack(to_string(id))
 
+  // Create a listbox widget
+  fun listbox(this, id)
+    return tk_eval("listbox ." + to_string(id))
+
+  // Insert text into a widget (like listbox) at index
+  fun insert(this, id, index, text)
+    return tk_eval("." + to_string(id) + " insert " + to_string(index) + " {" + to_string(text) + "}")
+
+  // Clear a widget (like listbox)
+  fun clear(this, id)
+    return tk_eval("." + to_string(id) + " delete 0 end")
+
+  // Bind an event to a command
+  fun bind(this, id, event, cmd)
+    return tk_bind(to_string(id), to_string(event), to_string(cmd))
+
+  // Evaluate raw Tcl script
+  fun eval(this, script)
+    return tk_eval(to_string(script))
+
+  // Get last Tcl result
+  fun result(this)
+    return tk_result()
+
   // Enter the Tk event loop (blocks until windows are closed)
   fun loop(this)
     return tk_loop()

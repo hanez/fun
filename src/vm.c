@@ -741,6 +741,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/tk/label.c"
             #include "vm/tk/button.c"
             #include "vm/tk/pack.c"
+            #include "vm/tk/bind.c"
             #endif
 
             /* SQLite ops */
@@ -783,6 +784,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/typeof.c"
             #include "vm/uclamp.c"
             #include "vm/sclamp.c"
+            #include "vm/os/list_dir.c"
 
             default:
                 if (!opcode_is_valid(inst.op)) {
