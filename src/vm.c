@@ -40,15 +40,15 @@
 #include "vm.h"
 
 // Optional by extensions commonly used code. #ifdef's are in each single file.
-#include "ext/curl.c"
-#include "ext/ini.c"
-#include "ext/json.c"
-#include "ext/libsql.c"
-#include "ext/pcsc.c"
-#include "ext/pcre2.c"
-#include "ext/sqlite.c"
-#include "ext/tcltk.c"
-#include "ext/xml2.c"
+#include "external/curl.c"
+#include "external/ini.c"
+#include "external/json.c"
+#include "external/libsql.c"
+#include "external/pcsc.c"
+#include "external/pcre2.c"
+#include "external/sqlite.c"
+#include "external/tcltk.c"
+#include "external/xml2.c"
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
