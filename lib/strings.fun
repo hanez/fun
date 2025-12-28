@@ -93,7 +93,7 @@ fun str_replace_all(s, from, to)
   out = []
   number i = 0
   while i < n
-    if (i + lf <= n) && (substr(src, i, lf) == f)
+    if ((i + lf <= n) && (substr(src, i, lf) == f))
       push(out, t)
       i = i + lf
     else
