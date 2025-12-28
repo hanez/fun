@@ -215,6 +215,13 @@ typedef enum {
     // Tk additions
     OP_TK_BIND,            // pops command, event, id; binds event to command
 
+    // Serial communication (termios)
+    OP_SERIAL_OPEN,        // pops baud_rate (int), path (string); returns fd (int) or 0
+    OP_SERIAL_CONFIG,      // pops flow_control, stop_bits, parity, data_bits, fd; returns 1/0
+    OP_SERIAL_SEND,        // pops data (string), fd; returns bytes sent (int)
+    OP_SERIAL_RECV,        // pops maxlen (int), fd; returns data (string)
+    OP_SERIAL_CLOSE,       // pops fd; returns 1/0
+
     // Tk (Tcl/Tk) optional minimal API
     OP_TK_EVAL,           // pops script string; pushes int rc (0 = OK)
     OP_TK_RESULT,         // pushes string: last Tcl result

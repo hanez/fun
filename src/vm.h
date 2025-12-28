@@ -51,6 +51,7 @@ static const char *opcode_names[] = {
     "EXIT",
     "OS_LIST_DIR",
     "TK_BIND",
+    "SERIAL_OPEN","SERIAL_CONFIG","SERIAL_SEND","SERIAL_RECV","SERIAL_CLOSE",
     "TK_EVAL","TK_RESULT","TK_LOOP","TK_WM_TITLE","TK_LABEL","TK_BUTTON","TK_PACK",
     "TRY_PUSH","TRY_POP","THROW"
 };

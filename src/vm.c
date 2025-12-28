@@ -676,6 +676,11 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/os/clock_mono_ms.c"
             #include "vm/os/date_format.c"
             #include "vm/os/random_number.c"
+            #include "vm/os/serial_open.c"
+            #include "vm/os/serial_config.c"
+            #include "vm/os/serial_send.c"
+            #include "vm/os/serial_recv.c"
+            #include "vm/os/serial_close.c"
 
             /* Socket ops */
             #include "vm/os/socket_tcp_listen.c"

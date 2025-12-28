@@ -1288,6 +1288,59 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* Serial builtins */
+            if (strcmp(name, "serial_open") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_open expects (path, baud)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "serial_open expects (path, baud)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_open expects (path, baud)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after serial_open args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SERIAL_OPEN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "serial_config") == 0) {
+                (*pos)++; /* '(' */
+                // fd, data_bits, parity, stop_bits, flow_control
+                for (int i = 0; i < 5; ++i) {
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_config expects 5 arguments"); free(name); return 0; }
+                    if (i < 4) {
+                        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "serial_config expects 5 arguments"); free(name); return 0; }
+                    }
+                }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after serial_config args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SERIAL_CONFIG, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "serial_send") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_send expects (fd, data)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "serial_send expects (fd, data)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_send expects (fd, data)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after serial_send args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SERIAL_SEND, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "serial_recv") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_recv expects (fd, maxlen)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "serial_recv expects (fd, maxlen)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_recv expects (fd, maxlen)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after serial_recv args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SERIAL_RECV, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "serial_close") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "serial_close expects (fd)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after serial_close arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SERIAL_CLOSE, 0);
+                free(name);
+                return 1;
+            }
             /* string ops */
             if (strcmp(name, "split") == 0) {
                 (*pos)++; /* '(' */
