@@ -90,7 +90,7 @@ crypt/
   sha384.fun
   sha512.fun
 encoding/
- base64.fun
+  base64.fun
 hello.fun
 hex.fun
 io/
