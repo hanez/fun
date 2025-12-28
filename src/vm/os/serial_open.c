@@ -13,6 +13,21 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
+
+/* Fallbacks for baud rates that might be missing on some systems */
+#ifndef B57600
+#define B57600 0010001
+#endif
+#ifndef B115200
+#define B115200 0010002
+#endif
+#ifndef B230400
+#define B230400 0010003
+#endif
+
+#ifndef O_NDELAY
+#define O_NDELAY O_NONBLOCK
+#endif
 #endif
 
 case OP_SERIAL_OPEN: {

@@ -24,8 +24,9 @@
 #if defined(_WIN32) || defined(_WIN64)
   #include <windows.h>
   #include <bcrypt.h>
-#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
   #include <stdlib.h>
+  #include <sys/random.h>
 #elif defined(__unix__)
   #if __has_include(<sys/random.h>)
     #include <sys/random.h>
@@ -85,7 +86,7 @@ case OP_RANDOM_NUMBER: {
         NTSTATUS st = BCryptGenRandom(NULL, raw, (ULONG)len, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
         ok = (st == 0);
     }
-#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
     {
         arc4random_buf(raw, (size_t)len);
         ok = 1;
