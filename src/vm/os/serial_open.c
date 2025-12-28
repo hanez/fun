@@ -15,6 +15,51 @@
 #include <unistd.h>
 
 /* Fallbacks for baud rates that might be missing on some systems */
+#ifndef B50
+#define B50 0000001
+#endif
+#ifndef B75
+#define B75 0000002
+#endif
+#ifndef B110
+#define B110 0000003
+#endif
+#ifndef B134
+#define B134 0000004
+#endif
+#ifndef B150
+#define B150 0000005
+#endif
+#ifndef B200
+#define B200 0000006
+#endif
+#ifndef B300
+#define B300 0000007
+#endif
+#ifndef B600
+#define B600 0000010
+#endif
+#ifndef B1200
+#define B1200 0000011
+#endif
+#ifndef B1800
+#define B1800 0000012
+#endif
+#ifndef B2400
+#define B2400 0000013
+#endif
+#ifndef B4800
+#define B4800 0000014
+#endif
+#ifndef B9600
+#define B9600 0000015
+#endif
+#ifndef B19200
+#define B19200 0000016
+#endif
+#ifndef B38400
+#define B38400 0000017
+#endif
 #ifndef B57600
 #define B57600 0010001
 #endif

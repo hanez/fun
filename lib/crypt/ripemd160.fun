@@ -204,7 +204,7 @@ class RIPEMD160()
       B = T
 
       // Right side step
-      Tr = this.add32(this.rol32(this.add32(this.add32(Ar, this.F(stage_r, Br, Cr, Dr)), this.add32(M[this.RR[j]], this.KR[stage])), this.SR[j]), Er)
+      Tr = this.add32(this.rol32(this.add32(this.add32(Ar, this.F(stage_r, Br, Cr, Dr)), this.add32(M[this.RR[j]], this.KR[stage_r])), this.SR[j]), Er)
       Ar = Er
       Er = Dr
       Dr = this.rol32(Cr, 10)
