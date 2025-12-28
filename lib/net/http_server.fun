@@ -58,7 +58,14 @@ class HTTPServer(number port)
       path = "/index.html"
 
     full_path = this.htdocs + path
-    content = read_file(full_path)
+
+    content = ""
+    if (str_ends_with(path, ".fun"))
+      res = proc_run("fun " + full_path)
+      content = res["out"]
+      //#include <\"full_path\">
+    else
+      content = read_file(full_path)
 
     if (len(content) > 0)
       this.send_response(fd, 200, "OK", content)
