@@ -48,3 +48,8 @@ fun test_serial()
     print("Could not open serial port (this is expected if /dev/ttyUSB0 doesn't exist or no permission)")
 
 test_serial()
+
+/* Possible output:
+Attempting to open serial port: /dev/ttyUSB0
+Could not open serial port (this is expected if /dev/ttyUSB0 doesn't exist or no permission)
+*/
