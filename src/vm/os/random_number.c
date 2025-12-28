@@ -27,6 +27,8 @@
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
   #include <stdlib.h>
   #include <sys/random.h>
+  /* On some BSDs, arc4random_buf might be hidden by _POSIX_C_SOURCE. */
+  void arc4random_buf(void *, size_t);
 #elif defined(__unix__)
   #if __has_include(<sys/random.h>)
     #include <sys/random.h>
