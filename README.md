@@ -75,9 +75,47 @@ Fun may not change the world — but it will make programming a little more fun.
 - if/else if/else
 - try/catch/finally
 
-### Lib
+### Lib (./lib/)
 
-...
+```
+arrays.fun
+crypt/
+  crc32c.fun
+  crc32.fun
+  md5.fun
+  md5_legacy.fun
+  ripemd160.fun - Broken!
+  sha1.fun
+  sha256.fun
+  sha384.fun
+  sha512.fun
+encoding/
+ base64.fun
+hello.fun
+hex.fun
+io/
+  console.fun
+  ini.fun
+  json.fun
+  pcsc2.fun
+  pcsc.fun
+  process.fun
+  serial.fun
+  socket.fun
+  thread.fun
+  xml.fun
+math.fun
+regex
+  pcre2.fun
+regex.fun
+strings.fun
+ui/
+  tk.fun
+utils/
+  datetime.fun
+  math.fun
+  range.fun
+```
 
 ### Extensions (only Linux actually)
 
