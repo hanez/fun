@@ -131,6 +131,8 @@ static const char *opcode_name(OpCode op) {
         case OP_TIME_NOW_MS: return "TIME_NOW_MS";
         case OP_CLOCK_MONO_MS: return "CLOCK_MONO_MS";
         case OP_DATE_FORMAT: return "DATE_FORMAT";
+        case OP_ENV_ALL: return "ENV_ALL";
+        case OP_FUN_VERSION: return "FUN_VERSION";
         case OP_THREAD_SPAWN: return "THREAD_SPAWN";
         case OP_THREAD_JOIN: return "THREAD_JOIN";
         case OP_SLEEP_MS: return "SLEEP_MS";

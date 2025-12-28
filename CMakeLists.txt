@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.37.29 LANGUAGES C)
+project(fun VERSION 0.37.30 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -378,10 +378,12 @@ target_include_directories(fun_core PUBLIC
 # Apply options to core
 if(FUN_DEBUG)
     message(STATUS "FUN_DEBUG enabled: building with verbose debug logging")
+    target_compile_definitions(fun_core PUBLIC FUN_VERSION="${PROJECT_VERSION}")
     target_compile_definitions(fun_core PUBLIC FUN_DEBUG=1)
 endif()
 
 # Provide default stdlib directory to the runtime
+target_compile_definitions(fun_core PUBLIC FUN_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(fun_core PUBLIC DEFAULT_LIB_DIR="${DEFAULT_LIB_DIR}")
 
 # PCSC include and link (if enabled)
@@ -472,7 +474,6 @@ add_executable(fun
         src/fun.c
 )
 # Provide version string to the CLI
-target_compile_definitions(fun PRIVATE FUN_VERSION=\"${PROJECT_VERSION}\")
 if(FUN_WITH_REPL)
   # Enable REPL compilation path and add the REPL source
   target_compile_definitions(fun PRIVATE FUN_WITH_REPL=1)

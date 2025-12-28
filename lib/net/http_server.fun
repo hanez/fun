@@ -61,9 +61,8 @@ class HTTPServer(number port)
 
     content = ""
     if (str_ends_with(path, ".fun"))
-      res = proc_run("fun " + full_path)
+      res = proc_run("fun" + " " + full_path)
       content = res["out"]
-      //#include <\"full_path\">
     else
       content = read_file(full_path)
 

@@ -126,6 +126,8 @@ typedef enum {
     OP_TIME_NOW_MS,   // pushes current wall-clock time in milliseconds since Unix epoch
     OP_CLOCK_MONO_MS, // pushes monotonic clock in milliseconds (not wall time)
     OP_DATE_FORMAT,   // pops fmt string, ms epoch (int); pushes formatted date string using strftime
+    OP_ENV_ALL,       // pushes map of all environment variables
+    OP_FUN_VERSION,   // pushes version string
 
     // Threads
     OP_THREAD_SPAWN,  // operand: 0=no args, 1=has args; pops [args?], fn; pushes thread id (int>0)

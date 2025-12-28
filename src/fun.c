@@ -9,6 +9,7 @@
 #include "parser.h"
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef FUN_WITH_REPL
@@ -42,6 +43,9 @@ static void print_usage(const char *prog) {
 }
 
 int main(int argc, char **argv) {
+    /* Set FUN_EXECUTABLE environment variable to the path of this binary */
+    setenv("FUN_EXECUTABLE", argv[0], 1);
+
     VM vm;
     vm_init(&vm);
 

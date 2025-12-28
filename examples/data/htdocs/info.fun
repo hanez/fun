@@ -11,8 +11,7 @@
  * Added: 2025-12-28
  */
 
-result = proc_run("fun -V")
-content = result["out"]
+content = fun_version()
 
 print("<html><body>")
 print("<h1>Fun Environment Information</h1>")
@@ -20,4 +19,14 @@ print("<p><strong>Current Path:</strong> " + env("PATH") + "</p>")
 print("<p><strong>Current User:</strong> " + env("USER") + "</p>")
 print("<p><strong>Time:</strong> " + date_format(time_now_ms(), "%Y-%m-%d %H:%M:%S") + "</p>")
 print("<p><strong>Version:</strong> " + to_string(content) + "</p>")
+print("<h2>Full Environment:</h2>")
+print("<ul>")
+all_env = env_all()
+all_keys = keys(all_env)
+i = 0
+while i < len(all_keys)
+    key = all_keys[i]
+    print("<li>" + key + "=" + all_env[key] + "</li>")
+    i = i + 1
+print("</ul>")
 print("</body></html>")

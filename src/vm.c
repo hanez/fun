@@ -667,6 +667,8 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/math/random_seed.c"
 
             #include "vm/os/env.c"
+            #include "vm/os/env_all.c"
+            #include "vm/os/fun_version.c"
             #include "vm/os/sleep_ms.c"
             #include "vm/os/thread_join.c"
             #include "vm/os/thread_spawn.c"
