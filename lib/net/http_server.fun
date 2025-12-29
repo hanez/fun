@@ -51,20 +51,44 @@ class HTTPServer(number port)
       sock_close(fd)
       return 0
 
-    method = parts[0]
-    path = parts[1]
+    method = str_trim(parts[0])
+    full_path = str_trim(parts[1])
+
+    path = full_path
+    query_string = ""
+    q_pos = find(full_path, "?")
+    if (q_pos >= 0)
+      path = substr(full_path, 0, q_pos)
+      query_string = substr(full_path, q_pos + 1, len(full_path) - q_pos - 1)
 
     if (path == "/")
       path = "/index.html"
 
-    full_path = this.htdocs + path
+    file_path = this.htdocs + path
+
+    post_data = ""
+    if (method == "POST")
+      // Find the end of headers (marked by \r\n\r\n or \n\n)
+      header_end = find(request, "\r\n\r\n")
+      if (header_end >= 0)
+        post_data = substr(request, header_end + 4, len(request) - header_end - 4)
+      else
+        header_end = find(request, "\n\n")
+        if (header_end >= 0)
+          post_data = substr(request, header_end + 2, len(request) - header_end - 2)
 
     content = ""
     if (str_ends_with(path, ".fun"))
-      res = proc_run("fun" + " " + full_path)
+      env_vars = ""
+      if (len(query_string) > 0)
+        env_vars = "QUERY_STRING='" + query_string + "' "
+      if (len(post_data) > 0)
+        env_vars = env_vars + "POST_DATA='" + post_data + "' "
+      
+      res = proc_run(env_vars + " " + "fun" + " " + file_path)
       content = res["out"]
     else
-      content = read_file(full_path)
+      content = read_file(file_path)
 
     if (len(content) > 0)
       this.send_response(fd, 200, "OK", content)
