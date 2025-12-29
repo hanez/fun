@@ -1,5 +1,3 @@
-#!/usr/bin/env fun
-
 /*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
@@ -11,14 +9,12 @@
  * Added: 2025-12-28
  */
 
-content = fun_version()
-
-print("<html><body>")
+print("<!doctype html><html><body>")
 print("<h1>Fun Environment Information</h1>")
 print("<p><strong>Current Path:</strong> " + env("PATH") + "</p>")
 print("<p><strong>Current User:</strong> " + env("USER") + "</p>")
 print("<p><strong>Time:</strong> " + date_format(time_now_ms(), "%Y-%m-%d %H:%M:%S") + "</p>")
-print("<p><strong>Version:</strong> " + to_string(content) + "</p>")
+print("<p><strong>Version:</strong> " + to_string(fun_version()) + "</p>")
 print("<h2>Full Environment:</h2>")
 print("<ul>")
 all_env = env_all()
