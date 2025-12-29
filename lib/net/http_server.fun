@@ -84,7 +84,7 @@ class HTTPServer(number port)
         env_vars = "QUERY_STRING='" + query_string + "' "
       if (len(post_data) > 0)
         env_vars = env_vars + "POST_DATA='" + post_data + "' "
-      
+
       res = proc_run(env_vars + " " + "fun" + " " + file_path)
       content = res["out"]
     else

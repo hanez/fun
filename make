@@ -100,6 +100,8 @@ elif [ "$target" = "freebsd" ]; then
       -DFUN_LINK_STATIC=OFF \
       -DFUN_DEBUG=OFF \
     && cmake --build build --target fun
+elif [ "$target" = "install" ]; then
+  sudo cmake --build build --target install
 elif [ "$target" = "minimal" ]; then
   rm -rf build \
     && cmake -S . -B build \
@@ -159,6 +161,7 @@ else
   echo " - alpine";
   echo " - debug";
   echo " - freebsd";
+  echo " - install";
   echo " - minimal";
   echo " - musl";
   echo " - repl";
