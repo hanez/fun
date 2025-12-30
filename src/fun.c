@@ -1,4 +1,13 @@
-/**
+/*
+* This file is part of the Fun programming language.
+ * https://fun-lang.xyz/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
+ */
+
+ /*
  * Main entry point for the Fun language interpreter.
  * Builds a CLI that runs a script file if provided; otherwise starts the REPL
  * when compiled with FUN_WITH_REPL enabled.
@@ -85,6 +94,46 @@ int main(int argc, char **argv) {
 
     if (argi < argc) {
         const char *path = argv[argi];
+
+        /* Collect script arguments (everything after script path) and expose via env vars */
+        int sargi = argi + 1; /* first script arg following the script path */
+        int sargc = (sargi < argc) ? (argc - sargi) : 0;
+
+        /* Export FUN_ARGC */
+        {
+            char buf[32];
+            snprintf(buf, sizeof(buf), "%d", sargc);
+            setenv("FUN_ARGC", buf, 1);
+        }
+
+        /* Export FUN_ARGV_i */
+        for (int i = 0; i < sargc; ++i) {
+            char key[32];
+            snprintf(key, sizeof(key), "FUN_ARGV_%d", i);
+            setenv(key, argv[sargi + i], 1);
+        }
+
+        /* Optional: space-joined convenience string FUN_ARGS */
+        if (sargc > 0) {
+            size_t total = 0;
+            for (int i = 0; i < sargc; ++i) {
+                total += strlen(argv[sargi + i]) + 1; /* +1 for space or NUL */
+            }
+            char *joined = (char*)malloc(total);
+            if (joined) {
+                joined[0] = '\0';
+                for (int i = 0; i < sargc; ++i) {
+                    strcat(joined, argv[sargi + i]);
+                    if (i + 1 < sargc) strcat(joined, " ");
+                }
+                setenv("FUN_ARGS", joined, 1);
+                free(joined);
+            }
+        } else {
+            /* Ensure FUN_ARGS is at least cleared for consistency */
+            setenv("FUN_ARGS", "", 1);
+        }
+
         Bytecode *bc = parse_file_to_bytecode(path);
         if (!bc) {
             fprintf(stderr, "Failed to compile script: %s\n", path);
