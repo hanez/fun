@@ -13,10 +13,10 @@
 
 // Demonstrates parsing flags like -f, --force, --force=42 and positionals
 // Usage examples:
-//   FUN_LIB_DIR="$(pwd)/lib" ./build_debug/fun ./examples/cli_parse_example.fun -f foo
-//   FUN_LIB_DIR="$(pwd)/lib" ./build_debug/fun ./examples/cli_parse_example.fun --force bar
-//   FUN_LIB_DIR="$(pwd)/lib" ./build_debug/fun ./examples/cli_parse_example.fun --force=42 alpha beta
-//   FUN_LIB_DIR="$(pwd)/lib" ./build_debug/fun ./examples/cli_parse_example.fun -abc x y
+//   FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/cli_parse_example.fun -f foo
+//   FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/cli_parse_example.fun --force bar
+//   FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/cli_parse_example.fun --force=42 alpha beta
+//   FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/cli_parse_example.fun -abc x y
 
 #include <cli.fun>
 

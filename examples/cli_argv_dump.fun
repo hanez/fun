@@ -13,7 +13,7 @@
 
 // Demonstrates accessing raw script arguments via lib/cli.fun
 // Usage:
-//   FUN_LIB_DIR="$(pwd)/lib" ./build_debug/fun ./examples/cli_argv_dump.fun -f --force=42 foo bar
+//   FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/cli_argv_dump.fun -f --force=42 foo bar
 
 #include <cli.fun>
 
