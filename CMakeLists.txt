@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.37.33 LANGUAGES C)
+project(fun VERSION 0.37.34 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -20,7 +20,7 @@ if(NOT DEFINED DEFAULT_LIB_DIR OR DEFAULT_LIB_DIR STREQUAL "")
   else()
     set(_FUN_DEFAULT_LIB_DIR "/usr/share/fun/lib")
   endif()
-  set(DEFAULT_LIB_DIR "${_FUN_DEFAULT_LIB_DIR}" CACHE PATH "Default library directory for Fun stdlib (override with -DDEFAULT_LIB_DIR=...)" FORCE)
+    set(DEFAULT_LIB_DIR "${_FUN_DEFAULT_LIB_DIR}" CACHE PATH "Default library directory for Fun stdlib (override with -DDEFAULT_LIB_DIR=...)" FORCE)
 else()
   set(DEFAULT_LIB_DIR "${DEFAULT_LIB_DIR}" CACHE PATH "Default library directory for Fun stdlib (override with -DDEFAULT_LIB_DIR=...)" FORCE)
 endif()
@@ -30,27 +30,27 @@ endif()
 option(FUN_USE_MUSL "Use musl libc toolchain when available (Linux only)" OFF)
 
 if(FUN_USE_MUSL AND UNIX AND NOT APPLE)
-    # Try to find a musl toolchain wrapper
-    find_program(_FUN_MUSL_CC NAMES musl-gcc musl-clang)
-    if(_FUN_MUSL_CC)
-        message(STATUS "FUN_USE_MUSL=ON: using musl toolchain: ${_FUN_MUSL_CC}")
-        # Force C compiler to musl wrapper before project() so the whole toolchain is configured accordingly
-        set(CMAKE_C_COMPILER "${_FUN_MUSL_CC}" CACHE FILEPATH "C compiler" FORCE)
-        set(FUN_LIBC "musl" CACHE STRING "Selected C library")
-    else()
-        message(WARNING "FUN_USE_MUSL=ON but no musl toolchain (musl-gcc or musl-clang) found. Falling back to default compiler (likely glibc).")
-        set(FUN_LIBC "glibc" CACHE STRING "Selected C library")
-    endif()
-else()
-    # Default remains the system toolchain (typically glibc on Linux)
+  # Try to find a musl toolchain wrapper
+  find_program(_FUN_MUSL_CC NAMES musl-gcc musl-clang)
+  if(_FUN_MUSL_CC)
+    message(STATUS "FUN_USE_MUSL=ON: using musl toolchain: ${_FUN_MUSL_CC}")
+    # Force C compiler to musl wrapper before project() so the whole toolchain is configured accordingly
+    set(CMAKE_C_COMPILER "${_FUN_MUSL_CC}" CACHE FILEPATH "C compiler" FORCE)
+    set(FUN_LIBC "musl" CACHE STRING "Selected C library")
+  else()
+    message(WARNING "FUN_USE_MUSL=ON but no musl toolchain (musl-gcc or musl-clang) found. Falling back to default compiler (likely glibc).")
     set(FUN_LIBC "glibc" CACHE STRING "Selected C library")
+  endif()
+else()
+  # Default remains the system toolchain (typically glibc on Linux)
+  set(FUN_LIBC "glibc" CACHE STRING "Selected C library")
 endif()
 
 # Expose a preprocessor macro indicating selected C library
 if(FUN_LIBC STREQUAL "musl")
-    add_definitions(-DFUN_LIBC_MUSL)
+  add_definitions(-DFUN_LIBC_MUSL)
 else()
-    add_definitions(-DFUN_LIBC_GLIBC)
+  add_definitions(-DFUN_LIBC_GLIBC)
 endif()
 
 # Optional: build statically linked executables
@@ -82,8 +82,8 @@ if(FUN_LINK_STATIC)
 
   # On MSVC, prefer the static runtime
   if(MSVC)
-    foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
-                    CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL)
+    foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE 
+            CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL)
       if(DEFINED ${flag_var})
         string(REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
       endif()
@@ -151,7 +151,7 @@ if(FUN_WITH_TCLTK)
 endif()
 # Ensure trailing slash
 if(NOT DEFAULT_LIB_DIR MATCHES "/$")
-    set(DEFAULT_LIB_DIR "${DEFAULT_LIB_DIR}/")
+  set(DEFAULT_LIB_DIR "${DEFAULT_LIB_DIR}/")
 endif()
 
 # Optional SQLite support
@@ -184,14 +184,14 @@ option(FUN_WITH_PCSC "Enable PCSC (pcsclite) support" OFF)
 set(PCSC_LINK_LIBS "")
 set(PCSC_INCLUDE_DIRS "")
 if(FUN_WITH_PCSC)
-    message(STATUS "Building with PCSC support")
-    add_definitions(-DFUN_WITH_PCSC)
-    if(APPLE)
-        list(APPEND PCSC_LINK_LIBS "-framework PCSC")
-    else()
-        list(APPEND PCSC_INCLUDE_DIRS "/usr/include/PCSC")
-        list(APPEND PCSC_LINK_LIBS pcsclite)
-    endif()
+  message(STATUS "Building with PCSC support")
+  add_definitions(-DFUN_WITH_PCSC)
+  if(APPLE)
+    list(APPEND PCSC_LINK_LIBS "-framework PCSC")
+  else()
+    list(APPEND PCSC_INCLUDE_DIRS "/usr/include/PCSC")
+    list(APPEND PCSC_LINK_LIBS pcsclite)
+  endif()
 endif()
 
 # Optional JSON (json-c) support
@@ -269,9 +269,9 @@ if(FUN_WITH_XML2)
         list(APPEND LIBXML2_INCLUDE_DIRS "/usr/include/libxml2")
         include_directories(${LIBXML2_INCLUDE_DIRS})
       endif()
-    else()
-      message(FATAL_ERROR "libxml2 not found. Install libxml2 (dev headers) or disable FUN_WITH_XML2.")
-    endif()
+  else()
+    message(FATAL_ERROR "libxml2 not found. Install libxml2 (dev headers) or disable FUN_WITH_XML2.")
+  endif()
   endif()
   # As a robust fallback, add standard system include path for libxml2 if present
   if(EXISTS "/usr/include/libxml2")
@@ -365,21 +365,21 @@ endif()
 
 # Core VM/library sources
 add_library(fun_core
-        src/bytecode.c
-        src/parser.c
-        src/value.c
-        src/vm.c
+  src/bytecode.c
+  src/parser.c
+  src/value.c
+  src/vm.c
 )
 
 target_include_directories(fun_core PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Apply options to core
 if(FUN_DEBUG)
-    message(STATUS "FUN_DEBUG enabled: building with verbose debug logging")
-    target_compile_definitions(fun_core PUBLIC FUN_VERSION="${PROJECT_VERSION}")
-    target_compile_definitions(fun_core PUBLIC FUN_DEBUG=1)
+  message(STATUS "FUN_DEBUG enabled: building with verbose debug logging")
+  target_compile_definitions(fun_core PUBLIC FUN_VERSION="${PROJECT_VERSION}")
+  target_compile_definitions(fun_core PUBLIC FUN_DEBUG=1)
 endif()
 
 # Provide default stdlib directory to the runtime
@@ -471,7 +471,7 @@ endif()
 # Interpreter /usr/bin/fun
 option(FUN_WITH_REPL "Enable interactive REPL in the fun CLI" OFF)
 add_executable(fun
-        src/fun.c
+  src/fun.c
 )
 # Provide version string to the CLI
 if(FUN_WITH_REPL)
@@ -483,12 +483,12 @@ target_link_libraries(fun PRIVATE fun_core)
 
 # Internal test programs
 add_executable(fun_test
-        src/fun_test.c
+  src/fun_test.c
 )
 target_link_libraries(fun_test PRIVATE fun_core)
 
 add_executable(test_opcodes
-        src/test_opcodes.c
+  src/test_opcodes.c
 )
 target_link_libraries(test_opcodes PRIVATE fun_core)
 
@@ -511,11 +511,11 @@ set(FUN_RUN_SCRIPT "" CACHE STRING "Script to run with the 'run' target, e.g. -D
 
 if(FUN_WITH_REPL)
   add_custom_target(repl
-    COMMAND $<TARGET_FILE:fun>
-    DEPENDS fun
-    USES_TERMINAL
-    COMMENT "Run Fun REPL"
-  )
+  COMMAND $<TARGET_FILE:fun>
+  DEPENDS fun
+  USES_TERMINAL
+  COMMENT "Run Fun REPL"
+)
 endif()
 
 add_custom_target(run
@@ -570,20 +570,20 @@ add_custom_target(run-examples
 
 # Clean and distclean
 add_custom_target(fun_clean
-        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
-        COMMENT "Clean build outputs (objects, binaries) in the build directory"
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
+  COMMENT "Clean build outputs (objects, binaries) in the build directory"
 )
 add_custom_target(distclean
-        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
-        COMMAND ${CMAKE_COMMAND} -E rm -rf
-        ${CMAKE_BINARY_DIR}/CMakeCache.txt
-        ${CMAKE_BINARY_DIR}/CMakeFiles
-        ${CMAKE_BINARY_DIR}/cmake_install.cmake
-        ${CMAKE_BINARY_DIR}/install_manifest.txt
-        ${CMAKE_BINARY_DIR}/Makefile
-        ${CMAKE_BINARY_DIR}/*.ninja
-        ${CMAKE_BINARY_DIR}/.ninja_*
-        COMMENT "Remove build outputs and CMake-generated files (reconfigure needed)"
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
+  COMMAND ${CMAKE_COMMAND} -E rm -rf
+  ${CMAKE_BINARY_DIR}/CMakeCache.txt
+  ${CMAKE_BINARY_DIR}/CMakeFiles
+  ${CMAKE_BINARY_DIR}/cmake_install.cmake
+  ${CMAKE_BINARY_DIR}/install_manifest.txt
+  ${CMAKE_BINARY_DIR}/Makefile
+  ${CMAKE_BINARY_DIR}/*.ninja
+  ${CMAKE_BINARY_DIR}/.ninja_*
+  COMMENT "Remove build outputs and CMake-generated files (reconfigure needed)"
 )
 
 # Robust uninstall support as a function (uses install_manifest*.txt)
@@ -615,14 +615,14 @@ list(APPEND _candidates
 set(_manifest_file \"\")
 foreach(_cand IN LISTS _candidates)
   if(EXISTS \"\${_cand}\")
-    set(_manifest_file \"\${_cand}\")
-    break()
+  set(_manifest_file \"\${_cand}\")
+  break()
   endif()
 endforeach()
 
 if(NOT _manifest_file)
   message(FATAL_ERROR
-    \"Cannot find install manifest. Tried: \${_candidates}.
+  \"Cannot find install manifest. Tried: \${_candidates}.
 If you installed from a different build directory, run uninstall from that build directory (where install_manifest*.txt resides).\")
 endif()
 
@@ -632,21 +632,21 @@ set(_removed 0)
 set(_dirs \"\")
 foreach(_file IN LISTS _files)
   if(_file STREQUAL \"\")
-    continue()
+  continue()
   endif()
   if(EXISTS \"\${_file}\" OR IS_SYMLINK \"\${_file}\")
-    message(STATUS \"Uninstalling: \${_file}\")
-    file(REMOVE \"\${_file}\")
-    # If the file still exists after attempting to remove it, fail with an explicit error
-    if(EXISTS \"\${_file}\" OR IS_SYMLINK \"\${_file}\")
-      message(FATAL_ERROR \"Failed to remove: \${_file}. Try running the uninstall target with sudo if it is a system install.\")
-    endif()
-    # Track the containing directory for potential cleanup
-    get_filename_component(_dir \"\${_file}\" DIRECTORY)
-    list(APPEND _dirs \"\${_dir}\")
-    math(EXPR _removed \"\${_removed}+1\")
+  message(STATUS \"Uninstalling: \${_file}\")
+  file(REMOVE \"\${_file}\")
+  # If the file still exists after attempting to remove it, fail with an explicit error
+  if(EXISTS \"\${_file}\" OR IS_SYMLINK \"\${_file}\")
+    message(FATAL_ERROR \"Failed to remove: \${_file}. Try running the uninstall target with sudo if it is a system install.\")
+  endif()
+  # Track the containing directory for potential cleanup
+  get_filename_component(_dir \"\${_file}\" DIRECTORY)
+  list(APPEND _dirs \"\${_dir}\")
+  math(EXPR _removed \"\${_removed}+1\")
   else()
-    message(STATUS \"Skipping (not found): \${_file}\")
+  message(STATUS \"Skipping (not found): \${_file}\")
   endif()
 endforeach()
 
@@ -659,14 +659,14 @@ set(_all_dirs \"\")
 foreach(_d IN LISTS _dirs)
   set(_p \"\${_d}\")
   while(NOT \"\${_p}\" STREQUAL \"\" AND NOT \"\${_p}\" STREQUAL \"/\")
+  list(APPEND _all_dirs \"\${_p}\")
+  get_filename_component(_p \"\${_p}\" DIRECTORY)
+  # Stop collecting parents once we reach a safe root or the filesystem root
+  list(FIND _safe_roots \"\${_p}\" _root_idx)
+  if(_root_idx GREATER -1)
     list(APPEND _all_dirs \"\${_p}\")
-    get_filename_component(_p \"\${_p}\" DIRECTORY)
-    # Stop collecting parents once we reach a safe root or the filesystem root
-    list(FIND _safe_roots \"\${_p}\" _root_idx)
-    if(_root_idx GREATER -1)
-      list(APPEND _all_dirs \"\${_p}\")
-      break()
-    endif()
+    break()
+  endif()
   endwhile()
 endforeach()
 
@@ -679,38 +679,38 @@ set(_pass 0)
 while(TRUE)
   set(_pass_removed 0)
   foreach(_dir IN LISTS _all_dirs)
-    if(EXISTS \"\${_dir}\" AND IS_DIRECTORY \"\${_dir}\")
-      # Only act on directories within safe roots
-      set(_allowed FALSE)
-      foreach(_root IN LISTS _safe_roots)
-        if(\"\${_dir}\" MATCHES \"^\${_root}(/|\$)\")
-          set(_allowed TRUE)
-          break()
-        endif()
-      endforeach()
-      if(NOT _allowed)
-        # e.g. /usr/bin — do not remove
-        continue()
-      endif()
-
-      # Remove only if empty (do not recurse unrelated content)
-      file(GLOB _dir_contents LIST_DIRECTORIES true \"\${_dir}/*\")
-      list(LENGTH _dir_contents _dir_len)
-      if(_dir_len EQUAL 0)
-        message(STATUS \"Removing empty directory: \${_dir}\")
-        file(REMOVE_RECURSE \"\${_dir}\")
-        if(IS_DIRECTORY \"\${_dir}\")
-          message(FATAL_ERROR \"Failed to remove directory: \${_dir}. Try running the uninstall target with sudo if it is a system install.\")
-        endif()
-        math(EXPR _removed_dirs \"\${_removed_dirs}+1\")
-        math(EXPR _pass_removed \"\${_pass_removed}+1\")
-      endif()
+  if(EXISTS \"\${_dir}\" AND IS_DIRECTORY \"\${_dir}\")
+    # Only act on directories within safe roots
+    set(_allowed FALSE)
+    foreach(_root IN LISTS _safe_roots)
+    if(\"\${_dir}\" MATCHES \"^\${_root}(/|\$)\")
+      set(_allowed TRUE)
+      break()
     endif()
+    endforeach()
+    if(NOT _allowed)
+    # e.g. /usr/bin — do not remove
+    continue()
+    endif()
+
+    # Remove only if empty (do not recurse unrelated content)
+    file(GLOB _dir_contents LIST_DIRECTORIES true \"\${_dir}/*\")
+    list(LENGTH _dir_contents _dir_len)
+    if(_dir_len EQUAL 0)
+    message(STATUS \"Removing empty directory: \${_dir}\")
+    file(REMOVE_RECURSE \"\${_dir}\")
+    if(IS_DIRECTORY \"\${_dir}\")
+      message(FATAL_ERROR \"Failed to remove directory: \${_dir}. Try running the uninstall target with sudo if it is a system install.\")
+    endif()
+    math(EXPR _removed_dirs \"\${_removed_dirs}+1\")
+    math(EXPR _pass_removed \"\${_pass_removed}+1\")
+    endif()
+  endif()
   endforeach()
 
   math(EXPR _pass \"\${_pass}+1\")
   if(_pass_removed EQUAL 0 OR _pass GREATER 5)
-    break()
+  break()
   endif()
 endwhile()
 
@@ -720,13 +720,13 @@ message(STATUS \"Uninstall finished. Removed \${_removed} files and \${_removed_
   # Expose an 'uninstall' build target (run with sudo if system locations were used)
   add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND}
-            -D MANIFEST="${CMAKE_BINARY_DIR}/install_manifest.txt"
-            -D CMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}"
-            -D CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-            -P "${_FUN_UNINSTALL_SCRIPT}"
+      -D MANIFEST="${CMAKE_BINARY_DIR}/install_manifest.txt"
+      -D CMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}"
+      -D CMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+      -P "${_FUN_UNINSTALL_SCRIPT}"
     USES_TERMINAL
     COMMENT "Uninstall files installed by this project (use sudo if needed)"
-  )
+)
 endfunction()
 
 # Define the uninstall target
@@ -735,21 +735,25 @@ fun_add_uninstall_target()
 # Install rules
 # Binary
 install(TARGETS fun
-        RUNTIME DESTINATION /usr/bin)
+  RUNTIME DESTINATION /usr/bin
+)
 
 # Libs
 install(DIRECTORY lib/
-        DESTINATION /usr/share/fun/lib
-        FILES_MATCHING PATTERN "*.fun")
+  DESTINATION /usr/share/fun/lib
+  FILES_MATCHING PATTERN "*.fun"
+)
 
 # Optionally install example scripts
 option(FUN_INSTALL_EXAMPLES "Install example .fun scripts" ON)
 if(FUN_INSTALL_EXAMPLES)
-    install(DIRECTORY examples/
-            DESTINATION /usr/share/fun/examples
-            FILES_MATCHING PATTERN "*.fun")
+  install(DIRECTORY examples/ 
+    DESTINATION /usr/share/fun/examples
+    FILES_MATCHING PATTERN "*.fun"
+  )
 endif()
 
 # - Docs
 install(FILES README.md LICENSE
-        DESTINATION /usr/share/doc/fun)
+  DESTINATION /usr/share/doc/fun
+)
