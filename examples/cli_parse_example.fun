@@ -28,10 +28,21 @@ pos = parsed["positionals"]
 if (flags["f"] == 1 || flags["force"] == 1)
   print("Force enabled")
 
-if (has_key(flags, "force") && typeof(flags["force"]) == "string")
+// No hasKey() builtin available here; check via keys()+contains()
+flag_keys = keys(flags)
+if (contains(flag_keys, "force") && typeof(flags["force"]) == "string")
   print(join(["Force value=", flags["force"]], ""))
 
 print("Flags map:")
 print(flags)
 print("Positionals:")
 print(pos)
+
+/* Expected output (FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/cli_parse_example.fun --force bar xx x x --for=xxx --h=1):
+1
+Force enabled
+Flags map:
+{"force": 1, "for": xxx, "h": 1}
+Positionals:
+[bar, xx, x, x]
+*/

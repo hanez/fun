@@ -1,3 +1,14 @@
+/*
+ * This file is part of the Fun programming language.
+ * https://fun-lang.xyz/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
+ *
+ * Added: 2025-12-30
+ */
+
 // Simple CLI helpers for Fun scripts.
 //
 // argv(): returns an array of the raw arguments passed to the script
@@ -14,7 +25,8 @@ fun argv()
   a = []
   i = 0
   while (i < n)
-    key = join(["FUN_ARGV_", to_string(i)], "")
+    // Build key without join() to avoid any potential call resolution issues
+    key = "FUN_ARGV_" + to_string(i)
     push(a, env(key))
     i = i + 1
   return a
@@ -27,23 +39,24 @@ fun parse_args(args)
   n = len(args)
   while (i < n)
     s = args[i]
-    if (len(s) >= 2 && substr(s, 0, 2) == "--")
+    slen = len(s)
+    if (slen >= 2 && substr(s, 0, 2) == "--")
       eq = find(s, "=")
       if (eq >= 0)
         key = substr(s, 2, eq - 2)           // between -- and =
-        val = substr(s, eq + 1, len(s) - (eq + 1))
+        val = substr(s, eq + 1, slen - (eq + 1))
         flags[key] = val
       else
-        key = substr(s, 2, len(s) - 2)
+        key = substr(s, 2, slen - 2)
         flags[key] = 1
-    else if (len(s) == 2 && substr(s, 0, 1) == "-")
+    else if (slen == 2 && substr(s, 0, 1) == "-")
       // short -f boolean
       key = substr(s, 1, 1)
       flags[key] = 1
-    else if (len(s) > 2 && substr(s, 0, 1) == "-")
+    else if (slen > 2 && substr(s, 0, 1) == "-")
       // compact short flags like -abc -> a=1, b=1, c=1
       j = 1
-      while (j < len(s))
+      while (j < slen)
         k = substr(s, j, 1)
         flags[k] = 1
         j = j + 1
