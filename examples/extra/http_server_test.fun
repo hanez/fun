@@ -1,3 +1,16 @@
+#!/usr/bin/env fun
+
+/*
+ * This file is part of the Fun programming language.
+ * https://fun-lang.xyz/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
+ *
+ * Added: 2025-12-28
+ */
+
 #include <io/socket.fun>
 
 c = TcpClient()
@@ -9,7 +22,6 @@ if (c.connect("127.0.0.1", 8080))
     resp = c.recv_all(4096)
     print("GET Response contains foo=bar: " + to_string(find(resp, "foo = bar") >= 0))
     print("GET Response contains baz=qux: " + to_string(find(resp, "baz = qux") >= 0))
-    
     c.close()
 else
     print("Failed to connect to server")
