@@ -15,7 +15,10 @@
 
 class RIPEMD160()
   KL = [0, 1518500249, 1859775393, 2400959708, 2840853838]
-  KR = [1352829926, 1548603684, 1836062451, 2054012649, 0]
+  //KR = [1352829926, 1548603684, 1836062451, 2054012649, 0]
+  // Correct KR constants according to RIPEMD-160 specification:
+  // 0x50A28BE6, 0x5C4DD124, 0x6D703EF3, 0x7A6D76E9, 0x00000000
+  KR = [1352829926, 1554976324, 1836072691, 2053994217, 0]
 
   RL = [
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
@@ -58,22 +61,23 @@ class RIPEMD160()
     return x
 
   fun rol32(this, x, s)
-    return rol(this.u32(x), s)
+    x = this.u32(x)
+    return this.u32(bor(shl(x, s), shr(x, 32 - s)))
 
   fun add32(this, a, b)
     return this.u32(a + b)
 
   fun F(this, stage, x, y, z)
     if stage == 0
-      return bxor(bxor(x, y), z)
+      return this.u32(bxor(bxor(x, y), z))
     else if stage == 1
-      return bor(band(x, y), band(bnot(x), z))
+      return this.u32(bor(band(x, y), band(bnot(x), z)))
     else if stage == 2
-      return bxor(bor(x, bnot(y)), z)
+      return this.u32(bxor(bor(x, bnot(y)), z))
     else if stage == 3
-      return bor(band(x, z), band(y, bnot(z)))
+      return this.u32(bor(band(x, z), band(y, bnot(z))))
     else
-      return bxor(x, bor(y, bnot(z)))
+      return this.u32(bxor(x, bor(y, bnot(z))))
 
   fun hex_val(this, ch)
     if ch == "0"
@@ -204,7 +208,9 @@ class RIPEMD160()
       B = T
 
       // Right side step
-      Tr = this.add32(this.rol32(this.add32(this.add32(Ar, this.F(stage_r, Br, Cr, Dr)), this.add32(M[this.RR[j]], this.KR[stage_r])), this.SR[j]), Er)
+      // Note: Right branch uses F in reverse stage order (stage_r),
+      // but the constants KR are indexed by the forward round index (stage).
+      Tr = this.add32(this.rol32(this.add32(this.add32(Ar, this.F(stage_r, Br, Cr, Dr)), this.add32(M[this.RR[j]], this.KR[stage])), this.SR[j]), Er)
       Ar = Er
       Er = Dr
       Dr = this.rol32(Cr, 10)
@@ -230,11 +236,19 @@ class RIPEMD160()
     h3 = state[3]
     h4 = state[4]
     
-    state[0] = this.add32(h1, this.add32(B, Cr))
-    state[1] = this.add32(h2, this.add32(C, Dr))
-    state[2] = this.add32(h3, this.add32(D, Er))
-    state[3] = this.add32(h4, this.add32(E, Ar))
-    state[4] = this.add32(h0, this.add32(A, Br))
+    // Final state combination (canonical RIPEMD-160):
+    // T  = h1 + Cl + Dr
+    // h1 = h2 + Dl + Er
+    // h2 = h3 + El + Ar
+    // h3 = h4 + Al + Br
+    // h4 = h0 + Bl + Cr
+    // h0 = T
+    T = this.add32(h1, this.add32(C, Dr))
+    state[1] = this.add32(h2, this.add32(D, Er))
+    state[2] = this.add32(h3, this.add32(E, Ar))
+    state[3] = this.add32(h4, this.add32(A, Br))
+    state[4] = this.add32(h0, this.add32(B, Cr))
+    state[0] = T
     return state
 
   fun ripemd160_bytes(this, bytes)
