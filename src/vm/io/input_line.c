@@ -1,6 +1,10 @@
 case OP_INPUT_LINE: {
-    /* operand: 0 = no prompt; 1 = has prompt (string or any value convertible to string) */
-    int has_prompt = inst.operand ? 1 : 0;
+    /* operand bit flags:
+     *  bit0 (1): has prompt (string or any value convertible to string) — top of stack holds prompt when set
+     *  bit1 (2): hidden input (do not echo typed characters)
+     */
+    int has_prompt = (inst.operand & 1) ? 1 : 0;
+    int hidden = (inst.operand & 2) ? 1 : 0;
     if (has_prompt) {
         /* pop prompt value and print without newline */
         Value pv = pop_value(vm);
@@ -13,6 +17,35 @@ case OP_INPUT_LINE: {
         free_value(pv);
     }
 
+    /* For hidden input, temporarily disable terminal echo if possible */
+    int echo_disabled = 0;
+#ifdef _WIN32
+    if (hidden) {
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        if (hStdin != INVALID_HANDLE_VALUE) {
+            DWORD mode;
+            if (GetConsoleMode(hStdin, &mode)) {
+                DWORD newMode = mode & ~(ENABLE_ECHO_INPUT);
+                if (SetConsoleMode(hStdin, newMode)) {
+                    echo_disabled = 1;
+                }
+            }
+        }
+    }
+#else
+    if (hidden) {
+        /* POSIX termios */
+        struct termios oldt;
+        if (tcgetattr(STDIN_FILENO, &oldt) == 0) {
+            struct termios newt = oldt;
+            newt.c_lflag &= ~(ECHO);
+            if (tcsetattr(STDIN_FILENO, TCSANOW, &newt) == 0) {
+                echo_disabled = 1;
+            }
+        }
+    }
+#endif
+
     /* read a line from stdin, dynamically grow buffer */
     size_t cap = 128;
     size_t len = 0;
@@ -20,7 +53,8 @@ case OP_INPUT_LINE: {
     if (!buf) {
         fprintf(stderr, "Runtime error: out of memory reading input");
         push_value(vm, make_string(""));
-        break;
+        /* On early exit, try to restore echo if we turned it off */
+        goto restore_echo_and_break;
     }
 
     int ch;
@@ -68,5 +102,36 @@ case OP_INPUT_LINE: {
     free(buf);
 
 push_done:
+    /* If we disabled echo, restore terminal settings and print a newline for UX */
+#ifdef _WIN32
+    if (echo_disabled) {
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        if (hStdin != INVALID_HANDLE_VALUE) {
+            DWORD mode;
+            if (GetConsoleMode(hStdin, &mode)) {
+                /* Re-enable ECHO flag */
+                mode |= ENABLE_ECHO_INPUT;
+                SetConsoleMode(hStdin, mode);
+            }
+        }
+        if (has_prompt) {
+            fputc('\n', stdout);
+            fflush(stdout);
+        }
+    }
+#else
+    if (echo_disabled) {
+        struct termios t;
+        if (tcgetattr(STDIN_FILENO, &t) == 0) {
+            t.c_lflag |= ECHO;
+            tcsetattr(STDIN_FILENO, TCSANOW, &t);
+        }
+        if (has_prompt) {
+            fputc('\n', stdout);
+            fflush(stdout);
+        }
+    }
+#endif
+restore_echo_and_break:
     break;
 }

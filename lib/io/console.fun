@@ -17,6 +17,15 @@ class Console()
     else
       return input(join([q, ": "], ""))
 
+  // Ask for a secret string (e.g., password) without echoing input
+  // Returns the entered string. A trailing newline is not echoed back.
+  fun ask_hidden(this, question)
+    q = to_string(question)
+    if (len(q) == 0)
+      return input_hidden("")
+    else
+      return input_hidden(join([q, ": "], ""))
+
   // Ask a yes/no question; returns 1 for yes, 0 for no
   // Accepts: y, yes, n, no (case-insensitive). Keeps asking until valid.
   fun ask_yes_no(this, question)

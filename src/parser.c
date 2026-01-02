@@ -709,6 +709,20 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "input_hidden") == 0) {
+                (*pos)++; /* '(' */
+                int hasPrompt = 0;
+                skip_spaces(src, len, pos);
+                if (*pos < len && src[*pos] != ')') {
+                    if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "input_hidden expects 0 or 1 argument"); free(name); return 0; }
+                    hasPrompt = 1;
+                }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after input_hidden arg(s)"); free(name); return 0; }
+                /* operand bit0 = hasPrompt, bit1 = hidden */
+                bytecode_add_instruction(bc, OP_INPUT_LINE, (hasPrompt ? 1 : 0) | 2);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "proc_run") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "proc_run expects 1 argument (command string)"); free(name); return 0; }

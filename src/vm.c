@@ -29,7 +29,13 @@
 #include <netdb.h>
 #include <sys/un.h>
 #include <unistd.h>
+/* For hidden input (password) handling in OP_INPUT_LINE */
+#include <termios.h>
 //#include <arpa/inet.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
 #endif
 
 /* Bring in split-out built-ins without changing the build system yet */
