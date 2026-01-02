@@ -48,6 +48,11 @@
 // Optional by extensions commonly used code. #ifdef's are in each single file.
 #include "external/curl.c"
 #include "external/ini.c"
+#ifdef FUN_WITH_INI
+/* Central INI handle registry and helpers */
+#include "vm/ini/handles.c"
+#endif
+/* Note: INI opcode handlers are included below; changes in vm/ini/*.c require vm.c to rebuild. */
 #include "external/json.c"
 #include "external/libsql.c"
 #include "external/pcsc.c"

@@ -27,35 +27,18 @@
 #  include <iniparser/iniparser.h>
 #  include <iniparser/dictionary.h>
 #endif
-#include <stdio.h> /* snprintf for helper */
+#include <stddef.h>
 
 typedef struct { dictionary *dict; int in_use; } IniSlot;
-static IniSlot g_ini[64];
 
-static int ini_alloc_handle(dictionary *d) {
-    for (int i = 1; i < (int)(sizeof(g_ini)/sizeof(g_ini[0])); ++i) {
-        if (!g_ini[i].in_use) { g_ini[i].in_use = 1; g_ini[i].dict = d; return i; }
-    }
-    return 0;
-}
-static dictionary* ini_get(int h) {
-    if (h > 0 && h < (int)(sizeof(g_ini)/sizeof(g_ini[0])) && g_ini[h].in_use) return g_ini[h].dict;
-    return NULL;
-}
-static int ini_free_handle(int h) {
-    if (h <= 0 || h >= (int)(sizeof(g_ini)/sizeof(g_ini[0])) || !g_ini[h].in_use) return 0;
-    if (g_ini[h].dict) iniparser_freedict(g_ini[h].dict);
-    g_ini[h].dict = NULL;
-    g_ini[h].in_use = 0;
-    return 1;
-}
+/* Single global registry (defined in handles.c) */
+extern IniSlot g_ini[64];
 
-/* Helper to build section:key string safely into provided buffer */
-static inline void ini_make_full_key(char *buf, size_t cap, const char *sec, const char *key) {
-    if (!buf || cap == 0) return;
-    if (!sec) sec = "";
-    if (!key) key = "";
-    /* iniparser expects "section:key" */
-    snprintf(buf, cap, "%s:%s", sec, key);
-}
+/* Registry API (implemented in handles.c) */
+int ini_alloc_handle(dictionary *d);
+dictionary* ini_get(int h);
+int ini_free_handle(int h);
+
+/* Helper to build section:key string safely into provided buffer (implemented in handles.c) */
+void ini_make_full_key(char *buf, size_t cap, const char *sec, const char *key);
 #endif /* FUN_WITH_INI */

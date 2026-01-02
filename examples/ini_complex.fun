@@ -91,7 +91,7 @@ else
   retries=3
   base_url=https://api.example.com
 [features]
-  feature_x=0
+  feature_x=1
   feature_y=0
 [paths]
   data_dir=./data

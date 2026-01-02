@@ -23,8 +23,29 @@ case OP_INI_GET_INT: {
     dictionary *d = ini_get(h);
     int outi = def;
     if (d && sec && key) {
-        char full[1024]; ini_make_full_key(full, sizeof(full), sec, key);
-        outi = iniparser_getint(d, full, def);
+        char full[1024]; char alt[1024];
+        ini_make_full_key(full, sizeof(full), sec, key);
+        memcpy(alt, full, sizeof(alt));
+        for (size_t i = 0; i < sizeof(alt) && alt[i]; ++i) { if (alt[i] == ':') { alt[i] = '.'; break; } }
+        const char *s = iniparser_getstring(d, full, NULL);
+        if (!s) s = iniparser_getstring(d, alt, NULL);
+        if (s) {
+            /* strip optional quotes and parse */
+            char buf[256];
+            size_t n = strlen(s);
+            if (n >= 2 && ((s[0]=='"' && s[n-1]=='"') || (s[0]=='\'' && s[n-1]=='\''))) {
+                size_t copy = (n-2) < sizeof(buf)-1 ? (n-2) : sizeof(buf)-1;
+                memcpy(buf, s+1, copy); buf[copy] = '\0';
+                s = buf;
+            }
+            /* skip leading spaces */
+            while (*s && (unsigned char)*s <= ' ') s++;
+            char *endp = NULL;
+            long v = strtol(s, &endp, 10);
+            if (endp && endp != s) outi = (int)v; else outi = def;
+        } else {
+            outi = def;
+        }
     }
     free_value(vdef); free_value(vkey); free_value(vsec); free_value(vh);
     push_value(vm, make_int(outi));

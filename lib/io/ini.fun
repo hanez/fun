@@ -29,7 +29,7 @@ class INI()
   // Load an INI file from path, closing previous one if open.
   // Returns handle (>0) or 0 on error.
   fun load(this, path)
-    if (this.h > 0)
+    if (this.is_open())
       ini_free(this.h)
       this.h = 0
     p = to_string(path)
@@ -39,11 +39,13 @@ class INI()
 
   // True if a dictionary is open.
   fun is_open(this)
-    return this.h > 0
+    // Be robust across runtimes: coerce to number and test non-zero
+    // Avoid using '>' to prevent integer-only GT errors in VM
+    return to_number(this.h) != 0
 
   // Close and free resources. Safe to call multiple times.
   fun close(this)
-    if (this.h > 0)
+    if (this.is_open())
       ini_free(this.h)
       this.h = 0
     return 1

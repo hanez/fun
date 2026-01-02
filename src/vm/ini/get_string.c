@@ -23,8 +23,19 @@ case OP_INI_GET_STRING: {
     dictionary *d = ini_get(h);
     const char *res = def;
     if (d && sec && key) {
-        char full[1024]; ini_make_full_key(full, sizeof(full), sec, key);
+        char full[1024]; char alt[1024];
+        ini_make_full_key(full, sizeof(full), sec, key);
+        /* Build alternate with dot separator for robustness */
+        ini_make_full_key(alt, sizeof(alt), sec, key);
+        size_t flen = strlen(full);
+        if (flen < sizeof(alt) && flen > 0) { /* create dot version in alt */
+            memcpy(alt, full, flen + 1);
+            for (size_t i = 0; i < flen; ++i) if (alt[i] == ':') { alt[i] = '.'; break; }
+        }
         const char *s = iniparser_getstring(d, full, def);
+        if (s == def) { /* not found, try alternate dot form */
+            s = iniparser_getstring(d, alt, def);
+        }
         res = s ? s : "";
     }
     free_value(vdef); free_value(vkey); free_value(vsec); free_value(vh);

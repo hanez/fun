@@ -19,7 +19,7 @@ if h == 0
   print("Failed to load " + path)
 else
   u = ini_get_string(h, "auth", "user", "guest")
-  r = ini_get_int(h, "network", "retries", 3)
+  r = ini_get_int(h, "network", "retries", 5)
   s = ini_get_bool(h, "network", "ssl", 0)
   print("user=" + u)
   print("retries=" + to_string(r))
@@ -31,6 +31,13 @@ else
 
 /* Expected output:
 user=����U
+retries=3
+ssl=1
+
+I wonder about the user= value when the default value is used!
+
+It should look like:
+user=guest
 retries=3
 ssl=1
 */
