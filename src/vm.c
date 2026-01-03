@@ -678,6 +678,13 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/math/ceil.c"
             #include "vm/math/trunc.c"
             #include "vm/math/round.c"
+            #include "vm/math/sin.c"
+            #include "vm/math/cos.c"
+            #include "vm/math/tan.c"
+            #include "vm/math/exp.c"
+            #include "vm/math/log.c"
+            #include "vm/math/log10.c"
+            #include "vm/math/sqrt.c"
             #include "vm/math/random_int.c"
             #include "vm/math/random_seed.c"
 

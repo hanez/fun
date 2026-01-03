@@ -193,6 +193,13 @@ static const char *opcode_name(OpCode op) {
         case OP_CEIL: return "CEIL";
         case OP_TRUNC: return "TRUNC";
         case OP_ROUND: return "ROUND";
+        case OP_SIN: return "SIN";
+        case OP_COS: return "COS";
+        case OP_TAN: return "TAN";
+        case OP_EXP: return "EXP";
+        case OP_LOG: return "LOG";
+        case OP_LOG10: return "LOG10";
+        case OP_SQRT: return "SQRT";
         default: return "???";
     }
 }

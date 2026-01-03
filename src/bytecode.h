@@ -242,7 +242,16 @@ typedef enum {
     OP_FLOOR,             // pops x (int/float); pushes floor(x) (int if integral else float)
     OP_CEIL,              // pops x (int/float); pushes ceil(x)  (int if integral else float)
     OP_TRUNC,             // pops x (int/float); pushes trunc(x) (int if integral else float)
-    OP_ROUND              // pops x (int/float); pushes round(x) (half away from zero)
+    OP_ROUND,             // pops x (int/float); pushes round(x) (half away from zero)
+
+    // C99 math.h transcendentals (float-aware)
+    OP_SIN,               // pops x (int/float); pushes sin(x)
+    OP_COS,               // pops x (int/float); pushes cos(x)
+    OP_TAN,               // pops x (int/float); pushes tan(x)
+    OP_EXP,               // pops x (int/float); pushes exp(x)
+    OP_LOG,               // pops x (int/float); pushes natural log ln(x)
+    OP_LOG10,             // pops x (int/float); pushes log10(x)
+    OP_SQRT               // pops x (int/float); pushes sqrt(x)
 } OpCode;
 
 typedef struct {

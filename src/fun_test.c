@@ -39,6 +39,9 @@ int main(void) {
     int cfn3_2 = bytecode_add_constant(bc, make_float(-3.2));
     int cfn3_5 = bytecode_add_constant(bc, make_float(-3.5));
     int cfn3_8 = bytecode_add_constant(bc, make_float(-3.8));
+    int cf0 = bytecode_add_constant(bc, make_float(0.0));
+    int cf1 = bytecode_add_constant(bc, make_float(1.0));
+    int c9 = bytecode_add_constant(bc, make_int(9));
 
     // ---------- Arithmetic ----------
     bytecode_add_instruction(bc, OP_LOAD_CONST, c42);
@@ -166,6 +169,36 @@ int main(void) {
     // integers should be unchanged
     bytecode_add_instruction(bc, OP_LOAD_CONST, c10);
     bytecode_add_instruction(bc, OP_FLOOR, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // ---------- Transcendentals demo ----------
+    // sin(0)=0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf0);
+    bytecode_add_instruction(bc, OP_SIN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // cos(0)=1
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf0);
+    bytecode_add_instruction(bc, OP_COS, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // tan(0)=0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf0);
+    bytecode_add_instruction(bc, OP_TAN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // exp(0)=1
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf0);
+    bytecode_add_instruction(bc, OP_EXP, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // log(1)=0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf1);
+    bytecode_add_instruction(bc, OP_LOG, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // log10(1)=0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf1);
+    bytecode_add_instruction(bc, OP_LOG10, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // sqrt(9)=3
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c9);
+    bytecode_add_instruction(bc, OP_SQRT, 0);
     bytecode_add_instruction(bc, OP_PRINT, 0);
 
     // ---------- HALT ----------

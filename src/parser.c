@@ -1786,6 +1786,55 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "sin") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "sin expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SIN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "cos") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "cos expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_COS, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "tan") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "tan expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TAN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "exp") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "exp expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_EXP, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "log") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "log expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LOG, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "log10") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "log10 expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LOG10, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sqrt") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "sqrt expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SQRT, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "pow") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "pow expects 2 args"); free(name); return 0; }
