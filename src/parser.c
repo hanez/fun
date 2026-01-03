@@ -1195,6 +1195,50 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            /* Notcurses builtins (optional) */
+            if (strcmp(name, "nc_init") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "nc_init expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_NC_INIT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "nc_shutdown") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "nc_shutdown expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_NC_SHUTDOWN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "nc_clear") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "nc_clear expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_NC_CLEAR, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "nc_draw_text") == 0) {
+                (*pos)++; /* '(' */
+                /* (y, x, text) -> push y, x, text, then opcode will pop text,x,y */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_text expects (y, x, text)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_text expects (y, x, text)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_text expects (y, x, text)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_text expects (y, x, text)"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_text expects (y, x, text)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_draw_text args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_NC_DRAW_TEXT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "nc_getch") == 0) {
+                (*pos)++; /* '(' */
+                /* (timeout_ms) */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_getch expects (timeout_ms)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_getch arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_NC_GETCH, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "pcsc_release") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "pcsc_release expects 1 argument (ctx)"); free(name); return 0; }

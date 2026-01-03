@@ -7,11 +7,14 @@
  * https://opensource.org/license/apache-2-0
  */
 
-/* Ensure POSIX prototypes (nanosleep, clock_gettime, localtime_r, etc.) are available
+/* Ensure POSIX/XSI prototypes (nanosleep, wcwidth, etc.) are available
  * before any system headers are included by amalgamated .c files. */
 #ifndef _WIN32
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
 #endif
 #endif
 
@@ -44,6 +47,13 @@
 #include "string.c"
 #include "value.h"
 #include "vm.h"
+
+/* Shared Notcurses state (optional) */
+#ifdef FUN_WITH_NOTCURSES
+#  include <wchar.h> /* ensure wcwidth/wcswidth prototypes present before notcurses.h on some systems */
+#  include <notcurses/notcurses.h>
+#endif
+#include "vm/notcurses/common.h"
 
 // Optional by extensions commonly used code. #ifdef's are in each single file.
 #include "external/curl.c"
@@ -779,6 +789,15 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/tk/button.c"
             #include "vm/tk/pack.c"
             #include "vm/tk/bind.c"
+            #endif
+
+            /* Notcurses TUI ops (optional) */
+            #ifdef FUN_WITH_NOTCURSES
+            #include "vm/notcurses/init.c"
+            #include "vm/notcurses/shutdown.c"
+            #include "vm/notcurses/clear.c"
+            #include "vm/notcurses/draw_text.c"
+            #include "vm/notcurses/getch.c"
             #endif
 
             /* SQLite ops */

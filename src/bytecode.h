@@ -261,7 +261,14 @@ typedef enum {
 
     // Min/Max variants (float-aware, C99 semantics)
     OP_FMIN,              // pops b, a (int/float); pushes fmin(a,b) (NaN handling per C99)
-    OP_FMAX               // pops b, a (int/float); pushes fmax(a,b) (NaN handling per C99)
+    OP_FMAX,              // pops b, a (int/float); pushes fmax(a,b) (NaN handling per C99)
+
+    /* Notcurses TUI (optional) */
+    OP_NC_INIT,           // initializes Notcurses; returns 1 on success, 0 on failure
+    OP_NC_SHUTDOWN,       // shuts down Notcurses; returns 0
+    OP_NC_CLEAR,          // clears screen/plane; returns 0
+    OP_NC_DRAW_TEXT,      // pops text, x, y; draws; returns 0
+    OP_NC_GETCH           // pops timeout_ms; returns codepoint or -1 on timeout/error
 } OpCode;
 
 typedef struct {

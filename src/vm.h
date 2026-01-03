@@ -53,7 +53,9 @@ static const char *opcode_names[] = {
     "TK_BIND",
     "SERIAL_OPEN","SERIAL_CONFIG","SERIAL_SEND","SERIAL_RECV","SERIAL_CLOSE",
     "TK_EVAL","TK_RESULT","TK_LOOP","TK_WM_TITLE","TK_LABEL","TK_BUTTON","TK_PACK",
-    "TRY_PUSH","TRY_POP","THROW"
+    "TRY_PUSH","TRY_POP","THROW",
+    /* Notcurses TUI (optional) */
+    "NC_INIT","NC_SHUTDOWN","NC_CLEAR","NC_DRAW_TEXT","NC_GETCH"
 };
 
 typedef struct {
@@ -132,7 +134,7 @@ void vm_debug_request_finish(VM *vm);
 void vm_debug_request_continue(VM *vm);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_THROW;  // all current opcodes
+    return op >= OP_NOP && op <= OP_NC_GETCH;  // all current opcodes (including optional NC_*)
 }
 
 #endif
