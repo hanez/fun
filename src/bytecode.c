@@ -200,6 +200,12 @@ static const char *opcode_name(OpCode op) {
         case OP_LOG: return "LOG";
         case OP_LOG10: return "LOG10";
         case OP_SQRT: return "SQRT";
+        case OP_GCD: return "GCD";
+        case OP_LCM: return "LCM";
+        case OP_ISQRT: return "ISQRT";
+        case OP_SIGN: return "SIGN";
+        case OP_FMIN: return "FMIN";
+        case OP_FMAX: return "FMAX";
         default: return "???";
     }
 }

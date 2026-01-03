@@ -11,6 +11,7 @@
 #include "value.h"
 #include "vm.h"
 #include <stdio.h>
+#include <math.h>
 
 #define ASSERT_EQ(val, expected) \
     if ((val).type != VAL_INT || (val).i != (expected)) { \
@@ -41,7 +42,17 @@ int main(void) {
     int cfn3_8 = bytecode_add_constant(bc, make_float(-3.8));
     int cf0 = bytecode_add_constant(bc, make_float(0.0));
     int cf1 = bytecode_add_constant(bc, make_float(1.0));
+    int cf5 = bytecode_add_constant(bc, make_float(5.0));
+    int c4 = bytecode_add_constant(bc, make_int(4));
     int c9 = bytecode_add_constant(bc, make_int(9));
+    int c48 = bytecode_add_constant(bc, make_int(48));
+    int c18 = bytecode_add_constant(bc, make_int(18));
+    int c21 = bytecode_add_constant(bc, make_int(21));
+    int c6 = bytecode_add_constant(bc, make_int(6));
+    int c15 = bytecode_add_constant(bc, make_int(15));
+    int c16 = bytecode_add_constant(bc, make_int(16));
+    int cneg5 = bytecode_add_constant(bc, make_int(-5));
+    int c7 = bytecode_add_constant(bc, make_int(7));
 
     // ---------- Arithmetic ----------
     bytecode_add_instruction(bc, OP_LOAD_CONST, c42);
@@ -199,6 +210,84 @@ int main(void) {
     // sqrt(9)=3
     bytecode_add_instruction(bc, OP_LOAD_CONST, c9);
     bytecode_add_instruction(bc, OP_SQRT, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // ---------- Integer math (gcd/lcm/isqrt/sign) demo ----------
+    // gcd(48,18)=6
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c48);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c18);
+    bytecode_add_instruction(bc, OP_GCD, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // lcm(21,6)=42
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c21);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c6);
+    bytecode_add_instruction(bc, OP_LCM, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // isqrt cases: 0, 1, 15->3, 16->4
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+    bytecode_add_instruction(bc, OP_ISQRT, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
+    bytecode_add_instruction(bc, OP_ISQRT, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c15);
+    bytecode_add_instruction(bc, OP_ISQRT, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c16);
+    bytecode_add_instruction(bc, OP_ISQRT, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // sign(-5)=-1, sign(0)=0, sign(7)=1
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cneg5);
+    bytecode_add_instruction(bc, OP_SIGN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c0);
+    bytecode_add_instruction(bc, OP_SIGN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c7);
+    bytecode_add_instruction(bc, OP_SIGN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // ---------- fmin/fmax demo ----------
+    // fmin(3.2, 4) -> 3.2
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf3_2);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c4);
+    bytecode_add_instruction(bc, OP_FMIN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // fmax(3.2, 4) -> 4
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf3_2);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c4);
+    bytecode_add_instruction(bc, OP_FMAX, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // NaN cases
+    double nanv = NAN;
+    int cNaN = bytecode_add_constant(bc, make_float(nanv));
+    // fmin(NaN, 5.0) -> 5.0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cNaN);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf5);
+    bytecode_add_instruction(bc, OP_FMIN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // fmax(NaN, 5.0) -> 5.0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cNaN);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf5);
+    bytecode_add_instruction(bc, OP_FMAX, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // fmin(5.0, NaN) -> 5.0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf5);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cNaN);
+    bytecode_add_instruction(bc, OP_FMIN, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // fmax(5.0, NaN) -> 5.0
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf5);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cNaN);
+    bytecode_add_instruction(bc, OP_FMAX, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    // fmin(NaN, NaN) -> NaN (prints as nan)
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cNaN);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cNaN);
+    bytecode_add_instruction(bc, OP_FMIN, 0);
     bytecode_add_instruction(bc, OP_PRINT, 0);
 
     // ---------- HALT ----------

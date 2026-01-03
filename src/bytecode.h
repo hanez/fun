@@ -251,7 +251,17 @@ typedef enum {
     OP_EXP,               // pops x (int/float); pushes exp(x)
     OP_LOG,               // pops x (int/float); pushes natural log ln(x)
     OP_LOG10,             // pops x (int/float); pushes log10(x)
-    OP_SQRT               // pops x (int/float); pushes sqrt(x)
+    OP_SQRT,              // pops x (int/float); pushes sqrt(x)
+
+    // Integer math helpers
+    OP_GCD,               // pops b, a; pushes gcd(|a|,|b|)
+    OP_LCM,               // pops b, a; pushes lcm(|a|,|b|) (0 if either is 0)
+    OP_ISQRT,             // pops x; pushes floor(sqrt(max(0,x))) for integers
+    OP_SIGN,              // pops x; pushes -1, 0, or 1 depending on the sign
+
+    // Min/Max variants (float-aware, C99 semantics)
+    OP_FMIN,              // pops b, a (int/float); pushes fmin(a,b) (NaN handling per C99)
+    OP_FMAX               // pops b, a (int/float); pushes fmax(a,b) (NaN handling per C99)
 } OpCode;
 
 typedef struct {

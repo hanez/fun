@@ -1742,6 +1742,22 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "fmin") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "fmin expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "fmin expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_FMIN, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "fmax") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "fmax expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "fmax expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_FMAX, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "clamp") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "clamp expects 3 args"); free(name); return 0; }
@@ -1832,6 +1848,36 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "sqrt expects 1 arg"); free(name); return 0; }
                 bytecode_add_instruction(bc, OP_SQRT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "gcd") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "gcd expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "gcd expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_GCD, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "lcm") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "lcm expects 2 args"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "lcm expects 2 args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_LCM, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "isqrt") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "isqrt expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ISQRT, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "sign") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "sign expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_SIGN, 0);
                 free(name);
                 return 1;
             }
