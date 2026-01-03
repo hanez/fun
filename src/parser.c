@@ -1758,6 +1758,34 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "floor") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "floor expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_FLOOR, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "ceil") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "ceil expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CEIL, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "trunc") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "trunc expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_TRUNC, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "round") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ')')) { parser_fail(*pos, "round expects 1 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_ROUND, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "pow") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos) || !consume_char(src, len, pos, ',')) { parser_fail(*pos, "pow expects 2 args"); free(name); return 0; }

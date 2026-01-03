@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.37.41 LANGUAGES C)
+project(fun VERSION 0.37.42 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -466,6 +466,12 @@ endif()
 # Link threads if available on UNIX
 if(Threads_FOUND)
   target_link_libraries(fun_core PUBLIC Threads::Threads)
+endif()
+
+# Link libm for C99 math functions if available
+find_library(M_LIB m)
+if(M_LIB)
+  target_link_libraries(fun_core PUBLIC ${M_LIB})
 endif()
 
 # Interpreter /usr/bin/fun

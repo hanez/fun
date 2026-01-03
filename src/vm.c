@@ -674,6 +674,10 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/math/min.c"
             #include "vm/math/mod.c"
             #include "vm/math/pow.c"
+            #include "vm/math/floor.c"
+            #include "vm/math/ceil.c"
+            #include "vm/math/trunc.c"
+            #include "vm/math/round.c"
             #include "vm/math/random_int.c"
             #include "vm/math/random_seed.c"
 

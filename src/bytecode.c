@@ -189,6 +189,10 @@ static const char *opcode_name(OpCode op) {
         case OP_TK_LABEL: return "TK_LABEL";
         case OP_TK_BUTTON: return "TK_BUTTON";
         case OP_TK_PACK: return "TK_PACK";
+        case OP_FLOOR: return "FLOOR";
+        case OP_CEIL: return "CEIL";
+        case OP_TRUNC: return "TRUNC";
+        case OP_ROUND: return "ROUND";
         default: return "???";
     }
 }

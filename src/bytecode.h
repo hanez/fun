@@ -236,7 +236,13 @@ typedef enum {
     // exceptions (minimal)
     OP_TRY_PUSH,           // operand = handler ip; push handler onto try-stack
     OP_TRY_POP,            // pop current handler
-    OP_THROW               // pops error value; if handler -> jump to it (push err), else print and terminate
+    OP_THROW,              // pops error value; if handler -> jump to it (push err), else print and terminate
+
+    // C99 math.h rounding family (float-aware)
+    OP_FLOOR,             // pops x (int/float); pushes floor(x) (int if integral else float)
+    OP_CEIL,              // pops x (int/float); pushes ceil(x)  (int if integral else float)
+    OP_TRUNC,             // pops x (int/float); pushes trunc(x) (int if integral else float)
+    OP_ROUND              // pops x (int/float); pushes round(x) (half away from zero)
 } OpCode;
 
 typedef struct {

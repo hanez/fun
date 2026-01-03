@@ -33,6 +33,12 @@ int main(void) {
     int c3 = bytecode_add_constant(bc, make_int(3));
     int c10 = bytecode_add_constant(bc, make_int(10));
     int c42 = bytecode_add_constant(bc, make_int(42));
+    int cf3_2 = bytecode_add_constant(bc, make_float(3.2));
+    int cf3_5 = bytecode_add_constant(bc, make_float(3.5));
+    int cf3_8 = bytecode_add_constant(bc, make_float(3.8));
+    int cfn3_2 = bytecode_add_constant(bc, make_float(-3.2));
+    int cfn3_5 = bytecode_add_constant(bc, make_float(-3.5));
+    int cfn3_8 = bytecode_add_constant(bc, make_float(-3.8));
 
     // ---------- Arithmetic ----------
     bytecode_add_instruction(bc, OP_LOAD_CONST, c42);
@@ -119,6 +125,48 @@ int main(void) {
 
     bytecode_add_instruction(bc, OP_LOAD_CONST, c1);
     bytecode_add_instruction(bc, OP_POP, 0);        // dApache-2.0ard 1 (stack now empty)
+
+    // ---------- Rounding (math.h) demo ----------
+    // floor/ceil/trunc/round on representative values
+    int start_round_demo = bc->instr_count;
+    (void)start_round_demo;
+
+    // +3.2
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf3_2);
+    bytecode_add_instruction(bc, OP_FLOOR, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf3_2);
+    bytecode_add_instruction(bc, OP_CEIL, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf3_2);
+    bytecode_add_instruction(bc, OP_TRUNC, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf3_2);
+    bytecode_add_instruction(bc, OP_ROUND, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // +3.5
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cf3_5);
+    bytecode_add_instruction(bc, OP_ROUND, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // -3.5
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cfn3_5);
+    bytecode_add_instruction(bc, OP_ROUND, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // -3.2
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cfn3_2);
+    bytecode_add_instruction(bc, OP_FLOOR, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+    bytecode_add_instruction(bc, OP_LOAD_CONST, cfn3_2);
+    bytecode_add_instruction(bc, OP_CEIL, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
+
+    // integers should be unchanged
+    bytecode_add_instruction(bc, OP_LOAD_CONST, c10);
+    bytecode_add_instruction(bc, OP_FLOOR, 0);
+    bytecode_add_instruction(bc, OP_PRINT, 0);
 
     // ---------- HALT ----------
     bytecode_add_instruction(bc, OP_HALT, 0);
