@@ -69,16 +69,23 @@ fi
 
 rc=0
 for f in "${files[@]}"; do
+  base_name="$(basename "$f")"
+  # If INI support is disabled, skip INI examples to avoid expected failures
+  if [[ "${FUN_WITH_INI:-}" =~ ^(0|OFF|off|false|False)$ ]]; then
+    if [[ "$base_name" == ini_*.fun ]]; then
+      echo "=== Skipping (INI disabled): examples/$base_name ==="
+      continue
+    fi
+  fi
   echo "=== Running: ${f#$ROOT/} ==="
   if ! "$BIN" "$f"; then
     echo "FAILED: ${f#$ROOT/}"
-    base="$(basename "$f")"
-    dest="$EX_DIR/error/$base"
+    dest="$EX_DIR/error/$base_name"
     # Move the failing example to the error folder
     if mv -f "$f" "$dest"; then
-      echo "Moved to: examples/error/$base"
+      echo "Moved to: examples/error/$base_name"
     else
-      echo "warning: failed to move $base to examples/error/" >&2
+      echo "warning: failed to move $base_name to examples/error/" >&2
     fi
     rc=1
   fi

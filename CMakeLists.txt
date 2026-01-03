@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.37.40 LANGUAGES C)
+project(fun VERSION 0.37.41 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -555,14 +555,14 @@ add_custom_target(ops-quiet
 )
 
 add_custom_target(examples
-  COMMAND ${CMAKE_COMMAND} -E env FUN_LIB_DIR="${FUN_LIB}" ${CMAKE_SOURCE_DIR}/scripts/run_examples.sh
+  COMMAND ${CMAKE_COMMAND} -E env FUN_LIB_DIR="${FUN_LIB}" FUN_WITH_INI=$<IF:$<BOOL:${FUN_WITH_INI}>,1,0> ${CMAKE_SOURCE_DIR}/scripts/run_examples.sh
   DEPENDS fun
   USES_TERMINAL
   COMMENT "Build and run all examples"
 )
 
 add_custom_target(run-examples
-  COMMAND ${CMAKE_COMMAND} -E env FUN_LIB_DIR="${FUN_LIB}" ${CMAKE_SOURCE_DIR}/scripts/run_examples.sh
+  COMMAND ${CMAKE_COMMAND} -E env FUN_LIB_DIR="${FUN_LIB}" FUN_WITH_INI=$<IF:$<BOOL:${FUN_WITH_INI}>,1,0> ${CMAKE_SOURCE_DIR}/scripts/run_examples.sh
   DEPENDS fun
   USES_TERMINAL
   COMMENT "Build and run all examples"

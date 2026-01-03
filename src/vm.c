@@ -741,6 +741,8 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/ini/set.c"
             #include "vm/ini/unset.c"
             #include "vm/ini/save.c"
+            #else
+            #include "vm/ini/stubs.c"
             #endif
 
             /* CURL ops */
