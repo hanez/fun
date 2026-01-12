@@ -1,4 +1,13 @@
-/**
+/*
+* This file is part of the Fun programming language.
+ * https://fun-lang.xyz/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
+ */
+
+ /**
  * Implements OP_ECHO: print top-of-stack value without trailing newline.
  * Now stores the value into the VM's output buffer and marks it as partial,
  * so the CLI can render echo output together with following print output.
