@@ -27,3 +27,7 @@ for i in range(0, total + 1)
 
 // Done. No additional prints/newlines here; progress() already
 // finalized the line when it reached 100%.
+
+/* Expected output:
+Downloading [=============================================================] 100%
+*/

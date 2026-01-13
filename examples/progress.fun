@@ -11,7 +11,9 @@
  * Added: 2026-01-12
  */
 
-// Demonstrates system library includes after installation to /usr/lib/fun
+// Realtime progress bar demo without printing extra newlines.
+// It only updates a single console line in-place. The progress()
+// helper emits one trailing newline automatically at 100%.
 
 // includes can also be done with a leading # like in C, but some programmers maybe like more clean code without a
 // leading #.
@@ -40,3 +42,12 @@ phase_total = 60
 for i in range(0, phase_total + 1)
   c.progress(i, phase_total, "Phase 2")
   sleep(15)
+
+/* Expected output:
+Progress demo: 0..100
+Downloading [=============================================================] 100%
+
+Multiple phases demo
+Phase 1 [=================================================================] 100%
+Phase 2 [=================================================================] 100%
+*/
