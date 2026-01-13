@@ -503,10 +503,6 @@ void vm_print_output(VM *vm) {
             printf("\n");
         }
     }
-    /* If the last item was partial (from echo), terminate the line for cleanliness */
-    if (vm->output_count > 0 && vm->output_is_partial[vm->output_count - 1]) {
-        printf("\n");
-    }
 }
 
 void vm_run(VM *vm, Bytecode *entry) {
@@ -852,6 +848,18 @@ void vm_run(VM *vm, Bytecode *entry) {
                     exit(1);
                 }
                 break;
+        }
+
+        /* Stream console output in realtime for scripts:
+         * When PRINT/ECHO pushed items into the VM's output buffer, flush them
+         * immediately to stdout and clear the buffer to avoid end-of-run bursts.
+         * This keeps REPL compatibility (REPL still prints after each submit),
+         * while regular script execution shows progress bars live.
+         */
+        if (inst.op == OP_PRINT || inst.op == OP_ECHO) {
+            vm_print_output(vm);
+            vm_clear_output(vm);
+            fflush(stdout);
         }
     }
     g_active_vm = NULL;
