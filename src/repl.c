@@ -860,6 +860,8 @@ static void show_repl_help(void) {
     printf("  :frame N                 Select frame N for :locals/:list/:disas (default: top)\n");
     printf("  :list [±K]               Show K lines of source around current frame line (default 5)\n");
     printf("  :disas [±N]              Disassemble around current frame ip (default 5)\n");
+    printf("  :disasm WHAT [off [len]] [to <file>]  Hexdump VM memory region to screen or file\n");
+    printf("           WHAT = code | stack | globals | consts\n");
     printf("  :stack [N]               Show top N (default all) stack values\n");
     printf("  :top                     Show the top of the VM stack\n");
     printf("  :locals [FRAME]          Show locals of frame (default: selected frame)\n");
@@ -896,6 +898,33 @@ static int write_entire_file(const char *path, const char *data, size_t len) {
     size_t n = fwrite(data, 1, len, f);
     fclose(f);
     return n == len;
+}
+
+/* ---------- Hexdump helper ---------- */
+static void hexdump_to(FILE *out, const unsigned char *data, size_t len, size_t base_off) {
+    if (!out || !data || len == 0) return;
+    const size_t width = 16;
+    char ascii[17];
+    ascii[16] = '\0';
+    for (size_t i = 0; i < len; i += width) {
+        size_t chunk = (len - i < width) ? (len - i) : width;
+        /* address */
+        fprintf(out, "%08zx  ", base_off + i);
+        /* hex bytes */
+        for (size_t j = 0; j < width; ++j) {
+            if (j < chunk) {
+                fprintf(out, "%02x ", data[i + j]);
+                unsigned char c = data[i + j];
+                ascii[j] = (c >= 32 && c <= 126) ? (char)c : '.';
+            } else {
+                fputs("   ", out);
+                ascii[j] = ' ';
+            }
+            if (j == 7) fputc(' ', out); /* extra space between 8-byte halves */
+        }
+        ascii[chunk < width ? chunk : width] = '\0';
+        fprintf(out, " |%s|\n", ascii);
+    }
 }
 
 static void print_last_n_lines(const char *path, int n) {
@@ -1388,14 +1417,143 @@ int fun_run_repl(VM *vm) {
                 if (idx < 0) { printf("(no current frame)\n"); continue; }
                 Frame *f = &vm->frames[idx];
                 if (!f->fn) { printf("(no function)\n"); continue; }
-                int curip = f->ip - 1; if (curip < 0) curip = 0;
+
+                /* Ensure we have a valid instruction buffer */
+                if (f->fn->instr_count <= 0 || f->fn->instructions == NULL) {
+                    printf("(no instructions)\n");
+                    continue;
+                }
+
+                int count = f->fn->instr_count;
+                int curip = f->ip - 1;
+                if (curip < 0) curip = 0;
+                if (curip >= count) curip = count - 1;
+
                 int from = curip - n; if (from < 0) from = 0;
-                int to = curip + n; if (to >= f->fn->instr_count) to = f->fn->instr_count - 1;
+                int to = curip + n;   if (to >= count) to = count - 1;
+                if (to < from) { /* nothing to show */ continue; }
+
                 for (int i = from; i <= to; ++i) {
                     Instruction ins = f->fn->instructions[i];
-                    const char *opname = (ins.op >= 0 && ins.op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0])))
-                                         ? opcode_names[ins.op] : "???";
+                    const char *opname = opcode_is_valid(ins.op) ? opcode_names[ins.op] : "???";
                     printf("%c %6d: %-14s %d\n", (i == curip ? '>' : ' '), i, opname, ins.operand);
+                }
+                continue;
+            } else if (strcmp(cmd, "disasm") == 0) {
+                /* Syntax: :disasm WHAT [off [len]] [to <file>]
+                   WHAT: code | stack | globals | consts */
+                const char *p = lstrip(arg);
+                if (!p || !*p) {
+                    printf("Usage: :disasm WHAT [off [len]] [to <file>]\n");
+                    printf("       WHAT = code | stack | globals | consts\n");
+                    continue;
+                }
+
+                char what[32];
+                int consumed = 0;
+                if (sscanf(p, "%31s %n", what, &consumed) != 1) {
+                    printf("Usage: :disasm WHAT [off [len]] [to <file>]\n");
+                    continue;
+                }
+                p += consumed;
+
+                size_t off = 0;
+                size_t len = (size_t)-1; /* default later to clamp */
+
+                /* parse optional off */
+                while (*p == ' ' || *p == '\t') p++;
+                if (*p && (isdigit((unsigned char)*p))) {
+                    char *endp = NULL;
+                    long long v = strtoll(p, &endp, 10);
+                    if (endp && endp != p && v >= 0) {
+                        off = (size_t)v;
+                        p = endp;
+                    }
+                }
+                /* parse optional len */
+                while (*p == ' ' || *p == '\t') p++;
+                if (*p && (isdigit((unsigned char)*p))) {
+                    char *endp = NULL;
+                    long long v = strtoll(p, &endp, 10);
+                    if (endp && endp != p && v >= 0) {
+                        len = (size_t)v;
+                        p = endp;
+                    }
+                }
+
+                /* optional: to <file> */
+                while (*p == ' ' || *p == '\t') p++;
+                int to_file = 0;
+                char path[PATH_MAX];
+                path[0] = '\0';
+                if (strncmp(p, "to", 2) == 0 && (p[2] == '\0' || isspace((unsigned char)p[2]))) {
+                    p += 2;
+                    while (*p == ' ' || *p == '\t') p++;
+                    if (!*p) { printf("Missing <file> after 'to'\n"); continue; }
+                    /* read until whitespace end or end of string; simple paths without spaces */
+                    size_t i = 0;
+                    while (*p && !isspace((unsigned char)*p) && i + 1 < sizeof(path)) path[i++] = *p++;
+                    path[i] = '\0';
+                    if (path[0] == '\0') { printf("Invalid file path\n"); continue; }
+                    to_file = 1;
+                }
+
+                const unsigned char *base = NULL;
+                size_t total = 0;
+                int ok_region = 1;
+
+                if (strcmp(what, "code") == 0) {
+                    int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+                    if (idx < 0) { printf("(no current frame)\n"); continue; }
+                    Frame *fr = &vm->frames[idx];
+                    if (!fr->fn || fr->fn->instr_count <= 0 || fr->fn->instructions == NULL) {
+                        printf("(no code to dump)\n"); continue;
+                    }
+                    base = (const unsigned char*)fr->fn->instructions;
+                    total = (size_t)fr->fn->instr_count * sizeof(Instruction);
+                } else if (strcmp(what, "consts") == 0) {
+                    int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+                    if (idx < 0) { printf("(no current frame)\n"); continue; }
+                    Frame *fr = &vm->frames[idx];
+                    if (!fr->fn || fr->fn->const_count <= 0 || fr->fn->constants == NULL) {
+                        printf("(no constants to dump)\n"); continue;
+                    }
+                    base = (const unsigned char*)fr->fn->constants;
+                    total = (size_t)fr->fn->const_count * sizeof(Value);
+                } else if (strcmp(what, "stack") == 0) {
+                    int count = vm->sp + 1;
+                    if (count <= 0) { printf("(stack empty)\n"); continue; }
+                    base = (const unsigned char*)vm->stack;
+                    total = (size_t)count * sizeof(Value);
+                } else if (strcmp(what, "globals") == 0) {
+                    base = (const unsigned char*)vm->globals;
+                    total = (size_t)MAX_GLOBALS * sizeof(Value);
+                } else {
+                    ok_region = 0;
+                }
+
+                if (!ok_region) {
+                    printf("Unknown region '%s'. Use one of: code, stack, globals, consts\n", what);
+                    continue;
+                }
+                if (!base || total == 0) { printf("(nothing to dump)\n"); continue; }
+
+                if (off >= total) { printf("(empty range: offset beyond end)\n"); continue; }
+                size_t avail = total - off;
+                if (len == (size_t)-1 || len == 0 || len > avail) {
+                    /* default to min(256, avail) */
+                    len = avail < 256 ? avail : 256;
+                }
+
+                if (!to_file) {
+                    printf("Hexdump %s: total=%zu, offset=%zu, len=%zu\n", what, total, off, len);
+                    hexdump_to(stdout, base + off, len, off);
+                } else {
+                    FILE *fout = fopen(path, "wb");
+                    if (!fout) { printf("Failed to open '%s' for writing\n", path); continue; }
+                    hexdump_to(fout, base + off, len, off);
+                    fclose(fout);
+                    printf("Wrote hexdump (%zu bytes from %s) to %s\n", len, what, path);
                 }
                 continue;
             } else if (strcmp(cmd, "printv") == 0) {
