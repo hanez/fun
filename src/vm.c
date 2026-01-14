@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
+#include <math.h>
 
 #ifdef __unix__
 #include <sys/wait.h>
