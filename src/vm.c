@@ -63,7 +63,8 @@
 /* Central INI handle registry and helpers */
 #include "vm/ini/handles.c"
 #endif
-/* Note: INI opcode handlers are included below; changes in vm/ini/*.c require vm.c to rebuild. */
+/* Note: INI opcode handlers are included below; changes in vm/ini/ .c files
+ * require vm.c to rebuild. */
 #include "external/json.c"
 #include "external/libsql.c"
 #include "external/pcsc.c"
