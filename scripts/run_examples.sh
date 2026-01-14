@@ -11,8 +11,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 EX_DIR="$ROOT/examples"
 
-# Allow override via first arg or FUN_BIN env
-BIN="${1:-${FUN_BIN:-}}"
+# Optional overrides via FUN_BIN env. First positional arg may now be an examples subdirectory.
+BIN="${FUN_BIN:-}"
+SUBDIR="${1:-}"
 
 pick_bin() {
   local cands=(
@@ -36,11 +37,17 @@ pick_bin() {
   return 1
 }
 
+# If user passed a subdir that actually looks like an executable path, treat it as BIN for backward compatibility
+if [[ -n "$SUBDIR" && -x "$SUBDIR" && ! -d "$EX_DIR/$SUBDIR" ]]; then
+  BIN="$SUBDIR"
+  SUBDIR=""
+fi
+
 if [[ -z "${BIN}" ]]; then
   if ! BIN="$(pick_bin)"; then
     echo "error: fun binary not found. Try building it (e.g., via CMake) or pass it explicitly:" >&2
-    echo "  scripts/run_examples.sh /path/to/fun" >&2
-    echo "or set FUN_BIN=/path/to/fun" >&2
+    echo "  FUN_BIN=/path/to/fun scripts/run_examples.sh [examples-subdir]" >&2
+    echo "or: scripts/run_examples.sh /path/to/fun" >&2
     exit 2
   fi
 fi
@@ -55,15 +62,26 @@ if [[ -z "${FUN_LIB_DIR:-}" ]]; then
   export FUN_LIB_DIR="$ROOT/lib"
 fi
 
-# Ensure error bucket exists
-mkdir -p "$EX_DIR/error"
+# Do not auto-move failing examples; keep user's workspace unchanged
+
+# Determine target examples directory (optionally restricted to a subdir)
+TARGET_DIR="$EX_DIR"
+if [[ -n "${SUBDIR}" ]]; then
+  if [[ -d "$EX_DIR/$SUBDIR" ]]; then
+    TARGET_DIR="$EX_DIR/$SUBDIR"
+  else
+    echo "error: examples subdirectory not found: $SUBDIR" >&2
+    echo "       expected at: $EX_DIR/$SUBDIR" >&2
+    exit 2
+  fi
+fi
 
 shopt -s nullglob
-files=("$EX_DIR"/*.fun)
+files=("$TARGET_DIR"/*.fun)
 shopt -u nullglob
 
 if (( ${#files[@]} == 0 )); then
-  echo "No .fun example files found in $EX_DIR"
+  echo "No .fun example files found in $TARGET_DIR"
   exit 0
 fi
 
@@ -80,13 +98,7 @@ for f in "${files[@]}"; do
   echo "=== Running: ${f#$ROOT/} ==="
   if ! "$BIN" "$f"; then
     echo "FAILED: ${f#$ROOT/}"
-    dest="$EX_DIR/error/$base_name"
-    # Move the failing example to the error folder
-    if mv -f "$f" "$dest"; then
-      echo "Moved to: examples/error/$base_name"
-    else
-      echo "warning: failed to move $base_name to examples/error/" >&2
-    fi
+    # Intentionally do not move files on failure; leave control to the user
     rc=1
   fi
 done

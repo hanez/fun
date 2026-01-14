@@ -29,6 +29,9 @@ if (res["code"] == 0)
 else
   print("Login failed!")
 
+// Propagate the child process exit status to the Fun program's exit code
+exit res["code"]
+
 /* Possible output:
 Username: hanez
 Password:
