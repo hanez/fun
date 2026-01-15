@@ -1138,7 +1138,9 @@ int fun_run_repl(VM *vm) {
                 continue;
             } else if (cmd_is_one_of(cmd, (const char*[]){"run","ru","profile","pf", NULL})) {
                 int is_profile = cmd_is_one_of(cmd, (const char*[]){"profile","pf", NULL});
-                int from_file = (arg && arg[0] != '\0');
+                // 'arg' is a fixed-size local array, so its address is always non-null.
+                // Only check whether it contains a non-empty string.
+                int from_file = (arg[0] != '\0');
 
                 const char *src = NULL;
                 char *filebuf = NULL;
