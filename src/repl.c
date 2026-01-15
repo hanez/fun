@@ -158,16 +158,28 @@ static void rl_word_right(const char *out, size_t len, size_t *pos) {
     while (*pos < len && out[*pos] == ' ') (*pos)++;
 }
 
-/* Expand file path for ":load " completion in-place; returns 1 if buffer changed (redraw) */
+/* Expand file path for path-taking REPL commands (e.g., :load, :run) in-place; returns 1 if buffer changed (redraw) */
 static int complete_load_path(char *buf, size_t *len_io) {
     size_t len = *len_io;
-    if (len < 5) return 0;
+    if (len < 3) return 0; /* minimally ":x" */
     const char *p = buf;
     while (*p == ' ') p++;
     if (*p != ':') return 0;
     p++;
-    if (strncmp(p, "load", 4) != 0) return 0;
-    p += 4;
+    /* Parse command token (letters only) */
+    const char *cmd_start = p;
+    while (*p && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))) p++;
+    size_t cmd_len = (size_t)(p - cmd_start);
+    if (cmd_len == 0) return 0;
+    /* Accept both full and short aliases for :load and :run */
+    int is_supported = 0;
+    if ((cmd_len == 4 && strncmp(cmd_start, "load", 4) == 0) ||
+        (cmd_len == 2 && strncmp(cmd_start, "lo", 2) == 0) ||
+        (cmd_len == 3 && strncmp(cmd_start, "run", 3) == 0) ||
+        (cmd_len == 2 && strncmp(cmd_start, "ru", 2) == 0)) {
+        is_supported = 1;
+    }
+    if (!is_supported) return 0;
     while (*p == ' ' || *p == '\t') p++;
     size_t arg_off = (size_t)(p - buf);
     if (arg_off > len) return 0;
@@ -840,40 +852,40 @@ static int buffer_looks_incomplete(const char *buf) {
 
 static void show_repl_help(void) {
     printf("Commands:\n");
-    printf("  :help                    Show this help\n");
-    printf("  :quit | :q | :exit       Exit the REPL\n");
-    printf("  :reset                   Reset VM state (clears globals)\n");
-    printf("  :dump  | :globals        Dump current globals\n");
-    printf("  :globals [pattern]       Dump globals filtering by value substring\n");
-    printf("  :vars [pattern]          Alias for :globals\n");
-    printf("  :clear                   Clear current input buffer\n");
-    printf("  :print                   Show current buffer\n");
-    printf("  :run                     Execute current buffer immediately\n");
-    printf("  :profile                 Execute buffer and show timing + instruction count\n");
-    printf("  :save <file>             Save current buffer to file\n");
-    printf("  :load <file>             Load file into buffer (does not run)\n");
-    printf("  :paste [run]             Enter paste mode; end with a single '.' line (optional 'run')\n");
-    printf("  :history [N]             Show last N lines of history (default 50)\n");
-    printf("  :time on|off|toggle      Toggle/enable/disable timing\n");
-    printf("  :env [NAME[=VALUE]]      Get or set environment variable\n");
-    printf("  :backtrace | :bt         Show backtrace of VM frames (most recent first)\n");
-    printf("  :frame N                 Select frame N for :locals/:list/:disas (default: top)\n");
-    printf("  :list [±K]               Show K lines of source around current frame line (default 5)\n");
-    printf("  :disas [±N]              Disassemble around current frame ip (default 5)\n");
-    printf("  :disasm WHAT [off [len]] [to <file>]  Hexdump VM memory region to screen or file\n");
+    printf("  :help | :h                                   Show this help\n");
+    printf("  :quit | :q | :exit                           Exit the REPL\n");
+    printf("  :reset | :re                                 Reset VM state (clears globals)\n");
+    printf("  :dump | :du | :globals | :gl                 Dump current globals\n");
+    printf("  :globals [pattern]                           Dump globals filtering by value substring\n");
+    printf("  :vars | :v [pattern]                         Alias for :globals\n");
+    printf("  :clear | :cl                                 Clear current input buffer\n");
+    printf("  :print | :pr                                 Show current buffer\n");
+    printf("  :run | :ru [file]                            Execute current buffer or the given file immediately\n");
+    printf("  :profile | :pf                               Execute buffer and show timing + instruction count\n");
+    printf("  :save | :sa <file>                           Save current buffer to file\n");
+    printf("  :load | :lo <file>                           Load file into buffer (does not run)\n");
+    printf("  :paste | :pa [run]                           Enter paste mode; end with a single '.' line (optional 'run')\n");
+    printf("  :history | :hi [N]                           Show last N lines of history (default 50)\n");
+    printf("  :time | :ti on|off|toggle                    Toggle/enable/disable timing\n");
+    printf("  :env | :en [NAME[=VALUE]]                    Get or set environment variable\n");
+    printf("  :backtrace | :bt | :ba                       Show backtrace of VM frames (most recent first)\n");
+    printf("  :frame | :fr N                               Select frame N for :locals/:list/:disasm (default: top)\n");
+    printf("  :list | :li [±K]                             Show K lines of source around current frame line (default 5)\n");
+    printf("  :disasm | :di [±N]                           Disassemble around current frame ip (default 5)\n");
+    printf("  :mdump | :md WHAT [offset [len]] [to <file>] Hexdump VM memory region to screen or file\n");
     printf("           WHAT = code | stack | globals | consts\n");
-    printf("  :stack [N]               Show top N (default all) stack values\n");
-    printf("  :top                     Show the top of the VM stack\n");
-    printf("  :locals [FRAME]          Show locals of frame (default: selected frame)\n");
-    printf("  :printv WHAT             Print value: local[i] | stack[i] | global[i]\n");
-    printf("  :break [file:]line       Set a breakpoint (default file = current frame file)\n");
-    printf("  :info breaks             List breakpoints\n");
-    printf("  :delete ID               Delete breakpoint by ID\n");
-    printf("  :clear breaks            Remove all breakpoints\n");
-    printf("  :cont                    Continue execution (exit REPL if in debug stop)\n");
-    printf("  :step                    Step one instruction\n");
-    printf("  :next                    Step over (current frame)\n");
-    printf("  :finish                  Run until the current frame returns\n");
+    printf("  :stack | :st [N]                             Show top N (default all) stack values\n");
+    printf("  :top | :to                                   Show the top of the VM stack\n");
+    printf("  :locals | :lc [FRAME]                        Show locals of frame (default: selected frame)\n");
+    printf("  :printv | :pv WHAT                           Print value: local[i] | stack[i] | global[i]\n");
+    printf("  :break | :br [file:]line                     Set a breakpoint (default file = current frame file)\n");
+    printf("  :info | :in breaks                           List breakpoints\n");
+    printf("  :delete | :de ID                             Delete breakpoint by ID\n");
+    printf("  :clear breaks | :cb                          Remove all breakpoints\n");
+    printf("  :cont | :co                                  Continue execution (exit REPL if in debug stop)\n");
+    printf("  :step | :sp                                  Step one instruction\n");
+    printf("  :next | :ne                                  Step over (current frame)\n");
+    printf("  :finish | :fi                                Run until the current frame returns\n");
 }
 
 static char *read_entire_file(const char *path, size_t *out_len) {
@@ -898,6 +910,15 @@ static int write_entire_file(const char *path, const char *data, size_t len) {
     size_t n = fwrite(data, 1, len, f);
     fclose(f);
     return n == len;
+}
+
+/* ---------- REPL command matching helper ---------- */
+static int cmd_is_one_of(const char *cmd, const char *const names[]) {
+    if (!cmd || !*cmd) return 0;
+    for (int i = 0; names[i] != NULL; ++i) {
+        if (strcmp(cmd, names[i]) == 0) return 1;
+    }
+    return 0;
 }
 
 /* ---------- Hexdump helper ---------- */
@@ -1071,19 +1092,19 @@ int fun_run_repl(VM *vm) {
             char arg[2048] = {0};
             sscanf(line, ":%63s %2047[^\n]", cmd, arg);
 
-            if (strcmp(cmd, "quit") == 0 || strcmp(cmd, "q") == 0 || strcmp(cmd, "exit") == 0) {
+            if (cmd_is_one_of(cmd, (const char*[]){"quit","q","qu","exit", NULL})) {
                 break;
-            } else if (strcmp(cmd, "help") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"help","h", NULL})) {
                 show_repl_help();
                 continue;
-            } else if (strcmp(cmd, "reset") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"reset","re", NULL})) {
                 vm_reset(vm);
                 printf("VM state reset.\n");
                 continue;
-            } else if (strcmp(cmd, "dump") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"dump","du", NULL})) {
                 vm_dump_globals(vm);
                 continue;
-            } else if (strcmp(cmd, "globals") == 0 || strcmp(cmd, "vars") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"globals","vars","gl","v","va", NULL})) {
                 const char *pattern = lstrip(arg);
                 int filtered = (pattern && *pattern);
                 printf("=== globals%s%s ===\n", filtered ? " matching '" : "", filtered ? pattern : "");
@@ -1098,11 +1119,11 @@ int fun_run_repl(VM *vm) {
                 }
                 printf("===============\n");
                 continue;
-            } else if (strcmp(cmd, "clear") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"clear","cl", NULL})) {
                 buflen = 0;
                 printf("(buffer cleared)\n");
                 continue;
-            } else if (strcmp(cmd, "print") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"print","pr", NULL})) {
                 if (buflen == 0) printf("(buffer empty)\n");
                 else {
                     if (buflen >= bufcap) {
@@ -1114,28 +1135,44 @@ int fun_run_repl(VM *vm) {
                     if (buflen > 0 && buffer[buflen-1] != '\n') printf("\n");
                 }
                 continue;
-            } else if (strcmp(cmd, "run") == 0 || strcmp(cmd, "profile") == 0) {
-                if (buflen == 0) {
-                    printf("(buffer empty)\n");
-                    continue;
+            } else if (cmd_is_one_of(cmd, (const char*[]){"run","ru","profile","pf", NULL})) {
+                int is_profile = cmd_is_one_of(cmd, (const char*[]){"profile","pf", NULL});
+                int from_file = (arg && arg[0] != '\0');
+
+                const char *src = NULL;
+                char *filebuf = NULL;
+                if (from_file) {
+                    size_t flen = 0;
+                    filebuf = read_entire_file(arg, &flen);
+                    if (!filebuf) {
+                        printf("Failed to load '%s'\n", arg);
+                        continue;
+                    }
+                    src = filebuf;
+                } else {
+                    if (buflen == 0) {
+                        printf("(buffer empty)\n");
+                        continue;
+                    }
+                    if (buflen + 1 > bufcap) {
+                        buffer = (char*)realloc(buffer, buflen + 1);
+                        bufcap = buflen + 1;
+                    }
+                    buffer[buflen] = '\0';
+                    src = buffer;
                 }
-                if (buflen + 1 > bufcap) {
-                    buffer = (char*)realloc(buffer, buflen + 1);
-                    bufcap = buflen + 1;
-                }
-                buffer[buflen] = '\0';
 
                 clock_t t_parse0 = 0, t_parse1 = 0, t_run0 = 0, t_run1 = 0;
-                if (strcmp(cmd, "profile") == 0) t_parse0 = clock();
-                Bytecode *bc = parse_string_to_bytecode(buffer);
-                if (strcmp(cmd, "profile") == 0) t_parse1 = clock();
+                if (is_profile) t_parse0 = clock();
+                Bytecode *bc = parse_string_to_bytecode(src);
+                if (is_profile) t_parse1 = clock();
 
                 if (bc) {
-                    if (repl_timing || strcmp(cmd, "profile") == 0) t_run0 = clock();
+                    if (repl_timing || is_profile) t_run0 = clock();
                     vm_run(vm, bc);
-                    if (repl_timing || strcmp(cmd, "profile") == 0) t_run1 = clock();
+                    if (repl_timing || is_profile) t_run1 = clock();
 
-                    if (strcmp(cmd, "profile") == 0) {
+                    if (is_profile) {
                         double ms_parse = (double)(t_parse1 - t_parse0) * 1000.0 / (double)CLOCKS_PER_SEC;
                         double ms_run   = (double)(t_run1 - t_run0)   * 1000.0 / (double)CLOCKS_PER_SEC;
                         printf("[profile] parse: %.2f ms, run: %.2f ms, total: %.2f ms, instr: %lld\n",
@@ -1148,14 +1185,14 @@ int fun_run_repl(VM *vm) {
                     vm_print_output(vm);
                     vm_clear_output(vm);
                     bytecode_free(bc);
-                    append_history(hist, buffer);
+                    if (!from_file) append_history(hist, buffer);
                 } else {
                     int line_no = 0, col_no = 0;
                     char emsg[256];
                     if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
                         printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
                         int cur_line = 1;
-                        const char *p = buffer;
+                        const char *p = src ? src : buffer;
                         while (*p && cur_line < line_no) {
                             if (*p == '\n') cur_line++;
                             p++;
@@ -1167,7 +1204,7 @@ int fun_run_repl(VM *vm) {
                         for (int i = 1; i < col_no; ++i) putchar(' ');
                         printf("^\n");
 #ifdef FUN_DEBUG
-                        if (hist) {
+                        if (hist && !from_file) {
                             fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
                             fflush(hist);
                         }
@@ -1175,16 +1212,20 @@ int fun_run_repl(VM *vm) {
                     } else {
                         printf("Parse error.\n");
 #ifdef FUN_DEBUG
-                        if (hist) {
+                        if (hist && !from_file) {
                             fprintf(hist, "// ERROR: parse error\n");
                             fflush(hist);
                         }
 #endif
                     }
                 }
-                buflen = 0;
+                if (from_file) {
+                    free(filebuf);
+                } else {
+                    buflen = 0; /* keep behavior: clear buffer only when running current buffer */
+                }
                 continue;
-            } else if (strcmp(cmd, "save") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"save","sa", NULL})) {
                 if (arg[0] == '\0') { printf("Usage: :save <file>\n"); continue; }
                 if (buflen == 0) { printf("(buffer empty)\n"); continue; }
                 if (!write_entire_file(arg, buffer, buflen)) {
@@ -1193,7 +1234,7 @@ int fun_run_repl(VM *vm) {
                     printf("Saved %zu bytes to '%s'\n", buflen, arg);
                 }
                 continue;
-            } else if (strcmp(cmd, "load") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"load","lo", NULL})) {
                 if (arg[0] == '\0') { printf("Usage: :load <file>\n"); continue; }
                 size_t flen = 0;
                 char *filebuf = read_entire_file(arg, &flen);
@@ -1212,7 +1253,7 @@ int fun_run_repl(VM *vm) {
                 free(filebuf);
                 printf("Loaded %zu bytes into buffer. Use :run or submit an empty line to execute.\n", buflen);
                 continue;
-            } else if (strcmp(cmd, "paste") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"paste","pa", NULL})) {
                 int run_after = 0;
                 const char *opt = lstrip(arg);
                 if (opt && (strcmp(opt, "run") == 0 || strcmp(opt, "exec") == 0)) run_after = 1;
@@ -1275,13 +1316,13 @@ int fun_run_repl(VM *vm) {
                     printf("(pasted %zu bytes into buffer)\n", buflen);
                 }
                 continue;
-            } else if (strcmp(cmd, "history") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"history","hi", NULL})) {
                 int n = 50;
                 if (arg[0] != '\0') n = atoi(arg);
                 if (n <= 0) n = 50;
                 print_last_n_lines(hist_path, n);
                 continue;
-            } else if (strcmp(cmd, "time") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"time","ti", NULL})) {
                 if (strcmp(lstrip(arg), "on") == 0) repl_timing = 1;
                 else if (strcmp(lstrip(arg), "off") == 0) repl_timing = 0;
                 else if (strcmp(lstrip(arg), "toggle") == 0) repl_timing = !repl_timing;
@@ -1291,7 +1332,7 @@ int fun_run_repl(VM *vm) {
                 }
                 printf("Timing %s\n", repl_timing ? "enabled" : "disabled");
                 continue;
-            } else if (strcmp(cmd, "env") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"env","en", NULL})) {
                 const char *spec = lstrip(arg);
                 if (!spec || *spec == '\0') {
                     env_show_usage();
@@ -1310,7 +1351,7 @@ int fun_run_repl(VM *vm) {
                     env_set(name, val);
                 }
                 continue;
-            } else if (strcmp(cmd, "backtrace") == 0 || strcmp(cmd, "bt") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"backtrace","bt","ba", NULL})) {
                 if (vm->fp < 0) { printf("(no frames)\n"); continue; }
                 printf("Backtrace (most recent call first):\n");
                 for (int i = vm->fp; i >= 0; --i) {
@@ -1321,7 +1362,7 @@ int fun_run_repl(VM *vm) {
                     printf("  #%d %s at %s ip=%d line=%d\n", i, fname, sfile, ip, vm->current_line);
                 }
                 continue;
-            } else if (strcmp(cmd, "stack") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"stack","st", NULL})) {
                 int n = -1;
                 const char *p = lstrip(arg);
                 if (p && *p) n = atoi(p);
@@ -1336,7 +1377,7 @@ int fun_run_repl(VM *vm) {
                     free(sv);
                 }
                 continue;
-            } else if (strcmp(cmd, "locals") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"locals","lc", NULL})) {
                 int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
                 const char *p = lstrip(arg);
                 if (p && *p) {
@@ -1358,7 +1399,7 @@ int fun_run_repl(VM *vm) {
                 }
                 if (!any) printf("  (no non-nil locals)\n");
                 continue;
-            } else if (strcmp(cmd, "frame") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"frame","fr", NULL})) {
                 const char *p = lstrip(arg);
                 if (!p || !*p) { printf("Usage: :frame N\n"); continue; }
                 int v = atoi(p);
@@ -1369,7 +1410,7 @@ int fun_run_repl(VM *vm) {
                 const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : "<unknown>";
                 printf("Selected frame #%d: %s (%s)\n", selected_frame, fname, sfile);
                 continue;
-            } else if (strcmp(cmd, "list") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"list","li", NULL})) {
                 int k = 5;
                 const char *p = lstrip(arg);
                 if (p && *p) k = atoi(p);
@@ -1408,7 +1449,7 @@ int fun_run_repl(VM *vm) {
                 }
                 free(src);
                 continue;
-            } else if (strcmp(cmd, "disas") == 0 || strcmp(cmd, "disassemble") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"disasm","disassemble","di", NULL})) {
                 int n = 5;
                 const char *p = lstrip(arg);
                 if (p && *p) n = atoi(p);
@@ -1439,12 +1480,12 @@ int fun_run_repl(VM *vm) {
                     printf("%c %6d: %-14s %d\n", (i == curip ? '>' : ' '), i, opname, ins.operand);
                 }
                 continue;
-            } else if (strcmp(cmd, "disasm") == 0) {
-                /* Syntax: :disasm WHAT [off [len]] [to <file>]
+            } else if (cmd_is_one_of(cmd, (const char*[]){"mdump","md", NULL})) {
+                /* Syntax: :mdump WHAT [offset [len]] [to <file>]
                    WHAT: code | stack | globals | consts */
                 const char *p = lstrip(arg);
                 if (!p || !*p) {
-                    printf("Usage: :disasm WHAT [off [len]] [to <file>]\n");
+                    printf("Usage: :mdump WHAT [offset [len]] [to <file>]\n");
                     printf("       WHAT = code | stack | globals | consts\n");
                     continue;
                 }
@@ -1452,7 +1493,7 @@ int fun_run_repl(VM *vm) {
                 char what[32];
                 int consumed = 0;
                 if (sscanf(p, "%31s %n", what, &consumed) != 1) {
-                    printf("Usage: :disasm WHAT [off [len]] [to <file>]\n");
+                    printf("Usage: :mdump WHAT [offset [len]] [to <file>]\n");
                     continue;
                 }
                 p += consumed;
@@ -1556,7 +1597,7 @@ int fun_run_repl(VM *vm) {
                     printf("Wrote hexdump (%zu bytes from %s) to %s\n", len, what, path);
                 }
                 continue;
-            } else if (strcmp(cmd, "printv") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"printv","pv", NULL})) {
                 const char *spec = lstrip(arg);
                 if (!spec || !*spec) { printf("Usage: :printv local[i] | stack[i] | global[i]\n"); continue; }
                 int idx = -1;
@@ -1581,13 +1622,13 @@ int fun_run_repl(VM *vm) {
                     printf("Usage: :printv local[i] | stack[i] | global[i]\n");
                 }
                 continue;
-            } else if (strcmp(cmd, "top") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"top","to", NULL})) {
                 if (vm->sp < 0) { printf("(stack empty)\n"); continue; }
                 char *sv = value_to_string_alloc(&vm->stack[vm->sp]);
                 printf("%s\n", sv ? sv : "nil");
                 free(sv);
                 continue;
-            } else if (strcmp(cmd, "break") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"break","br", NULL})) {
                 const char *p = lstrip(arg);
                 if (!p || !*p) { printf("Usage: :break [file:]line\n"); continue; }
                 const char *colon = strchr(p, ':');
@@ -1613,7 +1654,7 @@ int fun_run_repl(VM *vm) {
                 if (id >= 0) printf("Breakpoint %d set at %s:%d\n", id, filebuf, line);
                 else printf("Failed to set breakpoint\n");
                 continue;
-            } else if (strcmp(cmd, "info") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"info","in", NULL})) {
                 const char *what = lstrip(arg);
                 if (what && strcmp(what, "breaks") == 0) {
                     vm_debug_list_breakpoints(vm);
@@ -1621,10 +1662,14 @@ int fun_run_repl(VM *vm) {
                     printf("Usage: :info breaks\n");
                 }
                 continue;
-            } else if (strcmp(cmd, "delete") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"delete","de", NULL})) {
                 int id = atoi(lstrip(arg));
                 if (vm_debug_delete_breakpoint(vm, id)) printf("Deleted breakpoint %d\n", id);
                 else printf("No such breakpoint %d\n", id);
+                continue;
+            } else if (cmd_is_one_of(cmd, (const char*[]){"cb", NULL})) {
+                vm_debug_clear_breakpoints(vm);
+                printf("Cleared all breakpoints\n");
                 continue;
             } else if (strcmp(cmd, "clear") == 0) {
                 const char *what = lstrip(arg);
@@ -1635,22 +1680,22 @@ int fun_run_repl(VM *vm) {
                     printf("Usage: :clear breaks\n");
                 }
                 continue;
-            } else if (strcmp(cmd, "cont") == 0 || strcmp(cmd, "continue") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"cont","continue","co", NULL})) {
                 vm_debug_request_continue(vm);
                 printf("Continuing...\n");
                 if (vm->on_error_repl) return 0; /* exit REPL to continue execution */
                 continue;
-            } else if (strcmp(cmd, "step") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"step","sp", NULL})) {
                 vm_debug_request_step(vm);
                 printf("Stepping one instruction...\n");
                 if (vm->on_error_repl) return 0;
                 continue;
-            } else if (strcmp(cmd, "next") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"next","ne", NULL})) {
                 vm_debug_request_next(vm);
                 printf("Stepping over...\n");
                 if (vm->on_error_repl) return 0;
                 continue;
-            } else if (strcmp(cmd, "finish") == 0) {
+            } else if (cmd_is_one_of(cmd, (const char*[]){"finish","fi", NULL})) {
                 vm_debug_request_finish(vm);
                 printf("Running until current frame returns...\n");
                 if (vm->on_error_repl) return 0;
