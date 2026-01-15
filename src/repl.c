@@ -872,8 +872,9 @@ static void show_repl_help(void) {
     printf("  :frame | :fr N                               Select frame N for :locals/:list/:disasm (default: top)\n");
     printf("  :list | :li [±K]                             Show K lines of source around current frame line (default 5)\n");
     printf("  :disasm | :di [±N]                           Disassemble around current frame ip (default 5)\n");
-    printf("  :mdump | :md WHAT [offset [len]] [to <file>] Hexdump VM memory region to screen or file\n");
+    printf("  :mdump | :md WHAT [offset [len]] [raw] [to <file>] Dump VM memory region\n");
     printf("           WHAT = code | stack | globals | consts\n");
+    printf("           'raw' writes binary bytes instead of a formatted hexdump\n");
     printf("  :stack | :st [N]                             Show top N (default all) stack values\n");
     printf("  :top | :to                                   Show the top of the VM stack\n");
     printf("  :locals | :lc [FRAME]                        Show locals of frame (default: selected frame)\n");
@@ -1481,25 +1482,28 @@ int fun_run_repl(VM *vm) {
                 }
                 continue;
             } else if (cmd_is_one_of(cmd, (const char*[]){"mdump","md", NULL})) {
-                /* Syntax: :mdump WHAT [offset [len]] [to <file>]
-                   WHAT: code | stack | globals | consts */
+                /* Syntax: :mdump WHAT [offset [len]] [raw] [to <file>]
+                   WHAT: code | stack | globals | consts
+                   'raw' writes binary bytes instead of a formatted hexdump */
                 const char *p = lstrip(arg);
                 if (!p || !*p) {
-                    printf("Usage: :mdump WHAT [offset [len]] [to <file>]\n");
+                    printf("Usage: :mdump WHAT [offset [len]] [raw] [to <file>]\n");
                     printf("       WHAT = code | stack | globals | consts\n");
+                    printf("       'raw' writes binary bytes instead of a formatted hexdump\n");
                     continue;
                 }
 
                 char what[32];
                 int consumed = 0;
                 if (sscanf(p, "%31s %n", what, &consumed) != 1) {
-                    printf("Usage: :mdump WHAT [offset [len]] [to <file>]\n");
+                    printf("Usage: :mdump WHAT [offset [len]] [raw] [to <file>]\n");
                     continue;
                 }
                 p += consumed;
 
                 size_t off = 0;
                 size_t len = (size_t)-1; /* default later to clamp */
+                int want_raw = 0; /* output raw bytes instead of hexdump */
 
                 /* parse optional off */
                 while (*p == ' ' || *p == '\t') p++;
@@ -1520,6 +1524,13 @@ int fun_run_repl(VM *vm) {
                         len = (size_t)v;
                         p = endp;
                     }
+                }
+
+                /* optional: 'raw' keyword */
+                while (*p == ' ' || *p == '\t') p++;
+                if (strncmp(p, "raw", 3) == 0 && (p[3] == '\0' || isspace((unsigned char)p[3]))) {
+                    want_raw = 1;
+                    p += 3;
                 }
 
                 /* optional: to <file> */
@@ -1587,14 +1598,26 @@ int fun_run_repl(VM *vm) {
                 }
 
                 if (!to_file) {
-                    printf("Hexdump %s: total=%zu, offset=%zu, len=%zu\n", what, total, off, len);
-                    hexdump_to(stdout, base + off, len, off);
+                    if (want_raw) {
+                        /* Write raw bytes directly to stdout with no header */
+                        fwrite(base + off, 1, len, stdout);
+                        fflush(stdout);
+                    } else {
+                        printf("Hexdump %s: total=%zu, offset=%zu, len=%zu\n", what, total, off, len);
+                        hexdump_to(stdout, base + off, len, off);
+                    }
                 } else {
                     FILE *fout = fopen(path, "wb");
                     if (!fout) { printf("Failed to open '%s' for writing\n", path); continue; }
-                    hexdump_to(fout, base + off, len, off);
-                    fclose(fout);
-                    printf("Wrote hexdump (%zu bytes from %s) to %s\n", len, what, path);
+                    if (want_raw) {
+                        fwrite(base + off, 1, len, fout);
+                        fclose(fout);
+                        printf("Wrote raw bytes (%zu from %s) to %s\n", len, what, path);
+                    } else {
+                        hexdump_to(fout, base + off, len, off);
+                        fclose(fout);
+                        printf("Wrote hexdump (%zu bytes from %s) to %s\n", len, what, path);
+                    }
                 }
                 continue;
             } else if (cmd_is_one_of(cmd, (const char*[]){"printv","pv", NULL})) {
