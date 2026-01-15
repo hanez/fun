@@ -30,6 +30,7 @@ if [ "$target" = "all" ]; then
       -DFUN_WITH_JSON=ON \
       -DFUN_WITH_TCLTK=ON \
       -DFUN_WITH_INI=ON \
+      -DFUN_WITH_NOTCURSES=ON \
       -DFUN_LINK_STATIC=OFF \
       -DFUN_USE_MUSL=OFF \
       -DFUN_DEBUG=OFF \
@@ -65,6 +66,7 @@ elif [ "$target" = "alpine" ]; then
       -DFUN_WITH_TCLTK=OFF \
       -DFUN_WITH_INI=ON \
       -DFUN_LINK_STATIC=OFF \
+      -DFUN_USE_MUSL=ON \
       -DFUN_DEBUG=OFF \
     && cmake --build build --target fun
 elif [ "$target" = "debug" ]; then

@@ -1,0 +1,39 @@
+# Toggleable optional features live in per-file modules. These populate *_INCLUDE_DIRS and *_LINK_LIBS
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
+
+# Helper to report feature status nicely
+function(_fun_print_feature name flag)
+  if(${flag})
+    message(STATUS "  ${name}: ENABLED")
+  else()
+    message(STATUS "  ${name}: DISABLED")
+  endif()
+endfunction()
+
+# Include each extension module
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/TCLTK.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/SQLITE.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/PCSC.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/JSON.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/INI.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/XML2.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/LIBSQL.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/PCRE2.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/CURL.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/NOTCURSES.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/REPL.cmake)
+
+# Summary of extension toggles
+message(STATUS "---- Fun extension summary ----")
+_fun_print_feature("Tcl/Tk (FUN_WITH_TCLTK)" FUN_WITH_TCLTK)
+_fun_print_feature("SQLite (FUN_WITH_SQLITE)" FUN_WITH_SQLITE)
+_fun_print_feature("PCSC (FUN_WITH_PCSC)" FUN_WITH_PCSC)
+_fun_print_feature("JSON-C (FUN_WITH_JSON)" FUN_WITH_JSON)
+_fun_print_feature("INI/iniparser (FUN_WITH_INI)" FUN_WITH_INI)
+_fun_print_feature("libxml2 (FUN_WITH_XML2)" FUN_WITH_XML2)
+_fun_print_feature("libsql (FUN_WITH_LIBSQL)" FUN_WITH_LIBSQL)
+_fun_print_feature("PCRE2 (FUN_WITH_PCRE2)" FUN_WITH_PCRE2)
+_fun_print_feature("libcurl (FUN_WITH_CURL)" FUN_WITH_CURL)
+_fun_print_feature("Notcurses (FUN_WITH_NOTCURSES)" FUN_WITH_NOTCURSES)
+_fun_print_feature("REPL (FUN_WITH_REPL)" FUN_WITH_REPL)
+message(STATUS "--------------------------------")

@@ -4,7 +4,7 @@ CMakeCache.txt
 !.gitignore
 .venv
 build*
-cmake*
+cmake_install.cmake
 database.sqlite
 demo_*
 dist/

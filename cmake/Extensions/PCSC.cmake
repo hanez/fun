@@ -1,0 +1,13 @@
+# PCSC
+option(FUN_WITH_PCSC "Enable PCSC (pcsclite) support" OFF)
+set(PCSC_LINK_LIBS "")
+set(PCSC_INCLUDE_DIRS "")
+if(FUN_WITH_PCSC)
+  add_definitions(-DFUN_WITH_PCSC)
+  if(APPLE)
+    list(APPEND PCSC_LINK_LIBS "-framework PCSC")
+  else()
+    list(APPEND PCSC_INCLUDE_DIRS "/usr/include/PCSC")
+    list(APPEND PCSC_LINK_LIBS pcsclite)
+  endif()
+endif()
