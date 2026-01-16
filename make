@@ -45,6 +45,7 @@ elif [ "$target" = "all_debug" ]; then
       -DFUN_WITH_JSON=ON \
       -DFUN_WITH_TCLTK=ON \
       -DFUN_WITH_INI=ON \
+      -DFUN_WITH_NOTCURSES=ON \
       -DFUN_DEBUG=ON \
     && cmake --build build --target fun
 elif [ "$target" = "alpine" ]; then
@@ -58,7 +59,6 @@ elif [ "$target" = "alpine" ]; then
       -DFUN_WITH_XML2=ON \
       -DFUN_WITH_JSON=ON \
       -DFUN_WITH_INI=ON \
-      -DFUN_USE_MUSL=ON \
     && cmake --build build --target fun
 elif [ "$target" = "debug" ]; then
   rm -rf build \
