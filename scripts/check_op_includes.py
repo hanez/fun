@@ -19,7 +19,8 @@ BYTECODE = ROOT / "src" / "bytecode.h"
 VM_C = ROOT / "src" / "vm.c"
 
 OP_RE = re.compile(r'\bOP_([A-Z0-9_]+)\b')
-INCLUDE_RE = re.compile(r'#include\s+"vm/(?:[a-z0-9_]+/)?([a-z0-9_]+)\.c"')
+# Capture optional subdirectory and the basename separately
+INCLUDE_RE = re.compile(r'#include\s+"vm/(?:([a-z0-9_]+)/)?([a-z0-9_]+)\.c"')
 
 def read_text(path: Path) -> str:
     try:
@@ -42,14 +43,14 @@ def parse_opcodes_from_bytecode(text: str) -> set[str]:
     return ops
 
 def parse_includes_from_vm(text: str) -> set[str]:
-    incs = set(m.group(1) for m in INCLUDE_RE.finditer(text))
+    pairs = [(m.group(1) or "", m.group(2)) for m in INCLUDE_RE.finditer(text)]
 
     # Drop support includes that are not opcode handlers
-    support_includes = {"thread_common"}
-    incs = {name for name in incs if name not in support_includes}
+    support_includes = {"thread_common", "stubs", "handles"}
+    pairs = [(d, n) for (d, n) in pairs if n not in support_includes]
 
-    # Map include base names to OP_* tokens.
-    overrides = {
+    # Base-name overrides (dir-agnostic) for a few special cases
+    base_overrides = {
         # core
         "nop": "NOP", "halt": "HALT",
         "load_const": "LOAD_CONST", "load_local": "LOAD_LOCAL", "store_local": "STORE_LOCAL",
@@ -66,7 +67,7 @@ def parse_includes_from_vm(text: str) -> set[str]:
         "make_array": "MAKE_ARRAY", "len": "LEN",
         "index_get": "INDEX_GET", "index_set": "INDEX_SET",
         "push": "PUSH", "apop": "APOP", "set": "SET", "insert": "INSERT", "remove": "REMOVE",
-        "slice": "SLICE",
+        "slice": "SLICE", "clear": "CLEAR", "contains": "CONTAINS", "index_of": "INDEX_OF",
         # conversions and type/meta
         "to_number": "TO_NUMBER", "to_string": "TO_STRING",
         "cast": "CAST", "typeof": "TYPEOF", "uclamp": "UCLAMP", "sclamp": "SCLAMP",
@@ -89,9 +90,50 @@ def parse_includes_from_vm(text: str) -> set[str]:
         "thread_spawn": "THREAD_SPAWN", "thread_join": "THREAD_JOIN",
     }
 
-    tokens = set()
-    for inc in incs:
-        tokens.add(overrides.get(inc, inc.upper()))
+    def map_token(d: str, n: str) -> str:
+        # Directory-specific namespaces
+        if d == "curl":
+            return f"CURL_{n.upper()}"
+        if d == "ini":
+            if n in {"load", "free", "get_string", "get_int", "get_double", "get_bool", "set", "unset", "save"}:
+                return f"INI_{n.upper()}"
+        if d == "json":
+            if n in {"parse", "stringify", "from_file", "to_file"}:
+                return f"JSON_{n.upper()}"
+        if d == "xml":
+            if n in {"parse", "root", "name", "text"}:
+                return f"XML_{n.upper()}"
+        if d == "sqlite":
+            if n in {"open", "close", "exec", "query"}:
+                return f"SQLITE_{n.upper()}"
+        if d == "libsql":
+            if n in {"open", "close", "exec", "query"}:
+                return f"LIBSQL_{n.upper()}"
+        if d == "pcsc":
+            if n in {"establish", "release", "list_readers", "connect", "disconnect", "transmit"}:
+                return f"PCSC_{n.upper()}"
+        if d == "pcre2":
+            if n in {"test", "match", "findall"}:
+                return f"PCRE2_{n.upper()}"
+        if d == "tk":
+            # wm_title already uses underscore
+            return f"TK_{n.upper()}"
+        if d == "notcurses":
+            return f"NC_{n.upper()}"
+        if d == "os":
+            # special cases in OS
+            if n == "list_dir":
+                return "OS_LIST_DIR"
+            if n.startswith("socket_"):
+                rest = n.split("socket_", 1)[1].upper()
+                return f"SOCK_{rest}"
+            if n.startswith("serial_"):
+                # serial_open/config/send/recv/close
+                return f"SERIAL_{n.split('serial_',1)[1].upper()}"
+        # Fallbacks: known base overrides, else uppercase name
+        return base_overrides.get(n, n.upper())
+
+    tokens = set(map(lambda p: map_token(p[0], p[1]), pairs))
     return tokens
 
 def main() -> int:
