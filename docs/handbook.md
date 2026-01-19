@@ -100,6 +100,8 @@ Pass all options as -DNAME=VALUE. The most relevant toggles are:
 - FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
 - FUN_WITH_SQLITE=ON|OFF — enable SQLite (sqlite3) support (default OFF)
 - FUN_WITH_TCLTK=ON|OFF — enable Tk (GUI via Tcl/Tk) support (default OFF)
+- FUN_WITH_INI=ON|OFF — enable INI (iniparser) support (default OFF)
+- FUN_WITH_NOTCURSES=ON|OFF — enable Notcurses TUI support (default OFF)
 
 You can also set the default search path for the bundled stdlib with DEFAULT_LIB_DIR:
 
@@ -321,19 +323,28 @@ Error handling and debugging:
 
 Types:
 - number: signed integer (with helpers for unsigned behavior)
+- float: 64-bit IEEE-754 floating point
 - string: immutable bytes; len(s), join, split, substr, find
 - array: ordered list; len, push, apop, insert, remove, slice
 - map: associative dictionary typically keyed by strings
 - boolean: represented as 1 (true) or 0 (false); operators &&, ||, !
 - nil: absence of value
 
+Numeric variants:
+- byte (uint8)
+- Fixed width ints: int8/16/32/64 and uint8/16/32/64
+
 Control flow:
-- if/else, while; range helpers in utils.range
+- if/else, while; break, continue; range helpers in utils.range
 
 Functions and classes:
 - Define a function: fun name(args) ...
 - Define a class: class Name(constructor params) with method definitions fun method(this, ...)
 - _construct acts as the constructor if present; methods use explicit this
+
+Exceptions:
+- try { ... } catch (e) { ... } finally { ... }
+- Throwing/catching is defined by the spec; some runtimes may implement handling progressively. Examples: try_catch_finally.fun
 
 Modules and includes:
 - #include <path/to/module.fun> for libs under FUN_LIB_DIR
@@ -356,6 +367,10 @@ Conversion and type:
 
 Math and random:
 - min(a,b), max(a,b), clamp(x, lo, hi), abs(x), pow(a,b), random_seed(seed), random_int(lo, hiExclusive)
+
+Bitwise (uint32 operations):
+- band(a,b), bor(a,b), bxor(a,b), bnot(a)
+- shl(a, s), shr(a, s)
 
 Regex (requires PCRE2 when enabled):
 - regex_match(text, pattern) -> 1/0
@@ -491,20 +506,99 @@ Module lib/encoding/base64.fun: base64_encode(string), base64_decode(string)
 
 ### JSON (optional)
 
-Build flag: -DFUN_WITH_JSON=ON; requires json-c. VM functions: json_parse, json_stringify, json_from_file, json_to_file. Stdlib class JSON wraps these with light ergonomics. Example: examples/json_showcase.fun.
+Build flag: -DFUN_WITH_JSON=ON; requires json-c.
+
+VM API:
+- json_parse(text) -> value or nil
+- json_stringify(value, prettyFlag) -> string
+- json_from_file(path) -> value or nil
+- json_to_file(path, value, prettyFlag) -> 1/0
+
+Stdlib wrapper:
+- class JSON (lib/io/json.fun) — convenience methods mirroring the VM API.
+
+Example:
+```
+include <io/json.fun>
+
+j = JSON()
+data = j.parse('{"name":"Fun","year":2026,"ok":true,"tags":["vm","lang"]}')
+print(typeof(data))  // map
+print(data["name"])
+
+ok = j.to_file("./tmp/out.json", data, 1)  // pretty = 1
+print("saved:", ok)
+```
+
+Notes:
+- JSON types map to Fun types: object -> map, array -> array, string -> string, number -> number/float, true/false -> 1/0, null -> nil.
+- When writing, prettyFlag=1 enables pretty printing.
 
 ### CURL (optional)
 
-Build flag: -DFUN_WITH_CURL=ON; requires libcurl. VM provides:
-- curl_get(url) -> string ("" on error)
-- curl_post(url, body) -> string ("" on error)
+Build flag: -DFUN_WITH_CURL=ON; requires libcurl.
+
+VM API:
+- curl_get(url) -> string (empty string on error)
+- curl_post(url, body) -> string (empty string on error)
 - curl_download(url, path) -> 1/0
 
-Examples: curl_get_json.fun, curl_post.fun, curl_download.fun
+Stdlib wrapper:
+- None (call built-ins directly). See examples in examples/extra/.
+
+Example:
+```
+url = "https://httpbin.org/get"
+resp = curl_get(url)
+if (len(resp) == 0)
+  print("GET failed")
+else
+  print(substr(resp, 0, 60), "...")
+```
+
+Examples:
+- curl_get_json.fun, curl_post.fun, curl_download.fun
 
 ### PCSC (optional)
 
-Build flag: -DFUN_WITH_PCSC=ON; provides pcsc_* built-ins and a stdlib wrapper class PCSC. Example: pcsc_example.fun.
+Build flag: -DFUN_WITH_PCSC=ON; requires PC/SC (pcsc-lite).
+
+VM API:
+- pcsc_establish() -> context id (>0) or 0
+- pcsc_list_readers(ctx) -> array of reader names or nil
+- pcsc_connect(ctx, readerName) -> handle id (>0) or 0
+- pcsc_disconnect(handle) -> 1/0
+- pcsc_transmit(handle, bytesArray) -> { data: array<byte>, sw1: number, sw2: number, code: number }
+
+Stdlib wrapper:
+- class PCSC (lib/io/pcsc.fun) — higher-level helpers for listing readers, connecting, and APDU I/O.
+
+Example:
+```
+include <io/pcsc.fun>
+
+sc = PCSC()
+ctx = pcsc_establish()
+if (ctx == 0)
+  print("PCSC not available")
+else
+  readers = pcsc_list_readers(ctx)
+  if (readers == nil || len(readers) == 0)
+    print("No readers found")
+  else
+    h = pcsc_connect(ctx, readers[0])
+    if (h)
+      // Example APDU: GET RESPONSE (illustrative only)
+      res = pcsc_transmit(h, [0x00, 0xC0, 0x00, 0x00, 0x00])
+      print("SW:", res["sw1"], res["sw2"], "code:", res["code"]) 
+      pcsc_disconnect(h)
+```
+
+Examples:
+- examples/extra/pcsc_example.fun, examples/extra/pcsc_demo.fun
+
+Notes:
+- Smart card operations depend on the reader, card, and drivers installed. Ensure pcscd/service is running.
 
 ### SQLite (optional)
 
@@ -530,13 +624,174 @@ Example flow (examples/sqlite_example.fun):
 4) rows2 = sqlite_query(h, "SELECT count(*) AS cnt FROM tasks;")
 5) sqlite_close(h)
 
+### INI (optional)
+
+Build flag: -DFUN_WITH_INI=ON; requires iniparser (>= 4.2.6).
+
+VM API:
+- ini_load(path) -> handle (>0) or 0 on error
+- ini_free(handle) -> 1/0
+- ini_get_string(handle, section, key, default) -> string
+- ini_get_int(handle, section, key, defaultNumber) -> number
+- ini_get_double(handle, section, key, defaultFloat) -> float
+- ini_get_bool(handle, section, key, defaultBool) -> 1/0
+- ini_set(handle, section, key, valueString) -> 1/0
+- ini_unset(handle, section, key) -> 1/0
+- ini_save(handle, path) -> 1/0
+
+Notes:
+- Section/key may be looked up flexibly ("section:key" and "section.key").
+- Always free handles with ini_free when done.
+
+Example:
+```
+h = ini_load("./examples/data/example.ini")
+if (h == 0)
+  print("Failed to load INI")
+else
+  host = ini_get_string(h, "server", "host", "localhost")
+  port = ini_get_int(h, "server", "port", 8080)
+  print("server:", host, port)
+  ok = ini_set(h, "server", "host", "127.0.0.1")
+  if (ok)
+    ini_save(h, "./tmp/updated.ini")
+  ini_free(h)
+```
+
+### Notcurses (optional)
+
+Build flag: -DFUN_WITH_NOTCURSES=ON; requires notcurses (pkg-config: notcurses or notcurses-core).
+
+VM API:
+- nc_init() -> 1/0 (initialize TUI; call once)
+- nc_draw_text(x, y, text) -> 0 on success, -1 on error
+- nc_clear() -> 0 on success, -1 on error
+- nc_getch(timeout_ms) -> key code (int), -1 if timeout/no input
+- nc_shutdown() -> 1/0 (restore terminal)
+
+Example:
+```
+if (nc_init())
+  nc_draw_text(2, 1, "Fun + Notcurses")
+  print("Press any key...")
+  k = nc_getch(0)  // 0 = blocking
+  nc_shutdown()
+else
+  print("Notcurses init failed")
+```
+
+### XML (optional)
+
+Build flag: -DFUN_WITH_XML2=ON; requires libxml2.
+
+VM API:
+- xml_parse(text) -> doc_handle (>0) or 0 on error
+- xml_root(doc_handle) -> node_handle (>0) or 0 if missing
+- xml_name(node_handle) -> string
+- xml_text(node_handle) -> string
+
+Stdlib wrapper:
+- class XML (lib/io/xml.fun)
+  - parse(text): int
+  - from_file(path): int
+  - root(doc): int
+  - name(node): string
+  - text(node): string
+
+Example:
+```
+include <io/xml.fun>
+
+xml = XML()
+doc = xml.from_file("./examples/data/example.xml")
+if (doc == 0)
+  print("Failed to load XML file")
+else
+  root = xml.root(doc)
+  print(xml.name(root))
+  print(xml.text(root))
+```
+
+Notes:
+- Handles are integers managed by the VM; nodes belong to their document.
+
+### libSQL (optional)
+
+Build flag: -DFUN_WITH_LIBSQL=ON; requires libSQL client (compatible with sqlite3 C API).
+
+VM API:
+- libsql_open(path_or_url) -> handle (>0) or 0 on error
+- libsql_close(handle) -> nil
+- libsql_exec(handle, sql) -> rc (0 on success)
+- libsql_query(handle, sql) -> array of row maps
+
+Example flow:
+1) h = libsql_open("./database.sqlite")
+2) rows = libsql_query(h, "SELECT id, title FROM tasks;")
+3) rc = libsql_exec(h, "INSERT INTO tasks (title) VALUES ('Try libSQL');")
+4) libsql_close(h)
+
+### PCRE2 / Regex (optional)
+
+Build flag: -DFUN_WITH_PCRE2=ON; requires PCRE2 (8-bit API).
+
+VM API:
+- regex_match(text, pattern) -> 1/0
+- regex_search(text, pattern) -> map { match, start, end, groups }
+- regex_replace(text, pattern, repl) -> string
+
+Stdlib wrapper:
+- class Regex (lib/regex.fun) providing match/search/replace helpers.
+
+Examples: regex_demo.fun, regex_procedural.fun
+
+Notes:
+- Patterns use PCRE2 syntax.
+
+### Tcl/Tk GUI (optional)
+
+Build flag: -DFUN_WITH_TCLTK=ON; requires Tcl/Tk (8.6+).
+
+VM API:
+- tk_title(title) -> rc
+- tk_label(id, text) -> rc
+- tk_button(id, text) -> rc
+- tk_pack(id) -> rc
+- tk_loop() -> nil (enters event loop)
+
+Stdlib wrapper:
+- class TK (lib/ui/tk.fun) mirrors the VM API.
+
+Example:
+```
+include <ui/tk.fun>
+
+tk = TK()
+tk.title("Fun + Tk GUI")
+tk.label("hello", "Hello, world!")
+tk.pack("hello")
+tk.button("ok", "OK")
+tk.pack("ok")
+tk.loop()
+```
+
+Notes:
+- Ensure Tcl/Tk runtime libraries are available on your system.
+
+### REPL (optional)
+
+Build flag: -DFUN_WITH_REPL=ON.
+
+Description:
+- Enables the interactive Read–Eval–Print Loop and the --repl-on-error mode. No additional VM API functions; this feature is part of the executable.
+
 ---
 
 ## Examples reference
 
 You can run examples without installing by pointing FUN_LIB_DIR to the repository lib directory:
 
-  FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/<name>.fun
+  FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/<path>.fun
 
 Highlights (not exhaustive):
 - arrays.fun, arrays_advanced.fun, arrays_iter.fun — array operations
@@ -555,14 +810,14 @@ Highlights (not exhaustive):
 - have_fun.fun — quick sanity check
 - if_else_test.fun — branching
 - include_lib.fun, include_local.fun, include_namespace.fun — includes and namespacing
-- input_example.fun — console input
-- json_showcase.fun — JSON usage
-- curl_get_json.fun, curl_post.fun, curl_download.fun — HTTP via CURL
+- interactive/input_example.fun — console input
+- extra/json_showcase.fun — JSON usage
+- extra/curl_get_json.fun, extra/curl_post.fun, extra/curl_download.fun — HTTP via CURL
 - loops_break_continue.fun, nested_loops.fun, while_test.fun — loops
-- md5_demo.fun, sha1_demo.fun, sha256_demo.fun, sha256_str_demo.fun, sha384_example.fun, sha512_demo.fun, sha512_str_demo.fun — hashing
+- crypto/md5_demo.fun, crypto/sha1_demo.fun, crypto/sha256_demo.fun, crypto/sha256_str_demo.fun, crypto/sha384_example.fun, crypto/sha512_demo.fun, crypto/sha512_str_demo.fun — hashing
 - objects_basic.fun, objects_more.fun — map/object patterns
 - os_env.fun — environment variables
-- pcsc_example.fun — smart card demo
+- extra/pcsc_example.fun — smart card demo
 - process_example.fun — running external commands
 - regex_demo.fun, regex_procedural.fun — regex usage
 - stdlib_showcase.fun — tour through stdlib
@@ -574,7 +829,7 @@ Highlights (not exhaustive):
 - type_safety.fun, type_safety_fails.fun — type safety
 - types_integers.fun, signed_ints.fun, uint_types.fun — integers
 - unix_socket_echo.fun — UNIX domain sockets
-- sqlite_example.fun — SQLite usage
+- extra/sqlite_example.fun — SQLite usage
 
 Notes:
 - Some examples rely on optional features (JSON, CURL, PCSC, SQLite) and degrade gracefully when disabled.
