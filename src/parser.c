@@ -2851,26 +2851,26 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             || strcmp(name, "byte") == 0
             || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0
             || strcmp(name, "int8") == 0  || strcmp(name, "int16") == 0  || strcmp(name, "int32") == 0  || strcmp(name, "int64") == 0) {
-        int is_number  = (strcmp(name, "number") == 0);
-        int is_string  = (strcmp(name, "string") == 0);
-        int is_boolean = (strcmp(name, "boolean") == 0);
-        int is_nil     = (strcmp(name, "nil") == 0);
-        int is_class = (strcmp(name, "class") == 0);
-        int is_float = (strcmp(name, "float") == 0);
-        int is_array = (strcmp(name, "array") == 0);
-        int is_byte    = (strcmp(name, "byte")   == 0);
-        int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
-        int is_u16     = (strcmp(name, "uint16") == 0);
-        int is_u32     = (strcmp(name, "uint32") == 0);
-        int is_u64     = (strcmp(name, "uint64") == 0);
+            int is_number  = (strcmp(name, "number") == 0);
+            int is_string  = (strcmp(name, "string") == 0);
+            int is_boolean = (strcmp(name, "boolean") == 0);
+            int is_nil     = (strcmp(name, "nil") == 0);
+            int is_class = (strcmp(name, "class") == 0);
+            int is_float = (strcmp(name, "float") == 0);
+            int is_array = (strcmp(name, "array") == 0);
+            int is_byte    = (strcmp(name, "byte")   == 0);
+            int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
+            int is_u16     = (strcmp(name, "uint16") == 0);
+            int is_u32     = (strcmp(name, "uint32") == 0);
+            int is_u64     = (strcmp(name, "uint64") == 0);
             int is_s8      = (strcmp(name, "int8")   == 0);
             int is_s16     = (strcmp(name, "int16")  == 0);
             int is_s32     = (strcmp(name, "int32")  == 0);
             int is_s64     = (strcmp(name, "int64")  == 0) || is_number; /* number maps to int64 (signed) */
             int decl_bits  = is_u8 ? 8 : is_u16 ? 16 : is_u32 ? 32 : is_u64 ? 64
-                            : is_s8 ? 8 : is_s16 ? 16 : is_s32 ? 32 : is_s64 ? 64 : 0;
+                           : is_s8 ? 8 : is_s16 ? 16 : is_s32 ? 32 : is_s64 ? 64 : 0;
             int decl_signed = (is_s8 || is_s16 || is_s32 || is_s64) ? 1 : 0;
-                /* store decl bits with sign encoded: negative means signed (number is signed 64-bit) */
+            /* store decl bits with sign encoded: negative means signed (number is signed 64-bit) */
             if (decl_signed) decl_bits = -decl_bits;
 
             /* declared type metadata: integers use decl_bits; string/boolean/nil/Class/float/array use special markers */
@@ -3099,7 +3099,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     ci = bytecode_add_constant(bc, make_string(""));
                 } else if (is_nil) {
                     ci = bytecode_add_constant(bc, make_nil());
-                } else if (is_class_tkn) {
+                } else if (is_class) {
                     /* Class-typed variable defaults to Nil until assigned an instance */
                     ci = bytecode_add_constant(bc, make_nil());
                 } else if (is_boolean) {

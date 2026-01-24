@@ -71,7 +71,7 @@ class Person(number age, string name)
     // typeof(instance) will call this and return it
     return "Class"
 
-Class p = Person(33, "Jo")
+p = Person(33, "Jo")
 print(typeof(p))         // -> "Class"
 // p = "nope"            // Uncomment to see TypeError: expected Class
 
