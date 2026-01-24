@@ -40,8 +40,8 @@ case OP_DIV: {
             double da = (a.type == VAL_FLOAT) ? a.d : (double)a.i;
             double db = (b.type == VAL_FLOAT) ? b.d : (double)b.i;
             if (db == 0.0) {
-                fprintf(stderr, "Runtime error: division by zero\n");
-                exit(1);
+                vm_raise_error(vm, "division by zero");
+                break;
             }
             Value res = make_float(da / db);
             free_value(a);
@@ -49,8 +49,8 @@ case OP_DIV: {
             push_value(vm, res);
         } else {
             if (b.i == 0) {
-                fprintf(stderr, "Runtime error: division by zero\n");
-                exit(1);
+                vm_raise_error(vm, "division by zero");
+                break;
             }
             Value res = make_int(a.i / b.i);
             free_value(a);

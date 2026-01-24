@@ -122,6 +122,12 @@ void vm_dump_globals(VM *vm);
 // run entry Bytecode (pushes first frame)
 void vm_run(VM *vm, Bytecode *entry);
 
+/* Raise a runtime error that respects try/catch/finally.
+ * If a try handler is active in the current frame, control jumps to it
+ * with an error string pushed on the stack. Otherwise, prints the error
+ * (annotated with location) and terminates execution. */
+void vm_raise_error(VM *vm, const char *msg);
+
 /* --- Debugger API --- */
 void vm_debug_reset(VM *vm);
 int  vm_debug_add_breakpoint(VM *vm, const char *file, int line); // returns id >=0 or -1

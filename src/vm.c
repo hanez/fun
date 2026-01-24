@@ -235,6 +235,38 @@ static void fun_vm_exit(int code) {
 /* Redirect exit inside this TU (affects included opcode handlers) */
 #define exit(code) fun_vm_exit(code)
 
+/* Forward decl for stack push used by vm_raise_error */
+static void push_value(VM *vm, Value v);
+
+/* Raise a runtime error that respects try/catch/finally semantics.
+ * If a handler is installed for the current frame, jump to it and push
+ * an error string for the catch clause. Otherwise, print and stop VM. */
+void vm_raise_error(VM *vm, const char *msg) {
+    if (!vm || vm->fp < 0) {
+        fprintf(stderr, "Runtime error: %s\n", msg ? msg : "<error>");
+        return;
+    }
+    Frame *f = &vm->frames[vm->fp];
+    if (f->try_sp >= 0) {
+        char buf[256];
+        if (msg) {
+            snprintf(buf, sizeof(buf), "Runtime error: %s", msg);
+        } else {
+            snprintf(buf, sizeof(buf), "Runtime error");
+        }
+        /* push error value and transfer control to handler target */
+        Value err = make_string(buf);
+        push_value(vm, err);
+        int try_idx = f->try_stack[f->try_sp--];
+        int target = f->fn->instructions[try_idx].operand;
+        f->ip = target;
+        return;
+    }
+    /* No handler: print annotated message and terminate VM */
+    fprintf(stderr, "Runtime error: %s\n", msg ? msg : "<error>");
+    vm->fp = -1; /* stop execution */
+}
+
 /*
 Opcode case include index (vm_case_*.inc):
 - Core/stack/frame:
