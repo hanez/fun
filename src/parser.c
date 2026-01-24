@@ -73,6 +73,7 @@ static int g_temp_counter = 0;
 #define TYPE_META_NIL     10003
 #define TYPE_META_CLASS   10004
 #define TYPE_META_FLOAT   10005
+#define TYPE_META_ARRAY   10006
 
 static void parser_fail(size_t pos, const char *fmt, ...) {
     g_has_error = 1;
@@ -2845,21 +2846,23 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
            Note: 'number' maps to signed 64-bit here. 'byte' is an alias of unsigned 8-bit. 'Class' restricts to class instances.
          */
         if (strcmp(name, "number") == 0 || strcmp(name, "string") == 0 || strcmp(name, "boolean") == 0 || strcmp(name, "nil") == 0
-            || strcmp(name, "Class") == 0 || strcmp(name, "float") == 0
+            || strcmp(name, "class") == 0 || strcmp(name, "float") == 0
+            || strcmp(name, "array") == 0
             || strcmp(name, "byte") == 0
             || strcmp(name, "uint8") == 0 || strcmp(name, "uint16") == 0 || strcmp(name, "uint32") == 0 || strcmp(name, "uint64") == 0
             || strcmp(name, "int8") == 0  || strcmp(name, "int16") == 0  || strcmp(name, "int32") == 0  || strcmp(name, "int64") == 0) {
-            int is_number  = (strcmp(name, "number") == 0);
-            int is_string  = (strcmp(name, "string") == 0);
-            int is_boolean = (strcmp(name, "boolean") == 0);
-            int is_nil     = (strcmp(name, "nil") == 0);
-            int is_class_tkn = (strcmp(name, "Class") == 0);
-            int is_float_tkn = (strcmp(name, "float") == 0);
-            int is_byte    = (strcmp(name, "byte")   == 0);
-            int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
-            int is_u16     = (strcmp(name, "uint16") == 0);
-            int is_u32     = (strcmp(name, "uint32") == 0);
-            int is_u64     = (strcmp(name, "uint64") == 0);
+        int is_number  = (strcmp(name, "number") == 0);
+        int is_string  = (strcmp(name, "string") == 0);
+        int is_boolean = (strcmp(name, "boolean") == 0);
+        int is_nil     = (strcmp(name, "nil") == 0);
+        int is_class = (strcmp(name, "class") == 0);
+        int is_float = (strcmp(name, "float") == 0);
+        int is_array = (strcmp(name, "array") == 0);
+        int is_byte    = (strcmp(name, "byte")   == 0);
+        int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
+        int is_u16     = (strcmp(name, "uint16") == 0);
+        int is_u32     = (strcmp(name, "uint32") == 0);
+        int is_u64     = (strcmp(name, "uint64") == 0);
             int is_s8      = (strcmp(name, "int8")   == 0);
             int is_s16     = (strcmp(name, "int16")  == 0);
             int is_s32     = (strcmp(name, "int32")  == 0);
@@ -2870,7 +2873,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 /* store decl bits with sign encoded: negative means signed (number is signed 64-bit) */
             if (decl_signed) decl_bits = -decl_bits;
 
-            /* declared type metadata: integers use decl_bits; string/boolean/nil/Class/float use special markers */
+            /* declared type metadata: integers use decl_bits; string/boolean/nil/Class/float/array use special markers */
             int decl_meta = decl_bits;
             if (is_string) {
                 decl_meta = TYPE_META_STRING;
@@ -2878,10 +2881,12 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                 decl_meta = TYPE_META_BOOLEAN;
             } else if (is_nil) {
                 decl_meta = TYPE_META_NIL;
-            } else if (is_class_tkn) {
+            } else if (is_class) {
                 decl_meta = TYPE_META_CLASS;
-            } else if (is_float_tkn) {
+            } else if (is_float) {
                 decl_meta = TYPE_META_FLOAT;
+            } else if (is_array) {
+                decl_meta = TYPE_META_ARRAY;
             }
 
             free(name);
@@ -2984,6 +2989,23 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     bytecode_set_operand(bc, j_to_error, bc->instr_count);
                     {
                         int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Float"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else if (decl_meta == TYPE_META_ARRAY) {
+                    /* expect Array */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciArr = bytecode_add_constant(bc, make_string("Array"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciArr);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Array"));
                         bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
                         bytecode_add_instruction(bc, OP_PRINT, 0);
                         bytecode_add_instruction(bc, OP_HALT, 0);
@@ -3344,6 +3366,23 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
                     bytecode_set_operand(bc, j_to_error, bc->instr_count);
                     {
                         int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Float"));
+                        bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
+                        bytecode_add_instruction(bc, OP_PRINT, 0);
+                        bytecode_add_instruction(bc, OP_HALT, 0);
+                    }
+                    bytecode_set_operand(bc, j_skip_err, bc->instr_count);
+                } else if (meta == TYPE_META_ARRAY) {
+                    /* expect Array */
+                    bytecode_add_instruction(bc, OP_DUP, 0);
+                    bytecode_add_instruction(bc, OP_TYPEOF, 0);
+                    int ciArr = bytecode_add_constant(bc, make_string("Array"));
+                    bytecode_add_instruction(bc, OP_LOAD_CONST, ciArr);
+                    bytecode_add_instruction(bc, OP_EQ, 0);
+                    int j_to_error = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+                    int j_skip_err = bytecode_add_instruction(bc, OP_JUMP, 0);
+                    bytecode_set_operand(bc, j_to_error, bc->instr_count);
+                    {
+                        int ciMsg = bytecode_add_constant(bc, make_string("TypeError: expected Array"));
                         bytecode_add_instruction(bc, OP_LOAD_CONST, ciMsg);
                         bytecode_add_instruction(bc, OP_PRINT, 0);
                         bytecode_add_instruction(bc, OP_HALT, 0);

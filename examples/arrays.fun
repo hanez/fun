@@ -22,6 +22,7 @@
 
 // Arrays basics
 arr = [1, 2, 3]
+print(typeof(arr))
 print(arr)                 // -> [1, 2, 3]
 print(arr[0] + arr[1])     // -> 3
 
