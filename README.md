@@ -84,7 +84,7 @@ Fun may not change the world — but it will make programming a little more fun.
 
 See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the standard library provides.
 
-Optional extensions (build-time selectable / only testing this on Linux actually):
+### Optional extensions (build-time selectable / only testing this on Linux actually):
 
 - [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) &#9744;
 - [cURL](https://curl.se/) support builtin using [libcurl](https://curl.se/libcurl/) (optional) &#9745;
