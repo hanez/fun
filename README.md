@@ -2,6 +2,8 @@
 
 ## What is Fun?
 
+Fun is a small, strict, and simple programming language that runs on a compact stack-based virtual machine. The C core is intentionally minimal; most functionality and standard libraries are implemented in Fun itself. The language emphasizes simplicity, consistency, and joy in coding.
+
 Fun is an experiment, just for fun, but Fun works!
 
 Fun is a highly strict programming language, but also highly simple. It looks like Python (My favorite language), but there are differences.
@@ -14,6 +16,8 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](ht
 
 - Simplicity
 - Consistency
+- Simple to extend
+- Hackable
 - Joy in coding
 - Fun!
 
@@ -52,6 +56,7 @@ Fun is not about being the fastest or the most feature-rich. It’s about sharin
 - Respectful
 - Curious
 - Creative
+- Open for everyone
 
 Like the name says: Fun Unites Nerds.
 
@@ -77,47 +82,9 @@ Fun may not change the world — but it will make programming a little more fun.
 
 ### Lib (./lib/)
 
-```
-arrays.fun
-crypt/
-  crc32c.fun
-  crc32.fun
-  md5.fun
-  md5_legacy.fun
-  ripemd160.fun - Broken!
-  sha1.fun
-  sha256.fun
-  sha384.fun
-  sha512.fun
-encoding/
-  base64.fun
-hello.fun
-hex.fun
-io/
-  console.fun
-  ini.fun
-  json.fun
-  pcsc2.fun
-  pcsc.fun
-  process.fun
-  serial.fun
-  socket.fun
-  thread.fun
-  xml.fun
-math.fun
-regex
-  pcre2.fun
-regex.fun
-strings.fun
-ui/
-  tk.fun
-utils/
-  datetime.fun
-  math.fun
-  range.fun
-```
+See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the standard library provides.
 
-### Extensions (only Linux actually)
+Optional extensions (build-time selectable / only testing this on Linux actually):
 
 - [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) &#9744;
 - [cURL](https://curl.se/) support builtin using [libcurl](https://curl.se/libcurl/) (optional) &#9745;
