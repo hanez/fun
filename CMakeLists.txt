@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.37.62 LANGUAGES C)
+project(fun VERSION 0.38.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -11,10 +11,113 @@ include(${CMAKE_SOURCE_DIR}/cmake/Dependencies.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/Extensions.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Targets.cmake)
 
+# --- Always show key build toggles ---
+# Normalize to ENABLED/DISABLED like the "Fun extension summary"
+if(FUN_DEBUG)
+  set(_FUN_DEBUG_STATE "ENABLED")
+else()
+  set(_FUN_DEBUG_STATE "DISABLED")
+endif()
+
+if(FUN_WITH_RUST)
+  set(_FUN_WITH_RUST_STATE "ENABLED")
+else()
+  set(_FUN_WITH_RUST_STATE "DISABLED")
+endif()
+
+message(STATUS "==== Fun build options ====")
+message(STATUS "  FUN_DEBUG: ${_FUN_DEBUG_STATE}")
+message(STATUS "  FUN_WITH_RUST: ${_FUN_WITH_RUST_STATE}")
+message(STATUS "===========================")
+
 # Convenience aggregate target (like 'build' in Makefile)
 add_custom_target(build
   DEPENDS fun fun_test test_opcodes
 )
+
+# --- Rust (Cargo) integration: optionally build and link a staticlib with opcode examples ---
+option(FUN_WITH_RUST "Build and link Rust opcode library" OFF)
+
+if(FUN_WITH_RUST)
+  find_program(CARGO_EXECUTABLE cargo)
+  if(NOT CARGO_EXECUTABLE)
+    message(FATAL_ERROR "FUN_WITH_RUST=ON but 'cargo' not found in PATH")
+  endif()
+
+  set(RUST_CRATE_DIR ${CMAKE_SOURCE_DIR}/src/rust)
+
+  # Map CMake build type to Cargo profile and output path
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(RUST_PROFILE "debug")
+    set(RUST_BUILD_ARGS)
+  else()
+    set(RUST_PROFILE "release")
+    set(RUST_BUILD_ARGS --release)
+  endif()
+
+  # Crate name as per Cargo.toml
+  # Crate name on-disk replaces '-' with '_' in artifact names
+  set(RUST_CRATE_NAME hello-c-world)
+  string(REPLACE "-" "_" RUST_CRATE_BASENAME "${RUST_CRATE_NAME}")
+  set(RUST_LIB_NAME lib${RUST_CRATE_BASENAME}.a)
+  set(RUST_LIB_PATH ${RUST_CRATE_DIR}/target/${RUST_PROFILE}/${RUST_LIB_NAME})
+
+  add_custom_command(
+    OUTPUT ${RUST_LIB_PATH}
+    COMMAND ${CARGO_EXECUTABLE} build ${RUST_BUILD_ARGS}
+    WORKING_DIRECTORY ${RUST_CRATE_DIR}
+    COMMENT "Building Rust static library (${RUST_PROFILE})"
+    VERBATIM
+  )
+
+  add_custom_target(rust_ops_build DEPENDS ${RUST_LIB_PATH})
+
+  add_library(fun_ops STATIC IMPORTED GLOBAL)
+  set_target_properties(fun_ops PROPERTIES
+    IMPORTED_LOCATION ${RUST_LIB_PATH}
+    IMPORTED_LINK_INTERFACE_LANGUAGES C
+  )
+  add_dependencies(fun_ops rust_ops_build)
+
+  # Link Rust ops into the core so executables can call them
+  if(TARGET fun_core)
+    add_dependencies(fun_core rust_ops_build)
+    target_link_libraries(fun_core PRIVATE fun_ops)
+    target_compile_definitions(fun_core PRIVATE FUN_WITH_RUST)
+  endif()
+
+  # Propagate define to test targets that might call Rust
+  if(TARGET test_opcodes)
+    add_dependencies(test_opcodes rust_ops_build)
+    target_link_libraries(test_opcodes PRIVATE fun_ops)
+    target_compile_definitions(test_opcodes PRIVATE FUN_WITH_RUST)
+  endif()
+
+  if(TARGET fun)
+    target_compile_definitions(fun PRIVATE FUN_WITH_RUST)
+  endif()
+endif()
+
+# --- Size optimization for final binaries (Release) ---
+# Enable function/data sectioning for better GC; safe for all configs.
+add_compile_options(-ffunction-sections -fdata-sections)
+
+# Link-time garbage collection and stripping for the main executable in Release
+if(TARGET fun)
+  # Garbage-collect unused sections; also strip symbols (-s) in Release
+  target_link_options(fun PRIVATE
+    $<$<CONFIG:Release>:-Wl,--gc-sections -s>
+  )
+  # Prefer enabling LTO/IPO for Release builds
+  set_property(TARGET fun PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
+
+if(TARGET fun_core)
+  # LTO/IPO for the core library helps the final link DCE more Rust/C glue
+  set_property(TARGET fun_core PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+  # Ensure objects compiled with sectioning (added globally above) benefit from GC
+  target_link_options(fun_core PRIVATE $<$<CONFIG:Release>:-Wl,--gc-sections>)
+endif()
 
 # Convenience targets: repl, run, threads-demo, ops, examples
 set(FUN_RUN_SCRIPT "" CACHE STRING "Script to run with the 'run' target, e.g. -DFUN_RUN_SCRIPT=examples/strings_test.fun")

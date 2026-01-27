@@ -206,6 +206,7 @@ static const char *opcode_name(OpCode op) {
         case OP_SIGN: return "SIGN";
         case OP_FMIN: return "FMIN";
         case OP_FMAX: return "FMAX";
+        case OP_RUST_HELLO: return "RUST_HELLO";
         default: return "???";
     }
 }

@@ -54,6 +54,9 @@ static const char *opcode_names[] = {
     "SERIAL_OPEN","SERIAL_CONFIG","SERIAL_SEND","SERIAL_RECV","SERIAL_CLOSE",
     "TK_EVAL","TK_RESULT","TK_LOOP","TK_WM_TITLE","TK_LABEL","TK_BUTTON","TK_PACK",
     "TRY_PUSH","TRY_POP","THROW",
+    "FMIN","FMAX",
+    /* Rust FFI demo */
+    "RUST_HELLO",
     /* Notcurses TUI (optional) */
     "NC_INIT","NC_SHUTDOWN","NC_CLEAR","NC_DRAW_TEXT","NC_GETCH"
 };
@@ -142,5 +145,17 @@ void vm_debug_request_continue(VM *vm);
 static inline int opcode_is_valid(int op) {
     return op >= OP_NOP && op <= OP_NC_GETCH;  // all current opcodes (including optional NC_*)
 }
+
+/* --- Minimal C ABI helpers for FFI (Rust opcode experiments) --- */
+/* Pop an int64 from VM stack (errors if not an int/float); returns integer-converted value. */
+int64_t vm_pop_i64(VM *vm);
+/* Push an int64 onto VM stack. */
+void vm_push_i64(VM *vm, int64_t v);
+
+/* Example Rust-implemented opcode (adds top two ints on stack) */
+int fun_op_radd(VM *vm);
+
+/* Example Rust function returning a demo C string (null-terminated). */
+const char *fun_rust_get_string(void);
 
 #endif

@@ -263,6 +263,9 @@ typedef enum {
     OP_FMIN,              // pops b, a (int/float); pushes fmin(a,b) (NaN handling per C99)
     OP_FMAX,              // pops b, a (int/float); pushes fmax(a,b) (NaN handling per C99)
 
+    // Rust FFI demo opcode(s)
+    OP_RUST_HELLO,        // pushes string returned from Rust (hello world)
+
     /* Notcurses TUI (optional) */
     OP_NC_INIT,           // initializes Notcurses; returns 1 on success, 0 on failure
     OP_NC_SHUTDOWN,       // shuts down Notcurses; returns 0

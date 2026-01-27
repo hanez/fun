@@ -1,0 +1,16 @@
+[package]
+name = "hello-c-world"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[profile.release]
+panic = "abort"
+# Optimize for minimal size
+opt-level = "z"
+codegen-units = 1
+lto = true
+# If Cargo is new enough, this strips symbols from Rust objects
+strip = "symbols"

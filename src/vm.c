@@ -466,6 +466,28 @@ static Value pop_value(VM *vm) {
     return vm->stack[vm->sp--]; /* caller owns returned Value */
 }
 
+/* --- C ABI helpers for Rust FFI --- */
+int64_t vm_pop_i64(VM *vm) {
+    Value v = pop_value(vm);
+    int64_t out = 0;
+    if (v.type == VAL_INT) {
+        out = v.i;
+    } else if (v.type == VAL_FLOAT) {
+        out = (int64_t) v.d;
+    } else {
+        fprintf(stderr, "Runtime type error: expected int/float on stack, got %s\n", value_type_name(v.type));
+        free_value(v);
+        exit(1);
+    }
+    /* free any dynamic payload (no-op for int/float) */
+    free_value(v);
+    return out;
+}
+
+void vm_push_i64(VM *vm, int64_t v) {
+    push_value(vm, make_int(v));
+}
+
 static void frame_init(Frame *f) {
     f->fn = NULL;
     f->ip = 0;
@@ -733,6 +755,9 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/math/lcm.c"
             #include "vm/math/isqrt.c"
             #include "vm/math/sign.c"
+
+            /* Rust FFI demo opcode(s) */
+            #include "vm/rust/hello.c"
 
             #include "vm/os/env.c"
             #include "vm/os/env_all.c"

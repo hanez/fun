@@ -13,5 +13,7 @@ json.xml
 lib/*.so
 out/
 src/*.o
+src/rust/Cargo.lock
+src/rust/target
 *.swp
 tmp*

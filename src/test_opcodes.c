@@ -46,6 +46,29 @@ int main() {
     }
 
     vm_clear_output(&vm);
+
+    /* --- Rust FFI demo: call a Rust opcode and string function --- */
+#ifdef FUN_WITH_RUST
+    extern int fun_op_radd(VM *vm);
+    extern const char *fun_rust_get_string(void);
+
+    printf("=== Rust FFI demo ===\n");
+    const char *rs = fun_rust_get_string();
+    if (rs) {
+        printf("Rust says: %s\n", rs);
+    }
+
+    /* prepare stack: push 10 and 32, then call Rust add -> expect 42 */
+    vm_push_i64(&vm, 10);
+    vm_push_i64(&vm, 32);
+    int rc = fun_op_radd(&vm);
+    printf("fun_op_radd rc=%d\n", rc);
+    long long sum = (long long)vm_pop_i64(&vm);
+    printf("Rust op result: %lld\n", sum);
+#else
+    printf("=== Rust FFI demo (disabled; build with -DFUN_WITH_RUST=ON) ===\n");
+#endif
+
     vm_free(&vm);
     bytecode_free(bc);
     return 0;

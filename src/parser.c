@@ -786,6 +786,13 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "rust_hello") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "rust_hello expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_RUST_HELLO, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "os_list_dir") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "os_list_dir expects (path)"); free(name); return 0; }
