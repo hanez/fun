@@ -253,3 +253,80 @@ From vm.h defaults (tuned for simplicity; adjust if needed):
 - src/parser.c — compiler, expression/statement/block parsing, emission, indentation handling
 - src/vm/* — small focused opcode handlers by domain
 - src/external/* — integration shims for optional dependencies
+
+## Concurrency, isolates, and garbage collection
+
+### Short answer
+
+We chose isolated state (like Lua) rather than a single global lock (like Python’s GIL). Each VM has its own heap, scheduler, and GC. There are no cross‑VM pointers. Concurrency and data exchange happen via message passing and a few carefully scoped shared‑memory primitives for high‑throughput use cases. This keeps the C API simple, predictable, and safe to embed in multi‑threaded hosts.
+
+### Concurrency model
+
+- Isolates/VMs: Each `fun_vm_t*` is an isolate with its own heap, bytecode, scheduler, and GC. Multiple VMs can run truly in parallel on different OS threads/cores.
+- Intra‑VM concurrency: User‑space tasks (green threads/fibers) scheduled by the VM. Within a single VM, you get structured concurrency; the VM is single‑owner from the host’s perspective.
+- Inter‑VM concurrency: Use message passing (channels/ports) and zero‑copy shared buffers where explicitly opted in.
+
+### Memory and sharing
+
+- Per‑VM heaps: Objects are allocated, owned, and collected per VM. No object from VM A may be referenced by VM B.
+- No global runtime lock: There is no GIL. VMs never contend on a global lock and can scale across cores.
+- Message passing: `fun_send(port, value)` and `fun_recv(port, timeout)` copy values across VM boundaries using a compact, GC‑safe serialization format.
+- Zero‑copy fast path (opt‑in): For large payloads, hosts can create `fun_shared_buffer` objects which are reference‑counted, immutable within VMs, and can be shared across VMs without copying. Mutating a shared buffer requires creating a new buffer (copy‑on‑write style), preserving safety.
+
+### Thread‑safety rules for the C API
+
+- VM affinity: A `fun_vm_t*` has thread affinity. Host code must interact with a VM from its owning thread. If you need to call into the same VM from multiple OS threads, you post work to the VM’s run loop via `fun_vm_post(vm, callback, user_data)`.
+- Opaque handles: All handles (`fun_vm_t*`, `fun_value_t`, `fun_port_t`, `fun_shared_buffer_t`) are opaque. There are no raw pointers to VM heap objects in the API.
+- No cross‑VM objects: You cannot pass `fun_value_t` directly across VMs. Use `fun_send`/`fun_serialize`/`fun_deserialize` or `fun_shared_buffer`.
+- Optional locking helpers: For the rare case where a host wants shared mutable state outside the VM, we expose thin wrappers over atomics and locks (`fun_atomic_*`, `fun_mutex_t`, `fun_rwlock_t`) so extension code doesn’t need to mix threading libraries. These do not participate in GC and are outside VM heaps.
+
+### Scheduling and GC
+
+- Per‑VM scheduler: Green threads are multiplexed within a VM. Preemption is cooperative with periodic safe points; an optional time‑slice can yield between bytecode instruction groups when `FUN_DEBUG` or tracing is enabled.
+- Per‑VM GC: Stop‑the‑world, per‑VM. No global stop‑the‑world across VMs. A GC in one VM does not pause others.
+
+### Embedding patterns
+
+- Parallelism: Create N VMs for N cores, wire them with channels or shared buffers. No global lock contention.
+- UI/game loop: Keep one VM on the main thread; background workers operate their own VMs and communicate via ports.
+- Native callbacks/FFI: Callbacks into a VM must occur on its owning thread (use `fun_vm_post`). For bulk data (e.g., images, tensors), pass `fun_shared_buffer` to avoid copies.
+
+### Why not a GIL?
+
+- A GIL simplifies internal invariants but serializes all CPU‑bound work and penalizes embedded hosts with existing thread pools. Our isolate + message‑passing design preserves safety while scaling with cores.
+
+### When you must share state
+
+- Prefer `fun_shared_buffer` (immutable) or message passing.
+- If you truly need shared mutability from native code, use `fun_atomic_*` or `fun_mutex_t`/`fun_rwlock_t` around your own data structures outside the VM. The VM treats these as external resources.
+
+### Minimal API surface (illustrative)
+
+```c
+// Create/destroy VMs
+fun_vm_t* vm = fun_vm_create(const fun_vm_config_t*);
+void fun_vm_destroy(fun_vm_t*);
+
+// Thread-affine execution and posting work
+int fun_vm_run(fun_vm_t*, const fun_script_t*);
+int fun_vm_post(fun_vm_t*, void (*cb)(fun_vm_t*, void*), void* user);
+
+// Ports/channels for inter-VM comms
+fun_port_t* fun_port_create(fun_vm_t*);
+int fun_send(fun_port_t*, fun_value_t value);
+int fun_recv(fun_port_t*, fun_value_t* out, uint64_t timeout_ms);
+
+// Serialization for cross-VM values
+int fun_serialize(fun_value_t v, fun_buffer_t* out);
+int fun_deserialize(fun_vm_t*, const fun_buffer_t*, fun_value_t* out);
+
+// Zero-copy shared buffers (immutable inside VMs)
+fun_shared_buffer_t* fun_shared_buffer_new(size_t n);
+void* fun_shared_buffer_data(fun_shared_buffer_t*);
+void fun_shared_buffer_retain(fun_shared_buffer_t*);
+void fun_shared_buffer_release(fun_shared_buffer_t*);
+```
+
+### Glossary
+
+- GC: garbage collection. In our context, each `fun_vm_t` isolate has its own GC (stop‑the‑world, per‑VM). There is no global stop‑the‑world and no global lock; a GC pause in one VM does not affect others.
