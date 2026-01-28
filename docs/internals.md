@@ -285,6 +285,50 @@ We chose isolated state (like Lua) rather than a single global lock (like Python
 - Per‑VM scheduler: Green threads are multiplexed within a VM. Preemption is cooperative with periodic safe points; an optional time‑slice can yield between bytecode instruction groups when `FUN_DEBUG` or tracing is enabled.
 - Per‑VM GC: Stop‑the‑world, per‑VM. No global stop‑the‑world across VMs. A GC in one VM does not pause others.
 
+### Shared memory as the escape hatch
+
+Message passing and serialization are the defaults. When copying becomes too expensive, use shared memory — but keep it outside the tracing heaps and very constrained:
+
+- Off‑heap, opaque buffers: Use `fun_shared_buffer` for large blobs (e.g., images, JSON bytes, tensors). These are refcounted, live outside any VM heap, and are immutable from the VM’s perspective.
+- No heap pointers inside: Shared regions must not contain pointers into any VM heap. Treat them as raw bytes plus size/stride metadata.
+- Synchronization via atomics/futexes (host side): If you need concurrent producers/consumers over shared buffers, build lock‑free queues or channels on the host using atomics. The VM sees only opaque handles.
+- Lifetime: Governed by explicit ownership (retain/release), epochs, or arena lifetime — not by any VM’s GC.
+
+This provides zero‑copy hand‑off without coupling VMs or their collectors.
+
+### Do per‑VM GCs need to stop‑the‑world for shared regions?
+
+It depends on what “shared” means. Our design keeps per‑VM GCs independent by default:
+
+1) Untraced shared regions (recommended)
+   - Contents contain no GC pointers; GCs never scan them.
+   - Each VM can collect independently; no cross‑VM safepoints or barriers are required.
+   - Lifetime is managed explicitly (refcounts/finalizers/epochs). This is how `fun_shared_buffer` works.
+
+2) Shared, GC‑managed objects (generally avoid)
+   - If objects with pointers are genuinely shared across VMs, you need one of:
+     - Global safepoints with coordinated stop‑the‑world across participants; or
+     - A concurrent/incremental GC with cross‑VM read/write barriers and either a shared heap or remembered sets; or
+     - Replacing tracing with atomic refcounting for the shared objects.
+   - Complexity, latency, and correctness risks increase substantially. Fun intentionally avoids this mode.
+
+3) Hybrids
+   - Immutable shared objects with global refcounts and no pointers back into per‑VM heaps.
+   - Copy‑on‑write pages or rope/cord structures backed by `fun_shared_buffer`.
+   - Message passing that can “adopt” an off‑heap buffer by transferring ownership instead of copying.
+
+### Practical guidance
+
+- Default to isolated VMs and message passing.
+- Use `fun_shared_buffer` only for zero‑copy payloads; keep them untraced and pointer‑free relative to VM heaps.
+- Clearly document and enforce what types are shareable; forbid cross‑VM heap references.
+- If you ever consider sharing GC‑managed objects, budget for global safepoints or a fully barriered concurrent GC — neither is planned for Fun’s core.
+
+### Bottom line
+
+- Isolates are the sensible default; shared‑memory primitives are the performance escape hatch.
+- With off‑heap, untraced shared regions, per‑VM GCs stay independent and never have to stop the world across other VMs.
+
 ### Embedding patterns
 
 - Parallelism: Create N VMs for N cores, wire them with channels or shared buffers. No global lock contention.
