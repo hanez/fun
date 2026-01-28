@@ -30,3 +30,7 @@
  */
 
 print(rust_hello())
+
+/* Expected output:
+Hello from Rust ops!
+*/ 

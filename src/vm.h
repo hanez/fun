@@ -56,7 +56,7 @@ static const char *opcode_names[] = {
     "TRY_PUSH","TRY_POP","THROW",
     "FMIN","FMAX",
     /* Rust FFI demo */
-    "RUST_HELLO",
+    "RUST_HELLO","RUST_HELLO_ARGS",
     /* Notcurses TUI (optional) */
     "NC_INIT","NC_SHUTDOWN","NC_CLEAR","NC_DRAW_TEXT","NC_GETCH"
 };
@@ -157,5 +157,7 @@ int fun_op_radd(VM *vm);
 
 /* Example Rust function returning a demo C string (null-terminated). */
 const char *fun_rust_get_string(void);
+/* Rust function that prints a passed C string, returns 0 on success. */
+int fun_rust_print_string(const char *msg);
 
 #endif

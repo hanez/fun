@@ -90,6 +90,16 @@ if(FUN_WITH_TCLTK)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_TCLTK=1)
 endif()
 
+# Workaround: provide a dummy rust_eh_personality to satisfy linker when using
+# no_std Rust staticlib with panic abort (some toolchains still reference it).
+# If needed, we could add a C shim here, but the Rust crate now defines
+# rust_eh_personality itself, so no extra C sources are required.
+if(FUN_WITH_RUST)
+  if(TARGET fun)
+    target_sources(fun PRIVATE ${CMAKE_SOURCE_DIR}/src/rust/eh_personality.c)
+  endif()
+endif()
+
 # Special case for libxml2 system include path if enabled
 if(FUN_WITH_XML2)
   if(EXISTS "/usr/include/libxml2")

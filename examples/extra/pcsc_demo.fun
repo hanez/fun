@@ -33,9 +33,9 @@ if len(readers) > 0
 
   if h != 0
     // Sample APDU: SELECT MF (00 A4 00 00 02 3F 00)
-    resp = pc.transmit_hex(h, "00A40000023F00")
-    // Print hex data and SW
-    print("resp.data_hex=" + resp["data_hex"])
+    // Use the safe convenience transmitter which returns a map {data, sw1, sw2, code}
+    resp = pc.transmit("00A40000023F00")
+    print("resp.data.len=" + to_string(len(resp["data"])) + " bytes")
     print("resp.sw1=" + to_string(resp["sw1"]) + " sw2=" + to_string(resp["sw2"]) + " code=" + to_string(resp["code"]))
 
     _ = pc.disconnect(h)

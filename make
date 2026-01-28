@@ -88,6 +88,27 @@ elif [ "$target" = "repl" ]; then
     && cmake -S . -B build \
       -DFUN_WITH_REPL=ON \
     && cmake --build build --target fun
+elif [ "$target" = "rust_all" ]; then
+  rm -rf build && rm -rf src/rust/target \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=ON \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=ON \
+      -DFUN_WITH_SQLITE=ON \
+      -DFUN_WITH_CURL=ON \
+      -DFUN_WITH_PCRE2=ON \
+      -DFUN_WITH_XML2=ON \
+      -DFUN_WITH_JSON=ON \
+      -DFUN_WITH_TCLTK=ON \
+      -DFUN_WITH_INI=ON \
+      -DFUN_WITH_RUST=ON \
+      -DFUN_DEBUG=OFF \
+    && cmake --build build --target fun
+elif [ "$target" = "rust_minimal" ]; then
+  rm -rf build && rm -rf src/rust/target \
+    && cmake -S . -B build \
+      -DFUN_WITH_RUST=ON \
+    && cmake --build build --target fun
 else
   echo "Build target $target not found... aborting!";
   echo "Available targets:";
@@ -100,5 +121,7 @@ else
   echo " - minimal";
   echo " - musl";
   echo " - repl";
+  echo " - rust_all";
+  echo " - rust_minimal";
 fi
 
