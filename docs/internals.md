@@ -256,8 +256,6 @@ From vm.h defaults (tuned for simplicity; adjust if needed):
 
 ## Concurrency, isolates, and garbage collection
 
-### Short answer
-
 We chose isolated state (like Lua) rather than a single global lock (like Python’s GIL). Each VM has its own heap, scheduler, and GC. There are no cross‑VM pointers. Concurrency and data exchange happen via message passing and a few carefully scoped shared‑memory primitives for high‑throughput use cases. This keeps the C API simple, predictable, and safe to embed in multi‑threaded hosts.
 
 ### Concurrency model
@@ -295,6 +293,116 @@ Message passing and serialization are the defaults. When copying becomes too exp
 - Lifetime: Governed by explicit ownership (retain/release), epochs, or arena lifetime — not by any VM’s GC.
 
 This provides zero‑copy hand‑off without coupling VMs or their collectors.
+
+### Zero-Copy Shared Buffering
+
+- We default to isolates for safety and scaling.
+- Zero‑copy sharing is done with `fun_shared_buffer`, an off‑heap, GC‑untracked, pointer‑free block that’s immutable from the VM’s point of view.
+- Lifetime is managed with plain reference counting (`retain/release`).
+- For hot paths, we also support an adoption (ownership‑transfer) pattern during message passing so the sender can drop its ref without copying.
+
+#### How zero‑copy is kept safe
+
+- Off‑heap + untraced: `fun_shared_buffer` lives outside any VM heap, so per‑VM GCs never scan it and never need cross‑VM barriers.
+- Immutable inside VMs: once a buffer is visible to any VM, it is treated as read‑only by that VM code. That avoids aliasing hazards and lets multiple VMs parse the same bytes concurrently.
+- Pointer‑free contract: the buffer contains raw bytes only (no pointers into VM heaps), which prevents accidental cross‑heap reachability.
+
+#### Lifetime model
+
+- Global refcount on the shared object.
+  - `fun_shared_buffer_retain`/`fun_shared_buffer_release` drive deallocation.
+  - VMs just hold handles; the buffer’s memory is not traced by any VM.
+- Host mutation policy:
+  - You may fill/mutate the buffer before publication (while only the host holds a ref).
+  - After passing it into any VM or port, treat it as immutable; further mutation must be done by creating a new buffer or by using host‑side synchronization and not exposing the mutated view to VMs that assume immutability.
+
+#### Ownership transfer (adoption)
+
+- Message passing can “adopt” a buffer: instead of copying, the sender passes the handle and typically `release`s its ref after send.
+- The receiver `retain`s upon receipt if it needs to outlive the message scope.
+- This gives you zero‑copy with a clear single‑writer → multi‑reader handoff pattern.
+
+#### Why not share GC‑managed objects?
+
+- Sharing traced objects would require global safepoints or a fully barriered concurrent GC across VMs, or switching to atomic RC for those objects. We avoid that entirely; only off‑heap `fun_shared_buffer` is shared.
+
+#### Minimal API (illustrative)
+
+```c
+// Zero-copy shared buffers (immutable inside VMs)
+fun_shared_buffer_t* fun_shared_buffer_new(size_t n);
+void* fun_shared_buffer_data(fun_shared_buffer_t*);
+void fun_shared_buffer_retain(fun_shared_buffer_t*);
+void fun_shared_buffer_release(fun_shared_buffer_t*);
+
+// Ports/channels for inter-VM comms
+fun_port_t* fun_port_create(fun_vm_t*);
+int fun_send(fun_port_t*, fun_value_t value);      // can carry a shared buffer handle
+int fun_recv(fun_port_t*, fun_value_t* out, uint64_t timeout_ms);
+```
+
+#### Practical usage tips
+
+- Default to isolates + ports for logic; use `fun_shared_buffer` only for large payloads (images, tensors, blobs).
+- If you need shared mutability from native code, keep it outside the VM and guard with `fun_mutex_t`/`fun_rwlock_t` or `fun_atomic_*`. Don’t expose mutable state to VMs.
+- Document clearly when a buffer is “published” to VMs; after that point, treat it as immutable and rely on refcounts for lifetime.
+
+#### Bottom line
+
+- It’s reference counting by default, with an optional ownership‑transfer handoff in message passing to avoid copies. This keeps the host API small and predictable while preserving GC isolation and safety.
+
+### Immutable Buffer Sync via Ports
+
+We don’t expose shared mutability to VMs. The trick is: publish‑as‑immutable plus adoption via ports. Ports/queues do the synchronization; `fun_shared_buffer` is off‑heap and refcounted with atomic ops. The host doesn’t need to lock anything for the common paths.
+
+#### What removes the host’s synchronization burden
+
+- Immutable after publication
+  - Host fills a `fun_shared_buffer` while it’s private, then “publishes” it by sending through a port. From that point, all VM code treats it as read‑only. No data races; no host locks.
+- Port/queue owns the concurrency
+  - `fun_send`/`fun_recv` operate on an internal MPMC queue with the necessary atomics/fences. You don’t implement a queue nor protect it; the runtime does.
+- Adoption (ownership transfer)
+  - `fun_send` can adopt a buffer handle. Sender drops its ref after send; receiver retains if needed. Lifetime is clear without locks.
+- Atomic refcounting only
+  - The only shared mutable state is the buffer’s global refcount, updated atomically inside the runtime. You don’t touch it.
+- VM thread affinity
+  - You never call into a VM from arbitrary threads; use `fun_vm_post` to hop to the owning thread. This avoids host‑side marshaling races.
+
+#### Typical pattern (no locks needed)
+
+```c
+fun_shared_buffer_t* b = fun_shared_buffer_new(n);
+void* p = fun_shared_buffer_data(b);
+memcpy(p, src, n);                  // fill while private
+
+fun_send(port, fun_wrap_shared(b)); // publish + adopt
+fun_shared_buffer_release(b);       // drop sender’s ref (optional if send adopts)
+
+// On receiver side
+fun_value_t v;                       
+if (fun_recv(port, &v, 1000) == 0) {
+  fun_shared_buffer_t* r = fun_unwrap_shared(v);
+  // r is read‑only to VMs; parse/process concurrently without locks
+  // Retain if it must outlive the message scope
+  fun_shared_buffer_retain(r);
+  …
+  fun_shared_buffer_release(r);
+}
+```
+
+#### When would the host ever sync?
+
+- Only if you choose shared mutability outside the VM (e.g., a lock‑free ring buffer you manage). For that, we expose optional helpers (`fun_atomic_*`, `fun_mutex_t`, `fun_rwlock_t`), but they’re not required for the standard zero‑copy path.
+
+#### Guarantees provided by the runtime
+
+- Publication fences around `fun_send`/`fun_recv` ensure bytes written before send are visible to receivers without extra barriers.
+- Buffers are pointer‑free relative to VM heaps, so no cross‑heap reachability or GC coordination is needed.
+- Refcount updates are atomic; deallocation happens when the global count drops to zero.
+
+#### Bottom line
+
+- You don’t synchronize shared data: you publish immutable blobs and let ports handle concurrency and lifetime via atomic refcounting and adoption. Locks are only needed if you intentionally build shared mutable structures outside this model.
 
 ### Do per‑VM GCs need to stop‑the‑world for shared regions?
 
