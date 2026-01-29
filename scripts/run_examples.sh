@@ -86,6 +86,7 @@ if (( ${#files[@]} == 0 )); then
 fi
 
 rc=0
+fail_count=0
 for f in "${files[@]}"; do
   base_name="$(basename "$f")"
   # If INI support is disabled, skip INI examples to avoid expected failures
@@ -100,12 +101,13 @@ for f in "${files[@]}"; do
     echo "FAILED: ${f#$ROOT/}"
     # Intentionally do not move files on failure; leave control to the user
     rc=1
+    ((fail_count++))
   fi
 done
 
 if (( rc == 0 )); then
-  echo "All examples ran successfully."
+  echo "All examples ran successfully. Failed: ${fail_count}"
 else
-  echo "Some examples failed."
+  echo "Some examples failed. Failed: ${fail_count}"
 fi
 exit $rc
