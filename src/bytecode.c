@@ -208,6 +208,8 @@ static const char *opcode_name(OpCode op) {
         case OP_FMAX: return "FMAX";
         case OP_RUST_HELLO: return "RUST_HELLO";
         case OP_RUST_HELLO_ARGS: return "RUST_HELLO_ARGS";
+        case OP_RUST_GET_SP: return "RUST_GET_SP";
+        case OP_RUST_SET_EXIT: return "RUST_SET_EXIT";
         default: return "???";
     }
 }

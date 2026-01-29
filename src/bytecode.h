@@ -266,6 +266,8 @@ typedef enum {
     // Rust FFI demo opcode(s)
     OP_RUST_HELLO,        // pushes string returned from Rust (hello world)
     OP_RUST_HELLO_ARGS,   // pops message string; prints it via Rust; pushes Nil
+    OP_RUST_GET_SP,       // pushes current VM stack pointer (via Rust reading VM memory)
+    OP_RUST_SET_EXIT,     // pops int and sets VM exit_code (via Rust writing VM memory)
 
     /* Notcurses TUI (optional) */
     OP_NC_INIT,           // initializes Notcurses; returns 1 on success, 0 on failure

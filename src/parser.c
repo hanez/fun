@@ -801,6 +801,21 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "rust_get_sp") == 0) {
+                (*pos)++; /* '(' */
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "rust_get_sp expects ()"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_RUST_GET_SP, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "rust_set_exit") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "rust_set_exit expects (code:int)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after rust_set_exit arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_RUST_SET_EXIT, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "os_list_dir") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "os_list_dir expects (path)"); free(name); return 0; }

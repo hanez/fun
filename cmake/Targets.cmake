@@ -17,7 +17,6 @@ target_include_directories(fun_core PUBLIC
 
 # Apply options to core
 if(FUN_DEBUG)
-  message(STATUS "FUN_DEBUG enabled: building with verbose debug logging")
   target_compile_definitions(fun_core PUBLIC FUN_VERSION="${PROJECT_VERSION}")
   target_compile_definitions(fun_core PUBLIC FUN_DEBUG=1)
 endif()

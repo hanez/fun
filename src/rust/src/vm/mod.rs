@@ -2,7 +2,7 @@
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
- * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
  *
@@ -16,10 +16,18 @@
 //! ABI helpers declared on the C side (`vm_pop_i64`, `vm_push_i64`).
 
 use super::Vm;
+//use core::mem::size_of;
+use core::ptr;
 
 extern "C" {
     fn vm_pop_i64(vm: *mut Vm) -> i64;
     fn vm_push_i64(vm: *mut Vm, v: i64);
+    fn vm_as_mut_ptr(vm: *mut Vm) -> *mut core::ffi::c_void;
+    fn vm_sizeof() -> usize;
+    fn vm_value_sizeof() -> usize;
+    fn vm_offset_of_exit_code() -> usize;
+    fn vm_offset_of_sp() -> usize;
+    fn vm_offset_of_stack() -> usize;
 }
 
 /// Multiply the top two integers on the VM stack.
@@ -65,6 +73,32 @@ pub extern "C" fn fun_op_rdiv(vm: *mut Vm) -> i32 {
             return 1; // indicate error (div by zero)
         }
         vm_push_i64(vm, a / b);
+    }
+    0
+}
+
+/// Demo: push current stack pointer (vm.sp) using raw offset access.
+#[no_mangle]
+pub extern "C" fn fun_op_rget_sp(vm: *mut Vm) -> i32 {
+    unsafe {
+        let base = vm_as_mut_ptr(vm) as *mut u8;
+        let off_sp = vm_offset_of_sp();
+        let sp_ptr = base.add(off_sp) as *const i32;
+        let sp = ptr::read(sp_ptr);
+        vm_push_i64(vm, sp as i64);
+    }
+    0
+}
+
+/// Demo: set vm.exit_code to a value popped from the stack (i64 -> i32 cast).
+#[no_mangle]
+pub extern "C" fn fun_op_rset_exit(vm: *mut Vm) -> i32 {
+    unsafe {
+        let code = vm_pop_i64(vm) as i32;
+        let base = vm_as_mut_ptr(vm) as *mut u8;
+        let off_ec = vm_offset_of_exit_code();
+        let ec_ptr = base.add(off_ec) as *mut i32;
+        ptr::write(ec_ptr, code);
     }
     0
 }

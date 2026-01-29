@@ -1,5 +1,7 @@
 # Writing Rust-backed opcodes for Fun VM
 
+!!! CAUTION !!! I am not very experienced in using Rust. This should show that it is possible to implement opcodes in Rust and integrate them with the Fun VM.
+
 This guide explains how to implement VM opcodes in Rust, wire them into the C VM, and use them from Fun scripts.
 
 It assumes you are comfortable with basic Rust and C and have a working Fun checkout.

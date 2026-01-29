@@ -11,6 +11,7 @@
 #define FUN_VM_H
 
 #include "bytecode.h"
+#include <stddef.h>
 
 #define MAX_FRAMES 128
 #define MAX_FRAME_LOCALS 64
@@ -56,7 +57,7 @@ static const char *opcode_names[] = {
     "TRY_PUSH","TRY_POP","THROW",
     "FMIN","FMAX",
     /* Rust FFI demo */
-    "RUST_HELLO","RUST_HELLO_ARGS",
+    "RUST_HELLO","RUST_HELLO_ARGS","RUST_GET_SP","RUST_SET_EXIT",
     /* Notcurses TUI (optional) */
     "NC_INIT","NC_SHUTDOWN","NC_CLEAR","NC_DRAW_TEXT","NC_GETCH"
 };
@@ -159,5 +160,24 @@ int fun_op_radd(VM *vm);
 const char *fun_rust_get_string(void);
 /* Rust function that prints a passed C string, returns 0 on success. */
 int fun_rust_print_string(const char *msg);
+
+/* --- Extended C ABI for Rust to access VM internals (unsafe) --- */
+/* Size helpers for Rust side to compute offsets and do pointer math */
+size_t vm_sizeof(void);
+size_t vm_value_sizeof(void);
+
+/* Get a mutable byte pointer to the VM object. Extremely unsafe; intended for
+ * low-level FFI where Rust wants parity access with C code. */
+void *vm_as_mut_ptr(VM *vm);
+
+/* Offsets of commonly accessed VM fields to avoid re-declaring the struct layout in Rust */
+size_t vm_offset_of_exit_code(void);
+size_t vm_offset_of_sp(void);
+size_t vm_offset_of_stack(void);
+size_t vm_offset_of_globals(void);
+
+/* Demo Rust ops using the extended ABI */
+int fun_op_rget_sp(VM *vm);
+int fun_op_rset_exit(VM *vm);
 
 #endif

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <time.h>
 #include <math.h>
 
@@ -488,6 +489,35 @@ void vm_push_i64(VM *vm, int64_t v) {
     push_value(vm, make_int(v));
 }
 
+/* --- Extended C ABI for Rust to access VM internals (unsafe) --- */
+size_t vm_sizeof(void) {
+    return sizeof(VM);
+}
+
+size_t vm_value_sizeof(void) {
+    return sizeof(Value);
+}
+
+void *vm_as_mut_ptr(VM *vm) {
+    return (void*)vm;
+}
+
+size_t vm_offset_of_exit_code(void) {
+    return offsetof(VM, exit_code);
+}
+
+size_t vm_offset_of_sp(void) {
+    return offsetof(VM, sp);
+}
+
+size_t vm_offset_of_stack(void) {
+    return offsetof(VM, stack);
+}
+
+size_t vm_offset_of_globals(void) {
+    return offsetof(VM, globals);
+}
+
 static void frame_init(Frame *f) {
     f->fn = NULL;
     f->ip = 0;
@@ -758,6 +788,9 @@ void vm_run(VM *vm, Bytecode *entry) {
 
             /* Rust FFI demo opcode(s) */
             #include "vm/rust/hello.c"
+            #include "vm/rust/hello_args.c"
+            #include "vm/rust/get_sp.c"
+            #include "vm/rust/set_exit.c"
 
             #include "vm/os/env.c"
             #include "vm/os/env_all.c"
