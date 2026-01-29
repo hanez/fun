@@ -824,6 +824,16 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "cpp_add") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "cpp_add expects (a:int, b:int)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "cpp_add expects two arguments"); free(name); return 0; }
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "cpp_add expects (a:int, b:int)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after cpp_add args"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_CPP_ADD, 0);
+                free(name);
+                return 1;
+            }
             if (strcmp(name, "os_list_dir") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "os_list_dir expects (path)"); free(name); return 0; }

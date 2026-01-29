@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.38.3 LANGUAGES C)
+project(fun VERSION 0.38.4 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -19,14 +19,21 @@ else()
   set(_FUN_DEBUG_STATE "DISABLED")
 endif()
 
-if(FUN_WITH_RUST)
-  set(_FUN_WITH_RUST_STATE "ENABLED")
+if(FUN_WITH_CPP)
+    set(_FUN_WITH_CPP_STATE "ENABLED")
 else()
-  set(_FUN_WITH_RUST_STATE "DISABLED")
+    set(_FUN_WITH_CPP_STATE "DISABLED")
+endif()
+
+if(FUN_WITH_RUST)
+    set(_FUN_WITH_RUST_STATE "ENABLED")
+else()
+    set(_FUN_WITH_RUST_STATE "DISABLED")
 endif()
 
 message(STATUS "==== Fun build options ====")
 message(STATUS "  FUN_DEBUG: ${_FUN_DEBUG_STATE}")
+message(STATUS "  FUN_WITH_CPP: ${_FUN_WITH_CPP_STATE}")
 message(STATUS "  FUN_WITH_RUST: ${_FUN_WITH_RUST_STATE}")
 message(STATUS "===========================")
 
@@ -95,6 +102,36 @@ if(FUN_WITH_RUST)
 
   if(TARGET fun)
     target_compile_definitions(fun PRIVATE FUN_WITH_RUST)
+  endif()
+endif()
+
+# --- Optional C++ opcode demo ---
+option(FUN_WITH_CPP "Build and link C++ opcode demo" OFF)
+if(FUN_WITH_CPP)
+  enable_language(CXX)
+
+  add_library(fun_cpp_ops STATIC
+    src/vm/cpp/add.cpp
+  )
+
+  # Compile definitions propagate to C targets that dispatch the opcode
+  target_compile_definitions(fun_cpp_ops PUBLIC FUN_WITH_CPP)
+  target_include_directories(fun_cpp_ops PUBLIC ${CMAKE_SOURCE_DIR}/src)
+
+  # Link the C++ ops into the core so executables can call them
+  if(TARGET fun_core)
+    target_link_libraries(fun_core PRIVATE fun_cpp_ops)
+    target_compile_definitions(fun_core PRIVATE FUN_WITH_CPP)
+  endif()
+
+  # Also propagate to test targets (if they might use it)
+  if(TARGET test_opcodes)
+    target_link_libraries(test_opcodes PRIVATE fun_cpp_ops)
+    target_compile_definitions(test_opcodes PRIVATE FUN_WITH_CPP)
+  endif()
+
+  if(TARGET fun)
+    target_compile_definitions(fun PRIVATE FUN_WITH_CPP)
   endif()
 endif()
 

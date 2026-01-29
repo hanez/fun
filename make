@@ -31,6 +31,7 @@ if [ "$target" = "all" ]; then
       -DFUN_WITH_TCLTK=ON \
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_NOTCURSES=ON \
+      -DFUN_WITH_CPP=ON \
     && cmake --build build --target fun
 elif [ "$target" = "all_debug" ]; then
   rm -rf build \
@@ -46,6 +47,7 @@ elif [ "$target" = "all_debug" ]; then
       -DFUN_WITH_TCLTK=ON \
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_NOTCURSES=ON \
+      -DFUN_WITH_CPP=ON \
       -DFUN_DEBUG=ON \
     && cmake --build build --target fun
 elif [ "$target" = "alpine" ]; then
@@ -59,7 +61,29 @@ elif [ "$target" = "alpine" ]; then
       -DFUN_WITH_XML2=ON \
       -DFUN_WITH_JSON=ON \
       -DFUN_WITH_INI=ON \
+      -DFUN_WITH_CPP=ON \
     && cmake --build build --target fun
+elif [ "$target" = "cpp_all" ]; then
+  rm -rf build \
+    && cmake -S . -B build \
+      -DFUN_WITH_PCSC=ON \
+      -DFUN_WITH_REPL=ON \
+      -DFUN_WITH_LIBSQL=ON \
+      -DFUN_WITH_SQLITE=ON \
+      -DFUN_WITH_CURL=ON \
+      -DFUN_WITH_PCRE2=ON \
+      -DFUN_WITH_XML2=ON \
+      -DFUN_WITH_JSON=ON \
+      -DFUN_WITH_TCLTK=ON \
+      -DFUN_WITH_INI=ON \
+      -DFUN_WITH_NOTCURSES=ON \
+      -DFUN_WITH_CPP=ON \
+    && cmake --build build --target fun
+  elif [ "$target" = "cpp_minimal" ]; then
+    rm -rf build \
+      && cmake -S . -B build \
+        -DFUN_WITH_CPP=ON \
+      && cmake --build build --target fun
 elif [ "$target" = "debug" ]; then
   rm -rf build \
     && cmake -S . -B build \
@@ -102,6 +126,7 @@ elif [ "$target" = "rust_all" ]; then
       -DFUN_WITH_TCLTK=ON \
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_RUST=ON \
+      -DFUN_WITH_CPP=ON \
       -DFUN_DEBUG=OFF \
     && cmake --build build --target fun
 elif [ "$target" = "rust_minimal" ]; then
@@ -115,6 +140,8 @@ else
   echo " - all";
   echo " - all_debug";
   echo " - alpine";
+  echo " - cpp_all";
+  echo " - cpp_minimal";
   echo " - debug";
   echo " - freebsd";
   echo " - install";

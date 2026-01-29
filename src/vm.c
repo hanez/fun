@@ -897,6 +897,22 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/sqlite/query.c"
             #endif
 
+            /* C++ demo opcodes (guarded) */
+            #if defined(FUN_WITH_CPP)
+            case OP_CPP_ADD: {
+                int rc = fun_op_cpp_add(vm);
+                if (rc != 0) {
+                    vm_raise_error(vm, "cpp_add failed");
+                }
+                break;
+            }
+            #else
+            case OP_CPP_ADD: {
+                vm_raise_error(vm, "CPP support is not enabled (build with -DFUN_WITH_CPP=ON)");
+                break;
+            }
+            #endif
+
             /* libsql ops (independent) */
             #ifdef FUN_WITH_LIBSQL
             #include "vm/libsql/open.c"

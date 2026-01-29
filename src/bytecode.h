@@ -270,6 +270,9 @@ typedef enum {
     OP_RUST_GET_SP,       // pushes current VM stack pointer (via Rust reading VM memory)
     OP_RUST_SET_EXIT,     // pops int and sets VM exit_code (via Rust writing VM memory)
 
+    // C++ demo opcode(s)
+    OP_CPP_ADD,           // pops b, a; pushes (a + b)
+
     /* Notcurses TUI (optional) */
     OP_NC_INIT,           // initializes Notcurses; returns 1 on success, 0 on failure
     OP_NC_SHUTDOWN,       // shuts down Notcurses; returns 0

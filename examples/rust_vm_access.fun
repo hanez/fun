@@ -23,7 +23,7 @@ print("[Rust VM access demo]")
 print("vm.sp (from Rust) = " + to_string(rust_get_sp()))
 
 /* Write vm.exit_code via Rust (not directly observable without VM inspection) */
-print("Setting vm.exit_code to 5 via Rust...")
+print("Setting vm.exit_code to 42 via Rust...")
 rust_set_exit(42)
 
 print("Now exiting...")
