@@ -57,7 +57,7 @@ static const char *opcode_names[] = {
     "TRY_PUSH","TRY_POP","THROW",
     "FMIN","FMAX",
     /* Rust FFI demo */
-    "RUST_HELLO","RUST_HELLO_ARGS","RUST_GET_SP","RUST_SET_EXIT",
+    "RUST_HELLO","RUST_HELLO_ARGS","RUST_HELLO_ARGS_RETURN","RUST_GET_SP","RUST_SET_EXIT",
     /* Notcurses TUI (optional) */
     "NC_INIT","NC_SHUTDOWN","NC_CLEAR","NC_DRAW_TEXT","NC_GETCH"
 };
@@ -160,6 +160,10 @@ int fun_op_radd(VM *vm);
 const char *fun_rust_get_string(void);
 /* Rust function that prints a passed C string, returns 0 on success. */
 int fun_rust_print_string(const char *msg);
+/* Rust function that returns a newly allocated duplicate of the input C string. */
+char *fun_rust_echo_string(const char *input);
+/* Free a C string previously returned by fun_rust_echo_string. */
+void fun_rust_string_free(char *ptr);
 
 /* --- Extended C ABI for Rust to access VM internals (unsafe) --- */
 /* Size helpers for Rust side to compute offsets and do pointer math */

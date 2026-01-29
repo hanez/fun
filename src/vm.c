@@ -789,6 +789,7 @@ void vm_run(VM *vm, Bytecode *entry) {
             /* Rust FFI demo opcode(s) */
             #include "vm/rust/hello.c"
             #include "vm/rust/hello_args.c"
+            #include "vm/rust/hello_args_return.c"
             #include "vm/rust/get_sp.c"
             #include "vm/rust/set_exit.c"
 
