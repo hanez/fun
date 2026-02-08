@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.38.6 LANGUAGES C)
+project(fun VERSION 0.38.7 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -229,15 +229,10 @@ endif()
 # Common locations (out-of-source and legacy in-source builds)
 list(APPEND _candidates
   \"\${CMAKE_BINARY_DIR}/install_manifest.txt\"
-  \"\${CMAKE_SOURCE_DIR}/install_manifest.txt\"
   \"\${CMAKE_BINARY_DIR}/install_manifest_Debug.txt\"
   \"\${CMAKE_BINARY_DIR}/install_manifest_Release.txt\"
   \"\${CMAKE_BINARY_DIR}/install_manifest_RelWithDebInfo.txt\"
   \"\${CMAKE_BINARY_DIR}/install_manifest_MinSizeRel.txt\"
-  \"\${CMAKE_SOURCE_DIR}/install_manifest_Debug.txt\"
-  \"\${CMAKE_SOURCE_DIR}/install_manifest_Release.txt\"
-  \"\${CMAKE_SOURCE_DIR}/install_manifest_RelWithDebInfo.txt\"
-  \"\${CMAKE_SOURCE_DIR}/install_manifest_MinSizeRel.txt\"
 )
 
 set(_manifest_file \"\")
