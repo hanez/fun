@@ -9,6 +9,7 @@
  * Added: 2025-10-01
  */
 
+#include <hex.fun>
 #include <strings.fun>
 
 // Legacy global API and helpers. Please use the MD5 class (see lib/crypt/md5.fun).
@@ -47,42 +48,6 @@ fun add32(a, b)
 
 fun add32_4(a, b, c, d)
   return u32(u32(u32(a + b) + c) + d)
-
-fun hex_val(ch)
-  if (ch == "0")
-    return 0
-  else if (ch == "1")
-    return 1
-  else if (ch == "2")
-    return 2
-  else if (ch == "3")
-    return 3
-  else if (ch == "4")
-    return 4
-  else if (ch == "5")
-    return 5
-  else if (ch == "6")
-    return 6
-  else if (ch == "7")
-    return 7
-  else if (ch == "8")
-    return 8
-  else if (ch == "9")
-    return 9
-  else if (ch == "a" || ch == "A")
-    return 10
-  else if (ch == "b" || ch == "B")
-    return 11
-  else if (ch == "c" || ch == "C")
-    return 12
-  else if (ch == "d" || ch == "D")
-    return 13
-  else if (ch == "e" || ch == "E")
-    return 14
-  else if (ch == "f" || ch == "F")
-    return 15
-  else
-    return 0
 
 fun byte_from_hex_pair(hh)
   // hh is 2-char string

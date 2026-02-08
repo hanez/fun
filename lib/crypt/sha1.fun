@@ -17,6 +17,7 @@
 //   sha.sha1_hex(hexStr) -> digest hex string (lowercase)
 //   sha.sha1_str("abc")  -> digest hex string of ASCII bytes
 
+#include <hex.fun>
 #include <strings.fun>
 
 class SHA1()
@@ -37,45 +38,9 @@ class SHA1()
     return rol(x, s)
 
   // hex helpers
-  fun hex_val(this, ch)
-    if (ch == "0")
-      return 0
-    else if (ch == "1")
-      return 1
-    else if (ch == "2")
-      return 2
-    else if (ch == "3")
-      return 3
-    else if (ch == "4")
-      return 4
-    else if (ch == "5")
-      return 5
-    else if (ch == "6")
-      return 6
-    else if (ch == "7")
-      return 7
-    else if (ch == "8")
-      return 8
-    else if (ch == "9")
-      return 9
-    else if (ch == "a" || ch == "A")
-      return 10
-    else if (ch == "b" || ch == "B")
-      return 11
-    else if (ch == "c" || ch == "C")
-      return 12
-    else if (ch == "d" || ch == "D")
-      return 13
-    else if (ch == "e" || ch == "E")
-      return 14
-    else if (ch == "f" || ch == "F")
-      return 15
-    else
-      return 0
-
   fun byte_from_hex_pair(this, hh)
-    hi = this.hex_val(substr(hh, 0, 1))
-    lo = this.hex_val(substr(hh, 1, 1))
+    hi = hex_val(substr(hh, 0, 1))
+    lo = hex_val(substr(hh, 1, 1))
     return hi * 16 + lo
 
   fun from_hex(this, hex)
