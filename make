@@ -79,11 +79,17 @@ elif [ "$target" = "cpp_all" ]; then
       -DFUN_WITH_NOTCURSES=ON \
       -DFUN_WITH_CPP=ON \
     && cmake --build build --target fun
-  elif [ "$target" = "cpp_minimal" ]; then
+ elif [ "$target" = "cpp_minimal" ]; then
     rm -rf build \
       && cmake -S . -B build \
         -DFUN_WITH_CPP=ON \
       && cmake --build build --target fun
+ elif [ "$target" = "ctest" ]; then
+      rm -rf build \
+      && cmake -S . -B build \
+      && cmake --build build --target fun \
+      && (cd ./build/ \
+      && ctest --output-on-failure -R crypto)
 elif [ "$target" = "debug" ]; then
   rm -rf build \
     && cmake -S . -B build \

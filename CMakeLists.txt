@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.38.10 LANGUAGES C)
+project(fun VERSION 0.38.11 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -354,6 +354,45 @@ endfunction()
 
 # Define the uninstall target
 fun_add_uninstall_target()
+
+# --- CTest integration: run crypto examples as self-tests ---
+# These examples print results and exit non-zero on mismatch, so we can
+# wire them into CTest to have CI verify cryptographic correctness.
+include(CTest)
+if(BUILD_TESTING)
+  enable_testing()
+
+  # Helper to register a Fun example as a CTest test
+  function(fun_add_example_test TEST_NAME SCRIPT_REL)
+    # Absolute path to the example script in source tree
+    set(_script "${CMAKE_SOURCE_DIR}/${SCRIPT_REL}")
+    if(NOT EXISTS "${_script}")
+      message(FATAL_ERROR "fun_add_example_test: script not found: ${_script}")
+    endif()
+
+    add_test(NAME ${TEST_NAME}
+      COMMAND $<TARGET_FILE:fun> "${_script}"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    # Ensure the interpreter can find standard library (*.fun)
+    # The examples were authored to respect FUN_LIB_DIR.
+    set_tests_properties(${TEST_NAME} PROPERTIES
+      ENVIRONMENT "FUN_LIB_DIR=${CMAKE_SOURCE_DIR}/lib"
+    )
+  endfunction()
+
+  # Crypto example self-tests
+  fun_add_example_test(crypto_md5           examples/crypto/md5_demo.fun)
+  fun_add_example_test(crypto_sha1          examples/crypto/sha1_demo.fun)
+  fun_add_example_test(crypto_sha256_hex    examples/crypto/sha256_demo.fun)
+  fun_add_example_test(crypto_sha256_str    examples/crypto/sha256_str_demo.fun)
+  fun_add_example_test(crypto_sha512_hex    examples/crypto/sha512_demo.fun)
+  fun_add_example_test(crypto_sha512_str    examples/crypto/sha512_str_demo.fun)
+  fun_add_example_test(crypto_sha384        examples/crypto/sha384_example.fun)
+  fun_add_example_test(crypto_crc32         examples/crypto/crc32_example.fun)
+  fun_add_example_test(crypto_crc32c        examples/crypto/crc32c_example.fun)
+  fun_add_example_test(crypto_aes256        examples/crypto/aes256.fun)
+endif()
 
 # Install rules
 # Binary
