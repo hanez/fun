@@ -59,21 +59,13 @@ class CRC32()
       i = i + 2
     return arr
 
-  fun bytes_to_hex(this, arr)
-    i = 0
-    out = []
-    while i < len(arr)
-      push(out, two_hex(arr[i]))
-      i = i + 1
-    return join(out, "")
-
   fun u32_to_hex8(this, n)
     // big-endian printing (MSB first), common for CRC displays
     b3 = this.and32(this.shr32(n, 24), 255)
     b2 = this.and32(this.shr32(n, 16), 255)
     b1 = this.and32(this.shr32(n, 8), 255)
     b0 = this.and32(n, 255)
-    return this.bytes_to_hex([b3, b2, b1, b0])
+    return bytes_to_hex([b3, b2, b1, b0])
 
   // Bitwise update (no table needed) using reflected polynomial 0xEDB88320
   POLY = 3988292384 // 0xEDB88320

@@ -90,14 +90,6 @@ class MD5()
       i = i + 2
     return arr
 
-  fun bytes_to_hex(this, arr)
-    i = 0
-    out = []
-    while i < len(arr)
-      push(out, two_hex(arr[i]))
-      i = i + 1
-    return join(out, "")
-
   // MD5 aux
   fun F(this, x, y, z)
     return this.or32(this.and32(x, y), this.and32(this.not32(x), z))
@@ -213,9 +205,9 @@ class MD5()
   fun md5_hex(this, hexStr)
     bytes = this.from_hex(hexStr)
     digest = this.md5_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)
 
   fun md5_str(this, str)
     bytes = string_to_bytes_ascii(str)
     digest = this.md5_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)

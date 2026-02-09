@@ -36,14 +36,6 @@ class AES256()
       i = i + 2
     return arr
 
-  fun bytes_to_hex(this, arr)
-    i = 0
-    out = []
-    while i < len(arr)
-      push(out, two_hex(arr[i]))
-      i = i + 1
-    return join(out, "")
-
   // ---------- Finite field helpers (GF(2^8)) ----------
   fun b8(this, x)
     // clamp to 0..255
@@ -245,7 +237,7 @@ class AES256()
     pt = this.from_hex(pt_hex32)
     key = this.from_hex(key_hex64)
     ct = this.encrypt_block_bytes(pt, key)
-    return this.bytes_to_hex(ct)
+    return bytes_to_hex(ct)
 
   fun encrypt_ecb_hex(this, hexStr, key_hex64)
     // Robust handling that avoids substr semantics ambiguity by working on bytes
@@ -276,4 +268,4 @@ class AES256()
         push(out_bytes, ct_blk[k])
         k = k + 1
       off = off + 16
-    return this.bytes_to_hex(out_bytes)
+    return bytes_to_hex(out_bytes)

@@ -53,14 +53,6 @@ class SHA1()
       i = i + 2
     return arr
 
-  fun bytes_to_hex(this, arr)
-    i = 0
-    out = []
-    while i < len(arr)
-      push(out, two_hex(arr[i]))
-      i = i + 1
-    return join(out, "")
-
   // padding (SHA-1): append 0x80, then zeros until length ≡ 56 (mod 64), then 64-bit length big-endian
   fun pad_bytes(this, bytes)
     L = len(bytes)
@@ -164,9 +156,9 @@ class SHA1()
   fun sha1_hex(this, hexStr)
     bytes = this.from_hex(hexStr)
     digest = this.sha1_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)
 
   fun sha1_str(this, str)
     bytes = string_to_bytes_ascii(str)
     digest = this.sha1_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)

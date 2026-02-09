@@ -45,15 +45,6 @@ class SHA512()
       i = i + 2
     return arr
 
-  fun bytes_to_hex(this, arr)
-    out = []
-    number i = 0
-    number L = len(arr)
-    while i < L
-      push(out, two_hex(arr[i]))
-      i = i + 1
-    return join(out, "")
-
   // -------- 32/64 helpers --------
   fun u32(this, x)
     m = 4294967296
@@ -316,10 +307,10 @@ class SHA512()
   fun sha512_hex(this, hexStr)
     bytes = this.from_hex(hexStr)
     digest = this.sha512_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)
 
   // Hash raw string bytes (printable ASCII). Example: sha512_str("616263") -> ee2109...
   fun sha512_str(this, str)
     bytes = string_to_bytes_ascii(str)
     digest = this.sha512_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)

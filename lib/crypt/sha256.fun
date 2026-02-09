@@ -102,14 +102,6 @@ class SHA256()
       i = i + 2
     return arr
 
-  fun bytes_to_hex(this, arr)
-    i = 0
-    out = []
-    while i < len(arr)
-      push(out, two_hex(arr[i]))
-      i = i + 1
-    return join(out, "")
-
   // padding (SHA-256)
   fun pad_bytes(this, bytes)
     L = len(bytes)
@@ -217,10 +209,10 @@ class SHA256()
   fun sha256_hex(this, hexStr)
     bytes = this.from_hex(hexStr)
     digest = this.sha256_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)
 
   // Hash raw string bytes (printable ASCII). Example: sha256_str("616263") -> ee2109...
   fun sha256_str(this, str)
     bytes = string_to_bytes_ascii(str)
     digest = this.sha256_bytes(bytes)
-    return this.bytes_to_hex(digest)
+    return bytes_to_hex(digest)
