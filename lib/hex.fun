@@ -12,6 +12,10 @@
  */
 
 // Hex utility functions
+fun byte_from_hex_pair(hh)
+  hi = hex_val(substr(hh, 0, 1))
+  lo = hex_val(substr(hh, 1, 1))
+  return hi * 16 + lo
 
 fun hex_val(ch)
   if (ch == "0")

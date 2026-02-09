@@ -94,16 +94,11 @@ class RIPEMD160()
       i = i + 2
     return arr
 
-  fun two_hex(this, n)
-    n = band(n, 0xFF)
-    d = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
-    return join([d[shr(n, 4)], d[band(n, 0xF)]], "")
-
   fun bytes_to_hex(this, arr)
     i = 0
     out = []
     while i < len(arr)
-      push(out, this.two_hex(arr[i]))
+      push(out, two_hex(arr[i]))
       i = i + 1
     return join(out, "")
 

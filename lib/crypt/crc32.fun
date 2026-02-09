@@ -49,34 +49,21 @@ class CRC32()
     return band(this.u32(a), this.u32(b))
 
   // hex helpers (mirroring style from lib/crypt/md5.fun)
-  fun byte_from_hex_pair(this, hh)
-    hi = hex_val(substr(hh, 0, 1))
-    lo = hex_val(substr(hh, 1, 1))
-    return hi * 16 + lo
-
   fun from_hex(this, hex)
     arr = []
     i = 0
     n = len(hex)
     while i + 1 < n
-      b = this.byte_from_hex_pair(substr(hex, i, 2))
+      b = byte_from_hex_pair(substr(hex, i, 2))
       push(arr, b)
       i = i + 2
     return arr
-
-  fun two_hex(this, n)
-    n = n % 256
-    d = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
-    hi = n / 16
-    lo = n % 16
-    parts = [d[hi], d[lo]]
-    return join(parts, "")
 
   fun bytes_to_hex(this, arr)
     i = 0
     out = []
     while i < len(arr)
-      push(out, this.two_hex(arr[i]))
+      push(out, two_hex(arr[i]))
       i = i + 1
     return join(out, "")
 

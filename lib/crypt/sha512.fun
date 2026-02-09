@@ -45,21 +45,12 @@ class SHA512()
       i = i + 2
     return arr
 
-  fun two_hex(this, n)
-    n = n % 256
-    hexd = "0123456789abcdef"
-    number hi = (n / 16) % 16
-    number lo = n % 16
-    c1 = substr(hexd, hi, 1)
-    c2 = substr(hexd, lo, 1)
-    return join([c1, c2], "")
-
   fun bytes_to_hex(this, arr)
     out = []
     number i = 0
     number L = len(arr)
     while i < L
-      push(out, this.two_hex(arr[i]))
+      push(out, two_hex(arr[i]))
       i = i + 1
     return join(out, "")
 
