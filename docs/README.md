@@ -11,6 +11,9 @@ This file serves as an index of the documents in this directory. Links are relat
 - [opcodes.md](./opcodes.md) — VM opcodes overview grouped by domain with brief behavior/stack notes.
 - [internals.md](./internals.md) — Implementation details: bytecode format, VM architecture, stacks/frames, parser, and dispatch.
 - [rust.md](./rust.md) — Writing Rust‑backed opcodes and wiring them into the C VM; build/setup notes.
+- [examples.md](./examples.md) — How to run the examples and the interactive showcase script, with environment tips.
+- [testing.md](./testing.md) — How to build and run tests/targets with CMake/CTest, and where to add new tests.
+- [troubleshooting.md](./troubleshooting.md) — Common issues and quick fixes for build, includes, and REPL usage.
 
 ## Tips
 
