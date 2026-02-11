@@ -6,20 +6,20 @@ All commands assume you are in the repository root.
 
 ## Prerequisites
 
-- Build the interpreter (see handbook.md). You’ll have `build_debug/fun` or `build_release/fun` (paths may vary by your setup/IDE).
+- Build the interpreter (see handbook.md). You’ll have `build/fun` (paths may vary by your setup/IDE).
 - Set FUN_LIB_DIR to the repo’s lib directory when running without installation so `#include <...>` can find the standard library.
 
 Example (Linux/macOS/BSD):
 
 ```
-FUN_LIB_DIR="$(pwd)/lib" ./build_debug/fun examples/include_lib.fun
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/include_lib.fun
 ```
 
 Windows (PowerShell):
 
 ```
 $env:FUN_LIB_DIR = "$PWD/lib"
-./build_release/fun.exe .\examples\include_lib.fun
+./build/fun.exe .\examples\include_lib.fun
 ```
 
 ## Interactive showcase: play.fun

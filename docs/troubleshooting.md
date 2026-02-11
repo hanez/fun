@@ -17,14 +17,14 @@ Linux/macOS/BSD:
 
 ```
 export FUN_LIB_DIR="$(pwd)/lib"
-./build_debug/fun examples/include_lib.fun
+./build/fun examples/include_lib.fun
 ```
 
 Windows (PowerShell):
 
 ```
 $env:FUN_LIB_DIR = "$PWD/lib"
-./build_release/fun.exe .\examples\include_lib.fun
+./build/fun.exe .\examples\include_lib.fun
 ```
 
 If `FUN_LIB_DIR` is not set, the interpreter tries a compile‑time `DEFAULT_LIB_DIR`, and finally falls back to `./lib` relative to the current working directory. Be mindful of where you run the `fun` binary from.
@@ -42,7 +42,7 @@ Fix:
 ```
 cmake -S . -B build_debug -DFUN_WITH_REPL=ON
 cmake --build build_debug --target fun
-FUN_LIB_DIR="$(pwd)/lib" ./build_debug/fun
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun
 ```
 
 See repl.md for usage tips and features.
@@ -81,11 +81,11 @@ Symptoms:
 - Setting environment variables has no effect; include paths remain unresolved.
 
 Fix:
-- In CMD use: `set FUN_LIB_DIR=%CD%\lib && build-debug\fun.exe examples\include_lib.fun`
+- In CMD use: `set FUN_LIB_DIR=%CD%\lib && build\fun.exe examples\include_lib.fun`
 - In PowerShell use: `$env:FUN_LIB_DIR = "$PWD\lib"; .\build\fun.exe .\examples\include_lib.fun`
 
 ## Getting help
 
 - Run the interpreter with `--help` to see supported flags.
 - Explore docs/handbook.md and docs/repl.md.
-- Check the examples under `examples/` and try `./play.fun` for an interactive tour.
+- Check the examples under `examples/` for an interactive tour.
