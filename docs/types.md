@@ -153,20 +153,23 @@ print(typeof({}))          // "map"
 ## Common patterns
 
 - Accumulate values:
-  ``
+- 
+  ```
   acc = []
   for i = 0; i < 5; i = i + 1 { push(acc, i*i) }
   print(acc)  // [0,1,4,9,16]
-  ``
+  ```
 
 - Group related data with a map:
-  ``
+- 
+  ```
   person = { "name": "Lin", "skills": ["C", "Fun"] }
   print(person["skills"][1])  // Fun
   ```
 
 - Safe map read:
-  ``
+- 
+  ```
   v = person["twitter"]
   handle = v != nil ? v : "(none)"
   print(handle)
@@ -175,7 +178,8 @@ print(typeof({}))          // "map"
 ## Interop highlights
 
 - JSON (optional module) maps JSON arrays to Fun arrays and JSON objects to Fun maps.
-  ``
+
+  ```
   #include <json/json.fun>
   data = json_parse("{\"a\":[1,2]} ")
   print(typeof(data))       // map
