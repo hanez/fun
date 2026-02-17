@@ -2,6 +2,13 @@
 
 This guide shows how to create and use the most common Fun datatypes with practical examples. It focuses on arrays and maps, and also recaps numbers, floats, strings, booleans and nil so examples are self‑contained.
 
+See also:
+
+- [arrays.md](./arrays.md) — Deeper dive into array creation, indexing/slicing, iteration, and helpers.
+- [strings.md](./strings.md) — Practical guide to string literals, concatenation, substr/find, split, and conversions.
+- [maps.md](./maps.md) — Detailed guide to map construction, lookup/update, merging, and patterns.
+- [numbers.md](./numbers.md) — Numbers vs floats, arithmetic, conversions, clamping, bitwise ops, and common patterns.
+
 ## Quick overview
 
 - number: signed integer (use uclamp/sclamp for width handling)

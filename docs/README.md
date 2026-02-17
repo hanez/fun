@@ -6,6 +6,8 @@ This file serves as an index of the documents in this directory. Links are relat
 
 - [handbook.md](./handbook.md) — Comprehensive handbook for the Fun language and VM: install/build, configuration flags, usage, and full feature overview.
 - [types.md](./types.md) — Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
+- [numbers.md](./numbers.md) — Working with integers and floats: arithmetic, conversions, clamping, bitwise ops, and patterns.
+- [strings.md](./strings.md) — Working with strings: literals/escaping, concatenation, substr/find, split, and conversions.
 - [arrays.md](./arrays.md) — Working with arrays: creation, indexing/slicing, iteration patterns, helpers, and idioms.
 - [maps.md](./maps.md) — Working with maps: construction, lookup/update, merging, iteration, and common patterns.
 - [includes.md](./includes.md) — Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
