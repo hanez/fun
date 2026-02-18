@@ -19,6 +19,22 @@ This file serves as an index of the documents in this directory. Links are relat
 - [testing.md](./testing.md) — How to build and run tests/targets with CMake/CTest, and where to add new tests.
 - [troubleshooting.md](./troubleshooting.md) — Common issues and quick fixes for build, includes, and REPL usage.
 
+## New and supplemental guides
+
+- [build.md](./build.md) — How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST).
+- [cli.md](./cli.md) — Command‑line usage of the `fun` executable: synopsis, options, exit codes, includes and library paths.
+- [contributing.md](./contributing.md) — How to contribute: project structure, coding style, running tests, and PR guidelines.
+- [style-guide.md](./style-guide.md) — Coding conventions for C and Fun (indentation, naming, idioms).
+- [stdlib.md](./stdlib.md) — Overview of the standard library modules under ./lib with one‑line summaries.
+- [embedding.md](./embedding.md) — Embedding the VM from C/Rust, lifecycle, and host integration tips.
+- [errors-and-diagnostics.md](./errors-and-diagnostics.md) — Understanding parser/runtime errors and enabling diagnostics.
+- [performance.md](./performance.md) — Build/runtime tuning tips and patterns for better performance.
+- [security-and-sandboxing.md](./security-and-sandboxing.md) — Trust boundaries, I/O expectations, and capability restrictions.
+- [faq.md](./faq.md) — Frequently asked questions and quick answers.
+- [writing-tests.md](./writing-tests.md) — How to author new tests for Fun and opcode components.
+- [bytecode-format.md](./bytecode-format.md) — Reference for the bytecode format (split out from internals for convenience).
+- [roadmap.md](./roadmap.md) — High‑level direction, planned features, and pointers to issues.
+
 ## Tips
 
 - When building from the repo without installing, set `FUN_LIB_DIR` to the local `./lib` directory so examples and the REPL can locate the stdlib.
