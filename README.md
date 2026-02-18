@@ -105,17 +105,22 @@ There are some libs written in Fun available in the [./lib/](https://git.xw3.org
 
 ## Documentation
 
-This is actually a work in progress...
+Looking for docs? Start here:
 
-Current documentation is only found in the [Fun Handbook](https://git.xw3.org/fun/fun/src/branch/main/docs/handbook.md) and the [specification](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3.md).
+- Local documentation index: [docs/README.md](./docs/README.md)
+  - Handbook: [docs/handbook.md](./docs/handbook.md)
+  - Types overview: [docs/types.md](./docs/types.md)
+  - REPL guide: [docs/repl.md](./docs/repl.md)
+  - Testing: [docs/testing.md](./docs/testing.md)
+  - Troubleshooting: [docs/troubleshooting.md](./docs/troubleshooting.md)
 
-In the [./examples/](https://git.xw3.org/fun/fun/src/branch/main/examples) directory should be an example of most Fun features.
+Additional references:
 
-Fun internals are found directly in the [./src/](https://git.xw3.org/fun/fun/src/branch/main/src) diretory. Fun [Opcodes](https://en.wikipedia.org/wiki/Opcode) are found in [./src/vm/](https://git.xw3.org/fun/fun/src/branch/main/src/vm).
+- Specification: [spec/v0.3.md](./spec/v0.3.md) (work in progress)
+- Examples demonstrating most features: [examples/](./examples/)
+- Internals and VM opcodes live in [src/](./src/) (see [src/vm/](./src/vm) for opcode implementations)
 
-Since things are actually changing sometimes, I will not write the documentation for this as of now.
-
-Complete API documentation will follow.
+Note: The project is evolving; some documents may lag behind. The docs index in `./docs/README.md` is the most up‑to‑date entry point.
 
 ## Author
 
