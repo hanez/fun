@@ -8,7 +8,7 @@ This guide helps you understand common error messages and how to collect useful 
 - Runtime errors: type mismatches, out-of-range access, invalid operations.
 
 ## Enabling diagnostics
-- Build with `-DFUN_DEBUG=ON` to enable additional assertions and debug messages (see `docs/build.md`).
+- Build with `-DFUN_DEBUG=ON` to enable additional assertions and debug messages (see [build.md](./build.md)).
 - Run with smaller, focused scripts to isolate issues.
 
 ## Getting useful reports

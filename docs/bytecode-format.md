@@ -1,6 +1,6 @@
 # Bytecode Format (Overview)
 
-This document summarizes the Fun bytecode format. For deep VM details, see `docs/internals.md`.
+This document summarizes the Fun bytecode format. For deep VM details, see [internals.md](./internals.md).
 
 ## Goals
 - Compact representation for fast loading and dispatch
@@ -25,5 +25,5 @@ This document summarizes the Fun bytecode format. For deep VM details, see `docs
 - Operands encoded inline following the opcode (width varies by instruction).
 
 ## Versioning and compatibility
-- The header’s version field allows the VM to refuse or translate older/newer formats.
+- The header's version field allows the VM to refuse or translate older/newer formats.
 - Keep additions backward-compatible when possible by appending sections or flags.
