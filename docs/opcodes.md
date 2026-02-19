@@ -205,7 +205,9 @@ This document provides an overview of the available VM opcodes implemented under
 ## OpenSSL (optional)
 
 - OP_OPENSSL_MD5: Compute MD5 digest and return lowercase hex string; pops data:string; pushes md5:string.
-  - Requires building with `-DFUN_WITH_OPENSSL=ON`. When disabled, this opcode still exists but returns an empty string to match other optional extensions’ fallback behavior.
+- OP_OPENSSL_SHA256: Compute SHA‑256 digest and return lowercase hex string; pops data:string; pushes sha256:string.
+- OP_OPENSSL_SHA512: Compute SHA‑512 digest and return lowercase hex string; pops data:string; pushes sha512:string.
+  - Requires building with `-DFUN_WITH_OPENSSL=ON`. When disabled, these opcodes still exist but return an empty string to match other optional extensions’ fallback behavior.
 
 ## PCRE2 (Regex)
 

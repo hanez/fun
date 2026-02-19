@@ -170,6 +170,8 @@ static const char *opcode_name(OpCode op) {
         case OP_PCRE2_MATCH: return "PCRE2_MATCH";
         case OP_PCRE2_FINDALL: return "PCRE2_FINDALL";
         case OP_OPENSSL_MD5: return "OPENSSL_MD5";
+        case OP_OPENSSL_SHA256: return "OPENSSL_SHA256";
+        case OP_OPENSSL_SHA512: return "OPENSSL_SHA512";
         case OP_INI_LOAD: return "INI_LOAD";
         case OP_INI_FREE: return "INI_FREE";
         case OP_INI_GET_STRING: return "INI_GET_STRING";

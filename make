@@ -32,6 +32,7 @@ if [ "$target" = "all" ]; then
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_NOTCURSES=ON \
       -DFUN_WITH_CPP=ON \
+      -DFUN_WITH_OPENSSL=ON \
     && cmake --build build --target fun
 elif [ "$target" = "all_debug" ]; then
   rm -rf build \
@@ -48,6 +49,7 @@ elif [ "$target" = "all_debug" ]; then
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_NOTCURSES=ON \
       -DFUN_WITH_CPP=ON \
+      -DFUN_WITH_OPENSSL=ON \
       -DFUN_DEBUG=ON \
     && cmake --build build --target fun
 elif [ "$target" = "alpine" ]; then
@@ -62,6 +64,7 @@ elif [ "$target" = "alpine" ]; then
       -DFUN_WITH_JSON=ON \
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_CPP=ON \
+      -DFUN_WITH_OPENSSL=ON \
     && cmake --build build --target fun
 elif [ "$target" = "cpp_all" ]; then
   rm -rf build \
@@ -78,6 +81,7 @@ elif [ "$target" = "cpp_all" ]; then
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_NOTCURSES=ON \
       -DFUN_WITH_CPP=ON \
+      -DFUN_WITH_OPENSSL=ON \
     && cmake --build build --target fun
  elif [ "$target" = "cpp_minimal" ]; then
     rm -rf build \
@@ -133,6 +137,7 @@ elif [ "$target" = "rust_all" ]; then
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_RUST=ON \
       -DFUN_WITH_CPP=ON \
+      -DFUN_WITH_OPENSSL=ON \
       -DFUN_DEBUG=OFF \
     && cmake --build build --target fun
 elif [ "$target" = "rust_minimal" ]; then

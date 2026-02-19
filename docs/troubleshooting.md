@@ -40,8 +40,8 @@ Fix:
 - Build with `-DFUN_WITH_REPL=ON` and rebuild the `fun` target. Then launch without arguments:
 
 ```
-cmake -S . -B build_debug -DFUN_WITH_REPL=ON
-cmake --build build_debug --target fun
+cmake -S . -B build -DFUN_WITH_REPL=ON
+cmake --build build --target fun
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun
 ```
 

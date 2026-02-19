@@ -5,7 +5,7 @@ Answers to common questions.
 ## I built Fun but includes aren't found
 Set `FUN_LIB_DIR` to the repository's `./lib` directory when running without installation:
 ```
-FUN_LIB_DIR=./lib ./build_debug/fun examples/hello.fun
+FUN_LIB_DIR=./lib ./build/fun examples/hello.fun
 ```
 See [includes.md](./includes.md).
 

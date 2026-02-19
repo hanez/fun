@@ -73,7 +73,7 @@
 #include "external/sqlite.c"
 #include "external/tcltk.c"
 #include "external/xml2.c"
-#include "external/opensssl.c"
+#include "external/openssl.c"
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
@@ -869,8 +869,10 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/curl/download.c"
             #endif
 
-            /* OpenSSL ops (md5) */
+            /* OpenSSL ops (md5/sha256/sha512) */
             #include "vm/openssl/md5.c"
+            #include "vm/openssl/sha256.c"
+            #include "vm/openssl/sha512.c"
 
             /* Tk (Tcl/Tk) ops */
             #ifdef FUN_WITH_TCLTK

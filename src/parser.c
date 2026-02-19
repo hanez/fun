@@ -1197,12 +1197,28 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
-            /* OpenSSL (md5) */
+            /* OpenSSL (md5/sha256/sha512) */
             if (strcmp(name, "openssl_md5") == 0) {
                 (*pos)++; /* '(' */
                 if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "openssl_md5 expects (data)"); free(name); return 0; }
                 if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after openssl_md5 arg"); free(name); return 0; }
                 bytecode_add_instruction(bc, OP_OPENSSL_MD5, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "openssl_sha256") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "openssl_sha256 expects (data)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after openssl_sha256 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_OPENSSL_SHA256, 0);
+                free(name);
+                return 1;
+            }
+            if (strcmp(name, "openssl_sha512") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "openssl_sha512 expects (data)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after openssl_sha512 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_OPENSSL_SHA512, 0);
                 free(name);
                 return 1;
             }

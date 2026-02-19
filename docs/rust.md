@@ -27,8 +27,8 @@ Rust integration is optional and gated by a CMake flag. Default builds usually h
 Enable it for a configured profile (Debug or Release):
 
 - Debug example:
-  cmake -S . -B build_debug -DFUN_WITH_RUST=ON
-  cmake --build build_debug --target fun
+  cmake -S . -B build -DFUN_WITH_RUST=ON
+  cmake --build build --target fun
 
 - Release example:
   cmake -S . -B build_release -DFUN_WITH_RUST=ON
@@ -137,11 +137,11 @@ Once wired, expose the opcode via a builtin function or directly in bytecode. Th
 Run the example:
 
 1) Build with Rust enabled (Debug):
-   cmake -S . -B build_debug -DFUN_WITH_RUST=ON
-   cmake --build build_debug --target fun
+   cmake -S . -B build -DFUN_WITH_RUST=ON
+   cmake --build build --target fun
 
 2) Execute the script:
-   build_debug/fun examples/rust_hello.fun
+   build/fun examples/rust_hello.fun
 
 Expected output:
    Hello from Rust ops!

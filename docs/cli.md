@@ -29,10 +29,10 @@ See also: [includes.md](./includes.md) for namespaced includes and search order.
 ## Examples
 Run a script:
 ```
-FUN_LIB_DIR=./lib ./build_debug/fun examples/hello.fun
+FUN_LIB_DIR=./lib ./build/fun examples/hello.fun
 ```
 
 Start the REPL:
 ```
-./build_debug/fun -i
+./build/fun -i
 ```

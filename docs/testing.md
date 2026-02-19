@@ -18,7 +18,7 @@ To list targets with CMake directly, consult your IDE or run the build system’
 Debug profile example:
 
 ```
-cmake --build build_debug --target test_opcodes && ./build/test_opcodes
+cmake --build build --target test_opcodes && ./build/test_opcodes
 ```
 
 Release profile example:
@@ -30,14 +30,14 @@ cmake --build build_release --target test_opcodes && ./build/test_opcodes
 If `fun_test` exists in your configuration:
 
 ```
-cmake --build build_debug --target fun_test && ./build/fun_test
+cmake --build build --target fun_test && ./build/fun_test
 ```
 
 You can also invoke CTest to run any tests registered with `add_test()`:
 
 ```
-cmake --build build_debug --target test
-ctest --test-dir build_debug -j
+cmake --build build --target test
+ctest --test-dir build -j
 ```
 
 ## Adding new tests

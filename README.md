@@ -87,16 +87,16 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 ### Optional extensions (build-time selectable / only testing this on Linux actually):
 
 - [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) &#9744;
-- [cURL](https://curl.se/) support builtin using [libcurl](https://curl.se/libcurl/) (optional) &#9745;
-- [INI](https://en.wikipedia.org/wiki/INI_file) support builtin using [iniparser](https://gitlab.com/iniparser/iniparser/) (optional) &#9745;
-- [JSON](https://www.json.org/) support builtin using [json-c](https://github.com/json-c/json-c) (optional) &#9745;
-- [libSQL](https://github.com/tursodatabase/libsql) support builtin as a compatible alternative to SQLite (optional) &#9745;
-- [PCRE2](https://pcre2project.github.io/pcre2/) support builtin for Perl-Compatible Regular Expressions (optional) &#9745;
-- [PCSC](https://pcscworkgroup.com/) smart card support builtin using [PCSC lite](https://pcsclite.apdu.fr/) (optional) &#9745;
-- [OpenSSL](https://www.openssl.org/) integration (currently MD5 helper) (optional) &#9745;
-- [SQLite](https://sqlite.org/) support builtin (optional) &#9745;
-- [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) &#9745;
-- [XML](https://www.w3.org/XML/) support builtin using [libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home) (optional) &#9745;
+- [cURL (libcurl)](./docs/external/curl.md) (optional) &#9745;
+- [INI (iniparser)](./docs/external/ini.md) (optional) &#9745;
+- [JSON (json-c)](./docs/external/json.md) (optional) &#9745;
+- [libSQL](./docs/external/libsql.md) (optional) &#9745;
+- [PCRE2](./docs/external/pcre2.md) (optional) &#9745;
+- [PCSC (smart cards)](./docs/external/pcsc.md) (optional) &#9745;
+- [OpenSSL](./docs/external/openssl.md) (optional) &#9745;
+- [SQLite](./docs/external/sqlite.md) (optional) &#9745;
+- [Tk (Tcl/Tk GUI)](./docs/external/tcltk.md) (optional) &#9745;
+- [XML (libxml2)](./docs/external/xml2.md) (optional) &#9745;
 
 &#9745; = Done / &#9744; = Planned or in progress.
 
@@ -106,17 +106,7 @@ There are some libs written in Fun available in the [./lib/](https://git.xw3.org
 
 ### OpenSSL quickstart (MD5)
 
-The OpenSSL integration is optional and currently provides an `openssl_md5(data)` helper.
-
-- Build with OpenSSL enabled:
-  - `cmake -S . -B build_debug -DFUN_WITH_OPENSSL=ON`
-  - `cmake --build build_debug --target fun`
-- Run the example:
-  - `./build_debug/fun examples/crypto/openssl_md5.fun`
-
-If OpenSSL is disabled, the function returns an empty string (consistent with other optional extensions).
-
-Note: On OpenSSL 3.x the legacy `MD5_*` APIs are deprecated; you may see warnings during build.
+See the dedicated page: ./docs/external/openssl.md
 
 ## Documentation
 

@@ -35,6 +35,13 @@ This file serves as an index of the documents in this directory. Links are relat
 - [bytecode-format.md](./bytecode-format.md) - Reference for the bytecode format (split out from internals for convenience).
 - [roadmap.md](./roadmap.md) - High-level direction, planned features, and pointers to issues.
 
+## External extensions
+
+Documentation for optional, build-time selectable integrations lives in [external/](./external/):
+
+- [Index of extensions](./external/README.md)
+ - Highlights: [cURL](./external/curl.md), [INI](./external/ini.md), [JSON](./external/json.md), [XML (libxml2)](./external/xml2.md), [SQLite](./external/sqlite.md), [libSQL](./external/libsql.md), [PCRE2](./external/pcre2.md), [PC/SC](./external/pcsc.md), [Notcurses](./external/notcurses.md), [Tcl/Tk](./external/tcltk.md), [OpenSSL](./external/openssl.md)
+
 ## Tips
 
 - When building from the repo without installing, set `FUN_LIB_DIR` to the local `./lib` directory so examples and the REPL can locate the stdlib.
