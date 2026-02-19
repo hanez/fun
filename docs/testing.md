@@ -25,7 +25,7 @@ Release profile example:
 
 ```
 cmake --build build_release --target test_opcodes && ./build/test_opcodes
-``>
+```
 
 If `fun_test` exists in your configuration:
 
@@ -45,7 +45,8 @@ ctest --test-dir build -j
 - C/C++/VM-side tests: look for existing tests under `src` or `spec` and mirror the structure. Add a new source and register it in CMake with an executable or via `add_test()`.
 - Fun-level examples as tests: minimal scripts under `examples/` can act as smoke tests and are runnable via `./play.fun`. Consider adding a new example for new features and have CI invoke a subset.
 
-Guidelines:
+### Guidelines:
+
 - Keep each test focused; prefer several small tests over one monolith.
 - Avoid nondeterminism; set seeds where randomness is involved.
 - Make tests independent of the working directory unless the behavior under test is precisely path resolution.
