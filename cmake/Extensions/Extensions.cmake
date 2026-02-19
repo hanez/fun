@@ -22,6 +22,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/Extensions/PCRE2.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/CURL.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/NOTCURSES.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/REPL.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/OPENSSL.cmake)
 
 # Summary of extension toggles
 message(STATUS "---- Fun extension summary ----")
@@ -36,4 +37,5 @@ _fun_print_feature("PCRE2 (FUN_WITH_PCRE2)" FUN_WITH_PCRE2)
 _fun_print_feature("libcurl (FUN_WITH_CURL)" FUN_WITH_CURL)
 _fun_print_feature("Notcurses (FUN_WITH_NOTCURSES)" FUN_WITH_NOTCURSES)
 _fun_print_feature("REPL (FUN_WITH_REPL)" FUN_WITH_REPL)
+_fun_print_feature("OpenSSL (FUN_WITH_OPENSSL)" FUN_WITH_OPENSSL)
 message(STATUS "--------------------------------")

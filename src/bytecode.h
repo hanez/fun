@@ -181,6 +181,9 @@ typedef enum {
     OP_PCRE2_MATCH,       // pops flags, text, pattern; pushes match map or Nil
     OP_PCRE2_FINDALL,     // pops flags, text, pattern; pushes array of match maps
 
+    // OpenSSL (optional)
+    OP_OPENSSL_MD5,       // pops data string; pushes md5 hex string
+
     // INI (iniparser 4.2.6) optional
     OP_INI_LOAD,          // pops path; pushes handle (>0) or 0
     OP_INI_FREE,          // pops handle; pushes 1/0

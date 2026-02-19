@@ -36,7 +36,8 @@ foreach(var_pair
     LIBSQL
     LIBXML2
     TCL
-    NOTCURSES)
+    NOTCURSES
+    OPENSSL)
   if(${var_pair}_INCLUDE_DIRS)
     target_include_directories(fun_core PRIVATE ${${var_pair}_INCLUDE_DIRS})
   endif()
@@ -87,6 +88,10 @@ endif()
 
 if(FUN_WITH_TCLTK)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_TCLTK=1)
+endif()
+
+if(FUN_WITH_OPENSSL)
+  target_compile_definitions(fun_core PUBLIC FUN_WITH_OPENSSL=1)
 endif()
 
 # Workaround: provide a dummy rust_eh_personality to satisfy linker when using

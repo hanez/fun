@@ -21,7 +21,7 @@ This file serves as an index of the documents in this directory. Links are relat
 
 ## New and supplemental guides
 
-- [build.md](./build.md) - How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST).
+- [build.md](./build.md) - How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL).
 - [cli.md](./cli.md) - Command-line usage of the `fun` executable: synopsis, options, exit codes, includes and library paths.
 - [contributing.md](./contributing.md) - How to contribute: project structure, coding style, running tests, and PR guidelines.
 - [style-guide.md](./style-guide.md) - Coding conventions for C and Fun (indentation, naming, idioms).
@@ -39,3 +39,4 @@ This file serves as an index of the documents in this directory. Links are relat
 
 - When building from the repo without installing, set `FUN_LIB_DIR` to the local `./lib` directory so examples and the REPL can locate the stdlib.
 - For a broader project overview and quickstart, see the repository root [README.md](../README.md).
+- Crypto example: if built with `-DFUN_WITH_OPENSSL=ON`, try `examples/crypto/openssl_md5.fun` to compute MD5 using OpenSSL.

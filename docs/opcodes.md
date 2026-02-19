@@ -202,6 +202,11 @@ This document provides an overview of the available VM opcodes implemented under
 - OP_CURL_POST: HTTP POST; pops body:string, url:string; pushes response:string or Nil.
 - OP_CURL_DOWNLOAD: Download URL to file; pops path:string, url:string; pushes 1/0.
 
+## OpenSSL (optional)
+
+- OP_OPENSSL_MD5: Compute MD5 digest and return lowercase hex string; pops data:string; pushes md5:string.
+  - Requires building with `-DFUN_WITH_OPENSSL=ON`. When disabled, this opcode still exists but returns an empty string to match other optional extensions’ fallback behavior.
+
 ## PCRE2 (Regex)
 
 - OP_PCRE2_TEST: Test pattern; pops flags:int, text:string, pattern:string; pushes 1/0.

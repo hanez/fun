@@ -37,14 +37,14 @@ Notes:
 Tip: you can run specific examples directly too:
 
 ```
-FUN_LIB_DIR="$(pwd)/lib" fun examples/crypto/aes256.fun
+FUN_LIB_DIR="$(pwd)/lib" fun examples/crypto/openssl_md5.fun
 ```
 
 ## Example categories
 
 Browse the `examples/` tree for areas of interest:
 
-- crypto — crypto demonstrations (e.g., AES)
+- crypto — crypto demonstrations (e.g., OpenSSL MD5 helper; requires build with `-DFUN_WITH_OPENSSL=ON`)
 - blocking / interactive — I/O or user-interactive patterns
 - error / broken — negative tests and error showcases
 - math — numeric operations

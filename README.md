@@ -93,6 +93,7 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 - [libSQL](https://github.com/tursodatabase/libsql) support builtin as a compatible alternative to SQLite (optional) &#9745;
 - [PCRE2](https://pcre2project.github.io/pcre2/) support builtin for Perl-Compatible Regular Expressions (optional) &#9745;
 - [PCSC](https://pcscworkgroup.com/) smart card support builtin using [PCSC lite](https://pcsclite.apdu.fr/) (optional) &#9745;
+- [OpenSSL](https://www.openssl.org/) integration (currently MD5 helper) (optional) &#9745;
 - [SQLite](https://sqlite.org/) support builtin (optional) &#9745;
 - [Tk](https://www.tcl-lang.org/) support builtin for GUI application development (optional) &#9745;
 - [XML](https://www.w3.org/XML/) support builtin using [libxml2](https://gitlab.gnome.org/GNOME/libxml2/-/wikis/home) (optional) &#9745;
@@ -102,6 +103,20 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 Note: Not all of the above features will be implemented. Those who are marked "Done" will probaly remain in Fun, but I don't know actually... ;)
 
 There are some libs written in Fun available in the [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) diretory. In the future most Fun enhancements should be written in Fun itself.
+
+### OpenSSL quickstart (MD5)
+
+The OpenSSL integration is optional and currently provides an `openssl_md5(data)` helper.
+
+- Build with OpenSSL enabled:
+  - `cmake -S . -B build_debug -DFUN_WITH_OPENSSL=ON`
+  - `cmake --build build_debug --target fun`
+- Run the example:
+  - `./build_debug/fun examples/crypto/openssl_md5.fun`
+
+If OpenSSL is disabled, the function returns an empty string (consistent with other optional extensions).
+
+Note: On OpenSSL 3.x the legacy `MD5_*` APIs are deprecated; you may see warnings during build.
 
 ## Documentation
 
