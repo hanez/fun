@@ -869,10 +869,11 @@ void vm_run(VM *vm, Bytecode *entry) {
             #include "vm/curl/download.c"
             #endif
 
-            /* OpenSSL ops (md5/sha256/sha512) */
+            /* OpenSSL ops (md5/sha256/sha512/ripemd160) */
             #include "vm/openssl/md5.c"
             #include "vm/openssl/sha256.c"
             #include "vm/openssl/sha512.c"
+            #include "vm/openssl/ripemd160.c"
 
             /* Tk (Tcl/Tk) ops */
             #ifdef FUN_WITH_TCLTK

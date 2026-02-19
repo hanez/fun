@@ -11,18 +11,18 @@
  * Added: 2026-02-19
  */
 
-// OpenSSL MD5 example
+// OpenSSL RIPEMD-160 example
 // Enable with -DFUN_WITH_OPENSSL=ON during build for real hashing.
 
 s = "abc"
-d = openssl_md5(s)
-print("md5(abc) = " + d)
+d = openssl_ripemd160(s)
+print("ripemd160(abc) = " + d)
 
 // Another quick check (empty string)
 e = ""
-print("md5(\"\") = " + openssl_md5(e))
+print("ripemd160(\"\") = " + openssl_ripemd160(e))
 
-/* Expected output:
-md5(abc) = 900150983cd24fb0d6963f7d28e17f72
-md5("") = d41d8cd98f00b204e9800998ecf8427e
+/* Expected output (if RIPEMD-160 is available in your OpenSSL build):
+ripemd160(abc) = 8eb208f7e05d987a9b044a8e98c6b087f15a0bfc
+ripemd160("") = 9c1185a5c5e9fc54612808977ee8f548b2258d31
 */

@@ -1222,6 +1222,14 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
                 free(name);
                 return 1;
             }
+            if (strcmp(name, "openssl_ripemd160") == 0) {
+                (*pos)++; /* '(' */
+                if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "openssl_ripemd160 expects (data)"); free(name); return 0; }
+                if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after openssl_ripemd160 arg"); free(name); return 0; }
+                bytecode_add_instruction(bc, OP_OPENSSL_RIPEMD160, 0);
+                free(name);
+                return 1;
+            }
             /* PCSC builtins */
             if (strcmp(name, "pcsc_establish") == 0) {
                 (*pos)++; /* '(' */

@@ -185,6 +185,7 @@ typedef enum {
     OP_OPENSSL_MD5,       // pops data string; pushes md5 hex string
     OP_OPENSSL_SHA256,    // pops data string; pushes sha256 hex string
     OP_OPENSSL_SHA512,    // pops data string; pushes sha512 hex string
+    OP_OPENSSL_RIPEMD160, // pops data string; pushes ripemd160 hex string
 
     // INI (iniparser 4.2.6) optional
     OP_INI_LOAD,          // pops path; pushes handle (>0) or 0

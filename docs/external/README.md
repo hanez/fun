@@ -18,7 +18,7 @@ Extensions:
 - [PC/SC (Smart cards)](./pcsc.md)
 - [Notcurses (TUI)](./notcurses.md)
 - [Tcl/Tk (GUI)](./tcltk.md)
-- [OpenSSL (MD5 helper)](./openssl.md)
+- [OpenSSL](./openssl.md)
 
 Notes:
 - These integrations are optional; the VM compiles without them.
