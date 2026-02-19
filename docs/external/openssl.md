@@ -40,4 +40,4 @@
 
 ## Notes:
 
-- The OpenSSL 3.x provider configuration on your system determines availability of RIPEMD‑160. If the legacy provider is not enabled, openssl_ripemd160() will return an empty string.
+- The OpenSSL 3.x provider configuration on your system determines availability of RIPEMD-160. If the legacy provider is not enabled, openssl_ripemd160() will return an empty string.

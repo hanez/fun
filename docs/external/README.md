@@ -1,6 +1,6 @@
 # External integrations (optional extensions)
 
-This section documents Fun’s optional, build‑time selectable extensions. Each page covers:
+This section documents Fun's optional, build-time selectable extensions. Each page covers:
 - How to enable the extension via CMake option (FUN_WITH_*)
 - Build requirements and detection notes
 - Available opcodes and/or helper functions

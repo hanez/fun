@@ -1,7 +1,7 @@
 # LibreSSL extension (optional)
 
 - CMake option: FUN_WITH_LIBRESSL=ON
-- Purpose: provide small crypto helpers backed by LibreSSL’s libcrypto. Includes md5, sha256, sha512, ripemd160 helpers under libressl_* names.
+- Purpose: provide small crypto helpers backed by LibreSSL's libcrypto. Includes md5, sha256, sha512, ripemd160 helpers under libressl_* names.
 - Homepage: https://www.libressl.org/
 
 ## Build notes:
