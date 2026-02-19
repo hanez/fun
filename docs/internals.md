@@ -79,11 +79,11 @@ The interpreter loop lives in src/vm.c: vm_run. Opcodes are executed in a tight 
 
 Opcode handlers organization:
 - To keep vm.c readable, most opcode implementations are factored into small .c files included directly into vm.c (e.g., vm/core/load_const.c, vm/logic/and.c, vm/arrays/push.c, vm/math/abs.c, vm/os/thread_spawn.c, etc.).
-- This is a deliberate “amalgamation” style: small single‑purpose C units compiled as part of vm.c.
+- This is a deliberate “amalgamation” style: small single-purpose C units compiled as part of vm.c.
 - Optional subsystems (JSON, PCRE2, CURL, SQLite, libSQL, PC/SC, XML2, Tcl/Tk, Notcurses, INI, OpenSSL/LibreSSL crypto helpers, sockets, serial, OS helpers) are grouped under src/external and src/vm/<domain>/.
 
 Dispatch naming and visibility:
-- Human‑readable names for opcodes live in vm.h: opcode_names[]. These are used in debug prints and error messages.
+- Human-readable names for opcodes live in vm.h: opcode_names[]. These are used in debug prints and error messages.
 
 ## Stacks, frames, locals, globals
 
