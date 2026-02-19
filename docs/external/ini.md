@@ -4,7 +4,8 @@
 - Purpose: Read/write simple INI configuration files.
 - Homepage: https://github.com/ndevilla/iniparser
 
-Opcodes:
+## Opcodes:
+
 - OP_INI_LOAD: pops path; pushes handle (>0) or 0
 - OP_INI_FREE: pops handle; pushes 1/0
 - OP_INI_GET_STRING: pops def, key, section, handle; pushes string
@@ -15,6 +16,7 @@ Opcodes:
 - OP_INI_UNSET: pops key, section, handle; pushes 1/0
 - OP_INI_SAVE: pops path, handle; pushes 1/0
 
-Notes:
+## Notes:
+
 - Requires iniparser development headers/libs.
 - When disabled, helpers return neutral values (0/empty strings) like other optional extensions.

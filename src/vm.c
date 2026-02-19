@@ -74,6 +74,7 @@
 #include "external/tcltk.c"
 #include "external/xml2.c"
 #include "external/openssl.c"
+#include "external/libressl.c"
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
@@ -870,10 +871,20 @@ void vm_run(VM *vm, Bytecode *entry) {
             #endif
 
             /* OpenSSL ops (md5/sha256/sha512/ripemd160) */
+            #ifdef FUN_WITH_OPENSSL
             #include "vm/openssl/md5.c"
             #include "vm/openssl/sha256.c"
             #include "vm/openssl/sha512.c"
             #include "vm/openssl/ripemd160.c"
+            #endif
+
+            /* LibreSSL ops (md5/sha256/sha512/ripemd160) */
+            #ifdef FUN_WITH_LIBRESSL
+            #include "vm/libressl/md5.c"
+            #include "vm/libressl/sha256.c"
+            #include "vm/libressl/sha512.c"
+            #include "vm/libressl/ripemd160.c"
+            #endif
 
             /* Tk (Tcl/Tk) ops */
             #ifdef FUN_WITH_TCLTK

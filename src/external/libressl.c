@@ -9,28 +9,33 @@
  * Added: 2026-02-19
  */
 
- /*
- * OpenSSL integration helpers (MD5, RIPEMD-160, SHA-256, SHA-512)
+/*
+ * LibreSSL integration helpers (MD5, RIPEMD-160, SHA-256, SHA-512)
  */
 
-#ifdef FUN_WITH_OPENSSL
-#include <openssl/evp.h>
-/* Always use EVP_MD_get_size; if headers don't declare it, provide a
- * forward declaration to allow linking against OpenSSL libcrypto. */
+#ifdef FUN_WITH_LIBRESSL
+/*
+ * When building with LibreSSL, include the LibreSSL-provided headers explicitly.
+ * Downstream distros often ship them under /usr/include/libressl/openssl/…
+ * and expect the include path to point at /usr/include/libressl so that any
+ * nested `#include <openssl/...>` inside these headers resolves to the
+ * corresponding LibreSSL headers as well (not the system OpenSSL 3.x ones).
+ */
+#include <libressl/openssl/evp.h>
+/* Compatibility: Prefer EVP_MD_get_size universally. If LibreSSL headers
+ * don't declare it, provide a forward declaration so we can link against
+ * OpenSSL's libcrypto symbol when that is what CMake found. */
 #ifndef EVP_MD_get_size
 int EVP_MD_get_size(const EVP_MD *md);
 #endif
 #endif
 #include <stdlib.h>
 
-/* Compute MD5 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Caller must free(). Returns NULL on failure. When OpenSSL is disabled,
- * returns an allocated empty string ("") to keep behavior consistent with
- * other optional extensions. */
-static char *fun_openssl_md5_hex(const unsigned char *data, size_t len) {
+/* Compute MD5 hex of input buffer; returns malloc'ed C string (lowercase hex). */
+static char *fun_libressl_md5_hex(const unsigned char *data, size_t len) {
     static const char hexdig[] = "0123456789abcdef";
     if (!data && len != 0) return NULL;
-#ifdef FUN_WITH_OPENSSL
+#ifdef FUN_WITH_LIBRESSL
     const EVP_MD *md = EVP_md5();
     if (!md) return NULL;
     int dlen = EVP_MD_get_size(md);
@@ -40,7 +45,6 @@ static char *fun_openssl_md5_hex(const unsigned char *data, size_t len) {
     unsigned int out_len = 0;
     int ok;
     if (len == 0) {
-        // EVP_Digest handles zero-length fine as well
         ok = EVP_Digest(NULL, 0, digest, &out_len, md, NULL);
     } else {
         ok = EVP_Digest(data, len, digest, &out_len, md, NULL);
@@ -62,12 +66,11 @@ static char *fun_openssl_md5_hex(const unsigned char *data, size_t len) {
 #endif
 }
 
-/* Compute SHA-256 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Fallback when OpenSSL disabled: empty string. */
-static char *fun_openssl_sha256_hex(const unsigned char *data, size_t len) {
+/* Compute SHA-256 hex of input buffer; returns malloc'ed C string (lowercase hex). */
+static char *fun_libressl_sha256_hex(const unsigned char *data, size_t len) {
     static const char hexdig[] = "0123456789abcdef";
     if (!data && len != 0) return NULL;
-#ifdef FUN_WITH_OPENSSL
+#ifdef FUN_WITH_LIBRESSL
     const EVP_MD *md = EVP_sha256();
     if (!md) return NULL;
     int dlen = EVP_MD_get_size(md);
@@ -98,12 +101,11 @@ static char *fun_openssl_sha256_hex(const unsigned char *data, size_t len) {
 #endif
 }
 
-/* Compute SHA-512 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Fallback when OpenSSL disabled: empty string. */
-static char *fun_openssl_sha512_hex(const unsigned char *data, size_t len) {
+/* Compute SHA-512 hex of input buffer; returns malloc'ed C string (lowercase hex). */
+static char *fun_libressl_sha512_hex(const unsigned char *data, size_t len) {
     static const char hexdig[] = "0123456789abcdef";
     if (!data && len != 0) return NULL;
-#ifdef FUN_WITH_OPENSSL
+#ifdef FUN_WITH_LIBRESSL
     const EVP_MD *md = EVP_sha512();
     if (!md) return NULL;
     int dlen = EVP_MD_get_size(md);
@@ -134,14 +136,11 @@ static char *fun_openssl_sha512_hex(const unsigned char *data, size_t len) {
 #endif
 }
 
-/* Compute RIPEMD-160 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Note: On OpenSSL 3.x, RIPEMD160 may require the legacy provider; if unavailable,
- * EVP_ripemd160() can return NULL. In that case we return NULL and the VM opcode
- * will fall back to empty string behavior. When OpenSSL is disabled, return empty string. */
-static char *fun_openssl_ripemd160_hex(const unsigned char *data, size_t len) {
+/* Compute RIPEMD-160 hex of input buffer; returns malloc'ed C string (lowercase hex). */
+static char *fun_libressl_ripemd160_hex(const unsigned char *data, size_t len) {
     static const char hexdig[] = "0123456789abcdef";
     if (!data && len != 0) return NULL;
-#ifdef FUN_WITH_OPENSSL
+#ifdef FUN_WITH_LIBRESSL
     const EVP_MD *md = EVP_ripemd160();
     if (!md) return NULL;
     int dlen = EVP_MD_get_size(md);

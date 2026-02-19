@@ -6,7 +6,7 @@ This section documents Fun’s optional, build‑time selectable extensions. Eac
 - Available opcodes and/or helper functions
 - Minimal usage examples and links to example scripts
 
-Extensions:
+## Extensions:
 
 - [cURL (libcurl)](./curl.md)
 - [INI (iniparser)](./ini.md)
@@ -19,7 +19,9 @@ Extensions:
 - [Notcurses (TUI)](./notcurses.md)
 - [Tcl/Tk (GUI)](./tcltk.md)
 - [OpenSSL](./openssl.md)
+- [LibreSSL](./libressl.md)
 
-Notes:
+## Notes:
+
 - These integrations are optional; the VM compiles without them.
 - When disabled, related builtins usually return empty strings/neutral values rather than fail hard, mirroring existing optionality patterns.

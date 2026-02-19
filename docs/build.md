@@ -23,6 +23,7 @@ Fun exposes several options you can toggle at configure time:
 - `FUN_WITH_CPP` (ON/OFF) - Enable C++-based opcode/examples support
 - `FUN_WITH_RUST` (ON/OFF) - Build and link Rust staticlib from `src/rust/`
 - `FUN_WITH_OPENSSL` (ON/OFF) - Enable OpenSSL-backed helpers (MD5/SHA-256/SHA-512/RIPEMD-160)
+ - `FUN_WITH_LIBRESSL` (ON/OFF) - Enable LibreSSL-backed helpers (MD5/SHA-256/SHA-512/RIPEMD-160)
 
 When configuring, the build prints a summary like:
 
@@ -55,13 +56,13 @@ cmake --build build_release --target build
 ### Enabling optional extensions
 ```
 cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
-  -DFUN_WITH_CPP=ON -DFUN_WITH_RUST=ON -DFUN_WITH_OPENSSL=ON
+  -DFUN_WITH_CPP=ON -DFUN_WITH_RUST=ON -DFUN_WITH_OPENSSL=ON -DFUN_WITH_LIBRESSL=ON
 cmake --build build_release --target build
 ```
 
 If `FUN_WITH_RUST` is enabled, ensure `cargo` is available in PATH; the build will invoke it and link the produced static library.
 
-If `FUN_WITH_OPENSSL` is enabled, CMake must detect your system OpenSSL. Hash helpers use the EVP interface (OpenSSL 3-compatible). Note: RIPEMD-160 may require the legacy provider on OpenSSL 3.x; if unavailable, the helper returns an empty string.
+If `FUN_WITH_OPENSSL` is enabled, CMake must detect your system OpenSSL (libcrypto). If `FUN_WITH_LIBRESSL` is enabled, CMake detects LibreSSL directly (via pkg-config or standard include/lib locations) and links to LibreSSL’s `libcrypto` — no OpenSSL installation is required. Both extensions use the EVP interface. Note: On OpenSSL 3.x, RIPEMD-160 may require the legacy provider; if unavailable, the helper returns an empty string.
 
 ## Running
 - CLI: run the `fun` executable from your build directory.

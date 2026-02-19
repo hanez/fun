@@ -33,6 +33,7 @@ if [ "$target" = "all" ]; then
       -DFUN_WITH_NOTCURSES=ON \
       -DFUN_WITH_CPP=ON \
       -DFUN_WITH_OPENSSL=ON \
+      -DFUN_WITH_LIBRESSL=ON \
     && cmake --build build --target fun
 elif [ "$target" = "all_debug" ]; then
   rm -rf build \
