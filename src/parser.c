@@ -2969,9 +2969,9 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
             int is_string  = (strcmp(name, "string") == 0);
             int is_boolean = (strcmp(name, "boolean") == 0);
             int is_nil     = (strcmp(name, "nil") == 0);
-            int is_class = (strcmp(name, "class") == 0);
-            int is_float = (strcmp(name, "float") == 0);
-            int is_array = (strcmp(name, "array") == 0);
+            int is_class   = (strcmp(name, "class") == 0);
+            int is_float   = (strcmp(name, "float") == 0);
+            int is_array   = (strcmp(name, "array") == 0);
             int is_byte    = (strcmp(name, "byte")   == 0);
             int is_u8      = (strcmp(name, "uint8")  == 0) || is_byte;
             int is_u16     = (strcmp(name, "uint16") == 0);
