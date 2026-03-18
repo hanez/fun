@@ -12,15 +12,16 @@
 /* OP_XML_NAME: pops node handle; pushes string */
 case OP_XML_NAME: {
 #ifdef FUN_WITH_XML2
-    Value vh = pop_value(vm);
-    int h = (vh.type == VAL_INT) ? (int)vh.i : 0;
-    xmlNodePtr n = xml_node_get(h);
-    free_value(vh);
-    const char *name = (n && n->name) ? (const char*)n->name : "";
-    push_value(vm, make_string(name));
+  Value vh = pop_value(vm);
+  int h = (vh.type == VAL_INT) ? (int)vh.i : 0;
+  xmlNodePtr n = xml_node_get(h);
+  free_value(vh);
+  const char *name = (n && n->name) ? (const char *)n->name : "";
+  push_value(vm, make_string(name));
 #else
-    Value drop = pop_value(vm); free_value(drop);
-    push_value(vm, make_string(""));
+  Value drop = pop_value(vm);
+  free_value(drop);
+  push_value(vm, make_string(""));
 #endif
-    break;
+  break;
 }

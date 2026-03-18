@@ -15,22 +15,22 @@
  */
 case OP_RUST_HELLO_ARGS: {
 #ifdef FUN_WITH_RUST
-    Value vmsg = pop_value(vm);
-    char *msg = value_to_string_alloc(&vmsg);
-    free_value(vmsg);
-    if (msg) {
-        fun_rust_print_string(msg);
-        free(msg);
-    } else {
-        fun_rust_print_string("");
-    }
-    push_value(vm, make_nil());
+  Value vmsg = pop_value(vm);
+  char *msg = value_to_string_alloc(&vmsg);
+  free_value(vmsg);
+  if (msg) {
+    fun_rust_print_string(msg);
+    free(msg);
+  } else {
+    fun_rust_print_string("");
+  }
+  push_value(vm, make_nil());
 #else
-    /* Still pop and free the arg to keep stack sane */
-    Value vmsg = pop_value(vm);
-    free_value(vmsg);
-    vm_raise_error(vm, "RUST_HELLO_ARGS requires FUN_WITH_RUST=ON at build time");
-    push_value(vm, make_nil());
+  /* Still pop and free the arg to keep stack sane */
+  Value vmsg = pop_value(vm);
+  free_value(vmsg);
+  vm_raise_error(vm, "RUST_HELLO_ARGS requires FUN_WITH_RUST=ON at build time");
+  push_value(vm, make_nil());
 #endif
-    break;
+  break;
 }

@@ -18,25 +18,25 @@
 #endif
 #endif
 
+#include <math.h>
+#include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
-#include <stddef.h>
 #include <time.h>
-#include <math.h>
 
 #ifdef __unix__
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/un.h>
+#include <sys/wait.h>
 #include <unistd.h>
 /* For hidden input (password) handling in OP_INPUT_LINE */
 #include <termios.h>
-//#include <arpa/inet.h>
+// #include <arpa/inet.h>
 #endif
 
 #ifdef _WIN32
@@ -52,8 +52,8 @@
 
 /* Shared Notcurses state (optional) */
 #ifdef FUN_WITH_NOTCURSES
-#  include <wchar.h> /* ensure wcwidth/wcswidth prototypes present before notcurses.h on some systems */
-#  include <notcurses/notcurses.h>
+#include <notcurses/notcurses.h>
+#include <wchar.h> /* ensure wcwidth/wcswidth prototypes present before notcurses.h on some systems */
 #endif
 #include "vm/notcurses/common.h"
 
@@ -67,14 +67,14 @@
 /* Note: INI opcode handlers are included below; changes in vm/ini/ .c files
  * require vm.c to rebuild. */
 #include "external/json.c"
+#include "external/libressl.c"
 #include "external/libsql.c"
-#include "external/pcsc.c"
+#include "external/openssl.c"
 #include "external/pcre2.c"
+#include "external/pcsc.c"
 #include "external/sqlite.c"
 #include "external/tcltk.c"
 #include "external/xml2.c"
-#include "external/openssl.c"
-#include "external/libressl.c"
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
@@ -88,130 +88,150 @@ static VM *g_active_vm = NULL;
 
 /* fprintf wrapper that appends source line info for stderr messages */
 static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
-    int written = vfprintf(stream, fmt, ap);
-    if (stream == stderr && g_active_vm) {
-        /* Determine current frame and instruction pointer of the faulting op */
-        const char *opname = "unknown";
-        const char *fname = NULL;
-        const char *sfile = NULL;
-        int ip = -1;
-        int line = -1;
-        if (g_active_vm->fp >= 0) {
-            Frame *f = &g_active_vm->frames[g_active_vm->fp];
-            ip = f->ip - 1; /* last executed instruction */
-            if (f->fn) {
-                fname = f->fn->name;
-                sfile = f->fn->source_file;
-                /* derive opcode name */
-                if (ip >= 0 && ip < f->fn->instr_count) {
-                    int op = f->fn->instructions[ip].op;
-                    if (op >= 0 && op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0]))) {
-                        opname = opcode_names[op];
-                    }
-                }
-                /* derive source line by scanning back to the most recent OP_LINE marker */
-                for (int i = ip; i >= 0; --i) {
-                    Instruction prev = f->fn->instructions[i];
-                    if (prev.op == OP_LINE) { line = prev.operand; break; }
-                }
-                /* fallback to VM's last recorded line if no marker found */
-                if (line <= 0) line = g_active_vm->current_line > 0 ? g_active_vm->current_line : 1;
-
-                /* If this function was compiled from an include-expanded source, map to the included file */
-                if (sfile && line > 0) {
-                    char mapped_path[1024]; int mapped_line = line;
-                    if (map_expanded_line_to_include(sfile, line, mapped_path, sizeof(mapped_path), &mapped_line)) {
-                        sfile = strdup(mapped_path); /* leak on purpose for simplicity; this is rare */
-                        line = mapped_line;
-                    }
-                }
-            }
+  int written = vfprintf(stream, fmt, ap);
+  if (stream == stderr && g_active_vm) {
+    /* Determine current frame and instruction pointer of the faulting op */
+    const char *opname = "unknown";
+    const char *fname = NULL;
+    const char *sfile = NULL;
+    int ip = -1;
+    int line = -1;
+    if (g_active_vm->fp >= 0) {
+      Frame *f = &g_active_vm->frames[g_active_vm->fp];
+      ip = f->ip - 1; /* last executed instruction */
+      if (f->fn) {
+        fname = f->fn->name;
+        sfile = f->fn->source_file;
+        /* derive opcode name */
+        if (ip >= 0 && ip < f->fn->instr_count) {
+          int op = f->fn->instructions[ip].op;
+          if (op >= 0 && op < (int)(sizeof(opcode_names) / sizeof(opcode_names[0]))) {
+            opname = opcode_names[op];
+          }
         }
-        fprintf(stream == stderr ? stderr : stream,
-                " (at %s:%d in %s, op %s @ip %d)\n",
-                sfile ? sfile : "<unknown>",
-                line > 0 ? line : 1,
-                fname ? fname : "<entry>",
-                opname,
-                ip);
+        /* derive source line by scanning back to the most recent OP_LINE marker */
+        for (int i = ip; i >= 0; --i) {
+          Instruction prev = f->fn->instructions[i];
+          if (prev.op == OP_LINE) {
+            line = prev.operand;
+            break;
+          }
+        }
+        /* fallback to VM's last recorded line if no marker found */
+        if (line <= 0) line = g_active_vm->current_line > 0 ? g_active_vm->current_line : 1;
+
+        /* If this function was compiled from an include-expanded source, map to the included file */
+        if (sfile && line > 0) {
+          char mapped_path[1024];
+          int mapped_line = line;
+          if (map_expanded_line_to_include(sfile, line, mapped_path, sizeof(mapped_path), &mapped_line)) {
+            sfile = strdup(mapped_path); /* leak on purpose for simplicity; this is rare */
+            line = mapped_line;
+          }
+        }
+      }
     }
-    return written;
+    fprintf(stream == stderr ? stderr : stream,
+            " (at %s:%d in %s, op %s @ip %d)\n",
+            sfile ? sfile : "<unknown>",
+            line > 0 ? line : 1,
+            fname ? fname : "<entry>",
+            opname,
+            ip);
+  }
+  return written;
 }
 
 static int fun_vm_fprintf(FILE *stream, const char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
-    int r = fun_vm_vfprintf(stream, fmt, ap);
-    va_end(ap);
-    return r;
+  va_list ap;
+  va_start(ap, fmt);
+  int r = fun_vm_vfprintf(stream, fmt, ap);
+  va_end(ap);
+  return r;
 }
 
 /* Helper: try to map expanded source line to included file:line using preprocessor markers */
 static int map_expanded_line_to_include(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line) {
-    if (!path || line <= 0 || !out_path || out_path_cap == 0 || !out_line) return 0;
-    out_path[0] = '\0';
-    *out_line = line;
+  if (!path || line <= 0 || !out_path || out_path_cap == 0 || !out_line) return 0;
+  out_path[0] = '\0';
+  *out_line = line;
 
-    /* read original file */
-    FILE *f = fopen(path, "rb");
-    if (!f) return 0;
-    fseek(f, 0, SEEK_END);
-    long sz = ftell(f);
-    if (sz < 0) { fclose(f); return 0; }
-    rewind(f);
-    char *buf = (char*)malloc((size_t)sz + 1);
-    if (!buf) { fclose(f); return 0; }
-    size_t n = fread(buf, 1, (size_t)sz, f);
+  /* read original file */
+  FILE *f = fopen(path, "rb");
+  if (!f) return 0;
+  fseek(f, 0, SEEK_END);
+  long sz = ftell(f);
+  if (sz < 0) {
     fclose(f);
-    buf[n] = '\0';
+    return 0;
+  }
+  rewind(f);
+  char *buf = (char *)malloc((size_t)sz + 1);
+  if (!buf) {
+    fclose(f);
+    return 0;
+  }
+  size_t n = fread(buf, 1, (size_t)sz, f);
+  fclose(f);
+  buf[n] = '\0';
 
-    char *prep = preprocess_includes(buf);
-    free(buf);
-    if (!prep) return 0;
+  char *prep = preprocess_includes(buf);
+  free(buf);
+  if (!prep) return 0;
 
-    /* find start offset of requested 1-based line */
-    size_t len = strlen(prep);
-    size_t pos = 0; int cur = 1;
-    while (pos < len && cur < line) {
-        if (prep[pos] == '\n') cur++;
-        pos++;
-    }
-    if (cur != line) { free(prep); return 0; }
-
-    /* scan backward to find last include marker line */
-    const char *marker = "// __include_begin__: ";
-    size_t mlen = strlen(marker);
-    size_t scan = pos;
-    while (scan > 0) {
-        /* find start of this line */
-        size_t ls = scan;
-        while (ls > 0 && prep[ls - 1] != '\n') ls--;
-        /* check marker */
-        if (ls + mlen <= len && strncmp(prep + ls, marker, mlen) == 0) {
-            /* extract included path up to EOL or ' as ' */
-            size_t p = ls + mlen;
-            size_t pe = p;
-            while (pe < len && prep[pe] != '\n' && !(prep[pe] == ' ' && pe + 3 < len && strncmp(prep + pe, " as ", 4) == 0)) pe++;
-            size_t copy = (pe - p) < (out_path_cap - 1) ? (pe - p) : (out_path_cap - 1);
-            memcpy(out_path, prep + p, copy);
-            out_path[copy] = '\0';
-            /* compute inner line as number of newlines from end of marker line to current pos */
-            int inner = 1;
-            size_t q = pe;
-            /* skip to next line start */
-            while (q < len && prep[q] != '\n') q++;
-            if (q < len && prep[q] == '\n') q++;
-            while (q < pos) { if (prep[q] == '\n') inner++; q++; }
-            *out_line = inner;
-            free(prep);
-            return 1;
-        }
-        if (ls == 0) break;
-        scan = (ls > 0) ? (ls - 1) : 0;
-    }
-
+  /* find start offset of requested 1-based line */
+  size_t len = strlen(prep);
+  size_t pos = 0;
+  int cur = 1;
+  while (pos < len && cur < line) {
+    if (prep[pos] == '\n') cur++;
+    pos++;
+  }
+  if (cur != line) {
     free(prep);
     return 0;
+  }
+
+  /* scan backward to find last include marker line */
+  const char *marker = "// __include_begin__: ";
+  size_t mlen = strlen(marker);
+  size_t scan = pos;
+  while (scan > 0) {
+    /* find start of this line */
+    size_t ls = scan;
+    while (ls > 0 && prep[ls - 1] != '\n')
+      ls--;
+    /* check marker */
+    if (ls + mlen <= len && strncmp(prep + ls, marker, mlen) == 0) {
+      /* extract included path up to EOL or ' as ' */
+      size_t p = ls + mlen;
+      size_t pe = p;
+      while (pe < len && prep[pe] != '\n' && !(prep[pe] == ' ' && pe + 3 < len && strncmp(prep + pe, " as ", 4) == 0))
+        pe++;
+      size_t copy = (pe - p) < (out_path_cap - 1) ? (pe - p) : (out_path_cap - 1);
+      memcpy(out_path, prep + p, copy);
+      out_path[copy] = '\0';
+      /* compute inner line as number of newlines from end of marker line to current pos */
+      int inner = 1;
+      size_t q = pe;
+      /* skip to next line start */
+      while (q < len && prep[q] != '\n')
+        q++;
+      if (q < len && prep[q] == '\n') q++;
+      while (q < pos) {
+        if (prep[q] == '\n') inner++;
+        q++;
+      }
+      *out_line = inner;
+      free(prep);
+      return 1;
+    }
+    if (ls == 0) break;
+    scan = (ls > 0) ? (ls - 1) : 0;
+  }
+
+  free(prep);
+  return 0;
 }
 
 /* Redirect fprintf within this translation unit so opcode handlers use our wrapper */
@@ -223,15 +243,15 @@ static int map_expanded_line_to_include(const char *path, int line, char *out_pa
 static jmp_buf g_vm_err_jmp;
 
 static void fun_vm_exit(int code) {
-    if (g_active_vm && g_active_vm->repl_on_error) {
-        /* Jump back to vm_run to allow dropping into the REPL with intact VM state */
-        longjmp(g_vm_err_jmp, code ? code : 1);
-    }
-    /* Fallback: terminate immediately if not in REPL-on-error mode */
+  if (g_active_vm && g_active_vm->repl_on_error) {
+    /* Jump back to vm_run to allow dropping into the REPL with intact VM state */
+    longjmp(g_vm_err_jmp, code ? code : 1);
+  }
+  /* Fallback: terminate immediately if not in REPL-on-error mode */
 #ifdef _WIN32
-    _exit(code);
+  _exit(code);
 #else
-    _Exit(code);
+  _Exit(code);
 #endif
 }
 
@@ -245,29 +265,29 @@ static void push_value(VM *vm, Value v);
  * If a handler is installed for the current frame, jump to it and push
  * an error string for the catch clause. Otherwise, print and stop VM. */
 void vm_raise_error(VM *vm, const char *msg) {
-    if (!vm || vm->fp < 0) {
-        fprintf(stderr, "Runtime error: %s\n", msg ? msg : "<error>");
-        return;
-    }
-    Frame *f = &vm->frames[vm->fp];
-    if (f->try_sp >= 0) {
-        char buf[256];
-        if (msg) {
-            snprintf(buf, sizeof(buf), "Runtime error: %s", msg);
-        } else {
-            snprintf(buf, sizeof(buf), "Runtime error");
-        }
-        /* push error value and transfer control to handler target */
-        Value err = make_string(buf);
-        push_value(vm, err);
-        int try_idx = f->try_stack[f->try_sp--];
-        int target = f->fn->instructions[try_idx].operand;
-        f->ip = target;
-        return;
-    }
-    /* No handler: print annotated message and terminate VM */
+  if (!vm || vm->fp < 0) {
     fprintf(stderr, "Runtime error: %s\n", msg ? msg : "<error>");
-    vm->fp = -1; /* stop execution */
+    return;
+  }
+  Frame *f = &vm->frames[vm->fp];
+  if (f->try_sp >= 0) {
+    char buf[256];
+    if (msg) {
+      snprintf(buf, sizeof(buf), "Runtime error: %s", msg);
+    } else {
+      snprintf(buf, sizeof(buf), "Runtime error");
+    }
+    /* push error value and transfer control to handler target */
+    Value err = make_string(buf);
+    push_value(vm, err);
+    int try_idx = f->try_stack[f->try_sp--];
+    int target = f->fn->instructions[try_idx].operand;
+    f->ip = target;
+    return;
+  }
+  /* No handler: print annotated message and terminate VM */
+  fprintf(stderr, "Runtime error: %s\n", msg ? msg : "<error>");
+  vm->fp = -1; /* stop execution */
 }
 
 /*
@@ -308,686 +328,701 @@ Dev tips:
 - You can run scripts/run_examples.sh to sanity-check examples quickly.
 */
 
-static const char* value_type_name(ValueType t) {
-    switch (t) {
-        case VAL_FUNCTION: return "function";
-        case VAL_INT: return "int";
-        case VAL_FLOAT: return "float";
-        case VAL_BOOL: return "boolean";
-        case VAL_ARRAY: return "array";
-        case VAL_MAP: return "map";
-        case VAL_NIL: return "nil";
-        case VAL_STRING: return "string";
-        default: return "unknown";
-    }
+static const char *value_type_name(ValueType t) {
+  switch (t) {
+  case VAL_FUNCTION:
+    return "function";
+  case VAL_INT:
+    return "int";
+  case VAL_FLOAT:
+    return "float";
+  case VAL_BOOL:
+    return "boolean";
+  case VAL_ARRAY:
+    return "array";
+  case VAL_MAP:
+    return "map";
+  case VAL_NIL:
+    return "nil";
+  case VAL_STRING:
+    return "string";
+  default:
+    return "unknown";
+  }
 }
 
 void vm_clear_output(VM *vm) {
-    for (int i = 0; i < vm->output_count; ++i) {
-        free_value(vm->output[i]);
-    }
-    vm->output_count = 0;
-    // reset partial flags
-    for (int i = 0; i < OUTPUT_SIZE; ++i) vm->output_is_partial[i] = 0;
+  for (int i = 0; i < vm->output_count; ++i) {
+    free_value(vm->output[i]);
+  }
+  vm->output_count = 0;
+  // reset partial flags
+  for (int i = 0; i < OUTPUT_SIZE; ++i)
+    vm->output_is_partial[i] = 0;
 }
 
 void vm_free(VM *vm) {
-    // currently nothing persistent allocated inside VM itself
+  // currently nothing persistent allocated inside VM itself
 }
 
 /* forward declaration for helper used in vm_reset */
 static void vm_pop_frame(VM *vm);
 
 void vm_reset(VM *vm) {
-    // Pop all frames (free locals)
-    while (vm->fp >= 0) {
-        vm_pop_frame(vm);
-    }
-    // Clear stack
-    vm->sp = -1;
-    // Free globals
-    for (int i = 0; i < MAX_GLOBALS; ++i) {
-        free_value(vm->globals[i]);
-        vm->globals[i] = make_nil();
-    }
-    // Clear output buffer
-    vm_clear_output(vm);
-    // Reset exit code
-    vm->exit_code = 0;
+  // Pop all frames (free locals)
+  while (vm->fp >= 0) {
+    vm_pop_frame(vm);
+  }
+  // Clear stack
+  vm->sp = -1;
+  // Free globals
+  for (int i = 0; i < MAX_GLOBALS; ++i) {
+    free_value(vm->globals[i]);
+    vm->globals[i] = make_nil();
+  }
+  // Clear output buffer
+  vm_clear_output(vm);
+  // Reset exit code
+  vm->exit_code = 0;
 
-    // Reset debugger state (breakpoints, stepping)
-    vm_debug_reset(vm);
+  // Reset debugger state (breakpoints, stepping)
+  vm_debug_reset(vm);
 }
 
 void vm_dump_globals(VM *vm) {
-    printf("=== globals ===\n");
-    for (int i = 0; i < MAX_GLOBALS; ++i) {
-        if (vm->globals[i].type != VAL_NIL) {
-            printf("[%d] ", i);
-            print_value(&vm->globals[i]);
-            printf("\n");
-        }
+  printf("=== globals ===\n");
+  for (int i = 0; i < MAX_GLOBALS; ++i) {
+    if (vm->globals[i].type != VAL_NIL) {
+      printf("[%d] ", i);
+      print_value(&vm->globals[i]);
+      printf("\n");
     }
-    printf("===============\n");
+  }
+  printf("===============\n");
 }
 
 /* --- Debugger API impl --- */
 
 void vm_debug_reset(VM *vm) {
-    for (int i = 0; i < vm->break_count; ++i) {
-        if (vm->breakpoints[i].file) {
-            free(vm->breakpoints[i].file);
-            vm->breakpoints[i].file = NULL;
-        }
-        vm->breakpoints[i].active = 0;
-        vm->breakpoints[i].line = 0;
+  for (int i = 0; i < vm->break_count; ++i) {
+    if (vm->breakpoints[i].file) {
+      free(vm->breakpoints[i].file);
+      vm->breakpoints[i].file = NULL;
     }
-    vm->break_count = 0;
-    vm->debug_step_mode = 0;
-    vm->debug_step_target_fp = -1;
-    vm->debug_step_start_ic = vm->instr_count;
-    vm->debug_stop_requested = 0;
+    vm->breakpoints[i].active = 0;
+    vm->breakpoints[i].line = 0;
+  }
+  vm->break_count = 0;
+  vm->debug_step_mode = 0;
+  vm->debug_step_target_fp = -1;
+  vm->debug_step_start_ic = vm->instr_count;
+  vm->debug_stop_requested = 0;
 }
 
 int vm_debug_add_breakpoint(VM *vm, const char *file, int line) {
-    if (!file || line <= 0) return -1;
-    if (vm->break_count >= (int)(sizeof(vm->breakpoints)/sizeof(vm->breakpoints[0]))) return -1;
-    int id = vm->break_count++;
-    vm->breakpoints[id].file = strdup(file);
-    vm->breakpoints[id].line = line;
-    vm->breakpoints[id].active = 1;
-    return id;
+  if (!file || line <= 0) return -1;
+  if (vm->break_count >= (int)(sizeof(vm->breakpoints) / sizeof(vm->breakpoints[0]))) return -1;
+  int id = vm->break_count++;
+  vm->breakpoints[id].file = strdup(file);
+  vm->breakpoints[id].line = line;
+  vm->breakpoints[id].active = 1;
+  return id;
 }
 
 int vm_debug_delete_breakpoint(VM *vm, int id) {
-    if (id < 0 || id >= vm->break_count) return 0;
-    if (vm->breakpoints[id].file) free(vm->breakpoints[id].file);
-    for (int i = id + 1; i < vm->break_count; ++i) {
-        vm->breakpoints[i - 1] = vm->breakpoints[i];
-    }
-    vm->break_count--;
-    if (vm->break_count >= 0) {
-        vm->breakpoints[vm->break_count].file = NULL;
-        vm->breakpoints[vm->break_count].line = 0;
-        vm->breakpoints[vm->break_count].active = 0;
-    }
-    return 1;
+  if (id < 0 || id >= vm->break_count) return 0;
+  if (vm->breakpoints[id].file) free(vm->breakpoints[id].file);
+  for (int i = id + 1; i < vm->break_count; ++i) {
+    vm->breakpoints[i - 1] = vm->breakpoints[i];
+  }
+  vm->break_count--;
+  if (vm->break_count >= 0) {
+    vm->breakpoints[vm->break_count].file = NULL;
+    vm->breakpoints[vm->break_count].line = 0;
+    vm->breakpoints[vm->break_count].active = 0;
+  }
+  return 1;
 }
 
 void vm_debug_clear_breakpoints(VM *vm) {
-    vm_debug_reset(vm);
+  vm_debug_reset(vm);
 }
 
 void vm_debug_list_breakpoints(VM *vm) {
-    if (vm->break_count <= 0) {
-        printf("(no breakpoints)\n");
-        return;
-    }
-    for (int i = 0; i < vm->break_count; ++i) {
-        if (!vm->breakpoints[i].active) continue;
-        printf("  [%d] %s:%d\n", i, vm->breakpoints[i].file ? vm->breakpoints[i].file : "<unknown>", vm->breakpoints[i].line);
-    }
+  if (vm->break_count <= 0) {
+    printf("(no breakpoints)\n");
+    return;
+  }
+  for (int i = 0; i < vm->break_count; ++i) {
+    if (!vm->breakpoints[i].active) continue;
+    printf("  [%d] %s:%d\n", i, vm->breakpoints[i].file ? vm->breakpoints[i].file : "<unknown>", vm->breakpoints[i].line);
+  }
 }
 
 void vm_debug_request_step(VM *vm) {
-    vm->debug_step_mode = 1; // step
-    vm->debug_step_start_ic = vm->instr_count;
-    vm->debug_stop_requested = 0;
+  vm->debug_step_mode = 1; // step
+  vm->debug_step_start_ic = vm->instr_count;
+  vm->debug_stop_requested = 0;
 }
 
 void vm_debug_request_next(VM *vm) {
-    vm->debug_step_mode = 2; // next (step over)
-    vm->debug_step_target_fp = vm->fp;
-    vm->debug_step_start_ic = vm->instr_count;
-    vm->debug_stop_requested = 0;
+  vm->debug_step_mode = 2; // next (step over)
+  vm->debug_step_target_fp = vm->fp;
+  vm->debug_step_start_ic = vm->instr_count;
+  vm->debug_stop_requested = 0;
 }
 
 void vm_debug_request_finish(VM *vm) {
-    vm->debug_step_mode = 3; // finish (until return)
-    vm->debug_step_target_fp = vm->fp;
-    vm->debug_stop_requested = 0;
+  vm->debug_step_mode = 3; // finish (until return)
+  vm->debug_step_target_fp = vm->fp;
+  vm->debug_stop_requested = 0;
 }
 
 void vm_debug_request_continue(VM *vm) {
-    vm->debug_step_mode = 0;
-    vm->debug_stop_requested = 0;
+  vm->debug_step_mode = 0;
+  vm->debug_stop_requested = 0;
 }
 
 static void push_value(VM *vm, Value v) {
-    if (vm->sp >= STACK_SIZE - 1) {
-        fprintf(stderr, "Runtime error: stack overflow\n");
-        exit(1);
-    }
-    vm->stack[++vm->sp] = v; /* take ownership of v */
+  if (vm->sp >= STACK_SIZE - 1) {
+    fprintf(stderr, "Runtime error: stack overflow\n");
+    exit(1);
+  }
+  vm->stack[++vm->sp] = v; /* take ownership of v */
 }
 
 static Value pop_value(VM *vm) {
-    if (vm->sp < 0) {
-        fprintf(stderr, "Runtime error: stack underflow\n");
-        exit(1);
-    }
-    return vm->stack[vm->sp--]; /* caller owns returned Value */
+  if (vm->sp < 0) {
+    fprintf(stderr, "Runtime error: stack underflow\n");
+    exit(1);
+  }
+  return vm->stack[vm->sp--]; /* caller owns returned Value */
 }
 
 /* --- C ABI helpers for Rust FFI --- */
 int64_t vm_pop_i64(VM *vm) {
-    Value v = pop_value(vm);
-    int64_t out = 0;
-    if (v.type == VAL_INT) {
-        out = v.i;
-    } else if (v.type == VAL_FLOAT) {
-        out = (int64_t) v.d;
-    } else {
-        fprintf(stderr, "Runtime type error: expected int/float on stack, got %s\n", value_type_name(v.type));
-        free_value(v);
-        exit(1);
-    }
-    /* free any dynamic payload (no-op for int/float) */
+  Value v = pop_value(vm);
+  int64_t out = 0;
+  if (v.type == VAL_INT) {
+    out = v.i;
+  } else if (v.type == VAL_FLOAT) {
+    out = (int64_t)v.d;
+  } else {
+    fprintf(stderr, "Runtime type error: expected int/float on stack, got %s\n", value_type_name(v.type));
     free_value(v);
-    return out;
+    exit(1);
+  }
+  /* free any dynamic payload (no-op for int/float) */
+  free_value(v);
+  return out;
 }
 
 void vm_push_i64(VM *vm, int64_t v) {
-    push_value(vm, make_int(v));
+  push_value(vm, make_int(v));
 }
 
 /* --- Extended C ABI for Rust to access VM internals (unsafe) --- */
 size_t vm_sizeof(void) {
-    return sizeof(VM);
+  return sizeof(VM);
 }
 
 size_t vm_value_sizeof(void) {
-    return sizeof(Value);
+  return sizeof(Value);
 }
 
 void *vm_as_mut_ptr(VM *vm) {
-    return (void*)vm;
+  return (void *)vm;
 }
 
 size_t vm_offset_of_exit_code(void) {
-    return offsetof(VM, exit_code);
+  return offsetof(VM, exit_code);
 }
 
 size_t vm_offset_of_sp(void) {
-    return offsetof(VM, sp);
+  return offsetof(VM, sp);
 }
 
 size_t vm_offset_of_stack(void) {
-    return offsetof(VM, stack);
+  return offsetof(VM, stack);
 }
 
 size_t vm_offset_of_globals(void) {
-    return offsetof(VM, globals);
+  return offsetof(VM, globals);
 }
 
 static void frame_init(Frame *f) {
-    f->fn = NULL;
-    f->ip = 0;
-    for (int i = 0; i < MAX_FRAME_LOCALS; ++i) f->locals[i] = make_nil();
-    f->try_sp = -1;
+  f->fn = NULL;
+  f->ip = 0;
+  for (int i = 0; i < MAX_FRAME_LOCALS; ++i)
+    f->locals[i] = make_nil();
+  f->try_sp = -1;
 }
 
 void vm_init(VM *vm) {
-    vm->sp = -1;
-    vm->fp = -1;
-    vm->output_count = 0;
-    for (int i = 0; i < OUTPUT_SIZE; ++i) vm->output_is_partial[i] = 0;
-    vm->instr_count = 0;
-    vm->exit_code = 0;
-    vm->trace_enabled = 0;
-    vm->repl_on_error = 0;
-    vm->on_error_repl = NULL;
+  vm->sp = -1;
+  vm->fp = -1;
+  vm->output_count = 0;
+  for (int i = 0; i < OUTPUT_SIZE; ++i)
+    vm->output_is_partial[i] = 0;
+  vm->instr_count = 0;
+  vm->exit_code = 0;
+  vm->trace_enabled = 0;
+  vm->repl_on_error = 0;
+  vm->on_error_repl = NULL;
 
-    /* Debugger state */
-    vm->debug_step_mode = 0;
-    vm->debug_step_target_fp = -1;
-    vm->debug_step_start_ic = 0;
-    vm->debug_stop_requested = 0;
-    vm->break_count = 0;
-    for (int i = 0; i < (int)(sizeof(vm->breakpoints)/sizeof(vm->breakpoints[0])); ++i) {
-        vm->breakpoints[i].file = NULL;
-        vm->breakpoints[i].line = 0;
-        vm->breakpoints[i].active = 0;
-    }
+  /* Debugger state */
+  vm->debug_step_mode = 0;
+  vm->debug_step_target_fp = -1;
+  vm->debug_step_start_ic = 0;
+  vm->debug_stop_requested = 0;
+  vm->break_count = 0;
+  for (int i = 0; i < (int)(sizeof(vm->breakpoints) / sizeof(vm->breakpoints[0])); ++i) {
+    vm->breakpoints[i].file = NULL;
+    vm->breakpoints[i].line = 0;
+    vm->breakpoints[i].active = 0;
+  }
 
-    for (int i = 0; i < MAX_GLOBALS; ++i)
-        vm->globals[i] = make_nil();
+  for (int i = 0; i < MAX_GLOBALS; ++i)
+    vm->globals[i] = make_nil();
 }
 
 /* push a new frame, transferring ownership of args[] into frame->locals[0..argc-1] */
 static void vm_push_frame(VM *vm, Bytecode *fn, int argc, Value *args) {
-    if (vm->fp >= MAX_FRAMES - 1) {
-        fprintf(stderr, "Runtime error: too many frames\n");
-        exit(1);
-    }
-    Frame *f = &vm->frames[++vm->fp];
-    frame_init(f);
-    f->fn = fn;
-    f->ip = 0;
-    /* move args into locals 0..argc-1 */
-    for (int i = 0; i < argc && i < MAX_FRAME_LOCALS; ++i) {
-        f->locals[i] = args[i]; /* transfer ownership */
-    }
+  if (vm->fp >= MAX_FRAMES - 1) {
+    fprintf(stderr, "Runtime error: too many frames\n");
+    exit(1);
+  }
+  Frame *f = &vm->frames[++vm->fp];
+  frame_init(f);
+  f->fn = fn;
+  f->ip = 0;
+  /* move args into locals 0..argc-1 */
+  for (int i = 0; i < argc && i < MAX_FRAME_LOCALS; ++i) {
+    f->locals[i] = args[i]; /* transfer ownership */
+  }
 }
 
 /* pop current frame and free its locals */
 static void vm_pop_frame(VM *vm) {
-    if (vm->fp < 0) {
-        fprintf(stderr, "Runtime error: pop frame with empty frame stack\n");
-        exit(1);
-    }
-    Frame *f = &vm->frames[vm->fp];
-    for (int i = 0; i < MAX_FRAME_LOCALS; ++i) {
-        free_value(f->locals[i]);
-        f->locals[i] = make_nil();
-    }
-    vm->fp--;
+  if (vm->fp < 0) {
+    fprintf(stderr, "Runtime error: pop frame with empty frame stack\n");
+    exit(1);
+  }
+  Frame *f = &vm->frames[vm->fp];
+  for (int i = 0; i < MAX_FRAME_LOCALS; ++i) {
+    free_value(f->locals[i]);
+    f->locals[i] = make_nil();
+  }
+  vm->fp--;
 }
 
 void vm_print_output(VM *vm) {
-    for (int i = 0; i < vm->output_count; ++i) {
-        print_value(&vm->output[i]);
-        if (!vm->output_is_partial[i]) {
-            printf("\n");
-        }
+  for (int i = 0; i < vm->output_count; ++i) {
+    print_value(&vm->output[i]);
+    if (!vm->output_is_partial[i]) {
+      printf("\n");
     }
+  }
 }
 
 void vm_run(VM *vm, Bytecode *entry) {
-    /* reset instruction count for this run */
-    vm->instr_count = 0;
-    vm->current_line = 1;
-    g_active_vm = vm;
+  /* reset instruction count for this run */
+  vm->instr_count = 0;
+  vm->current_line = 1;
+  g_active_vm = vm;
 
-    /* set error trap if REPL-on-error is enabled */
-    if (vm->repl_on_error) {
-        int jcode = setjmp(g_vm_err_jmp);
-        if (jcode != 0) {
-            /* We got here from a trapped exit() in an error path */
-            fprintf(stderr, "Entering REPL due to runtime error (code %d)\n", jcode);
-            if (vm->on_error_repl) {
-                vm->on_error_repl(vm);
-            }
-            g_active_vm = NULL;
-            return;
-        }
+  /* set error trap if REPL-on-error is enabled */
+  if (vm->repl_on_error) {
+    int jcode = setjmp(g_vm_err_jmp);
+    if (jcode != 0) {
+      /* We got here from a trapped exit() in an error path */
+      fprintf(stderr, "Entering REPL due to runtime error (code %d)\n", jcode);
+      if (vm->on_error_repl) {
+        vm->on_error_repl(vm);
+      }
+      g_active_vm = NULL;
+      return;
+    }
+  }
+
+  /* start with entry frame (no args) */
+  vm_push_frame(vm, entry, 0, NULL);
+
+  while (vm->fp >= 0) {
+    Frame *f = &vm->frames[vm->fp];
+
+    /* Stop conditions at top of loop (stepping/finish) */
+    if (vm->on_error_repl) {
+      int should_stop = 0;
+      if (vm->debug_stop_requested) {
+        should_stop = 1;
+      } else if (vm->debug_step_mode == 1 && vm->instr_count > vm->debug_step_start_ic) { /* step */
+        should_stop = 1;
+        vm->debug_step_mode = 0;
+      } else if (vm->debug_step_mode == 2 && vm->instr_count > vm->debug_step_start_ic && vm->fp <= vm->debug_step_target_fp) { /* next */
+        should_stop = 1;
+        vm->debug_step_mode = 0;
+      } else if (vm->debug_step_mode == 3 && vm->fp < vm->debug_step_target_fp) { /* finish */
+        should_stop = 1;
+        vm->debug_step_mode = 0;
+      }
+      if (should_stop) {
+        vm->debug_stop_requested = 0;
+        fprintf(stderr, "Paused (debug)\n");
+        vm->on_error_repl(vm);
+        /* Frame pointer might have changed (reset/cont); refresh f */
+        if (vm->fp < 0) break;
+        f = &vm->frames[vm->fp];
+      }
     }
 
-    /* start with entry frame (no args) */
-    vm_push_frame(vm, entry, 0, NULL);
-
-    while (vm->fp >= 0) {
-        Frame *f = &vm->frames[vm->fp];
-
-        /* Stop conditions at top of loop (stepping/finish) */
-        if (vm->on_error_repl) {
-            int should_stop = 0;
-            if (vm->debug_stop_requested) {
-                should_stop = 1;
-            } else if (vm->debug_step_mode == 1 && vm->instr_count > vm->debug_step_start_ic) { /* step */
-                should_stop = 1;
-                vm->debug_step_mode = 0;
-            } else if (vm->debug_step_mode == 2 && vm->instr_count > vm->debug_step_start_ic && vm->fp <= vm->debug_step_target_fp) { /* next */
-                should_stop = 1;
-                vm->debug_step_mode = 0;
-            } else if (vm->debug_step_mode == 3 && vm->fp < vm->debug_step_target_fp) { /* finish */
-                should_stop = 1;
-                vm->debug_step_mode = 0;
-            }
-            if (should_stop) {
-                vm->debug_stop_requested = 0;
-                fprintf(stderr, "Paused (debug)\n");
-                vm->on_error_repl(vm);
-                /* Frame pointer might have changed (reset/cont); refresh f */
-                if (vm->fp < 0) break;
-                f = &vm->frames[vm->fp];
-            }
-        }
-
-        if (f->ip < 0 || f->ip >= f->fn->instr_count) {
-            /* no more instructions in this frame -> implicit return nil */
-            Value nilv = make_nil();
-            vm_pop_frame(vm);
-            push_value(vm, nilv);
-            continue;
-        }
-
-        Instruction inst = f->fn->instructions[f->ip++];
-        vm->instr_count++; /* count each executed instruction */
-
-        if (vm->trace_enabled) {
-            const char *opname = (inst.op >= 0 && inst.op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0])))
-                                 ? opcode_names[inst.op] : "???";
-            const char *fname = f->fn && f->fn->name ? f->fn->name : "<entry>";
-            const char *sfile = f->fn && f->fn->source_file ? f->fn->source_file : "<unknown>";
-            /* Dump up to top 4 stack values */
-            int count = vm->sp + 1;
-            int start = count - 4; if (start < 0) start = 0;
-            fprintf(stdout, "TRACE %s:%d %s ip=%d %-14s %d | stack[%d]=[", sfile, vm->current_line, fname, f->ip - 1, opname, inst.operand, count);
-            for (int i = start; i < count; ++i) {
-                char *sv = value_to_string_alloc(&vm->stack[i]);
-                if (!sv) sv = strdup("<oom>");
-                fprintf(stdout, "%s%s", sv, (i == count - 1 ? "" : ", "));
-                free(sv);
-            }
-            fprintf(stdout, "]\n");
-        }
-
-        /* Breakpoint hit detection: breakpoints are set on source_file:line via LINE markers */
-        if (vm->on_error_repl && inst.op == OP_LINE && vm->break_count > 0) {
-            const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : NULL;
-            int line = inst.operand;
-            for (int bi = 0; bi < vm->break_count; ++bi) {
-                if (!vm->breakpoints[bi].active) continue;
-                if (vm->breakpoints[bi].line != line) continue;
-                if (!sfile || !vm->breakpoints[bi].file) continue;
-                if (strcmp(vm->breakpoints[bi].file, sfile) != 0) continue;
-                fprintf(stderr, "Breakpoint %d hit at %s:%d\n", bi, sfile, line);
-                vm->on_error_repl(vm);
-                /* After returning, refresh frame pointer and frame */
-                if (vm->fp < 0) break;
-                f = &vm->frames[vm->fp];
-                break;
-            }
-        }
-
-        switch (inst.op) {
-            /* All opcode handlers as .c includes */
-            #include "vm/arithmetic/add.c"
-            #include "vm/arithmetic/div.c"
-            #include "vm/arithmetic/mul.c"
-            #include "vm/arithmetic/sub.c"
-
-            #include "vm/arrays/apop.c"
-            #include "vm/arrays/clear.c"
-            #include "vm/arrays/contains.c"
-            #include "vm/arrays/enumerate.c"
-            #include "vm/arrays/index_get.c"
-            #include "vm/arrays/index_of.c"
-            #include "vm/arrays/index_set.c"
-            #include "vm/arrays/insert.c"
-            #include "vm/arrays/join.c"
-            #include "vm/arrays/make_array.c"
-            #include "vm/arrays/push.c"
-            #include "vm/arrays/remove.c"
-            #include "vm/arrays/set.c"
-            #include "vm/arrays/slice.c"
-            #include "vm/arrays/zip.c"
-
-            /* Bitwise and shifts/rotates */
-            #include "vm/bitwise/band.c"
-            #include "vm/bitwise/bor.c"
-            #include "vm/bitwise/bxor.c"
-            #include "vm/bitwise/bnot.c"
-            #include "vm/bitwise/shl.c"
-            #include "vm/bitwise/shr.c"
-            #include "vm/bitwise/rol.c"
-            #include "vm/bitwise/ror.c"
-
-            #include "vm/core/call.c"
-            #include "vm/core/dup.c"
-            #include "vm/core/exit.c"
-            #include "vm/core/halt.c"
-            #include "vm/core/jump.c"
-            #include "vm/core/jump_if_false.c"
-            #include "vm/core/load_const.c"
-            #include "vm/core/load_global.c"
-            #include "vm/core/load_local.c"
-            #include "vm/core/nop.c"
-            #include "vm/core/pop.c"
-            #include "vm/core/return.c"
-            #include "vm/core/store_global.c"
-            #include "vm/core/store_local.c"
-            #include "vm/core/swap.c"
-            #include "vm/core/throw.c"
-            #include "vm/core/try_pop.c"
-            #include "vm/core/try_push.c"
-
-            #include "vm/io/read_file.c"
-            #include "vm/io/write_file.c"
-            #include "vm/io/input_line.c"
-
-            #include "vm/logic/and.c"
-            #include "vm/logic/eq.c"
-            #include "vm/logic/gt.c"
-            #include "vm/logic/gte.c"
-            #include "vm/logic/lt.c"
-            #include "vm/logic/lte.c"
-            #include "vm/logic/neq.c"
-            #include "vm/logic/not.c"
-            #include "vm/logic/or.c"
-
-            #include "vm/maps/has_key.c"
-            #include "vm/maps/keys.c"
-            #include "vm/maps/make_map.c"
-            #include "vm/maps/values.c"
-
-            #include "vm/math/abs.c"
-            #include "vm/math/clamp.c"
-            #include "vm/math/max.c"
-            #include "vm/math/min.c"
-            #include "vm/math/fmax.c"
-            #include "vm/math/fmin.c"
-            #include "vm/math/mod.c"
-            #include "vm/math/pow.c"
-            #include "vm/math/floor.c"
-            #include "vm/math/ceil.c"
-            #include "vm/math/trunc.c"
-            #include "vm/math/round.c"
-            #include "vm/math/sin.c"
-            #include "vm/math/cos.c"
-            #include "vm/math/tan.c"
-            #include "vm/math/exp.c"
-            #include "vm/math/log.c"
-            #include "vm/math/log10.c"
-            #include "vm/math/sqrt.c"
-            #include "vm/math/random_int.c"
-            #include "vm/math/random_seed.c"
-            #include "vm/math/gcd.c"
-            #include "vm/math/lcm.c"
-            #include "vm/math/isqrt.c"
-            #include "vm/math/sign.c"
-
-            /* Rust FFI demo opcode(s) */
-            #include "vm/rust/hello.c"
-            #include "vm/rust/hello_args.c"
-            #include "vm/rust/hello_args_return.c"
-            #include "vm/rust/get_sp.c"
-            #include "vm/rust/set_exit.c"
-
-            #include "vm/os/env.c"
-            #include "vm/os/env_all.c"
-            #include "vm/os/fun_version.c"
-            #include "vm/os/sleep_ms.c"
-            #include "vm/os/thread_join.c"
-            #include "vm/os/thread_spawn.c"
-            #include "vm/os/proc_run.c"
-            #include "vm/os/proc_system.c"
-            #include "vm/os/time_now_ms.c"
-            #include "vm/os/clock_mono_ms.c"
-            #include "vm/os/date_format.c"
-            #include "vm/os/random_number.c"
-            #include "vm/os/serial_open.c"
-            #include "vm/os/serial_config.c"
-            #include "vm/os/serial_send.c"
-            #include "vm/os/serial_recv.c"
-            #include "vm/os/serial_close.c"
-
-            /* Socket ops */
-            #include "vm/os/socket_tcp_listen.c"
-            #include "vm/os/socket_tcp_accept.c"
-            #include "vm/os/socket_tcp_connect.c"
-            #include "vm/os/socket_send.c"
-            #include "vm/os/socket_recv.c"
-            #include "vm/os/socket_close.c"
-            #include "vm/os/socket_unix_listen.c"
-            #include "vm/os/socket_unix_connect.c"
-
-            #ifdef FUN_WITH_PCSC
-            #include "vm/pcsc/establish.c"
-            #include "vm/pcsc/release.c"
-            #include "vm/pcsc/list_readers.c"
-            #include "vm/pcsc/connect.c"
-            #include "vm/pcsc/disconnect.c"
-            #include "vm/pcsc/transmit.c"
-            #endif
-
-            /* JSON ops (implemented in jsonc.c, included above) */
-            #ifdef FUN_WITH_JSON
-            #include "vm/json/parse.c"
-            #include "vm/json/stringify.c"
-            #include "vm/json/from_file.c"
-            #include "vm/json/to_file.c"
-            #endif
-
-            /* XML ops (libxml2) */
-            #ifdef FUN_WITH_XML2
-            #include "vm/xml/parse.c"
-            #include "vm/xml/root.c"
-            #include "vm/xml/name.c"
-            #include "vm/xml/text.c"
-            #endif
-
-            /* INI ops (iniparser 4.2.6) */
-            #ifdef FUN_WITH_INI
-            #include "vm/ini/load.c"
-            #include "vm/ini/free.c"
-            #include "vm/ini/get_string.c"
-            #include "vm/ini/get_int.c"
-            #include "vm/ini/get_double.c"
-            #include "vm/ini/get_bool.c"
-            #include "vm/ini/set.c"
-            #include "vm/ini/unset.c"
-            #include "vm/ini/save.c"
-            #else
-            #include "vm/ini/stubs.c"
-            #endif
-
-            /* CURL ops */
-            #ifdef FUN_WITH_CURL
-            #include "vm/curl/get.c"
-            #include "vm/curl/post.c"
-            #include "vm/curl/download.c"
-            #endif
-
-            /* OpenSSL ops (md5/sha256/sha512/ripemd160) */
-            #ifdef FUN_WITH_OPENSSL
-            #include "vm/openssl/md5.c"
-            #include "vm/openssl/sha256.c"
-            #include "vm/openssl/sha512.c"
-            #include "vm/openssl/ripemd160.c"
-            #endif
-
-            /* LibreSSL ops (md5/sha256/sha512/ripemd160) */
-            #ifdef FUN_WITH_LIBRESSL
-            #include "vm/libressl/md5.c"
-            #include "vm/libressl/sha256.c"
-            #include "vm/libressl/sha512.c"
-            #include "vm/libressl/ripemd160.c"
-            #endif
-
-            /* Tk (Tcl/Tk) ops */
-            #ifdef FUN_WITH_TCLTK
-            #include "vm/tk/eval.c"
-            #include "vm/tk/result.c"
-            #include "vm/tk/loop.c"
-            #include "vm/tk/wm_title.c"
-            #include "vm/tk/label.c"
-            #include "vm/tk/button.c"
-            #include "vm/tk/pack.c"
-            #include "vm/tk/bind.c"
-            #endif
-
-            /* Notcurses TUI ops (optional) */
-            #ifdef FUN_WITH_NOTCURSES
-            #include "vm/notcurses/init.c"
-            #include "vm/notcurses/shutdown.c"
-            #include "vm/notcurses/clear.c"
-            #include "vm/notcurses/draw_text.c"
-            #include "vm/notcurses/getch.c"
-            #endif
-
-            /* SQLite ops */
-            #ifdef FUN_WITH_SQLITE
-            #include "vm/sqlite/open.c"
-            #include "vm/sqlite/close.c"
-            #include "vm/sqlite/exec.c"
-            #include "vm/sqlite/query.c"
-            #endif
-
-            /* C++ demo opcodes (guarded) */
-            #if defined(FUN_WITH_CPP)
-            case OP_CPP_ADD: {
-                int rc = fun_op_cpp_add(vm);
-                if (rc != 0) {
-                    vm_raise_error(vm, "cpp_add failed");
-                }
-                break;
-            }
-            #else
-            case OP_CPP_ADD: {
-                vm_raise_error(vm, "CPP support is not enabled (build with -DFUN_WITH_CPP=ON)");
-                break;
-            }
-            #endif
-
-            /* libsql ops (independent) */
-            #ifdef FUN_WITH_LIBSQL
-            #include "vm/libsql/open.c"
-            #include "vm/libsql/close.c"
-            #include "vm/libsql/exec.c"
-            #include "vm/libsql/query.c"
-            #endif
-
-            /* PCRE2 ops */
-            #ifdef FUN_WITH_PCRE2
-            #include "vm/pcre2/test.c"
-            #include "vm/pcre2/match.c"
-            #include "vm/pcre2/findall.c"
-            #endif
-
-            #include "vm/strings/find.c"
-            #include "vm/strings/regex_match.c"
-            #include "vm/strings/regex_search.c"
-            #include "vm/strings/regex_replace.c"
-            #include "vm/strings/split.c"
-            #include "vm/strings/substr.c"
-
-            #include "vm/len.c"
-            #include "vm/line.c"
-            #include "vm/print.c"
-            #include "vm/echo.c"
-            #include "vm/to_number.c"
-            #include "vm/to_string.c"
-            #include "vm/cast.c"
-            #include "vm/typeof.c"
-            #include "vm/uclamp.c"
-            #include "vm/sclamp.c"
-            #include "vm/os/list_dir.c"
-
-            default:
-                if (!opcode_is_valid(inst.op)) {
-                    fprintf(stderr, "Runtime error: unknown opcode %d (%s) at instruction %d\n",
-                            inst.op,
-                            (inst.op >= 0 && inst.op < sizeof(opcode_names)/sizeof(opcode_names[0]))
-                                ? opcode_names[inst.op] : "???",
-                            f->ip - 1);
-                    exit(1);
-                }
-                break;
-        }
-
-        /* Stream console output in realtime for scripts:
-         * When PRINT/ECHO pushed items into the VM's output buffer, flush them
-         * immediately to stdout and clear the buffer to avoid end-of-run bursts.
-         * This keeps REPL compatibility (REPL still prints after each submit),
-         * while regular script execution shows progress bars live.
-         */
-        if (inst.op == OP_PRINT || inst.op == OP_ECHO) {
-            vm_print_output(vm);
-            vm_clear_output(vm);
-            fflush(stdout);
-        }
+    if (f->ip < 0 || f->ip >= f->fn->instr_count) {
+      /* no more instructions in this frame -> implicit return nil */
+      Value nilv = make_nil();
+      vm_pop_frame(vm);
+      push_value(vm, nilv);
+      continue;
     }
-    g_active_vm = NULL;
+
+    Instruction inst = f->fn->instructions[f->ip++];
+    vm->instr_count++; /* count each executed instruction */
+
+    if (vm->trace_enabled) {
+      const char *opname = (inst.op >= 0 && inst.op < (int)(sizeof(opcode_names) / sizeof(opcode_names[0])))
+                             ? opcode_names[inst.op]
+                             : "???";
+      const char *fname = f->fn && f->fn->name ? f->fn->name : "<entry>";
+      const char *sfile = f->fn && f->fn->source_file ? f->fn->source_file : "<unknown>";
+      /* Dump up to top 4 stack values */
+      int count = vm->sp + 1;
+      int start = count - 4;
+      if (start < 0) start = 0;
+      fprintf(stdout, "TRACE %s:%d %s ip=%d %-14s %d | stack[%d]=[", sfile, vm->current_line, fname, f->ip - 1, opname, inst.operand, count);
+      for (int i = start; i < count; ++i) {
+        char *sv = value_to_string_alloc(&vm->stack[i]);
+        if (!sv) sv = strdup("<oom>");
+        fprintf(stdout, "%s%s", sv, (i == count - 1 ? "" : ", "));
+        free(sv);
+      }
+      fprintf(stdout, "]\n");
+    }
+
+    /* Breakpoint hit detection: breakpoints are set on source_file:line via LINE markers */
+    if (vm->on_error_repl && inst.op == OP_LINE && vm->break_count > 0) {
+      const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : NULL;
+      int line = inst.operand;
+      for (int bi = 0; bi < vm->break_count; ++bi) {
+        if (!vm->breakpoints[bi].active) continue;
+        if (vm->breakpoints[bi].line != line) continue;
+        if (!sfile || !vm->breakpoints[bi].file) continue;
+        if (strcmp(vm->breakpoints[bi].file, sfile) != 0) continue;
+        fprintf(stderr, "Breakpoint %d hit at %s:%d\n", bi, sfile, line);
+        vm->on_error_repl(vm);
+        /* After returning, refresh frame pointer and frame */
+        if (vm->fp < 0) break;
+        f = &vm->frames[vm->fp];
+        break;
+      }
+    }
+
+    switch (inst.op) {
+/* All opcode handlers as .c includes */
+#include "vm/arithmetic/add.c"
+#include "vm/arithmetic/div.c"
+#include "vm/arithmetic/mul.c"
+#include "vm/arithmetic/sub.c"
+
+#include "vm/arrays/apop.c"
+#include "vm/arrays/clear.c"
+#include "vm/arrays/contains.c"
+#include "vm/arrays/enumerate.c"
+#include "vm/arrays/index_get.c"
+#include "vm/arrays/index_of.c"
+#include "vm/arrays/index_set.c"
+#include "vm/arrays/insert.c"
+#include "vm/arrays/join.c"
+#include "vm/arrays/make_array.c"
+#include "vm/arrays/push.c"
+#include "vm/arrays/remove.c"
+#include "vm/arrays/set.c"
+#include "vm/arrays/slice.c"
+#include "vm/arrays/zip.c"
+
+/* Bitwise and shifts/rotates */
+#include "vm/bitwise/band.c"
+#include "vm/bitwise/bnot.c"
+#include "vm/bitwise/bor.c"
+#include "vm/bitwise/bxor.c"
+#include "vm/bitwise/rol.c"
+#include "vm/bitwise/ror.c"
+#include "vm/bitwise/shl.c"
+#include "vm/bitwise/shr.c"
+
+#include "vm/core/call.c"
+#include "vm/core/dup.c"
+#include "vm/core/exit.c"
+#include "vm/core/halt.c"
+#include "vm/core/jump.c"
+#include "vm/core/jump_if_false.c"
+#include "vm/core/load_const.c"
+#include "vm/core/load_global.c"
+#include "vm/core/load_local.c"
+#include "vm/core/nop.c"
+#include "vm/core/pop.c"
+#include "vm/core/return.c"
+#include "vm/core/store_global.c"
+#include "vm/core/store_local.c"
+#include "vm/core/swap.c"
+#include "vm/core/throw.c"
+#include "vm/core/try_pop.c"
+#include "vm/core/try_push.c"
+
+#include "vm/io/input_line.c"
+#include "vm/io/read_file.c"
+#include "vm/io/write_file.c"
+
+#include "vm/logic/and.c"
+#include "vm/logic/eq.c"
+#include "vm/logic/gt.c"
+#include "vm/logic/gte.c"
+#include "vm/logic/lt.c"
+#include "vm/logic/lte.c"
+#include "vm/logic/neq.c"
+#include "vm/logic/not.c"
+#include "vm/logic/or.c"
+
+#include "vm/maps/has_key.c"
+#include "vm/maps/keys.c"
+#include "vm/maps/make_map.c"
+#include "vm/maps/values.c"
+
+#include "vm/math/abs.c"
+#include "vm/math/ceil.c"
+#include "vm/math/clamp.c"
+#include "vm/math/cos.c"
+#include "vm/math/exp.c"
+#include "vm/math/floor.c"
+#include "vm/math/fmax.c"
+#include "vm/math/fmin.c"
+#include "vm/math/gcd.c"
+#include "vm/math/isqrt.c"
+#include "vm/math/lcm.c"
+#include "vm/math/log.c"
+#include "vm/math/log10.c"
+#include "vm/math/max.c"
+#include "vm/math/min.c"
+#include "vm/math/mod.c"
+#include "vm/math/pow.c"
+#include "vm/math/random_int.c"
+#include "vm/math/random_seed.c"
+#include "vm/math/round.c"
+#include "vm/math/sign.c"
+#include "vm/math/sin.c"
+#include "vm/math/sqrt.c"
+#include "vm/math/tan.c"
+#include "vm/math/trunc.c"
+
+/* Rust FFI demo opcode(s) */
+#include "vm/rust/get_sp.c"
+#include "vm/rust/hello.c"
+#include "vm/rust/hello_args.c"
+#include "vm/rust/hello_args_return.c"
+#include "vm/rust/set_exit.c"
+
+#include "vm/os/clock_mono_ms.c"
+#include "vm/os/date_format.c"
+#include "vm/os/env.c"
+#include "vm/os/env_all.c"
+#include "vm/os/fun_version.c"
+#include "vm/os/proc_run.c"
+#include "vm/os/proc_system.c"
+#include "vm/os/random_number.c"
+#include "vm/os/serial_close.c"
+#include "vm/os/serial_config.c"
+#include "vm/os/serial_open.c"
+#include "vm/os/serial_recv.c"
+#include "vm/os/serial_send.c"
+#include "vm/os/sleep_ms.c"
+#include "vm/os/thread_join.c"
+#include "vm/os/thread_spawn.c"
+#include "vm/os/time_now_ms.c"
+
+/* Socket ops */
+#include "vm/os/socket_close.c"
+#include "vm/os/socket_recv.c"
+#include "vm/os/socket_send.c"
+#include "vm/os/socket_tcp_accept.c"
+#include "vm/os/socket_tcp_connect.c"
+#include "vm/os/socket_tcp_listen.c"
+#include "vm/os/socket_unix_connect.c"
+#include "vm/os/socket_unix_listen.c"
+
+#ifdef FUN_WITH_PCSC
+#include "vm/pcsc/connect.c"
+#include "vm/pcsc/disconnect.c"
+#include "vm/pcsc/establish.c"
+#include "vm/pcsc/list_readers.c"
+#include "vm/pcsc/release.c"
+#include "vm/pcsc/transmit.c"
+#endif
+
+/* JSON ops (implemented in jsonc.c, included above) */
+#ifdef FUN_WITH_JSON
+#include "vm/json/from_file.c"
+#include "vm/json/parse.c"
+#include "vm/json/stringify.c"
+#include "vm/json/to_file.c"
+#endif
+
+/* XML ops (libxml2) */
+#ifdef FUN_WITH_XML2
+#include "vm/xml/name.c"
+#include "vm/xml/parse.c"
+#include "vm/xml/root.c"
+#include "vm/xml/text.c"
+#endif
+
+/* INI ops (iniparser 4.2.6) */
+#ifdef FUN_WITH_INI
+#include "vm/ini/free.c"
+#include "vm/ini/get_bool.c"
+#include "vm/ini/get_double.c"
+#include "vm/ini/get_int.c"
+#include "vm/ini/get_string.c"
+#include "vm/ini/load.c"
+#include "vm/ini/save.c"
+#include "vm/ini/set.c"
+#include "vm/ini/unset.c"
+#else
+#include "vm/ini/stubs.c"
+#endif
+
+/* CURL ops */
+#ifdef FUN_WITH_CURL
+#include "vm/curl/download.c"
+#include "vm/curl/get.c"
+#include "vm/curl/post.c"
+#endif
+
+/* OpenSSL ops (md5/sha256/sha512/ripemd160) */
+#ifdef FUN_WITH_OPENSSL
+#include "vm/openssl/md5.c"
+#include "vm/openssl/ripemd160.c"
+#include "vm/openssl/sha256.c"
+#include "vm/openssl/sha512.c"
+#endif
+
+/* LibreSSL ops (md5/sha256/sha512/ripemd160) */
+#ifdef FUN_WITH_LIBRESSL
+#include "vm/libressl/md5.c"
+#include "vm/libressl/ripemd160.c"
+#include "vm/libressl/sha256.c"
+#include "vm/libressl/sha512.c"
+#endif
+
+/* Tk (Tcl/Tk) ops */
+#ifdef FUN_WITH_TCLTK
+#include "vm/tk/bind.c"
+#include "vm/tk/button.c"
+#include "vm/tk/eval.c"
+#include "vm/tk/label.c"
+#include "vm/tk/loop.c"
+#include "vm/tk/pack.c"
+#include "vm/tk/result.c"
+#include "vm/tk/wm_title.c"
+#endif
+
+/* Notcurses TUI ops (optional) */
+#ifdef FUN_WITH_NOTCURSES
+#include "vm/notcurses/clear.c"
+#include "vm/notcurses/draw_text.c"
+#include "vm/notcurses/getch.c"
+#include "vm/notcurses/init.c"
+#include "vm/notcurses/shutdown.c"
+#endif
+
+/* SQLite ops */
+#ifdef FUN_WITH_SQLITE
+#include "vm/sqlite/close.c"
+#include "vm/sqlite/exec.c"
+#include "vm/sqlite/open.c"
+#include "vm/sqlite/query.c"
+#endif
+
+/* C++ demo opcodes (guarded) */
+#if defined(FUN_WITH_CPP)
+    case OP_CPP_ADD: {
+      int rc = fun_op_cpp_add(vm);
+      if (rc != 0) {
+        vm_raise_error(vm, "cpp_add failed");
+      }
+      break;
+    }
+#else
+    case OP_CPP_ADD: {
+      vm_raise_error(vm, "CPP support is not enabled (build with -DFUN_WITH_CPP=ON)");
+      break;
+    }
+#endif
+
+/* libsql ops (independent) */
+#ifdef FUN_WITH_LIBSQL
+#include "vm/libsql/close.c"
+#include "vm/libsql/exec.c"
+#include "vm/libsql/open.c"
+#include "vm/libsql/query.c"
+#endif
+
+/* PCRE2 ops */
+#ifdef FUN_WITH_PCRE2
+#include "vm/pcre2/findall.c"
+#include "vm/pcre2/match.c"
+#include "vm/pcre2/test.c"
+#endif
+
+#include "vm/strings/find.c"
+#include "vm/strings/regex_match.c"
+#include "vm/strings/regex_replace.c"
+#include "vm/strings/regex_search.c"
+#include "vm/strings/split.c"
+#include "vm/strings/substr.c"
+
+#include "vm/cast.c"
+#include "vm/echo.c"
+#include "vm/len.c"
+#include "vm/line.c"
+#include "vm/os/list_dir.c"
+#include "vm/print.c"
+#include "vm/sclamp.c"
+#include "vm/to_number.c"
+#include "vm/to_string.c"
+#include "vm/typeof.c"
+#include "vm/uclamp.c"
+
+    default:
+      if (!opcode_is_valid(inst.op)) {
+        fprintf(stderr, "Runtime error: unknown opcode %d (%s) at instruction %d\n",
+                inst.op,
+                (inst.op >= 0 && inst.op < sizeof(opcode_names) / sizeof(opcode_names[0]))
+                  ? opcode_names[inst.op]
+                  : "???",
+                f->ip - 1);
+        exit(1);
+      }
+      break;
+    }
+
+    /* Stream console output in realtime for scripts:
+     * When PRINT/ECHO pushed items into the VM's output buffer, flush them
+     * immediately to stdout and clear the buffer to avoid end-of-run bursts.
+     * This keeps REPL compatibility (REPL still prints after each submit),
+     * while regular script execution shows progress bars live.
+     */
+    if (inst.op == OP_PRINT || inst.op == OP_ECHO) {
+      vm_print_output(vm);
+      vm_clear_output(vm);
+      fflush(stdout);
+    }
+  }
+  g_active_vm = NULL;
 }

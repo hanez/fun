@@ -8,7 +8,7 @@
  */
 
 /**
-* @file gte.c
+ * @file gte.c
  * @brief Implements the OP_GTE opcode for greater-than-or-equal comparison in the VM.
  *
  * This file handles the OP_GTE instruction, which checks if the first value is greater than or equal to the second.
@@ -32,13 +32,14 @@
  */
 
 case OP_GTE: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    if (a.type != VAL_INT || b.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: GTE expects ints\n");
-        exit(1);
-    }
-    push_value(vm, make_int(a.i >= b.i ? 1 : 0));
-    free_value(a); free_value(b);
-    break;
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  if (a.type != VAL_INT || b.type != VAL_INT) {
+    fprintf(stderr, "Runtime type error: GTE expects ints\n");
+    exit(1);
+  }
+  push_value(vm, make_int(a.i >= b.i ? 1 : 0));
+  free_value(a);
+  free_value(b);
+  break;
 }

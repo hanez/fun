@@ -8,7 +8,7 @@
  */
 
 /**
-* @file pop.c
+ * @file pop.c
  * @brief Implements the OP_POP opcode for removing the top stack value in the VM.
  *
  * This file handles the OP_POP instruction, which removes the top value from the stack.
@@ -29,11 +29,11 @@
  */
 
 case OP_POP: {
-    if (vm->sp < 0) {
-        fprintf(stderr, "Runtime error: stack underflow for POP\n");
-        exit(1);
-    }
-    Value v = pop_value(vm);
-    free_value(v);
-    break;
+  if (vm->sp < 0) {
+    fprintf(stderr, "Runtime error: stack underflow for POP\n");
+    exit(1);
+  }
+  Value v = pop_value(vm);
+  free_value(v);
+  break;
 }

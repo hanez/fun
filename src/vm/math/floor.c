@@ -10,34 +10,34 @@
  */
 
 /**
-* @file floor.c
+ * @file floor.c
  * @brief Implements the OP_FLOOR opcode using C99 math.h floor().
  */
 
 #include <math.h>
 
 case OP_FLOOR: {
-    Value v = pop_value(vm);
-    if (v.type == VAL_INT) {
-        /* floor(n) == n for integers */
-        push_value(vm, make_int(v.i));
-        free_value(v);
-    } else if (v.type == VAL_FLOAT) {
-        double r = floor(v.d);
-        if (r >= (double)INT64_MIN && r <= (double)INT64_MAX) {
-            int64_t ii = (int64_t)r;
-            if ((double)ii == r) {
-                push_value(vm, make_int(ii));
-            } else {
-                push_value(vm, make_float(r));
-            }
-        } else {
-            push_value(vm, make_float(r));
-        }
-        free_value(v);
+  Value v = pop_value(vm);
+  if (v.type == VAL_INT) {
+    /* floor(n) == n for integers */
+    push_value(vm, make_int(v.i));
+    free_value(v);
+  } else if (v.type == VAL_FLOAT) {
+    double r = floor(v.d);
+    if (r >= (double)INT64_MIN && r <= (double)INT64_MAX) {
+      int64_t ii = (int64_t)r;
+      if ((double)ii == r) {
+        push_value(vm, make_int(ii));
+      } else {
+        push_value(vm, make_float(r));
+      }
     } else {
-        fprintf(stderr, "Runtime type error: FLOOR expects number, got %s\n", value_type_name(v.type));
-        exit(1);
+      push_value(vm, make_float(r));
     }
-    break;
+    free_value(v);
+  } else {
+    fprintf(stderr, "Runtime type error: FLOOR expects number, got %s\n", value_type_name(v.type));
+    exit(1);
+  }
+  break;
 }

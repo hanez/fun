@@ -1,5 +1,5 @@
 /**
-* This file is part of the Fun programming language.
+ * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
@@ -12,16 +12,17 @@
 /* NC_CLEAR */
 case OP_NC_CLEAR: {
 #ifdef FUN_WITH_NOTCURSES
-    if (_fun_nc && _fun_nc_std) {
-        ncplane_erase(_fun_nc_std);
-        notcurses_render(_fun_nc);
-        push_value(vm, make_int(0));
-    } else {
-        push_value(vm, make_int(-1));
-    }
-#else
-    (void)_fun_nc; (void)_fun_nc_std;
+  if (_fun_nc && _fun_nc_std) {
+    ncplane_erase(_fun_nc_std);
+    notcurses_render(_fun_nc);
+    push_value(vm, make_int(0));
+  } else {
     push_value(vm, make_int(-1));
+  }
+#else
+  (void)_fun_nc;
+  (void)_fun_nc_std;
+  push_value(vm, make_int(-1));
 #endif
-    break;
+  break;
 }

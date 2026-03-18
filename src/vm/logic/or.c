@@ -8,7 +8,7 @@
  */
 
 /**
-* @file or.c
+ * @file or.c
  * @brief Implements the OP_OR opcode for logical OR in the VM.
  *
  * This file handles the OP_OR instruction, which performs a logical OR operation
@@ -32,11 +32,11 @@
  */
 
 case OP_OR: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    int res = value_is_truthy(&a) || value_is_truthy(&b);
-    free_value(a);
-    free_value(b);
-    push_value(vm, make_bool(res));
-    break;
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  int res = value_is_truthy(&a) || value_is_truthy(&b);
+  free_value(a);
+  free_value(b);
+  push_value(vm, make_bool(res));
+  break;
 }

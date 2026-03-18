@@ -8,7 +8,7 @@
  */
 
 /**
-* @file div.c
+ * @file div.c
  * @brief Implements the OP_DIV opcode for integer division in the VM.
  *
  * This file handles the OP_DIV instruction, which performs integer division
@@ -33,34 +33,34 @@
  */
 
 case OP_DIV: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    if ((a.type == VAL_INT || a.type == VAL_FLOAT) && (b.type == VAL_INT || b.type == VAL_FLOAT)) {
-        if (a.type == VAL_FLOAT || b.type == VAL_FLOAT) {
-            double da = (a.type == VAL_FLOAT) ? a.d : (double)a.i;
-            double db = (b.type == VAL_FLOAT) ? b.d : (double)b.i;
-            if (db == 0.0) {
-                vm_raise_error(vm, "division by zero");
-                break;
-            }
-            Value res = make_float(da / db);
-            free_value(a);
-            free_value(b);
-            push_value(vm, res);
-        } else {
-            if (b.i == 0) {
-                vm_raise_error(vm, "division by zero");
-                break;
-            }
-            Value res = make_int(a.i / b.i);
-            free_value(a);
-            free_value(b);
-            push_value(vm, res);
-        }
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  if ((a.type == VAL_INT || a.type == VAL_FLOAT) && (b.type == VAL_INT || b.type == VAL_FLOAT)) {
+    if (a.type == VAL_FLOAT || b.type == VAL_FLOAT) {
+      double da = (a.type == VAL_FLOAT) ? a.d : (double)a.i;
+      double db = (b.type == VAL_FLOAT) ? b.d : (double)b.i;
+      if (db == 0.0) {
+        vm_raise_error(vm, "division by zero");
+        break;
+      }
+      Value res = make_float(da / db);
+      free_value(a);
+      free_value(b);
+      push_value(vm, res);
     } else {
-        fprintf(stderr, "Runtime type error: DIV expects numbers, got %s and %s\n",
-                value_type_name(a.type), value_type_name(b.type));
-        exit(1);
+      if (b.i == 0) {
+        vm_raise_error(vm, "division by zero");
+        break;
+      }
+      Value res = make_int(a.i / b.i);
+      free_value(a);
+      free_value(b);
+      push_value(vm, res);
     }
-    break;
+  } else {
+    fprintf(stderr, "Runtime type error: DIV expects numbers, got %s and %s\n",
+            value_type_name(a.type), value_type_name(b.type));
+    exit(1);
+  }
+  break;
 }

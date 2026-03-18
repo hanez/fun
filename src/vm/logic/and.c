@@ -8,7 +8,7 @@
  */
 
 /**
-* @file and.c
+ * @file and.c
  * @brief Implements the OP_AND opcode for logical AND in the VM.
  *
  * This file handles the OP_AND instruction, which performs a logical AND operation
@@ -32,11 +32,11 @@
  */
 
 case OP_AND: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    int res = value_is_truthy(&a) && value_is_truthy(&b);
-    free_value(a);
-    free_value(b);
-    push_value(vm, make_bool(res));
-    break;
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  int res = value_is_truthy(&a) && value_is_truthy(&b);
+  free_value(a);
+  free_value(b);
+  push_value(vm, make_bool(res));
+  break;
 }

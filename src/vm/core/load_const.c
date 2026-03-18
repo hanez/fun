@@ -8,7 +8,7 @@
  */
 
 /**
-* @file load_const.c
+ * @file load_const.c
  * @brief Implements the OP_LOAD_CONST opcode for loading constants in the VM.
  *
  * This file handles the OP_LOAD_CONST instruction, which loads a constant value
@@ -26,12 +26,12 @@
  */
 
 case OP_LOAD_CONST: {
-    int idx = inst.operand;
-    if (idx < 0 || idx >= f->fn->const_count) {
-        fprintf(stderr, "Runtime error: constant index out of range\n");
-        exit(1);
-    }
-    Value c = copy_value(&f->fn->constants[idx]);
-    push_value(vm, c);
-    break;
+  int idx = inst.operand;
+  if (idx < 0 || idx >= f->fn->const_count) {
+    fprintf(stderr, "Runtime error: constant index out of range\n");
+    exit(1);
+  }
+  Value c = copy_value(&f->fn->constants[idx]);
+  push_value(vm, c);
+  break;
 }

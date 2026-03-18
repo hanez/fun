@@ -12,11 +12,11 @@
 /* OP_INI_FREE: pops handle; pushes 1/0 */
 #ifdef FUN_WITH_INI
 case OP_INI_FREE: {
-    Value vh = pop_value(vm);
-    int h = (vh.type == VAL_INT) ? (int)vh.i : 0;
-    free_value(vh);
-    int ok = ini_free_handle(h);
-    push_value(vm, make_int(ok));
-    break;
+  Value vh = pop_value(vm);
+  int h = (vh.type == VAL_INT) ? (int)vh.i : 0;
+  free_value(vh);
+  int ok = ini_free_handle(h);
+  push_value(vm, make_int(ok));
+  break;
 }
 #endif

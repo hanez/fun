@@ -13,15 +13,21 @@
  * LibreSSL SHA-512 builtin
  */
 case OP_LIBRESSL_SHA512: {
-    Value vdata = pop_value(vm);
-    char *s = value_to_string_alloc(&vdata);
-    free_value(vdata);
-    if (!s) { push_value(vm, make_string("")); break; }
-    char *hex = fun_libressl_sha512_hex((const unsigned char*)s, strlen(s));
-    free(s);
-    if (!hex) { push_value(vm, make_string("")); break; }
-    Value out = make_string(hex);
-    free(hex);
-    push_value(vm, out);
+  Value vdata = pop_value(vm);
+  char *s = value_to_string_alloc(&vdata);
+  free_value(vdata);
+  if (!s) {
+    push_value(vm, make_string(""));
     break;
+  }
+  char *hex = fun_libressl_sha512_hex((const unsigned char *)s, strlen(s));
+  free(s);
+  if (!hex) {
+    push_value(vm, make_string(""));
+    break;
+  }
+  Value out = make_string(hex);
+  free(hex);
+  push_value(vm, out);
+  break;
 }

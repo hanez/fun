@@ -17,23 +17,23 @@
  * Stack after: [int ms]
  */
 
-#include <time.h>
 #include <stdint.h>
+#include <time.h>
 
 case OP_CLOCK_MONO_MS: {
-    int64_t ms;
+  int64_t ms;
 #if defined(CLOCK_MONOTONIC) && !defined(_WIN32)
-    struct timespec ts;
-    if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
-        ms = (int64_t)ts.tv_sec * 1000 + (int64_t)(ts.tv_nsec / 1000000);
-    } else {
-        time_t s = time(NULL);
-        ms = (int64_t)s * 1000;
-    }
-#else
+  struct timespec ts;
+  if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0) {
+    ms = (int64_t)ts.tv_sec * 1000 + (int64_t)(ts.tv_nsec / 1000000);
+  } else {
     time_t s = time(NULL);
     ms = (int64_t)s * 1000;
+  }
+#else
+  time_t s = time(NULL);
+  ms = (int64_t)s * 1000;
 #endif
-    push_value(vm, make_int(ms));
-    break;
+  push_value(vm, make_int(ms));
+  break;
 }

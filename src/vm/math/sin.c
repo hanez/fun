@@ -10,22 +10,22 @@
  */
 
 /**
-* @file sin.c
+ * @file sin.c
  * @brief Implements the OP_SIN opcode using C99 math.h sin().
  */
 
 #include <math.h>
 
 case OP_SIN: {
-    Value v = pop_value(vm);
-    if (v.type == VAL_INT || v.type == VAL_FLOAT) {
-        double x = (v.type == VAL_FLOAT) ? v.d : (double)v.i;
-        double r = sin(x);
-        push_value(vm, make_float(r));
-        free_value(v);
-    } else {
-        fprintf(stderr, "Runtime type error: SIN expects number, got %s\n", value_type_name(v.type));
-        exit(1);
-    }
-    break;
+  Value v = pop_value(vm);
+  if (v.type == VAL_INT || v.type == VAL_FLOAT) {
+    double x = (v.type == VAL_FLOAT) ? v.d : (double)v.i;
+    double r = sin(x);
+    push_value(vm, make_float(r));
+    free_value(v);
+  } else {
+    fprintf(stderr, "Runtime type error: SIN expects number, got %s\n", value_type_name(v.type));
+    exit(1);
+  }
+  break;
 }

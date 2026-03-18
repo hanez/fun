@@ -1,24 +1,24 @@
 #!/usr/bin/env fun
 
 /*
- * This file is part of the Fun programming language.
- * https://fun-lang.xyz/
- *
- * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the Apache-2.0 license.
- * https://opensource.org/license/apache-2-0
- */
+  * This file is part of the Fun programming language.
+  * https://fun-lang.xyz/
+  *
+  * Copyright 2025 Johannes Findeisen <you@hanez.org>
+  * Licensed under the terms of the Apache-2.0 license.
+  * https://opensource.org/license/apache-2-0
+  */
 
 /*
- * Arrays Example
- *
- * Demonstrates basic array operations including:
- * - Array declaration and initialization
- * - Accessing elements via indexing
- * - Iterating through arrays with `for` loops
- * - Creating subarrays (slices)
- *- Length calculation
- */
+  * Arrays Example
+  *
+  * Demonstrates basic array operations including:
+  * - Array declaration and initialization
+  * - Accessing elements via indexing
+  * - Iterating through arrays with `for` loops
+  * - Creating subarrays (slices)
+  *- Length calculation
+  */
 
 // Arrays basics
 arr = [1, 2, 3]

@@ -8,8 +8,8 @@
  *
  * Added: 2025-12-11 (2025-12-11 migrated from src/vm/libsql/common.c)
  */
- 
- /* Ensure PCRE2 is configured consistently across the whole translation unit.
+
+/* Ensure PCRE2 is configured consistently across the whole translation unit.
  * vm.c includes many opcode implementation .c files; some use PCRE2. For PCRE2
  * headers to expose the correct typedefs (e.g., pcre2_code, PCRE2_SPTR), the
  * PCRE2_CODE_UNIT_WIDTH macro must be defined before the first inclusion of

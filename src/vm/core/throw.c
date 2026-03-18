@@ -8,26 +8,26 @@
  */
 
 case OP_THROW: {
-    Value err = pop_value(vm);
-    /* if there is a handler in this frame, jump to it and push err for catch */
-    if (f->try_sp >= 0) {
-        int try_idx = f->try_stack[f->try_sp--];
-        int target = f->fn->instructions[try_idx].operand;
-        /* push error for catch block */
-        push_value(vm, err); /* transfer ownership to stack */
-        f->ip = target;
-        break;
-    }
-    /* Unhandled: print error and terminate */
-    char *s = value_to_string_alloc(&err);
-    if (s) {
-        fprintf(stdout, "%s\n", s);
-        free(s);
-    } else {
-        fprintf(stdout, "<error>\n");
-    }
-    free_value(err);
-    /* clear frames to stop execution */
-    vm->fp = -1;
+  Value err = pop_value(vm);
+  /* if there is a handler in this frame, jump to it and push err for catch */
+  if (f->try_sp >= 0) {
+    int try_idx = f->try_stack[f->try_sp--];
+    int target = f->fn->instructions[try_idx].operand;
+    /* push error for catch block */
+    push_value(vm, err); /* transfer ownership to stack */
+    f->ip = target;
     break;
+  }
+  /* Unhandled: print error and terminate */
+  char *s = value_to_string_alloc(&err);
+  if (s) {
+    fprintf(stdout, "%s\n", s);
+    free(s);
+  } else {
+    fprintf(stdout, "<error>\n");
+  }
+  free_value(err);
+  /* clear frames to stop execution */
+  vm->fp = -1;
+  break;
 }

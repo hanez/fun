@@ -8,7 +8,7 @@
  */
 
 /**
-* @file arr_push.c
+ * @file arr_push.c
  * @brief Implements the OP_ARR_PUSH opcode for appending elements to arrays in the VM.
  *
  * This file handles the OP_ARR_PUSH instruction, which appends a value to the end of an array.
@@ -33,18 +33,18 @@
  */
 
 case OP_PUSH: {
-    Value v = pop_value(vm);
-    Value arr = pop_value(vm);
-    if (arr.type != VAL_ARRAY) {
-        fprintf(stderr, "Runtime type error: ARR_PUSH expects array\n");
-        exit(1);
-    }
-    int n = array_push(&arr, v);
-    if (n < 0) {
-        fprintf(stderr, "Runtime error: push failed (OOM?)\n");
-        exit(1);
-    }
-    free_value(arr);
-    push_value(vm, make_int(n));
-    break;
+  Value v = pop_value(vm);
+  Value arr = pop_value(vm);
+  if (arr.type != VAL_ARRAY) {
+    fprintf(stderr, "Runtime type error: ARR_PUSH expects array\n");
+    exit(1);
+  }
+  int n = array_push(&arr, v);
+  if (n < 0) {
+    fprintf(stderr, "Runtime error: push failed (OOM?)\n");
+    exit(1);
+  }
+  free_value(arr);
+  push_value(vm, make_int(n));
+  break;
 }

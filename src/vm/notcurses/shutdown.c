@@ -12,14 +12,15 @@
 /* NC_SHUTDOWN */
 case OP_NC_SHUTDOWN: {
 #ifdef FUN_WITH_NOTCURSES
-    if (_fun_nc) {
-        notcurses_stop(_fun_nc);
-        _fun_nc = NULL;
-        _fun_nc_std = NULL;
-    }
+  if (_fun_nc) {
+    notcurses_stop(_fun_nc);
+    _fun_nc = NULL;
+    _fun_nc_std = NULL;
+  }
 #else
-    (void)_fun_nc; (void)_fun_nc_std;
+  (void)_fun_nc;
+  (void)_fun_nc_std;
 #endif
-    push_value(vm, make_int(0));
-    break;
+  push_value(vm, make_int(0));
+  break;
 }

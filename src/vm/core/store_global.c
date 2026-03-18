@@ -8,7 +8,7 @@
  */
 
 /**
-* @file store_global.c
+ * @file store_global.c
  * @brief Implements the OP_STORE_GLOBAL opcode for storing global variables in the VM.
  *
  * This file handles the OP_STORE_GLOBAL instruction, which stores a value into a global variable
@@ -31,16 +31,16 @@
  */
 
 case OP_STORE_GLOBAL: {
-    int idx = inst.operand;
-    if (idx < 0 || idx >= MAX_GLOBALS) {
-        fprintf(stderr, "Runtime error: global index out of range\n");
-        exit(1);
-    }
-    Value v = pop_value(vm);
+  int idx = inst.operand;
+  if (idx < 0 || idx >= MAX_GLOBALS) {
+    fprintf(stderr, "Runtime error: global index out of range\n");
+    exit(1);
+  }
+  Value v = pop_value(vm);
 #ifdef FUN_DEBUG
-    fprintf(stderr, "DEBUG STORE_GLOBAL[%d]: new.type=%d\n", idx, v.type);
+  fprintf(stderr, "DEBUG STORE_GLOBAL[%d]: new.type=%d\n", idx, v.type);
 #endif
-    free_value(vm->globals[idx]);
-    vm->globals[idx] = v;
-    break;
+  free_value(vm->globals[idx]);
+  vm->globals[idx] = v;
+  break;
 }

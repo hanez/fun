@@ -11,18 +11,18 @@
 
 #ifdef FUN_WITH_INI
 #if defined(__has_include)
-#  if __has_include(<iniparser/iniparser.h>)
-#    include <iniparser/iniparser.h>
-#    include <iniparser/dictionary.h>
-#  elif __has_include(<iniparser.h>)
-#    include <iniparser.h>
-#    include <dictionary.h>
-#  else
-#    error "iniparser headers not found"
-#  endif
+#if __has_include(<iniparser/iniparser.h>)
+#include <iniparser/dictionary.h>
+#include <iniparser/iniparser.h>
+#elif __has_include(<iniparser.h>)
+#include <dictionary.h>
+#include <iniparser.h>
 #else
-#  include <iniparser/iniparser.h>
-#  include <iniparser/dictionary.h>
+#error "iniparser headers not found"
+#endif
+#else
+#include <iniparser/dictionary.h>
+#include <iniparser/iniparser.h>
 #endif
 #include "vm/ini/handles.h"
 #endif

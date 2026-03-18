@@ -8,7 +8,7 @@
  */
 
 /**
-* @file len.c
+ * @file len.c
  * @brief Implements the OP_LEN opcode for getting the length of arrays or strings in the VM.
  *
  * This file handles the OP_LEN instruction, which retrieves the length of an array or string.
@@ -32,18 +32,18 @@
  */
 
 case OP_LEN: {
-    Value a = pop_value(vm);
-    int len = 0;
-    if (a.type == VAL_STRING) {
-        len = (int)(a.s ? (int)strlen(a.s) : 0);
-    } else if (a.type == VAL_ARRAY) {
-        len = array_length(&a);
-        if (len < 0) len = 0;
-    } else {
-            /* Be lenient: for non-array/non-string, treat length as 0 */
-            push_value(vm, make_int(0));
-    }
-    free_value(a);
-    push_value(vm, make_int(len));
-    break;
+  Value a = pop_value(vm);
+  int len = 0;
+  if (a.type == VAL_STRING) {
+    len = (int)(a.s ? (int)strlen(a.s) : 0);
+  } else if (a.type == VAL_ARRAY) {
+    len = array_length(&a);
+    if (len < 0) len = 0;
+  } else {
+    /* Be lenient: for non-array/non-string, treat length as 0 */
+    push_value(vm, make_int(0));
+  }
+  free_value(a);
+  push_value(vm, make_int(len));
+  break;
 }

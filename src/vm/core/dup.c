@@ -8,7 +8,7 @@
  */
 
 /**
-* @file dup.c
+ * @file dup.c
  * @brief Implements the OP_DUP opcode for duplicating the top stack value in the VM.
  *
  * This file handles the OP_DUP instruction, which duplicates the top value on the stack.
@@ -25,17 +25,17 @@
  * // Bytecode: OP_DUP
  * // Stack before: [42]
  * // Stack after: [42, 42]
-*
+ *
  * @author Johannes Findeisen
  * @date 2025-10-16
  */
 
 case OP_DUP: {
-    if (vm->sp < 0) {
-        fprintf(stderr, "Runtime error: stack underflow for DUP\n");
-        exit(1);
-    }
-    Value top = vm->stack[vm->sp];
-    push_value(vm, copy_value(&top));
-    break;
+  if (vm->sp < 0) {
+    fprintf(stderr, "Runtime error: stack underflow for DUP\n");
+    exit(1);
+  }
+  Value top = vm->stack[vm->sp];
+  push_value(vm, copy_value(&top));
+  break;
 }

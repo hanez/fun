@@ -12,18 +12,22 @@
 /* PCSC release */
 case OP_PCSC_RELEASE: {
 #ifdef FUN_WITH_PCSC
-    Value vid = pop_value(vm);
-    int id = (int)vid.i;
-    free_value(vid);
-    pcsc_ctx_entry *e = pcsc_get_ctx(id);
-    if (!e) { push_value(vm, make_int(0)); break; }
-    SCardReleaseContext(e->ctx);
-    e->in_use = 0;
-    e->ctx = 0;
-    push_value(vm, make_int(1));
-#else
-    Value vid = pop_value(vm); free_value(vid);
+  Value vid = pop_value(vm);
+  int id = (int)vid.i;
+  free_value(vid);
+  pcsc_ctx_entry *e = pcsc_get_ctx(id);
+  if (!e) {
     push_value(vm, make_int(0));
-#endif
     break;
+  }
+  SCardReleaseContext(e->ctx);
+  e->in_use = 0;
+  e->ctx = 0;
+  push_value(vm, make_int(1));
+#else
+  Value vid = pop_value(vm);
+  free_value(vid);
+  push_value(vm, make_int(0));
+#endif
+  break;
 }

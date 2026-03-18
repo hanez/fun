@@ -8,7 +8,7 @@
  */
 
 /**
-* @file jump_if_false.c
+ * @file jump_if_false.c
  * @brief Implements the OP_JUMP_IF_FALSE opcode for conditional jumps in the VM.
  *
  * This file handles the OP_JUMP_IF_FALSE instruction, which jumps if the top
@@ -29,11 +29,11 @@
  */
 
 case OP_JUMP_IF_FALSE: {
-    Value cond = pop_value(vm);
-    int truthy = value_is_truthy(&cond);
-    free_value(cond);
-    if (!truthy) {
-        f->ip = inst.operand;
-    }
-    break;
+  Value cond = pop_value(vm);
+  int truthy = value_is_truthy(&cond);
+  free_value(cond);
+  if (!truthy) {
+    f->ip = inst.operand;
+  }
+  break;
 }

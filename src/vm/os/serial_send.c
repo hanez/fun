@@ -14,23 +14,23 @@
 #endif
 
 case OP_SERIAL_SEND: {
-    /* Pops data (string), fd (int); returns bytes sent (int) */
-    Value datav = pop_value(vm);
-    Value fdv = pop_value(vm);
-    int sent = -1;
+  /* Pops data (string), fd (int); returns bytes sent (int) */
+  Value datav = pop_value(vm);
+  Value fdv = pop_value(vm);
+  int sent = -1;
 #ifdef __unix__
-    if (fdv.type != VAL_INT || datav.type != VAL_STRING) {
-        fprintf(stderr, "Runtime type error: serial_send expects (int fd, string data)\n");
-    } else {
-        int fd = (int)fdv.i;
-        const char *buf = datav.s ? datav.s : "";
-        size_t len = strlen(buf);
-        ssize_t n = write(fd, buf, len);
-        if (n >= 0) sent = (int)n;
-    }
+  if (fdv.type != VAL_INT || datav.type != VAL_STRING) {
+    fprintf(stderr, "Runtime type error: serial_send expects (int fd, string data)\n");
+  } else {
+    int fd = (int)fdv.i;
+    const char *buf = datav.s ? datav.s : "";
+    size_t len = strlen(buf);
+    ssize_t n = write(fd, buf, len);
+    if (n >= 0) sent = (int)n;
+  }
 #endif
-    free_value(datav);
-    free_value(fdv);
-    push_value(vm, make_int(sent));
-    break;
+  free_value(datav);
+  free_value(fdv);
+  push_value(vm, make_int(sent));
+  break;
 }

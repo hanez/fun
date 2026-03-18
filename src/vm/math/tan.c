@@ -10,22 +10,22 @@
  */
 
 /**
-* @file tan.c
+ * @file tan.c
  * @brief Implements the OP_TAN opcode using C99 math.h tan().
  */
 
 #include <math.h>
 
 case OP_TAN: {
-    Value v = pop_value(vm);
-    if (v.type == VAL_INT || v.type == VAL_FLOAT) {
-        double x = (v.type == VAL_FLOAT) ? v.d : (double)v.i;
-        double r = tan(x);
-        push_value(vm, make_float(r));
-        free_value(v);
-    } else {
-        fprintf(stderr, "Runtime type error: TAN expects number, got %s\n", value_type_name(v.type));
-        exit(1);
-    }
-    break;
+  Value v = pop_value(vm);
+  if (v.type == VAL_INT || v.type == VAL_FLOAT) {
+    double x = (v.type == VAL_FLOAT) ? v.d : (double)v.i;
+    double r = tan(x);
+    push_value(vm, make_float(r));
+    free_value(v);
+  } else {
+    fprintf(stderr, "Runtime type error: TAN expects number, got %s\n", value_type_name(v.type));
+    exit(1);
+  }
+  break;
 }

@@ -15,12 +15,12 @@
  */
 case OP_RUST_GET_SP: {
 #ifdef FUN_WITH_RUST
-    extern int fun_op_rget_sp(VM *vm);
-    int rc = fun_op_rget_sp(vm);
-    (void)rc; /* rc currently unused; 0 means OK */
+  extern int fun_op_rget_sp(VM * vm);
+  int rc = fun_op_rget_sp(vm);
+  (void)rc; /* rc currently unused; 0 means OK */
 #else
-    vm_raise_error(vm, "RUST_GET_SP requires FUN_WITH_RUST=ON at build time");
-    push_value(vm, make_int(-1));
+  vm_raise_error(vm, "RUST_GET_SP requires FUN_WITH_RUST=ON at build time");
+  push_value(vm, make_int(-1));
 #endif
-    break;
+  break;
 }

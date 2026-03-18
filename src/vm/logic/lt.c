@@ -8,7 +8,7 @@
  */
 
 /**
-* @file lt.c
+ * @file lt.c
  * @brief Implements the OP_LT opcode for less-than comparison in the VM.
  *
  * This file handles the OP_LT instruction, which checks if the first value is less than the second.
@@ -32,16 +32,16 @@
  */
 
 case OP_LT: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    if (a.type != VAL_INT || b.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: LT expects ints, got %s and %s\n",
-                value_type_name(a.type), value_type_name(b.type));
-        exit(1);
-    }
-    Value res = make_int(a.i < b.i ? 1 : 0);
-    free_value(a);
-    free_value(b);
-    push_value(vm, res);
-    break;
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  if (a.type != VAL_INT || b.type != VAL_INT) {
+    fprintf(stderr, "Runtime type error: LT expects ints, got %s and %s\n",
+            value_type_name(a.type), value_type_name(b.type));
+    exit(1);
+  }
+  Value res = make_int(a.i < b.i ? 1 : 0);
+  free_value(a);
+  free_value(b);
+  push_value(vm, res);
+  break;
 }

@@ -11,7 +11,7 @@
 
 /* TK_RESULT */
 case OP_TK_RESULT: {
-    const char *r = fun_tk_get_result();
-    push_value(vm, make_string(r ? r : ""));
-    break;
+  const char *r = fun_tk_get_result();
+  push_value(vm, make_string(r ? r : ""));
+  break;
 }

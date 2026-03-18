@@ -8,7 +8,7 @@
  */
 
 /**
-* @file max.c
+ * @file max.c
  * @brief Implements the OP_MAX opcode for finding the maximum of two values in the VM.
  *
  * This file handles the OP_MAX instruction, which finds the maximum of two integer values.
@@ -32,10 +32,14 @@
  */
 
 case OP_MAX: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "MAX expects ints\n"); exit(1); }
-    push_value(vm, make_int(a.i > b.i ? a.i : b.i));
-    free_value(a); free_value(b);
-    break;
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  if (a.type != VAL_INT || b.type != VAL_INT) {
+    fprintf(stderr, "MAX expects ints\n");
+    exit(1);
+  }
+  push_value(vm, make_int(a.i > b.i ? a.i : b.i));
+  free_value(a);
+  free_value(b);
+  break;
 }

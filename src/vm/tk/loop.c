@@ -11,13 +11,13 @@
 
 /* TK_LOOP */
 case OP_TK_LOOP: {
-    fun_tk_loop();
+  fun_tk_loop();
 #ifdef FUN_WITH_TCLTK
-    /* Ensure the process terminates once the GUI window(s) are closed. */
-    exit(0);
+  /* Ensure the process terminates once the GUI window(s) are closed. */
+  exit(0);
 #else
-    /* When Tk support is not compiled in, behave as a no-op returning Nil. */
-    push_value(vm, make_nil());
+  /* When Tk support is not compiled in, behave as a no-op returning Nil. */
+  push_value(vm, make_nil());
 #endif
-    break; /* not reached when FUN_WITH_TCLTK */
+  break; /* not reached when FUN_WITH_TCLTK */
 }

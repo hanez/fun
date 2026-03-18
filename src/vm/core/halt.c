@@ -8,7 +8,7 @@
  */
 
 /**
-* @file halt.c
+ * @file halt.c
  * @brief Implements the OP_HALT opcode for stopping VM execution.
  *
  * This file handles the OP_HALT instruction, which stops the execution of the VM.
@@ -27,4 +27,4 @@
  */
 
 case OP_HALT:
-    return;
+return;

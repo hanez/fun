@@ -8,7 +8,7 @@
  */
 
 /**
-* @file nop.c
+ * @file nop.c
  * @brief Implements the OP_NOP opcode for no operation in the VM.
  *
  * This file handles the OP_NOP instruction, which performs no operation.
@@ -27,4 +27,4 @@
  */
 
 case OP_NOP:
-    break;
+break;

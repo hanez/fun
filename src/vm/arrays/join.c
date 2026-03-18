@@ -8,7 +8,7 @@
  */
 
 /**
-* @file join.c
+ * @file join.c
  * @brief Implements the OP_JOIN opcode for joining array elements into a string in the VM.
  *
  * This file handles the OP_JOIN instruction, which joins the elements of an array into a string
@@ -27,21 +27,21 @@
  * // Bytecode: OP_JOIN
  * // Stack before: [", ", ["a", "b", "c"]]
  * // Stack after: ["a, b, c"]
- * 
+ *
  * @author Johannes Findeisen
  * @date 2025-10-16
  */
 
 case OP_JOIN: {
-    Value sep = pop_value(vm);
-    Value arr = pop_value(vm);
-    if (arr.type != VAL_ARRAY || sep.type != VAL_STRING) {
-        fprintf(stderr, "Runtime type error: JOIN expects (array, string)\n");
-        exit(1);
-    }
-    Value out = bi_join(&arr, &sep);
-    free_value(arr);
-    free_value(sep);
-    push_value(vm, out);
-    break;
+  Value sep = pop_value(vm);
+  Value arr = pop_value(vm);
+  if (arr.type != VAL_ARRAY || sep.type != VAL_STRING) {
+    fprintf(stderr, "Runtime type error: JOIN expects (array, string)\n");
+    exit(1);
+  }
+  Value out = bi_join(&arr, &sep);
+  free_value(arr);
+  free_value(sep);
+  push_value(vm, out);
+  break;
 }

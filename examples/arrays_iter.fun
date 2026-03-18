@@ -1,24 +1,24 @@
 #!/usr/bin/env fun
 
 /*
- * This file is part of the Fun programming language.
- * https://fun-lang.xyz/
- *
- * Copyright 2025 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the Apache-2.0 license.
- * https://opensource.org/license/apache-2-0
- */
+  * This file is part of the Fun programming language.
+  * https://fun-lang.xyz/
+  *
+  * Copyright 2025 Johannes Findeisen <you@hanez.org>
+  * Licensed under the terms of the Apache-2.0 license.
+  * https://opensource.org/license/apache-2-0
+  */
 
 /*
- * Array Iteration Examples
- *
- * Focuses specifically on:
- * - Various iteration methods (`for`, `while`)
- * - Using array mapping functions
- * - Filtering arrays based on conditions
- * - Reducing arrays to computed values
- *- Converting between different collection types during iteration
- */
+  * Array Iteration Examples
+  *
+  * Focuses specifically on:
+  * - Various iteration methods (`for`, `while`)
+  * - Using array mapping functions
+  * - Filtering arrays based on conditions
+  * - Reducing arrays to computed values
+  *- Converting between different collection types during iteration
+  */
 
 // for-in over an array literal
 for x in [1, 2, 3]

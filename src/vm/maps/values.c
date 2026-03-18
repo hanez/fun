@@ -8,7 +8,7 @@
  */
 
 /**
-* @file values.c
+ * @file values.c
  * @brief Implements the OP_VALUES opcode for retrieving map values in the VM.
  *
  * This file handles the OP_VALUES instruction, which retrieves the values of a map
@@ -32,10 +32,13 @@
  */
 
 case OP_VALUES: {
-    Value m = pop_value(vm);
-    if (m.type != VAL_MAP) { fprintf(stderr, "VALUES expects map\n"); exit(1); }
-    Value arr = map_values_array(&m);
-    free_value(m);
-    push_value(vm, arr);
-    break;
+  Value m = pop_value(vm);
+  if (m.type != VAL_MAP) {
+    fprintf(stderr, "VALUES expects map\n");
+    exit(1);
+  }
+  Value arr = map_values_array(&m);
+  free_value(m);
+  push_value(vm, arr);
+  break;
 }

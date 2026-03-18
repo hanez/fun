@@ -10,7 +10,7 @@
  */
 
 /**
-* @file round.c
+ * @file round.c
  * @brief Implements the OP_ROUND opcode using C99 math.h round().
  *        C99 round() rounds half away from zero.
  */
@@ -18,26 +18,26 @@
 #include <math.h>
 
 case OP_ROUND: {
-    Value v = pop_value(vm);
-    if (v.type == VAL_INT) {
-        push_value(vm, make_int(v.i));
-        free_value(v);
-    } else if (v.type == VAL_FLOAT) {
-        double r = round(v.d);
-        if (r >= (double)INT64_MIN && r <= (double)INT64_MAX) {
-            int64_t ii = (int64_t)r;
-            if ((double)ii == r) {
-                push_value(vm, make_int(ii));
-            } else {
-                push_value(vm, make_float(r));
-            }
-        } else {
-            push_value(vm, make_float(r));
-        }
-        free_value(v);
+  Value v = pop_value(vm);
+  if (v.type == VAL_INT) {
+    push_value(vm, make_int(v.i));
+    free_value(v);
+  } else if (v.type == VAL_FLOAT) {
+    double r = round(v.d);
+    if (r >= (double)INT64_MIN && r <= (double)INT64_MAX) {
+      int64_t ii = (int64_t)r;
+      if ((double)ii == r) {
+        push_value(vm, make_int(ii));
+      } else {
+        push_value(vm, make_float(r));
+      }
     } else {
-        fprintf(stderr, "Runtime type error: ROUND expects number, got %s\n", value_type_name(v.type));
-        exit(1);
+      push_value(vm, make_float(r));
     }
-    break;
+    free_value(v);
+  } else {
+    fprintf(stderr, "Runtime type error: ROUND expects number, got %s\n", value_type_name(v.type));
+    exit(1);
+  }
+  break;
 }

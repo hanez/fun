@@ -1,5 +1,5 @@
 /*
-* This file is part of the Fun programming language.
+ * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
@@ -21,8 +21,8 @@ extern "C" {
 }
 
 extern "C" int fun_op_cpp_add(VM *vm) {
-    int64_t a = vm_pop_i64(vm);
-    int64_t b = vm_pop_i64(vm);
-    vm_push_i64(vm, a + b);
-    return 0; // success
+  int64_t a = vm_pop_i64(vm);
+  int64_t b = vm_pop_i64(vm);
+  vm_push_i64(vm, a + b);
+  return 0; // success
 }

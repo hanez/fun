@@ -14,24 +14,32 @@
  */
 case OP_LIBSQL_OPEN: {
 #ifdef FUN_WITH_LIBSQL
-    Value vpath = pop_value(vm);
-    char *path = value_to_string_alloc(&vpath);
-    free_value(vpath);
-    if (!path) { push_value(vm, make_int(0)); break; }
-    sqlite3 *db = NULL;
-    int rc = sqlite3_open(path, &db);
-    free(path);
-    if (rc != SQLITE_OK || !db) {
-        if (db) sqlite3_close(db);
-        push_value(vm, make_int(0));
-        break;
-    }
-    LibSqlHandle *h = libsql_reg_add(db);
-    if (!h) { sqlite3_close(db); push_value(vm, make_int(0)); break; }
-    push_value(vm, make_int(h->id));
-#else
-    Value v = pop_value(vm); free_value(v);
+  Value vpath = pop_value(vm);
+  char *path = value_to_string_alloc(&vpath);
+  free_value(vpath);
+  if (!path) {
     push_value(vm, make_int(0));
-#endif
     break;
+  }
+  sqlite3 *db = NULL;
+  int rc = sqlite3_open(path, &db);
+  free(path);
+  if (rc != SQLITE_OK || !db) {
+    if (db) sqlite3_close(db);
+    push_value(vm, make_int(0));
+    break;
+  }
+  LibSqlHandle *h = libsql_reg_add(db);
+  if (!h) {
+    sqlite3_close(db);
+    push_value(vm, make_int(0));
+    break;
+  }
+  push_value(vm, make_int(h->id));
+#else
+  Value v = pop_value(vm);
+  free_value(v);
+  push_value(vm, make_int(0));
+#endif
+  break;
 }

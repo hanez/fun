@@ -139,6 +139,12 @@ if(FUN_WITH_REPL)
 endif()
 target_link_libraries(fun PRIVATE fun_core)
 
+# Executable: funstx (syntax checker CLI)
+add_executable(funstx
+  ${CMAKE_SOURCE_DIR}/src/funstx.c
+)
+target_link_libraries(funstx PRIVATE fun_core)
+
 # Internal test programs
 add_executable(fun_test
   ${CMAKE_SOURCE_DIR}/src/fun_test.c)

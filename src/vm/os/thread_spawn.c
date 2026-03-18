@@ -10,15 +10,15 @@
  */
 
 case OP_THREAD_SPAWN: {
-    /* operand: 0 -> no args; 1 -> has args array or single arg */
-    Value argsMaybe = make_nil();
-    if (inst.operand == 1) {
-        argsMaybe = pop_value(vm); /* maybe array or scalar */
-    }
-    Value fnv = pop_value(vm);
-    int tid = fun_thread_spawn(fnv, argsMaybe, inst.operand == 1);
-    free_value(fnv);
-    if (inst.operand == 1) free_value(argsMaybe);
-    push_value(vm, make_int(tid));
-    break;
+  /* operand: 0 -> no args; 1 -> has args array or single arg */
+  Value argsMaybe = make_nil();
+  if (inst.operand == 1) {
+    argsMaybe = pop_value(vm); /* maybe array or scalar */
+  }
+  Value fnv = pop_value(vm);
+  int tid = fun_thread_spawn(fnv, argsMaybe, inst.operand == 1);
+  free_value(fnv);
+  if (inst.operand == 1) free_value(argsMaybe);
+  push_value(vm, make_int(tid));
+  break;
 }

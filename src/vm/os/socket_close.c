@@ -10,20 +10,20 @@
  */
 
 case OP_SOCK_CLOSE: {
-    /* Pops fd; returns 1/0 */
-    Value fdv = pop_value(vm);
-    int ok = 0;
+  /* Pops fd; returns 1/0 */
+  Value fdv = pop_value(vm);
+  int ok = 0;
 #ifdef __unix__
-    if (fdv.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: sock_close expects (int fd)\n");
-        free_value(fdv);
-        push_value(vm, make_int(0));
-        break;
-    }
-    int fd = (int)fdv.i;
-    ok = (close(fd) == 0) ? 1 : 0;
-#endif
+  if (fdv.type != VAL_INT) {
+    fprintf(stderr, "Runtime type error: sock_close expects (int fd)\n");
     free_value(fdv);
-    push_value(vm, make_int(ok));
+    push_value(vm, make_int(0));
     break;
+  }
+  int fd = (int)fdv.i;
+  ok = (close(fd) == 0) ? 1 : 0;
+#endif
+  free_value(fdv);
+  push_value(vm, make_int(ok));
+  break;
 }

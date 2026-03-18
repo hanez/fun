@@ -8,7 +8,7 @@
  */
 
 /**
-* @file to_string.c
+ * @file to_string.c
  * @brief Implements the OP_TO_STRING opcode for converting values to strings in the VM.
  *
  * This file handles the OP_TO_STRING instruction, which converts a value of any type
@@ -38,11 +38,11 @@
  */
 
 case OP_TO_STRING: {
-    Value v = pop_value(vm);
-    char *s = value_to_string_alloc(&v);
-    Value out = make_string(s ? s : "");
-    if (s) free(s);
-    free_value(v);
-    push_value(vm, out);
-    break;
+  Value v = pop_value(vm);
+  char *s = value_to_string_alloc(&v);
+  Value out = make_string(s ? s : "");
+  if (s) free(s);
+  free_value(v);
+  push_value(vm, out);
+  break;
 }

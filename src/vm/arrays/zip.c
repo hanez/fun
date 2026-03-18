@@ -8,7 +8,7 @@
  */
 
 /**
-* @file zip.c
+ * @file zip.c
  * @brief Implements the OP_ZIP opcode for array zipping in the VM.
  *
  * This file handles the OP_ZIP instruction, which combines two arrays into
@@ -24,7 +24,7 @@
  * - Exits with error if arguments aren't arrays
  *
  * Example:
- * // Bytecode: OP_ZIP 
+ * // Bytecode: OP_ZIP
  * // Stack before: [[1,2], ['a','b']]
  * // Stack after: [[[1,'a'], [2,'b']]]
  *
@@ -33,15 +33,15 @@
  */
 
 case OP_ZIP: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    if (a.type != VAL_ARRAY || b.type != VAL_ARRAY) {
-        fprintf(stderr, "Runtime type error: ZIP expects (array, array)\n");
-        exit(1);
-    }
-    Value out = bi_zip(&a, &b);
-    free_value(a);
-    free_value(b);
-    push_value(vm, out);
-    break;
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  if (a.type != VAL_ARRAY || b.type != VAL_ARRAY) {
+    fprintf(stderr, "Runtime type error: ZIP expects (array, array)\n");
+    exit(1);
+  }
+  Value out = bi_zip(&a, &b);
+  free_value(a);
+  free_value(b);
+  push_value(vm, out);
+  break;
 }

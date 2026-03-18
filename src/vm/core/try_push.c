@@ -8,11 +8,11 @@
  */
 
 case OP_TRY_PUSH: {
-    /* push index of this TRY instruction; handler ip is in its operand (may be patched later) */
-    if (f->try_sp >= (int)(sizeof(f->try_stack)/sizeof(f->try_stack[0])) - 1) {
-        fprintf(stderr, "Runtime error: try depth exceeded\n");
-        exit(1);
-    }
-    f->try_stack[++f->try_sp] = f->ip - 1; /* index of TRY_PUSH instruction */
-    break;
+  /* push index of this TRY instruction; handler ip is in its operand (may be patched later) */
+  if (f->try_sp >= (int)(sizeof(f->try_stack) / sizeof(f->try_stack[0])) - 1) {
+    fprintf(stderr, "Runtime error: try depth exceeded\n");
+    exit(1);
+  }
+  f->try_stack[++f->try_sp] = f->ip - 1; /* index of TRY_PUSH instruction */
+  break;
 }

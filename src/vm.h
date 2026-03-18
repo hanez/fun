@@ -20,94 +20,93 @@
 #define STACK_SIZE 1024
 
 static const char *opcode_names[] = {
-    "NOP","LOAD_CONST","LOAD_LOCAL","STORE_LOCAL",
-    "LOAD_GLOBAL","STORE_GLOBAL","ADD","SUB","MUL","DIV",
-    "LT","LTE","GT","GTE","EQ","NEQ","POP","JUMP",
-    "JUMP_IF_FALSE","CALL","RETURN","PRINT","ECHO","HALT",
-    "LINE",
-    "MOD","AND","OR","NOT","DUP","SWAP",
-    "MAKE_ARRAY","INDEX_GET","INDEX_SET",
-    "LEN","PUSH","APOP","SET","INSERT","REMOVE","SLICE",
-    "TO_NUMBER","TO_STRING","CAST","TYPEOF",
-    "SPLIT","JOIN","SUBSTR","FIND",
-    "REGEX_MATCH","REGEX_SEARCH","REGEX_REPLACE",
-    "CONTAINS","INDEX_OF","CLEAR",
-    "ENUMERATE","ZIP",
-    "MIN","MAX","CLAMP","ABS","POW","RANDOM_SEED","RANDOM_INT",
-    "MAKE_MAP","KEYS","VALUES","HAS_KEY",
-    "READ_FILE","WRITE_FILE","ENV","INPUT_LINE","PROC_RUN","PROC_SYSTEM",
-    "TIME_NOW_MS","CLOCK_MONO_MS","DATE_FORMAT",
-    "THREAD_SPAWN","THREAD_JOIN","SLEEP_MS",
-    "RANDOM_NUMBER",
-    "BAND","BOR","BXOR","BNOT","SHL","SHR","ROTL","ROTR",
-    "JSON_PARSE","JSON_STRINGIFY","JSON_FROM_FILE","JSON_TO_FILE",
-    "CURL_GET","CURL_POST","CURL_DOWNLOAD",
-    "SQLITE_OPEN","SQLITE_CLOSE","SQLITE_EXEC","SQLITE_QUERY",
-    "LIBSQL_OPEN","LIBSQL_CLOSE","LIBSQL_EXEC","LIBSQL_QUERY",
-    "PCSC_ESTABLISH","PCSC_RELEASE","PCSC_LIST_READERS","PCSC_CONNECT","PCSC_DISCONNECT","PCSC_TRANSMIT",
-    "PCRE2_TEST","PCRE2_MATCH","PCRE2_FINDALL",
-    "INI_LOAD","INI_FREE","INI_GET_STRING","INI_GET_INT","INI_GET_DOUBLE","INI_GET_BOOL","INI_SET","INI_UNSET","INI_SAVE",
-    "XML_PARSE","XML_ROOT","XML_NAME","XML_TEXT",
-    "SOCK_TCP_LISTEN","SOCK_TCP_ACCEPT","SOCK_TCP_CONNECT","SOCK_SEND","SOCK_RECV","SOCK_CLOSE","SOCK_UNIX_LISTEN","SOCK_UNIX_CONNECT",
-    "EXIT",
-    "OS_LIST_DIR",
-    "TK_BIND",
-    "SERIAL_OPEN","SERIAL_CONFIG","SERIAL_SEND","SERIAL_RECV","SERIAL_CLOSE",
-    "TK_EVAL","TK_RESULT","TK_LOOP","TK_WM_TITLE","TK_LABEL","TK_BUTTON","TK_PACK",
-    "TRY_PUSH","TRY_POP","THROW",
-    "FMIN","FMAX",
-    /* Rust FFI demo */
-    "RUST_HELLO","RUST_HELLO_ARGS","RUST_HELLO_ARGS_RETURN","RUST_GET_SP","RUST_SET_EXIT",
-    /* C++ demo */
-    "CPP_ADD",
-    /* Notcurses TUI (optional) */
-    "NC_INIT","NC_SHUTDOWN","NC_CLEAR","NC_DRAW_TEXT","NC_GETCH"
-};
+  "NOP", "LOAD_CONST", "LOAD_LOCAL", "STORE_LOCAL",
+  "LOAD_GLOBAL", "STORE_GLOBAL", "ADD", "SUB", "MUL", "DIV",
+  "LT", "LTE", "GT", "GTE", "EQ", "NEQ", "POP", "JUMP",
+  "JUMP_IF_FALSE", "CALL", "RETURN", "PRINT", "ECHO", "HALT",
+  "LINE",
+  "MOD", "AND", "OR", "NOT", "DUP", "SWAP",
+  "MAKE_ARRAY", "INDEX_GET", "INDEX_SET",
+  "LEN", "PUSH", "APOP", "SET", "INSERT", "REMOVE", "SLICE",
+  "TO_NUMBER", "TO_STRING", "CAST", "TYPEOF",
+  "SPLIT", "JOIN", "SUBSTR", "FIND",
+  "REGEX_MATCH", "REGEX_SEARCH", "REGEX_REPLACE",
+  "CONTAINS", "INDEX_OF", "CLEAR",
+  "ENUMERATE", "ZIP",
+  "MIN", "MAX", "CLAMP", "ABS", "POW", "RANDOM_SEED", "RANDOM_INT",
+  "MAKE_MAP", "KEYS", "VALUES", "HAS_KEY",
+  "READ_FILE", "WRITE_FILE", "ENV", "INPUT_LINE", "PROC_RUN", "PROC_SYSTEM",
+  "TIME_NOW_MS", "CLOCK_MONO_MS", "DATE_FORMAT",
+  "THREAD_SPAWN", "THREAD_JOIN", "SLEEP_MS",
+  "RANDOM_NUMBER",
+  "BAND", "BOR", "BXOR", "BNOT", "SHL", "SHR", "ROTL", "ROTR",
+  "JSON_PARSE", "JSON_STRINGIFY", "JSON_FROM_FILE", "JSON_TO_FILE",
+  "CURL_GET", "CURL_POST", "CURL_DOWNLOAD",
+  "SQLITE_OPEN", "SQLITE_CLOSE", "SQLITE_EXEC", "SQLITE_QUERY",
+  "LIBSQL_OPEN", "LIBSQL_CLOSE", "LIBSQL_EXEC", "LIBSQL_QUERY",
+  "PCSC_ESTABLISH", "PCSC_RELEASE", "PCSC_LIST_READERS", "PCSC_CONNECT", "PCSC_DISCONNECT", "PCSC_TRANSMIT",
+  "PCRE2_TEST", "PCRE2_MATCH", "PCRE2_FINDALL",
+  "INI_LOAD", "INI_FREE", "INI_GET_STRING", "INI_GET_INT", "INI_GET_DOUBLE", "INI_GET_BOOL", "INI_SET", "INI_UNSET", "INI_SAVE",
+  "XML_PARSE", "XML_ROOT", "XML_NAME", "XML_TEXT",
+  "SOCK_TCP_LISTEN", "SOCK_TCP_ACCEPT", "SOCK_TCP_CONNECT", "SOCK_SEND", "SOCK_RECV", "SOCK_CLOSE", "SOCK_UNIX_LISTEN", "SOCK_UNIX_CONNECT",
+  "EXIT",
+  "OS_LIST_DIR",
+  "TK_BIND",
+  "SERIAL_OPEN", "SERIAL_CONFIG", "SERIAL_SEND", "SERIAL_RECV", "SERIAL_CLOSE",
+  "TK_EVAL", "TK_RESULT", "TK_LOOP", "TK_WM_TITLE", "TK_LABEL", "TK_BUTTON", "TK_PACK",
+  "TRY_PUSH", "TRY_POP", "THROW",
+  "FMIN", "FMAX",
+  /* Rust FFI demo */
+  "RUST_HELLO", "RUST_HELLO_ARGS", "RUST_HELLO_ARGS_RETURN", "RUST_GET_SP", "RUST_SET_EXIT",
+  /* C++ demo */
+  "CPP_ADD",
+  /* Notcurses TUI (optional) */
+  "NC_INIT", "NC_SHUTDOWN", "NC_CLEAR", "NC_DRAW_TEXT", "NC_GETCH"};
 
 typedef struct {
-    Bytecode *fn;
-    int ip;
-    Value locals[MAX_FRAME_LOCALS];
-    /* exception handling (per-frame) */
-    int try_stack[16];
-    int try_sp; /* -1 when empty */
+  Bytecode *fn;
+  int ip;
+  Value locals[MAX_FRAME_LOCALS];
+  /* exception handling (per-frame) */
+  int try_stack[16];
+  int try_sp; /* -1 when empty */
 } Frame;
 
 struct VM {
-    Value stack[STACK_SIZE];
-    int sp;
+  Value stack[STACK_SIZE];
+  int sp;
 
-    Frame frames[MAX_FRAMES];
-    int fp; // frame pointer, -1 when no frame
+  Frame frames[MAX_FRAMES];
+  int fp; // frame pointer, -1 when no frame
 
-    Value globals[MAX_GLOBALS];
+  Value globals[MAX_GLOBALS];
 
-    Value output[OUTPUT_SIZE]; // store printed values
-    int output_count;
-    int output_is_partial[OUTPUT_SIZE]; // 1 when the corresponding output entry should not end with newline (echo)
+  Value output[OUTPUT_SIZE]; // store printed values
+  int output_count;
+  int output_is_partial[OUTPUT_SIZE]; // 1 when the corresponding output entry should not end with newline (echo)
 
-    long long instr_count; // executed instructions in the last vm_run
+  long long instr_count; // executed instructions in the last vm_run
 
-    int current_line; // last executed source line (debug)
+  int current_line; // last executed source line (debug)
 
-    int exit_code; // process exit code set by OP_EXIT
+  int exit_code; // process exit code set by OP_EXIT
 
-    int trace_enabled; // when non-zero, print executed ops and stack
-    int repl_on_error; // when non-zero, enter REPL on runtime error (preserve stack)
-    int (*on_error_repl)(struct VM *vm); // optional hook to run REPL on error
+  int trace_enabled;                   // when non-zero, print executed ops and stack
+  int repl_on_error;                   // when non-zero, enter REPL on runtime error (preserve stack)
+  int (*on_error_repl)(struct VM *vm); // optional hook to run REPL on error
 
-    /* --- Debugger state --- */
-    int debug_step_mode;        // 0 none, 1 step, 2 next, 3 finish
-    int debug_step_target_fp;   // target frame pointer for next/finish
-    long long debug_step_start_ic; // instruction count snapshot when step/next requested
-    int debug_stop_requested;   // force a pause at loop top
+  /* --- Debugger state --- */
+  int debug_step_mode;           // 0 none, 1 step, 2 next, 3 finish
+  int debug_step_target_fp;      // target frame pointer for next/finish
+  long long debug_step_start_ic; // instruction count snapshot when step/next requested
+  int debug_stop_requested;      // force a pause at loop top
 
-    struct {
-        char *file;             // strdup'ed file path
-        int line;               // 1-based line
-        int active;             // 1 if active
-    } breakpoints[64];
-    int break_count;            // number of active breakpoints
+  struct {
+    char *file; // strdup'ed file path
+    int line;   // 1-based line
+    int active; // 1 if active
+  } breakpoints[64];
+  int break_count; // number of active breakpoints
 };
 
 typedef struct VM VM;
@@ -136,8 +135,8 @@ void vm_raise_error(VM *vm, const char *msg);
 
 /* --- Debugger API --- */
 void vm_debug_reset(VM *vm);
-int  vm_debug_add_breakpoint(VM *vm, const char *file, int line); // returns id >=0 or -1
-int  vm_debug_delete_breakpoint(VM *vm, int id);                   // returns 1 on success
+int vm_debug_add_breakpoint(VM *vm, const char *file, int line); // returns id >=0 or -1
+int vm_debug_delete_breakpoint(VM *vm, int id);                  // returns 1 on success
 void vm_debug_clear_breakpoints(VM *vm);
 void vm_debug_list_breakpoints(VM *vm);
 void vm_debug_request_step(VM *vm);
@@ -146,7 +145,7 @@ void vm_debug_request_finish(VM *vm);
 void vm_debug_request_continue(VM *vm);
 
 static inline int opcode_is_valid(int op) {
-    return op >= OP_NOP && op <= OP_NC_GETCH;  // all current opcodes (including optional NC_*)
+  return op >= OP_NOP && op <= OP_NC_GETCH; // all current opcodes (including optional NC_*)
 }
 
 /* --- Minimal C ABI helpers for FFI (Rust opcode experiments) --- */

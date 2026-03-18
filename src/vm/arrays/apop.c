@@ -8,7 +8,7 @@
  */
 
 /**
-* @file apop.c
+ * @file apop.c
  * @brief Implements the OP_APOP opcode for removing elements from arrays in the VM.
  *
  * This file handles the OP_APOP instruction, which removes the last element from an array
@@ -33,17 +33,17 @@
  */
 
 case OP_APOP: {
-    Value arr = pop_value(vm);
-    if (arr.type != VAL_ARRAY) {
-        fprintf(stderr, "Runtime type error: ARR_APOP expects array\n");
-        exit(1);
-    }
-    Value out;
-    if (!array_pop(&arr, &out)) {
-        fprintf(stderr, "Runtime error: pop from empty array\n");
-        exit(1);
-    }
-    free_value(arr);
-    push_value(vm, out);
-    break;
+  Value arr = pop_value(vm);
+  if (arr.type != VAL_ARRAY) {
+    fprintf(stderr, "Runtime type error: ARR_APOP expects array\n");
+    exit(1);
+  }
+  Value out;
+  if (!array_pop(&arr, &out)) {
+    fprintf(stderr, "Runtime error: pop from empty array\n");
+    exit(1);
+  }
+  free_value(arr);
+  push_value(vm, out);
+  break;
 }

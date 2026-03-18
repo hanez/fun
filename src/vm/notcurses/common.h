@@ -19,5 +19,5 @@ struct notcurses;
 struct ncplane;
 
 /* Shared static state within vm.c translation unit (header is included into vm.c at file scope) */
-static struct notcurses* _fun_nc = NULL;
-static struct ncplane*   _fun_nc_std = NULL;
+static struct notcurses *_fun_nc = NULL;
+static struct ncplane *_fun_nc_std = NULL;

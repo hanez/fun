@@ -1,5 +1,5 @@
 /**
-* This file is part of the Fun programming language.
+ * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
@@ -12,19 +12,23 @@
 /* PCSC disconnect */
 case OP_PCSC_DISCONNECT: {
 #ifdef FUN_WITH_PCSC
-    Value vh = pop_value(vm);
-    int hid = (int)vh.i;
-    free_value(vh);
-    pcsc_card_entry *ce = pcsc_get_card(hid);
-    if (!ce) { push_value(vm, make_int(0)); break; }
-    SCardDisconnect(ce->h, SCARD_LEAVE_CARD);
-    ce->in_use = 0;
-    ce->h = 0;
-    ce->proto = 0;
-    push_value(vm, make_int(1));
-#else
-    Value vh = pop_value(vm); free_value(vh);
+  Value vh = pop_value(vm);
+  int hid = (int)vh.i;
+  free_value(vh);
+  pcsc_card_entry *ce = pcsc_get_card(hid);
+  if (!ce) {
     push_value(vm, make_int(0));
-#endif
     break;
+  }
+  SCardDisconnect(ce->h, SCARD_LEAVE_CARD);
+  ce->in_use = 0;
+  ce->h = 0;
+  ce->proto = 0;
+  push_value(vm, make_int(1));
+#else
+  Value vh = pop_value(vm);
+  free_value(vh);
+  push_value(vm, make_int(0));
+#endif
+  break;
 }

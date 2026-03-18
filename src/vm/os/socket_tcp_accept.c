@@ -10,21 +10,21 @@
  */
 
 case OP_SOCK_TCP_ACCEPT: {
-    /* Pops listen fd; pushes client fd (>0) or 0 */
-    Value fdv = pop_value(vm);
-    int client = 0;
+  /* Pops listen fd; pushes client fd (>0) or 0 */
+  Value fdv = pop_value(vm);
+  int client = 0;
 #ifdef __unix__
-    if (fdv.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: tcp_accept expects (int listen_fd)\n");
-        free_value(fdv);
-        push_value(vm, make_int(0));
-        break;
-    }
-    int s = (int)fdv.i;
-    int c = accept(s, NULL, NULL);
-    if (c >= 0) client = c;
-#endif
+  if (fdv.type != VAL_INT) {
+    fprintf(stderr, "Runtime type error: tcp_accept expects (int listen_fd)\n");
     free_value(fdv);
-    push_value(vm, make_int(client > 0 ? client : 0));
+    push_value(vm, make_int(0));
     break;
+  }
+  int s = (int)fdv.i;
+  int c = accept(s, NULL, NULL);
+  if (c >= 0) client = c;
+#endif
+  free_value(fdv);
+  push_value(vm, make_int(client > 0 ? client : 0));
+  break;
 }

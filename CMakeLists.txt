@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.38.16 LANGUAGES C)
+project(fun VERSION 0.39.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -46,7 +46,16 @@ message(STATUS "===========================")
 
 # Convenience aggregate target (like 'build' in Makefile)
 add_custom_target(build
-  DEPENDS fun fun_test test_opcodes
+  DEPENDS fun funstx fun_test test_opcodes
+)
+
+# Formatting helper target: run clang-format over C/C++ sources using .clang-format
+add_custom_target(format
+  COMMAND ${CMAKE_COMMAND} -E echo "Running clang-format on sources..."
+  COMMAND /bin/sh -c "command -v clang-format >/dev/null 2>&1 || { echo 'clang-format not found in PATH' >&2; exit 1; }"
+  COMMAND /bin/sh -c "set -e; for pat in '*.c' '*.h' '*.cpp' '*.hpp'; do find ${CMAKE_SOURCE_DIR}/src -type f -name \"\$pat\" -print0; done | xargs -0 -n 50 clang-format -i"
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  COMMENT "Apply .clang-format (IndentWidth=2) to all source files"
 )
 
 # --- Rust (Cargo) integration: optionally build and link a staticlib with opcode examples ---
@@ -397,6 +406,11 @@ endif()
 # Install rules
 # Binary
 install(TARGETS fun
+  RUNTIME DESTINATION /usr/bin
+)
+
+# Also install the syntax-checker CLI by default
+install(TARGETS funstx
   RUNTIME DESTINATION /usr/bin
 )
 

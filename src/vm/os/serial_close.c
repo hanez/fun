@@ -14,18 +14,18 @@
 #endif
 
 case OP_SERIAL_CLOSE: {
-    /* Pops fd (int); returns 1/0 */
-    Value fdv = pop_value(vm);
-    int ok = 0;
+  /* Pops fd (int); returns 1/0 */
+  Value fdv = pop_value(vm);
+  int ok = 0;
 #ifdef __unix__
-    if (fdv.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: serial_close expects (int fd)\n");
-    } else {
-        int fd = (int)fdv.i;
-        if (close(fd) == 0) ok = 1;
-    }
+  if (fdv.type != VAL_INT) {
+    fprintf(stderr, "Runtime type error: serial_close expects (int fd)\n");
+  } else {
+    int fd = (int)fdv.i;
+    if (close(fd) == 0) ok = 1;
+  }
 #endif
-    free_value(fdv);
-    push_value(vm, make_int(ok));
-    break;
+  free_value(fdv);
+  push_value(vm, make_int(ok));
+  break;
 }

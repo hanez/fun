@@ -8,7 +8,7 @@
  */
 
 /**
-* @file not.c
+ * @file not.c
  * @brief Implements the OP_NOT opcode for logical NOT in the VM.
  *
  * This file handles the OP_NOT instruction, which performs a logical NOT operation
@@ -32,9 +32,9 @@
  */
 
 case OP_NOT: {
-    Value v = pop_value(vm);
-    int res = !value_is_truthy(&v);
-    free_value(v);
-    push_value(vm, make_bool(res));
-    break;
+  Value v = pop_value(vm);
+  int res = !value_is_truthy(&v);
+  free_value(v);
+  push_value(vm, make_bool(res));
+  break;
 }

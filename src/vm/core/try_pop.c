@@ -8,6 +8,6 @@
  */
 
 case OP_TRY_POP: {
-    if (f->try_sp >= 0) f->try_sp--;
-    break;
+  if (f->try_sp >= 0) f->try_sp--;
+  break;
 }

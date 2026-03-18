@@ -1,5 +1,5 @@
 /**
-* This file is part of the Fun programming language.
+ * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
@@ -15,13 +15,13 @@
  * pushes: (uint32_t)(a ^ b)
  */
 case OP_BXOR: {
-    Value vb = pop_value(vm);
-    Value va = pop_value(vm);
-    uint32_t a = (va.type == VAL_INT) ? (uint32_t)va.i : 0u;
-    uint32_t b = (vb.type == VAL_INT) ? (uint32_t)vb.i : 0u;
-    uint32_t r = a ^ b;
-    free_value(vb);
-    free_value(va);
-    push_value(vm, make_int((int64_t)(uint64_t)r));
-    break;
+  Value vb = pop_value(vm);
+  Value va = pop_value(vm);
+  uint32_t a = (va.type == VAL_INT) ? (uint32_t)va.i : 0u;
+  uint32_t b = (vb.type == VAL_INT) ? (uint32_t)vb.i : 0u;
+  uint32_t r = a ^ b;
+  free_value(vb);
+  free_value(va);
+  push_value(vm, make_int((int64_t)(uint64_t)r));
+  break;
 }

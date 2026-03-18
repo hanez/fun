@@ -10,18 +10,18 @@
  */
 
 case OP_SLEEP_MS: {
-    Value ms = pop_value(vm);
-    if (ms.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: sleep(ms) expects Number (milliseconds)\n");
-        free_value(ms);
-        /* push Nil so caller-side POP is safe */
-        push_value(vm, make_nil());
-        break;
-    }
-    long t = (long)ms.i;
-    if (t > 0) fun_sleep_ms(t);
+  Value ms = pop_value(vm);
+  if (ms.type != VAL_INT) {
+    fprintf(stderr, "Runtime type error: sleep(ms) expects Number (milliseconds)\n");
     free_value(ms);
-    /* push Nil so statement POP does not underflow */
+    /* push Nil so caller-side POP is safe */
     push_value(vm, make_nil());
     break;
+  }
+  long t = (long)ms.i;
+  if (t > 0) fun_sleep_ms(t);
+  free_value(ms);
+  /* push Nil so statement POP does not underflow */
+  push_value(vm, make_nil());
+  break;
 }

@@ -8,30 +8,30 @@
  *
  * Added: 2025-10-05
  */
- 
- /**
+
+/**
  * REPL implementation for the Fun programming language.
  * Built only when FUN_WITH_REPL is defined.
  */
 
+#include "repl.h"
 #include "bytecode.h"
+#include "parser.h"
 #include "value.h"
 #include "vm.h"
-#include "parser.h"
-#include "repl.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
 #include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #ifndef _WIN32
+#include <dirent.h>
+#include <limits.h>
+#include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <limits.h>
 #endif
 
 #ifdef FUN_WITH_REPL
@@ -46,46 +46,47 @@ static char *rl_hist[RL_HIST_MAX];
 static int rl_count = 0;
 
 /* last history entry (or NULL) */
-static const char* rl_hist_last(void) {
-    if (rl_count <= 0) return NULL;
-    return rl_hist[rl_count - 1];
+static const char *rl_hist_last(void) {
+  if (rl_count <= 0) return NULL;
+  return rl_hist[rl_count - 1];
 }
 
 /* add one line to in-memory history (without trailing newline), dedup consecutive */
 static void rl_hist_add(const char *s) {
-    if (!s) return;
-    size_t n = strlen(s);
-    /* strip single trailing newline if present */
-    while (n > 0 && (s[n-1] == '\n' || s[n-1] == '\r')) n--;
-    if (n == 0) return;
-    /* dedupe consecutive identical */
-    const char *last = rl_hist_last();
-    if (last && strncmp(last, s, n) == 0 && last[n] == '\0') return;
+  if (!s) return;
+  size_t n = strlen(s);
+  /* strip single trailing newline if present */
+  while (n > 0 && (s[n - 1] == '\n' || s[n - 1] == '\r'))
+    n--;
+  if (n == 0) return;
+  /* dedupe consecutive identical */
+  const char *last = rl_hist_last();
+  if (last && strncmp(last, s, n) == 0 && last[n] == '\0') return;
 
-    /* allocate and copy */
-    char *cpy = (char*)malloc(n + 1);
-    if (!cpy) return;
-    memcpy(cpy, s, n);
-    cpy[n] = '\0';
+  /* allocate and copy */
+  char *cpy = (char *)malloc(n + 1);
+  if (!cpy) return;
+  memcpy(cpy, s, n);
+  cpy[n] = '\0';
 
-    if (rl_count == RL_HIST_MAX) {
-        free(rl_hist[0]);
-        memmove(&rl_hist[0], &rl_hist[1], sizeof(rl_hist[0]) * (RL_HIST_MAX - 1));
-        rl_count--;
-    }
-    rl_hist[rl_count++] = cpy;
+  if (rl_count == RL_HIST_MAX) {
+    free(rl_hist[0]);
+    memmove(&rl_hist[0], &rl_hist[1], sizeof(rl_hist[0]) * (RL_HIST_MAX - 1));
+    rl_count--;
+  }
+  rl_hist[rl_count++] = cpy;
 }
 
 /* preload history from file (one line per entry) */
 static void rl_hist_load_file(const char *path) {
-    if (!path) return;
-    FILE *f = fopen(path, "r");
-    if (!f) return;
-    char line[4096];
-    while (fgets(line, sizeof(line), f)) {
-        rl_hist_add(line);
-    }
-    fclose(f);
+  if (!path) return;
+  FILE *f = fopen(path, "r");
+  if (!f) return;
+  char line[4096];
+  while (fgets(line, sizeof(line), f)) {
+    rl_hist_add(line);
+  }
+  fclose(f);
 }
 
 #ifndef _WIN32
@@ -93,196 +94,224 @@ static struct termios g_orig_tios;
 static int g_raw_enabled = 0;
 
 static void repl_disable_raw(void) {
-    if (g_raw_enabled) {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &g_orig_tios);
-        g_raw_enabled = 0;
-    }
+  if (g_raw_enabled) {
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &g_orig_tios);
+    g_raw_enabled = 0;
+  }
 }
 static int repl_enable_raw(void) {
-    if (!isatty(STDIN_FILENO)) return 0;
-    if (g_raw_enabled) return 1;
-    if (tcgetattr(STDIN_FILENO, &g_orig_tios) == -1) return 0;
-    struct termios raw = g_orig_tios;
-    raw.c_lflag &= ~(ICANON | ECHO);
-    raw.c_cc[VMIN] = 1;
-    raw.c_cc[VTIME] = 0;
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) return 0;
-    g_raw_enabled = 1;
-    return 1;
+  if (!isatty(STDIN_FILENO)) return 0;
+  if (g_raw_enabled) return 1;
+  if (tcgetattr(STDIN_FILENO, &g_orig_tios) == -1) return 0;
+  struct termios raw = g_orig_tios;
+  raw.c_lflag &= ~(ICANON | ECHO);
+  raw.c_cc[VMIN] = 1;
+  raw.c_cc[VTIME] = 0;
+  if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) return 0;
+  g_raw_enabled = 1;
+  return 1;
 }
 
 /* return 1 if path is a directory, else 0 */
 static int is_dir_path(const char *path) {
-    struct stat st;
-    if (stat(path, &st) != 0) return 0;
-    return S_ISDIR(st.st_mode);
+  struct stat st;
+  if (stat(path, &st) != 0) return 0;
+  return S_ISDIR(st.st_mode);
 }
 
 /* Compute longest common prefix of a set of strings (starting from offset base_len) */
 static size_t lcp_suffix(const char **names, int count, size_t base_len) {
-    if (count <= 0) return base_len;
-    size_t lcp = (size_t)-1;
-    for (int i = 0; i < count; ++i) {
-        size_t nlen = strlen(names[i]);
-        size_t cur = 0;
-        /* compare suffix part starting at base_len */
-        while (base_len + cur < nlen) {
-            char c = names[i][base_len + cur];
-            int ok = 1;
-            for (int j = 0; j < count; ++j) {
-                size_t jlen = strlen(names[j]);
-                if (base_len + cur >= jlen || names[j][base_len + cur] != c) { ok = 0; break; }
-            }
-            if (!ok) break;
-            cur++;
+  if (count <= 0) return base_len;
+  size_t lcp = (size_t)-1;
+  for (int i = 0; i < count; ++i) {
+    size_t nlen = strlen(names[i]);
+    size_t cur = 0;
+    /* compare suffix part starting at base_len */
+    while (base_len + cur < nlen) {
+      char c = names[i][base_len + cur];
+      int ok = 1;
+      for (int j = 0; j < count; ++j) {
+        size_t jlen = strlen(names[j]);
+        if (base_len + cur >= jlen || names[j][base_len + cur] != c) {
+          ok = 0;
+          break;
         }
-        if (lcp == (size_t)-1 || cur < lcp) lcp = cur;
+      }
+      if (!ok) break;
+      cur++;
     }
-    return base_len + (lcp == (size_t)-1 ? 0 : lcp);
+    if (lcp == (size_t)-1 || cur < lcp) lcp = cur;
+  }
+  return base_len + (lcp == (size_t)-1 ? 0 : lcp);
 }
 
 /* Word-jump helpers (used by Ctrl+Left/Right in the REPL editor).
  * Words are runs of non-space characters; separators are spaces.
  */
 static void rl_word_left(const char *out, size_t len, size_t *pos) {
-    (void)len;
-    if (!out || !pos) return;
-    if (*pos == 0) return;
-    while (*pos > 0 && out[*pos - 1] == ' ') (*pos)--;
-    while (*pos > 0 && out[*pos - 1] != ' ') (*pos)--;
+  (void)len;
+  if (!out || !pos) return;
+  if (*pos == 0) return;
+  while (*pos > 0 && out[*pos - 1] == ' ')
+    (*pos)--;
+  while (*pos > 0 && out[*pos - 1] != ' ')
+    (*pos)--;
 }
 static void rl_word_right(const char *out, size_t len, size_t *pos) {
-    if (!out || !pos) return;
-    if (*pos >= len) return;
-    while (*pos < len && out[*pos] != ' ') (*pos)++;
-    while (*pos < len && out[*pos] == ' ') (*pos)++;
+  if (!out || !pos) return;
+  if (*pos >= len) return;
+  while (*pos < len && out[*pos] != ' ')
+    (*pos)++;
+  while (*pos < len && out[*pos] == ' ')
+    (*pos)++;
 }
 
 /* Expand file path for path-taking REPL commands (e.g., :load, :run) in-place; returns 1 if buffer changed (redraw) */
 static int complete_load_path(char *buf, size_t *len_io) {
-    size_t len = *len_io;
-    if (len < 3) return 0; /* minimally ":x" */
-    const char *p = buf;
-    while (*p == ' ') p++;
-    if (*p != ':') return 0;
+  size_t len = *len_io;
+  if (len < 3) return 0; /* minimally ":x" */
+  const char *p = buf;
+  while (*p == ' ')
     p++;
-    /* Parse command token (letters only) */
-    const char *cmd_start = p;
-    while (*p && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z'))) p++;
-    size_t cmd_len = (size_t)(p - cmd_start);
-    if (cmd_len == 0) return 0;
-    /* Accept both full and short aliases for :load and :run */
-    int is_supported = 0;
-    if ((cmd_len == 4 && strncmp(cmd_start, "load", 4) == 0) ||
-        (cmd_len == 2 && strncmp(cmd_start, "lo", 2) == 0) ||
-        (cmd_len == 3 && strncmp(cmd_start, "run", 3) == 0) ||
-        (cmd_len == 2 && strncmp(cmd_start, "ru", 2) == 0)) {
-        is_supported = 1;
-    }
-    if (!is_supported) return 0;
-    while (*p == ' ' || *p == '\t') p++;
-    size_t arg_off = (size_t)(p - buf);
-    if (arg_off > len) return 0;
+  if (*p != ':') return 0;
+  p++;
+  /* Parse command token (letters only) */
+  const char *cmd_start = p;
+  while (*p && ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z')))
+    p++;
+  size_t cmd_len = (size_t)(p - cmd_start);
+  if (cmd_len == 0) return 0;
+  /* Accept both full and short aliases for :load and :run */
+  int is_supported = 0;
+  if ((cmd_len == 4 && strncmp(cmd_start, "load", 4) == 0) ||
+      (cmd_len == 2 && strncmp(cmd_start, "lo", 2) == 0) ||
+      (cmd_len == 3 && strncmp(cmd_start, "run", 3) == 0) ||
+      (cmd_len == 2 && strncmp(cmd_start, "ru", 2) == 0)) {
+    is_supported = 1;
+  }
+  if (!is_supported) return 0;
+  while (*p == ' ' || *p == '\t')
+    p++;
+  size_t arg_off = (size_t)(p - buf);
+  if (arg_off > len) return 0;
 
-    char prefix[PATH_MAX];
-    size_t plen = 0;
-    if (len - arg_off >= sizeof(prefix)) plen = sizeof(prefix) - 1;
-    else plen = len - arg_off;
-    memcpy(prefix, buf + arg_off, plen);
-    prefix[plen] = '\0';
+  char prefix[PATH_MAX];
+  size_t plen = 0;
+  if (len - arg_off >= sizeof(prefix))
+    plen = sizeof(prefix) - 1;
+  else
+    plen = len - arg_off;
+  memcpy(prefix, buf + arg_off, plen);
+  prefix[plen] = '\0';
 
-    char expanded[PATH_MAX];
-    if (prefix[0] == '~') {
-        const char *home = getenv("HOME");
-        if (!home) home = getenv("USERPROFILE");
-        if (home) snprintf(expanded, sizeof(expanded), "%s%s", home, prefix + 1);
-        else snprintf(expanded, sizeof(expanded), "%s", prefix);
+  char expanded[PATH_MAX];
+  if (prefix[0] == '~') {
+    const char *home = getenv("HOME");
+    if (!home) home = getenv("USERPROFILE");
+    if (home)
+      snprintf(expanded, sizeof(expanded), "%s%s", home, prefix + 1);
+    else
+      snprintf(expanded, sizeof(expanded), "%s", prefix);
+  } else {
+    snprintf(expanded, sizeof(expanded), "%s", prefix);
+  }
+
+  char dirpart[PATH_MAX], base[PATH_MAX];
+  const char *slash = strrchr(expanded, '/');
+  if (slash) {
+    size_t dlen = (size_t)(slash - expanded);
+    if (dlen == 0) {
+      strcpy(dirpart, "/");
     } else {
-        snprintf(expanded, sizeof(expanded), "%s", prefix);
+      memcpy(dirpart, expanded, dlen);
+      dirpart[dlen] = '\0';
     }
+    snprintf(base, sizeof(base), "%s", slash + 1);
+  } else {
+    strcpy(dirpart, ".");
+    snprintf(base, sizeof(base), "%s", expanded);
+  }
 
-    char dirpart[PATH_MAX], base[PATH_MAX];
-    const char *slash = strrchr(expanded, '/');
-    if (slash) {
-        size_t dlen = (size_t)(slash - expanded);
-        if (dlen == 0) { strcpy(dirpart, "/"); }
-        else { memcpy(dirpart, expanded, dlen); dirpart[dlen] = '\0'; }
-        snprintf(base, sizeof(base), "%s", slash + 1);
-    } else {
-        strcpy(dirpart, ".");
-        snprintf(base, sizeof(base), "%s", expanded);
+  DIR *dp = opendir(dirpart);
+  if (!dp) {
+    fputc('\a', stdout);
+    fflush(stdout);
+    return 0;
+  }
+
+  const char *names[1024];
+  char storage[1024][NAME_MAX + 1];
+  int count = 0;
+  struct dirent *de;
+  size_t blen = strlen(base);
+  while ((de = readdir(dp)) != NULL) {
+    if (blen == 0 || strncmp(de->d_name, base, blen) == 0) {
+      if (count < (int)(sizeof(names) / sizeof(names[0]))) {
+        snprintf(storage[count], sizeof(storage[count]), "%s", de->d_name);
+        names[count] = storage[count];
+        count++;
+      }
     }
+  }
+  closedir(dp);
 
-    DIR *dp = opendir(dirpart);
-    if (!dp) { fputc('\a', stdout); fflush(stdout); return 0; }
+  if (count == 0) {
+    fputc('\a', stdout);
+    fflush(stdout);
+    return 0;
+  }
 
-    const char *names[1024];
-    char storage[1024][NAME_MAX + 1];
-    int count = 0;
-    struct dirent *de;
-    size_t blen = strlen(base);
-    while ((de = readdir(dp)) != NULL) {
-        if (blen == 0 || strncmp(de->d_name, base, blen) == 0) {
-            if (count < (int)(sizeof(names)/sizeof(names[0]))) {
-                snprintf(storage[count], sizeof(storage[count]), "%s", de->d_name);
-                names[count] = storage[count];
-                count++;
-            }
-        }
+  size_t new_pref_len = lcp_suffix(names, count, blen);
+  int changed = 0;
+
+  char completed[PATH_MAX];
+  if (slash) {
+    char head[PATH_MAX];
+    memcpy(head, expanded, (size_t)(slash - expanded + 1));
+    head[slash - expanded + 1] = '\0';
+    strncpy(completed, head, sizeof(completed));
+  } else {
+    snprintf(completed, sizeof(completed), "%s", "");
+  }
+
+  strncat(completed, base, sizeof(completed) - strlen(completed) - 1);
+  if (new_pref_len > blen) {
+    strncat(completed, names[0] + blen, (new_pref_len - blen));
+    changed = 1;
+  } else if (count == 1) {
+    size_t extra = strlen(names[0]) - blen;
+    strncat(completed, names[0] + blen, extra);
+    changed = 1;
+  }
+
+  if (count == 1) {
+    char test[PATH_MAX];
+    if (slash)
+      snprintf(test, sizeof(test), "%.*s/%s", (int)(slash - expanded), expanded, names[0]);
+    else
+      snprintf(test, sizeof(test), "%s", names[0]);
+    if (is_dir_path(test)) {
+      strncat(completed, "/", sizeof(completed) - strlen(completed) - 1);
     }
-    closedir(dp);
+  }
 
-    if (count == 0) { fputc('\a', stdout); fflush(stdout); return 0; }
-
-    size_t new_pref_len = lcp_suffix(names, count, blen);
-    int changed = 0;
-
-    char completed[PATH_MAX];
-    if (slash) {
-        char head[PATH_MAX];
-        memcpy(head, expanded, (size_t)(slash - expanded + 1));
-        head[slash - expanded + 1] = '\0';
-        strncpy(completed, head, sizeof(completed));
-    } else {
-        snprintf(completed, sizeof(completed), "%s", "");
+  if (!changed && count > 1) {
+    putchar('\n');
+    for (int i = 0; i < count; ++i) {
+      fputs(names[i], stdout);
+      fputc(((i + 1) % 6 == 0) ? '\n' : '\t', stdout);
     }
+    if (count % 6 != 0) putchar('\n');
+    fflush(stdout);
+    return 0;
+  }
 
-    strncat(completed, base, sizeof(completed) - strlen(completed) - 1);
-    if (new_pref_len > blen) {
-        strncat(completed, names[0] + blen, (new_pref_len - blen));
-        changed = 1;
-    } else if (count == 1) {
-        size_t extra = strlen(names[0]) - blen;
-        strncat(completed, names[0] + blen, extra);
-        changed = 1;
-    }
-
-    if (count == 1) {
-        char test[PATH_MAX];
-        if (slash) snprintf(test, sizeof(test), "%.*s/%s", (int)(slash - expanded), expanded, names[0]);
-        else snprintf(test, sizeof(test), "%s", names[0]);
-        if (is_dir_path(test)) {
-            strncat(completed, "/", sizeof(completed) - strlen(completed) - 1);
-        }
-    }
-
-    if (!changed && count > 1) {
-        putchar('\n');
-        for (int i = 0; i < count; ++i) {
-            fputs(names[i], stdout);
-            fputc(((i + 1) % 6 == 0) ? '\n' : '\t', stdout);
-        }
-        if (count % 6 != 0) putchar('\n');
-        fflush(stdout);
-        return 0;
-    }
-
-    size_t comp_len = strlen(completed);
-    if (arg_off + comp_len >= PATH_MAX - 1) comp_len = PATH_MAX - 2 - arg_off;
-    memcpy(buf + arg_off, completed, comp_len);
-    *len_io = arg_off + comp_len;
-    buf[*len_io] = '\0';
-    return 1;
+  size_t comp_len = strlen(completed);
+  if (arg_off + comp_len >= PATH_MAX - 1) comp_len = PATH_MAX - 2 - arg_off;
+  memcpy(buf + arg_off, completed, comp_len);
+  *len_io = arg_off + comp_len;
+  buf[*len_io] = '\0';
+  return 1;
 }
 
 /* ---------- Stdlib symbol completion ---------- */
@@ -290,397 +319,468 @@ static char **g_std_syms = NULL;
 static int g_std_syms_count = 0;
 static int g_std_syms_cap = 0;
 
-static int is_ident_start(int c) { return (c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')); }
-static int is_ident_char(int c) { return is_ident_start(c) || (c >= '0' && c <= '9'); }
+static int is_ident_start(int c) {
+  return (c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+}
+static int is_ident_char(int c) {
+  return is_ident_start(c) || (c >= '0' && c <= '9');
+}
 
 static void std_syms_add(const char *name) {
-    if (!name || !*name) return;
-    /* dedupe */
-    for (int i = 0; i < g_std_syms_count; ++i) {
-        if (strcmp(g_std_syms[i], name) == 0) return;
-    }
-    if (g_std_syms_count == g_std_syms_cap) {
-        int ncap = g_std_syms_cap == 0 ? 256 : g_std_syms_cap * 2;
-        char **nn = (char**)realloc(g_std_syms, (size_t)ncap * sizeof(char*));
-        if (!nn) return;
-        g_std_syms = nn;
-        g_std_syms_cap = ncap;
-    }
-    size_t n = strlen(name);
-    char *cpy = (char*)malloc(n + 1);
-    if (!cpy) return;
-    memcpy(cpy, name, n + 1);
-    g_std_syms[g_std_syms_count++] = cpy;
+  if (!name || !*name) return;
+  /* dedupe */
+  for (int i = 0; i < g_std_syms_count; ++i) {
+    if (strcmp(g_std_syms[i], name) == 0) return;
+  }
+  if (g_std_syms_count == g_std_syms_cap) {
+    int ncap = g_std_syms_cap == 0 ? 256 : g_std_syms_cap * 2;
+    char **nn = (char **)realloc(g_std_syms, (size_t)ncap * sizeof(char *));
+    if (!nn) return;
+    g_std_syms = nn;
+    g_std_syms_cap = ncap;
+  }
+  size_t n = strlen(name);
+  char *cpy = (char *)malloc(n + 1);
+  if (!cpy) return;
+  memcpy(cpy, name, n + 1);
+  g_std_syms[g_std_syms_count++] = cpy;
 }
 
 static void scan_symbols_from_file(const char *path) {
-    FILE *f = fopen(path, "r");
-    if (!f) return;
-    char line[4096];
-    while (fgets(line, sizeof(line), f)) {
-        const char *p = line;
-        while (*p == ' ' || *p == '\t') p++;
-        /* Patterns: fun NAME( ; class NAME ; const NAME ; var NAME */
-        const char *kw = NULL;
-        if (strncmp(p, "fun ", 4) == 0) { kw = "fun"; p += 4; }
-        else if (strncmp(p, "class ", 6) == 0) { kw = "class"; p += 6; }
-        else if (strncmp(p, "const ", 6) == 0) { kw = "const"; p += 6; }
-        else if (strncmp(p, "var ", 4) == 0) { kw = "var"; p += 4; }
-        if (!kw) continue;
-        while (*p == ' ' || *p == '\t') p++;
-        if (!is_ident_start((unsigned char)*p)) continue;
-        char name[256];
-        size_t ni = 0;
-        while (is_ident_char((unsigned char)*p) && ni + 1 < sizeof(name)) {
-            name[ni++] = *p++;
-        }
-        name[ni] = '\0';
-        if (ni > 0) std_syms_add(name);
+  FILE *f = fopen(path, "r");
+  if (!f) return;
+  char line[4096];
+  while (fgets(line, sizeof(line), f)) {
+    const char *p = line;
+    while (*p == ' ' || *p == '\t')
+      p++;
+    /* Patterns: fun NAME( ; class NAME ; const NAME ; var NAME */
+    const char *kw = NULL;
+    if (strncmp(p, "fun ", 4) == 0) {
+      kw = "fun";
+      p += 4;
+    } else if (strncmp(p, "class ", 6) == 0) {
+      kw = "class";
+      p += 6;
+    } else if (strncmp(p, "const ", 6) == 0) {
+      kw = "const";
+      p += 6;
+    } else if (strncmp(p, "var ", 4) == 0) {
+      kw = "var";
+      p += 4;
     }
-    fclose(f);
+    if (!kw) continue;
+    while (*p == ' ' || *p == '\t')
+      p++;
+    if (!is_ident_start((unsigned char)*p)) continue;
+    char name[256];
+    size_t ni = 0;
+    while (is_ident_char((unsigned char)*p) && ni + 1 < sizeof(name)) {
+      name[ni++] = *p++;
+    }
+    name[ni] = '\0';
+    if (ni > 0) std_syms_add(name);
+  }
+  fclose(f);
 }
 
 static void scan_dir_recursive(const char *dir) {
-    DIR *dp = opendir(dir);
-    if (!dp) return;
-    struct dirent *de;
-    char path[PATH_MAX];
-    while ((de = readdir(dp)) != NULL) {
-        const char *n = de->d_name;
-        if (strcmp(n, ".") == 0 || strcmp(n, "..") == 0) continue;
-        snprintf(path, sizeof(path), "%s/%s", dir, n);
-        struct stat st;
-        if (stat(path, &st) != 0) continue;
-        if (S_ISDIR(st.st_mode)) {
-            scan_dir_recursive(path);
-        } else {
-            size_t L = strlen(n);
-            if (L >= 4 && strcmp(n + (L - 4), ".fun") == 0) {
-                scan_symbols_from_file(path);
-            }
-        }
+  DIR *dp = opendir(dir);
+  if (!dp) return;
+  struct dirent *de;
+  char path[PATH_MAX];
+  while ((de = readdir(dp)) != NULL) {
+    const char *n = de->d_name;
+    if (strcmp(n, ".") == 0 || strcmp(n, "..") == 0) continue;
+    snprintf(path, sizeof(path), "%s/%s", dir, n);
+    struct stat st;
+    if (stat(path, &st) != 0) continue;
+    if (S_ISDIR(st.st_mode)) {
+      scan_dir_recursive(path);
+    } else {
+      size_t L = strlen(n);
+      if (L >= 4 && strcmp(n + (L - 4), ".fun") == 0) {
+        scan_symbols_from_file(path);
+      }
     }
-    closedir(dp);
+  }
+  closedir(dp);
 }
 
 static void load_stdlib_symbols(const char *libdir) {
-    if (!libdir || !*libdir) return;
-    scan_dir_recursive(libdir);
+  if (!libdir || !*libdir) return;
+  scan_dir_recursive(libdir);
 }
 
 static void free_stdlib_symbols(void) {
-    for (int i = 0; i < g_std_syms_count; ++i) free(g_std_syms[i]);
-    free(g_std_syms);
-    g_std_syms = NULL;
-    g_std_syms_count = g_std_syms_cap = 0;
+  for (int i = 0; i < g_std_syms_count; ++i)
+    free(g_std_syms[i]);
+  free(g_std_syms);
+  g_std_syms = NULL;
+  g_std_syms_count = g_std_syms_cap = 0;
 }
 
 /* Complete the trailing identifier in 'buf' using stdlib symbols.
    Returns 1 if buffer changed, 2 if a menu was printed, 0 otherwise. */
 static int complete_stdlib_ident(char *buf, size_t *len_io, size_t *pos_io, size_t cap) {
-    size_t len = *len_io;
-    size_t pos = *pos_io;
-    if (pos != len) return 0; /* complete only at end */
-    if (len == 0) return 0;
+  size_t len = *len_io;
+  size_t pos = *pos_io;
+  if (pos != len) return 0; /* complete only at end */
+  if (len == 0) return 0;
 
-    /* find start of identifier */
-    size_t start = len;
-    while (start > 0 && is_ident_char((unsigned char)buf[start - 1])) start--;
-    if (start == len) return 0;
+  /* find start of identifier */
+  size_t start = len;
+  while (start > 0 && is_ident_char((unsigned char)buf[start - 1]))
+    start--;
+  if (start == len) return 0;
 
-    const char *prefix = buf + start;
-    size_t plen = len - start;
+  const char *prefix = buf + start;
+  size_t plen = len - start;
 
-    /* collect matches */
-    const char *matches[1024];
-    int mcount = 0;
-    for (int i = 0; i < g_std_syms_count && mcount < (int)(sizeof(matches)/sizeof(matches[0])); ++i) {
-        if (strncmp(g_std_syms[i], prefix, plen) == 0) {
-            matches[mcount++] = g_std_syms[i];
-        }
+  /* collect matches */
+  const char *matches[1024];
+  int mcount = 0;
+  for (int i = 0; i < g_std_syms_count && mcount < (int)(sizeof(matches) / sizeof(matches[0])); ++i) {
+    if (strncmp(g_std_syms[i], prefix, plen) == 0) {
+      matches[mcount++] = g_std_syms[i];
     }
-    if (mcount == 0) { fputc('\a', stdout); fflush(stdout); return 0; }
+  }
+  if (mcount == 0) {
+    fputc('\a', stdout);
+    fflush(stdout);
+    return 0;
+  }
 
-    /* compute longest common extension */
-    size_t lcp = (size_t)-1;
+  /* compute longest common extension */
+  size_t lcp = (size_t)-1;
+  for (int i = 0; i < mcount; ++i) {
+    size_t nlen = strlen(matches[i]);
+    size_t cur = 0;
+    while (plen + cur < nlen) {
+      char c = matches[i][plen + cur];
+      int ok = 1;
+      for (int j = 0; j < mcount; ++j) {
+        size_t jlen = strlen(matches[j]);
+        if (plen + cur >= jlen || matches[j][plen + cur] != c) {
+          ok = 0;
+          break;
+        }
+      }
+      if (!ok) break;
+      cur++;
+    }
+    if (lcp == (size_t)-1 || cur < lcp) lcp = cur;
+  }
+  size_t new_pref_len = plen + (lcp == (size_t)-1 ? 0 : lcp);
+
+  /* build completion text */
+  char comp[512];
+  size_t write_len = 0;
+  if (mcount == 1) {
+    snprintf(comp, sizeof(comp), "%s", matches[0]);
+    write_len = strlen(comp);
+  } else if (new_pref_len > plen) {
+    strncpy(comp, prefix, plen);
+    comp[plen] = '\0';
+    strncat(comp, matches[0] + plen, new_pref_len - plen);
+    write_len = strlen(comp);
+  } else {
+    /* list candidates */
+    putchar('\n');
     for (int i = 0; i < mcount; ++i) {
-        size_t nlen = strlen(matches[i]);
-        size_t cur = 0;
-        while (plen + cur < nlen) {
-            char c = matches[i][plen + cur];
-            int ok = 1;
-            for (int j = 0; j < mcount; ++j) {
-                size_t jlen = strlen(matches[j]);
-                if (plen + cur >= jlen || matches[j][plen + cur] != c) { ok = 0; break; }
-            }
-            if (!ok) break;
-            cur++;
-        }
-        if (lcp == (size_t)-1 || cur < lcp) lcp = cur;
+      fputs(matches[i], stdout);
+      fputc(((i + 1) % 6 == 0) ? '\n' : '\t', stdout);
     }
-    size_t new_pref_len = plen + (lcp == (size_t)-1 ? 0 : lcp);
+    if (mcount % 6 != 0) putchar('\n');
+    fflush(stdout);
+    return 2;
+  }
 
-    /* build completion text */
-    char comp[512];
-    size_t write_len = 0;
-    if (mcount == 1) {
-        snprintf(comp, sizeof(comp), "%s", matches[0]);
-        write_len = strlen(comp);
-    } else if (new_pref_len > plen) {
-        strncpy(comp, prefix, plen);
-        comp[plen] = '\0';
-        strncat(comp, matches[0] + plen, new_pref_len - plen);
-        write_len = strlen(comp);
-    } else {
-        /* list candidates */
-        putchar('\n');
-        for (int i = 0; i < mcount; ++i) {
-            fputs(matches[i], stdout);
-            fputc(((i + 1) % 6 == 0) ? '\n' : '\t', stdout);
-        }
-        if (mcount % 6 != 0) putchar('\n');
-        fflush(stdout);
-        return 2;
-    }
-
-    /* replace tail from 'start' with comp */
-    if (start + write_len >= cap) write_len = cap - 1 - start;
-    memmove(buf + start, comp, write_len);
-    *len_io = start + write_len;
-    buf[*len_io] = '\0';
-    *pos_io = *len_io;
-    return 1;
+  /* replace tail from 'start' with comp */
+  if (start + write_len >= cap) write_len = cap - 1 - start;
+  memmove(buf + start, comp, write_len);
+  *len_io = start + write_len;
+  buf[*len_io] = '\0';
+  *pos_io = *len_io;
+  return 1;
 }
 
 /* Read one line with prompt, handling backspace, Up/Down history and :load path completion (now with multi-line editing via Ctrl+O) */
 static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
 #ifdef _WIN32
-    if (prompt) fputs(prompt, stdout), fflush(stdout);
+  if (prompt) fputs(prompt, stdout), fflush(stdout);
+  if (!fgets(out, (int)out_cap, stdin)) return 0;
+  return 1;
+#else
+  if (prompt) fputs(prompt, stdout), fflush(stdout);
+  if (!repl_enable_raw()) {
     if (!fgets(out, (int)out_cap, stdin)) return 0;
     return 1;
-#else
-    if (prompt) fputs(prompt, stdout), fflush(stdout);
-    if (!repl_enable_raw()) {
-        if (!fgets(out, (int)out_cap, stdin)) return 0;
-        return 1;
+  }
+
+  size_t len = 0;
+  size_t pos = 0;
+  int hist_pos = rl_count;
+  char saved_current[4096];
+  int has_saved = 0;
+
+  /* How many terminal rows were drawn in the previous repaint (prompt + lines in 'out').
+     We assume no automatic wrapping (only explicit '\n'). */
+  static int prev_rows = 1;
+
+#define RL_REDRAW()                                                                             \
+  do {                                                                                          \
+    /* Count explicit newlines to estimate rows to draw (prompt line + content lines) */        \
+    int rows = 1;                                                                               \
+    int has_nl = 0;                                                                             \
+    for (size_t __i = 0; __i < len; ++__i) {                                                    \
+      if (out[__i] == '\n') {                                                                   \
+        rows++;                                                                                 \
+        has_nl = 1;                                                                             \
+      }                                                                                         \
+    }                                                                                           \
+    /* Move cursor to the start (top) of the previous render block */                           \
+    if (prev_rows > 1) {                                                                        \
+      fprintf(stdout, "\x1b[%dA", prev_rows - 1);                                               \
+    }                                                                                           \
+    fputc('\r', stdout);                                                                        \
+    /* Repaint prompt + content */                                                              \
+    if (prompt) fputs(prompt, stdout);                                                          \
+    fwrite(out, 1, len, stdout);                                                                \
+    /* Clear everything below the current cursor (removes remnants of older, longer renders) */ \
+    fputs("\x1b[J", stdout);                                                                    \
+    /* Cursor policy: keep at end for multi-line; for single-line respect pos */                \
+    if (!has_nl && pos < len) {                                                                 \
+      size_t back = (size_t)(len - pos);                                                        \
+      if (back > 0) fprintf(stdout, "\x1b[%zuD", back);                                         \
+    } else {                                                                                    \
+      pos = len;                                                                                \
+    }                                                                                           \
+    prev_rows = rows;                                                                           \
+    fflush(stdout);                                                                             \
+  } while (0)
+
+  for (;;) {
+    int ch = getchar();
+    if (ch == EOF) {
+      repl_disable_raw();
+      return 0;
     }
 
-    size_t len = 0;
-    size_t pos = 0;
-    int hist_pos = rl_count;
-    char saved_current[4096];
-    int has_saved = 0;
-
-    /* How many terminal rows were drawn in the previous repaint (prompt + lines in 'out').
-       We assume no automatic wrapping (only explicit '\n'). */
-    static int prev_rows = 1;
-
-    #define RL_REDRAW() do { \
-        /* Count explicit newlines to estimate rows to draw (prompt line + content lines) */ \
-        int rows = 1; \
-        int has_nl = 0; \
-        for (size_t __i = 0; __i < len; ++__i) { \
-            if (out[__i] == '\n') { rows++; has_nl = 1; } \
-        } \
-        /* Move cursor to the start (top) of the previous render block */ \
-        if (prev_rows > 1) { fprintf(stdout, "\x1b[%dA", prev_rows - 1); } \
-        fputc('\r', stdout); \
-        /* Repaint prompt + content */ \
-        if (prompt) fputs(prompt, stdout); \
-        fwrite(out, 1, len, stdout); \
-        /* Clear everything below the current cursor (removes remnants of older, longer renders) */ \
-        fputs("\x1b[J", stdout); \
-        /* Cursor policy: keep at end for multi-line; for single-line respect pos */ \
-        if (!has_nl && pos < len) { \
-            size_t back = (size_t)(len - pos); \
-            if (back > 0) fprintf(stdout, "\x1b[%zuD", back); \
-        } else { \
-            pos = len; \
-        } \
-        prev_rows = rows; \
-        fflush(stdout); \
-    } while(0)
-
-    for (;;) {
-        int ch = getchar();
-        if (ch == EOF) { repl_disable_raw(); return 0; }
-
-        if (ch == '\r' || ch == '\n') {
-            fputc('\n', stdout);
-            if (len + 1 < out_cap) {
-                out[len++] = '\n';
-                out[len] = '\0';
-            } else {
-                out[len] = '\0';
-            }
-            rl_hist_add(out);
-            repl_disable_raw();
-            return 1;
-        } else if (ch == 27) {
-            int c1 = getchar();
-            if (c1 == '[') {
-                char params[16];
-                int pi = 0;
-                int final = 0;
-                for (;;) {
-                    int cx = getchar();
-                    if (cx == EOF) break;
-                    if ((cx >= 'A' && cx <= 'Z') || (cx >= 'a' && cx <= 'z') || cx == '~') {
-                        final = cx;
-                        break;
-                    }
-                    if (pi + 1 < (int)sizeof(params)) {
-                        params[pi++] = (char)cx;
-                        params[pi] = '\0';
-                    }
-                }
-                int ctrl = 0;
-                if (pi > 0) {
-                    if (strstr(params, ";5") != NULL || strcmp(params, "5") == 0 || strstr(params, "1;5") != NULL) {
-                        ctrl = 1;
-                    }
-                }
-
-                /* disallow fine-grained horizontal movement in multi-line mode (cursor stays at end) */
-                int has_nl = 0; for (size_t __i = 0; __i < len; ++__i) { if (out[__i] == '\n') { has_nl = 1; break; } }
-
-                if (final == 'A') {
-                    if (!has_saved) {
-                        size_t sl = len < sizeof(saved_current) - 1 ? len : sizeof(saved_current) - 1;
-                        memcpy(saved_current, out, sl);
-                        saved_current[sl] = '\0';
-                        has_saved = 1;
-                    }
-                    if (hist_pos > 0) {
-                        hist_pos--;
-                        const char *h = rl_hist[hist_pos];
-                        size_t hl = strlen(h);
-                        if (hl >= out_cap) hl = out_cap - 1;
-                        memcpy(out, h, hl);
-                        out[hl] = '\0';
-                        len = hl;
-                        pos = len;
-                        RL_REDRAW();
-                    } else {
-                        fputc('\a', stdout); fflush(stdout);
-                    }
-                } else if (final == 'B') {
-                    if (hist_pos < rl_count) {
-                        hist_pos++;
-                        if (hist_pos == rl_count) {
-                            if (has_saved) {
-                                size_t hl = strlen(saved_current);
-                                if (hl >= out_cap) hl = out_cap - 1;
-                                memcpy(out, saved_current, hl);
-                                out[hl] = '\0';
-                                len = hl;
-                            } else {
-                                len = 0; out[0] = '\0';
-                            }
-                        } else {
-                            const char *h = rl_hist[hist_pos];
-                            size_t hl = strlen(h);
-                            if (hl >= out_cap) hl = out_cap - 1;
-                            memcpy(out, h, hl);
-                            out[hl] = '\0';
-                            len = hl;
-                        }
-                        pos = len;
-                        RL_REDRAW();
-                    } else {
-                        fputc('\a', stdout); fflush(stdout);
-                    }
-                } else if (final == 'C') {
-                    if (has_nl) { fputc('\a', stdout); fflush(stdout); pos = len; RL_REDRAW(); }
-                    else if (ctrl) {
-                        size_t old = pos;
-                        rl_word_right(out, len, &pos);
-                        if (pos != old) RL_REDRAW();
-                        else { fputc('\a', stdout); fflush(stdout); }
-                    } else {
-                        if (pos < len) { pos++; fputs("\x1b[C", stdout); fflush(stdout); }
-                        else { fputc('\a', stdout); fflush(stdout); }
-                    }
-                } else if (final == 'D') {
-                    if (has_nl) { fputc('\a', stdout); fflush(stdout); pos = len; RL_REDRAW(); }
-                    else if (ctrl) {
-                        size_t old = pos;
-                        rl_word_left(out, len, &pos);
-                        if (pos != old) RL_REDRAW();
-                        else { fputc('\a', stdout); fflush(stdout); }
-                    } else {
-                        if (pos > 0) { pos--; fputs("\x1b[D", stdout); fflush(stdout); }
-                        else { fputc('\a', stdout); fflush(stdout); }
-                    }
-                } else {
-                    /* ignore other CSI sequences */
-                }
-            }
-        } else if (ch == 127 || ch == 8) {
-            if (pos > 0) {
-                memmove(out + pos - 1, out + pos, len - pos);
-                len--;
-                pos--;
-                out[len] = '\0';
-                RL_REDRAW();
-            } else {
-                fputc('\a', stdout);
-                fflush(stdout);
-            }
-        } else if (ch == '\t') {
-            if (pos != len) {
-                fputc('\a', stdout);
-                fflush(stdout);
-            } else {
-                out[len] = '\0';
-                size_t newlen = len;
-                int changed = complete_load_path(out, &newlen);
-                if (changed) {
-                    len = newlen;
-                    pos = len;
-                } else {
-                    /* try stdlib symbol completion */
-                    int res = complete_stdlib_ident(out, &newlen, &pos, out_cap);
-                    if (res == 1) {
-                        len = newlen;
-                    } else if (res == 2) {
-                        /* menu printed — do not modify buffer, just redraw prompt+line */
-                    } else {
-                        fputc('\a', stdout);
-                        fflush(stdout);
-                    }
-                }
-                RL_REDRAW();
-            }
-        } else if (ch == 15) { /* Ctrl+O -> insert newline at cursor (multi-line editing) */
-            if (len + 1 < out_cap) {
-                memmove(out + pos + 1, out + pos, len - pos);
-                out[pos] = '\n';
-                len++;
-                pos++;
-                out[len] = '\0';
-                hist_pos = rl_count;
-                RL_REDRAW();
-            } else {
-                fputc('\a', stdout); fflush(stdout);
-            }
-        } else if (ch >= 32 && ch <= 126) {
-            if (len + 1 < out_cap) {
-                memmove(out + pos + 1, out + pos, len - pos);
-                out[pos] = (char)ch;
-                len++;
-                pos++;
-                out[len] = '\0';
-                hist_pos = rl_count;
-                RL_REDRAW();
-            } else {
-                fputc('\a', stdout);
-                fflush(stdout);
-            }
-        } else {
-            /* ignore other control characters */
+    if (ch == '\r' || ch == '\n') {
+      fputc('\n', stdout);
+      if (len + 1 < out_cap) {
+        out[len++] = '\n';
+        out[len] = '\0';
+      } else {
+        out[len] = '\0';
+      }
+      rl_hist_add(out);
+      repl_disable_raw();
+      return 1;
+    } else if (ch == 27) {
+      int c1 = getchar();
+      if (c1 == '[') {
+        char params[16];
+        int pi = 0;
+        int final = 0;
+        for (;;) {
+          int cx = getchar();
+          if (cx == EOF) break;
+          if ((cx >= 'A' && cx <= 'Z') || (cx >= 'a' && cx <= 'z') || cx == '~') {
+            final = cx;
+            break;
+          }
+          if (pi + 1 < (int)sizeof(params)) {
+            params[pi++] = (char)cx;
+            params[pi] = '\0';
+          }
         }
+        int ctrl = 0;
+        if (pi > 0) {
+          if (strstr(params, ";5") != NULL || strcmp(params, "5") == 0 || strstr(params, "1;5") != NULL) {
+            ctrl = 1;
+          }
+        }
+
+        /* disallow fine-grained horizontal movement in multi-line mode (cursor stays at end) */
+        int has_nl = 0;
+        for (size_t __i = 0; __i < len; ++__i) {
+          if (out[__i] == '\n') {
+            has_nl = 1;
+            break;
+          }
+        }
+
+        if (final == 'A') {
+          if (!has_saved) {
+            size_t sl = len < sizeof(saved_current) - 1 ? len : sizeof(saved_current) - 1;
+            memcpy(saved_current, out, sl);
+            saved_current[sl] = '\0';
+            has_saved = 1;
+          }
+          if (hist_pos > 0) {
+            hist_pos--;
+            const char *h = rl_hist[hist_pos];
+            size_t hl = strlen(h);
+            if (hl >= out_cap) hl = out_cap - 1;
+            memcpy(out, h, hl);
+            out[hl] = '\0';
+            len = hl;
+            pos = len;
+            RL_REDRAW();
+          } else {
+            fputc('\a', stdout);
+            fflush(stdout);
+          }
+        } else if (final == 'B') {
+          if (hist_pos < rl_count) {
+            hist_pos++;
+            if (hist_pos == rl_count) {
+              if (has_saved) {
+                size_t hl = strlen(saved_current);
+                if (hl >= out_cap) hl = out_cap - 1;
+                memcpy(out, saved_current, hl);
+                out[hl] = '\0';
+                len = hl;
+              } else {
+                len = 0;
+                out[0] = '\0';
+              }
+            } else {
+              const char *h = rl_hist[hist_pos];
+              size_t hl = strlen(h);
+              if (hl >= out_cap) hl = out_cap - 1;
+              memcpy(out, h, hl);
+              out[hl] = '\0';
+              len = hl;
+            }
+            pos = len;
+            RL_REDRAW();
+          } else {
+            fputc('\a', stdout);
+            fflush(stdout);
+          }
+        } else if (final == 'C') {
+          if (has_nl) {
+            fputc('\a', stdout);
+            fflush(stdout);
+            pos = len;
+            RL_REDRAW();
+          } else if (ctrl) {
+            size_t old = pos;
+            rl_word_right(out, len, &pos);
+            if (pos != old)
+              RL_REDRAW();
+            else {
+              fputc('\a', stdout);
+              fflush(stdout);
+            }
+          } else {
+            if (pos < len) {
+              pos++;
+              fputs("\x1b[C", stdout);
+              fflush(stdout);
+            } else {
+              fputc('\a', stdout);
+              fflush(stdout);
+            }
+          }
+        } else if (final == 'D') {
+          if (has_nl) {
+            fputc('\a', stdout);
+            fflush(stdout);
+            pos = len;
+            RL_REDRAW();
+          } else if (ctrl) {
+            size_t old = pos;
+            rl_word_left(out, len, &pos);
+            if (pos != old)
+              RL_REDRAW();
+            else {
+              fputc('\a', stdout);
+              fflush(stdout);
+            }
+          } else {
+            if (pos > 0) {
+              pos--;
+              fputs("\x1b[D", stdout);
+              fflush(stdout);
+            } else {
+              fputc('\a', stdout);
+              fflush(stdout);
+            }
+          }
+        } else {
+          /* ignore other CSI sequences */
+        }
+      }
+    } else if (ch == 127 || ch == 8) {
+      if (pos > 0) {
+        memmove(out + pos - 1, out + pos, len - pos);
+        len--;
+        pos--;
+        out[len] = '\0';
+        RL_REDRAW();
+      } else {
+        fputc('\a', stdout);
+        fflush(stdout);
+      }
+    } else if (ch == '\t') {
+      if (pos != len) {
+        fputc('\a', stdout);
+        fflush(stdout);
+      } else {
+        out[len] = '\0';
+        size_t newlen = len;
+        int changed = complete_load_path(out, &newlen);
+        if (changed) {
+          len = newlen;
+          pos = len;
+        } else {
+          /* try stdlib symbol completion */
+          int res = complete_stdlib_ident(out, &newlen, &pos, out_cap);
+          if (res == 1) {
+            len = newlen;
+          } else if (res == 2) {
+            /* menu printed — do not modify buffer, just redraw prompt+line */
+          } else {
+            fputc('\a', stdout);
+            fflush(stdout);
+          }
+        }
+        RL_REDRAW();
+      }
+    } else if (ch == 15) { /* Ctrl+O -> insert newline at cursor (multi-line editing) */
+      if (len + 1 < out_cap) {
+        memmove(out + pos + 1, out + pos, len - pos);
+        out[pos] = '\n';
+        len++;
+        pos++;
+        out[len] = '\0';
+        hist_pos = rl_count;
+        RL_REDRAW();
+      } else {
+        fputc('\a', stdout);
+        fflush(stdout);
+      }
+    } else if (ch >= 32 && ch <= 126) {
+      if (len + 1 < out_cap) {
+        memmove(out + pos + 1, out + pos, len - pos);
+        out[pos] = (char)ch;
+        len++;
+        pos++;
+        out[len] = '\0';
+        hist_pos = rl_count;
+        RL_REDRAW();
+      } else {
+        fputc('\a', stdout);
+        fflush(stdout);
+      }
+    } else {
+      /* ignore other control characters */
     }
+  }
 #endif
 }
 #endif /* !_WIN32 */
@@ -688,1134 +788,1346 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
 /* ---------- Small utilities ---------- */
 
 static int is_blank_line(const char *s) {
-    for (const char *p = s; *p; ++p) {
-        if (*p != ' ' && *p != '\t' && *p != '\r' && *p != '\n') return 0;
-    }
-    return 1;
+  for (const char *p = s; *p; ++p) {
+    if (*p != ' ' && *p != '\t' && *p != '\r' && *p != '\n') return 0;
+  }
+  return 1;
 }
 
-static const char* lstrip(const char *s) {
-    while (*s == ' ' || *s == '\t') s++;
-    return s;
+static const char *lstrip(const char *s) {
+  while (*s == ' ' || *s == '\t')
+    s++;
+  return s;
 }
 
 static int ends_with_opener(const char *line) {
-    size_t n = strlen(line);
-    while (n > 0 && (line[n-1] == ' ' || line[n-1] == '\t' || line[n-1] == '\r' || line[n-1] == '\n')) n--;
-    if (n == 0) return 0;
-    char c = line[n-1];
-    if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' ||
-        c == '<' || c == '>' || c == '=' || c == '!' || c == '&' || c == '|' || c == ',') {
-        return 1;
-    }
-    return 0;
+  size_t n = strlen(line);
+  while (n > 0 && (line[n - 1] == ' ' || line[n - 1] == '\t' || line[n - 1] == '\r' || line[n - 1] == '\n'))
+    n--;
+  if (n == 0) return 0;
+  char c = line[n - 1];
+  if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' ||
+      c == '<' || c == '>' || c == '=' || c == '!' || c == '&' || c == '|' || c == ',') {
+    return 1;
+  }
+  return 0;
 }
 
 /* Compute how many indentation levels (2 spaces per level) are still open. */
 static int compute_open_indent_blocks(const char *buf) {
-    int in_block_comment = 0;
-    int open = 0;
-    int have_baseline = 0;
-    int cur = 0;
+  int in_block_comment = 0;
+  int open = 0;
+  int have_baseline = 0;
+  int cur = 0;
 
-    const char *p = buf;
-    while (*p) {
-        const char *line = p;
-        while (*p && *p != '\n') p++;
-        const char *line_end = p;
-        if (*p == '\n') p++;
+  const char *p = buf;
+  while (*p) {
+    const char *line = p;
+    while (*p && *p != '\n')
+      p++;
+    const char *line_end = p;
+    if (*p == '\n') p++;
 
-        if (in_block_comment) {
-            const char *q = line;
-            while (q < line_end) {
-                if (q + 1 < line_end && q[0] == '*' && q[1] == '/') { in_block_comment = 0; q += 2; break; }
-                q++;
-            }
-            if (in_block_comment) continue;
+    if (in_block_comment) {
+      const char *q = line;
+      while (q < line_end) {
+        if (q + 1 < line_end && q[0] == '*' && q[1] == '/') {
+          in_block_comment = 0;
+          q += 2;
+          break;
         }
-
-        const char *s = line;
-        int spaces = 0;
-        while (s < line_end && *s == ' ') { spaces++; s++; }
-        while (s < line_end && *s == '\t') { s++; }
-
-        const char *t = s;
-        if (t >= line_end) continue;
-
-        if ((t + 1) <= line_end && t[0] == '/' && (t + 1 < line_end && (t[1] == '/' || t[1] == '*'))) {
-            if (t[1] == '/') {
-                continue;
-            } else if (t[1] == '*') {
-                in_block_comment = 1;
-                continue;
-            }
-        }
-
-        int lvl = spaces / 2;
-        if (!have_baseline) {
-            cur = lvl;
-            have_baseline = 1;
-            continue;
-        }
-        if (lvl > cur) {
-            open += (lvl - cur);
-        } else if (lvl < cur) {
-            int dec = (cur - lvl);
-            if (dec > open) open = 0;
-            else open -= dec;
-        }
-        cur = lvl;
+        q++;
+      }
+      if (in_block_comment) continue;
     }
-    return open;
+
+    const char *s = line;
+    int spaces = 0;
+    while (s < line_end && *s == ' ') {
+      spaces++;
+      s++;
+    }
+    while (s < line_end && *s == '\t') {
+      s++;
+    }
+
+    const char *t = s;
+    if (t >= line_end) continue;
+
+    if ((t + 1) <= line_end && t[0] == '/' && (t + 1 < line_end && (t[1] == '/' || t[1] == '*'))) {
+      if (t[1] == '/') {
+        continue;
+      } else if (t[1] == '*') {
+        in_block_comment = 1;
+        continue;
+      }
+    }
+
+    int lvl = spaces / 2;
+    if (!have_baseline) {
+      cur = lvl;
+      have_baseline = 1;
+      continue;
+    }
+    if (lvl > cur) {
+      open += (lvl - cur);
+    } else if (lvl < cur) {
+      int dec = (cur - lvl);
+      if (dec > open)
+        open = 0;
+      else
+        open -= dec;
+    }
+    cur = lvl;
+  }
+  return open;
 }
 
 /* Detect if current buffer looks incomplete. */
 static int buffer_looks_incomplete(const char *buf) {
-    int in_single = 0, in_double = 0, escape = 0;
-    int in_block_comment = 0, in_line_comment = 0;
-    int paren = 0;
+  int in_single = 0, in_double = 0, escape = 0;
+  int in_block_comment = 0, in_line_comment = 0;
+  int paren = 0;
 
-    const char *p = buf;
-    const char *last_sig_line = NULL;
+  const char *p = buf;
+  const char *last_sig_line = NULL;
 
-    while (*p) {
-        char c = *p;
+  while (*p) {
+    char c = *p;
 
-        if (in_line_comment) {
-            if (c == '\n') in_line_comment = 0;
-            p++;
-            continue;
-        }
-        if (in_block_comment) {
-            if (c == '*' && p[1] == '/') { in_block_comment = 0; p += 2; continue; }
-            p++;
-            continue;
-        }
+    if (in_line_comment) {
+      if (c == '\n') in_line_comment = 0;
+      p++;
+      continue;
+    }
+    if (in_block_comment) {
+      if (c == '*' && p[1] == '/') {
+        in_block_comment = 0;
+        p += 2;
+        continue;
+      }
+      p++;
+      continue;
+    }
 
-        if (!in_single && !in_double) {
-            if (c == '/' && p[1] == '/') { in_line_comment = 1; p += 2; continue; }
-            if (c == '/' && p[1] == '*') { in_block_comment = 1; p += 2; continue; }
-        }
+    if (!in_single && !in_double) {
+      if (c == '/' && p[1] == '/') {
+        in_line_comment = 1;
+        p += 2;
+        continue;
+      }
+      if (c == '/' && p[1] == '*') {
+        in_block_comment = 1;
+        p += 2;
+        continue;
+      }
+    }
 
-        if (in_single) {
-            if (!escape && c == '\\') { escape = 1; p++; continue; }
-            if (!escape && c == '\'') { in_single = 0; p++; continue; }
-            escape = 0; p++; continue;
-        } else if (in_double) {
-            if (!escape && c == '\\') { escape = 1; p++; continue; }
-            if (!escape && c == '"') { in_double = 0; p++; continue; }
-            escape = 0; p++; continue;
-        } else {
-            if (c == '\'') { in_single = 1; p++; continue; }
-            if (c == '"') { in_double = 1; p++; continue; }
-            if (c == '(') { paren++; p++; continue; }
-            if (c == ')') { if (paren > 0) paren--; p++; continue; }
-        }
-
-        if (c == '\n') {
-            const char *q = p + 1;
-            while (*q == ' ' || *q == '\t') q++;
-            if (*q && *q != '\n') last_sig_line = q;
-        }
+    if (in_single) {
+      if (!escape && c == '\\') {
+        escape = 1;
         p++;
+        continue;
+      }
+      if (!escape && c == '\'') {
+        in_single = 0;
+        p++;
+        continue;
+      }
+      escape = 0;
+      p++;
+      continue;
+    } else if (in_double) {
+      if (!escape && c == '\\') {
+        escape = 1;
+        p++;
+        continue;
+      }
+      if (!escape && c == '"') {
+        in_double = 0;
+        p++;
+        continue;
+      }
+      escape = 0;
+      p++;
+      continue;
+    } else {
+      if (c == '\'') {
+        in_single = 1;
+        p++;
+        continue;
+      }
+      if (c == '"') {
+        in_double = 1;
+        p++;
+        continue;
+      }
+      if (c == '(') {
+        paren++;
+        p++;
+        continue;
+      }
+      if (c == ')') {
+        if (paren > 0) paren--;
+        p++;
+        continue;
+      }
     }
 
-    if (!last_sig_line) {
-        const char *q = buf;
-        const char *candidate = NULL;
-        while (*q) {
-            const char *line_start = q;
-            while (*q && *q != '\n') q++;
-            const char *t = line_start;
-            while (*t == ' ' || *t == '\t') t++;
-            if (*t && *t != '\n' && *t != '\r') candidate = t;
-            if (*q == '\n') q++;
-        }
-        last_sig_line = candidate;
+    if (c == '\n') {
+      const char *q = p + 1;
+      while (*q == ' ' || *q == '\t')
+        q++;
+      if (*q && *q != '\n') last_sig_line = q;
     }
+    p++;
+  }
 
-    if (in_single || in_double || in_block_comment || paren > 0) return 1;
-
-    if (last_sig_line) {
-        if (strncmp(lstrip(last_sig_line), "if", 2) == 0 ||
-            strncmp(lstrip(last_sig_line), "else", 4) == 0 ||
-            strncmp(lstrip(last_sig_line), "while", 5) == 0 ||
-            strncmp(lstrip(last_sig_line), "for", 3) == 0 ||
-            strncmp(lstrip(last_sig_line), "fun", 3) == 0) {
-            return 1;
-        }
-        if (ends_with_opener(last_sig_line)) return 1;
+  if (!last_sig_line) {
+    const char *q = buf;
+    const char *candidate = NULL;
+    while (*q) {
+      const char *line_start = q;
+      while (*q && *q != '\n')
+        q++;
+      const char *t = line_start;
+      while (*t == ' ' || *t == '\t')
+        t++;
+      if (*t && *t != '\n' && *t != '\r') candidate = t;
+      if (*q == '\n') q++;
     }
+    last_sig_line = candidate;
+  }
 
-    return 0;
+  if (in_single || in_double || in_block_comment || paren > 0) return 1;
+
+  if (last_sig_line) {
+    if (strncmp(lstrip(last_sig_line), "if", 2) == 0 ||
+        strncmp(lstrip(last_sig_line), "else", 4) == 0 ||
+        strncmp(lstrip(last_sig_line), "while", 5) == 0 ||
+        strncmp(lstrip(last_sig_line), "for", 3) == 0 ||
+        strncmp(lstrip(last_sig_line), "fun", 3) == 0) {
+      return 1;
+    }
+    if (ends_with_opener(last_sig_line)) return 1;
+  }
+
+  return 0;
 }
 
 static void show_repl_help(void) {
-    printf("Commands:\n");
-    printf("  :help | :h                                   Show this help\n");
-    printf("  :quit | :q | :exit                           Exit the REPL\n");
-    printf("  :reset | :re                                 Reset VM state (clears globals)\n");
-    printf("  :dump | :du | :globals | :gl                 Dump current globals\n");
-    printf("  :globals [pattern]                           Dump globals filtering by value substring\n");
-    printf("  :vars | :v [pattern]                         Alias for :globals\n");
-    printf("  :clear | :cl                                 Clear current input buffer\n");
-    printf("  :print | :pr                                 Show current buffer\n");
-    printf("  :run | :ru [file]                            Execute current buffer or the given file immediately\n");
-    printf("  :profile | :pf                               Execute buffer and show timing + instruction count\n");
-    printf("  :save | :sa <file>                           Save current buffer to file\n");
-    printf("  :load | :lo <file>                           Load file into buffer (does not run)\n");
-    printf("  :paste | :pa [run]                           Enter paste mode; end with a single '.' line (optional 'run')\n");
-    printf("  :history | :hi [N]                           Show last N lines of history (default 50)\n");
-    printf("  :time | :ti on|off|toggle                    Toggle/enable/disable timing\n");
-    printf("  :env | :en [NAME[=VALUE]]                    Get or set environment variable\n");
-    printf("  :backtrace | :bt | :ba                       Show backtrace of VM frames (most recent first)\n");
-    printf("  :frame | :fr N                               Select frame N for :locals/:list/:disasm (default: top)\n");
-    printf("  :list | :li [±K]                             Show K lines of source around current frame line (default 5)\n");
-    printf("  :disasm | :di [±N]                           Disassemble around current frame ip (default 5)\n");
-    printf("  :mdump | :md WHAT [offset [len]] [raw] [to <file>] Dump VM memory region\n");
-    printf("           WHAT = code | stack | globals | consts\n");
-    printf("           'raw' writes binary bytes instead of a formatted hexdump\n");
-    printf("  :stack | :st [N]                             Show top N (default all) stack values\n");
-    printf("  :top | :to                                   Show the top of the VM stack\n");
-    printf("  :locals | :lc [FRAME]                        Show locals of frame (default: selected frame)\n");
-    printf("  :printv | :pv WHAT                           Print value: local[i] | stack[i] | global[i]\n");
-    printf("  :break | :br [file:]line                     Set a breakpoint (default file = current frame file)\n");
-    printf("  :info | :in breaks                           List breakpoints\n");
-    printf("  :delete | :de ID                             Delete breakpoint by ID\n");
-    printf("  :clear breaks | :cb                          Remove all breakpoints\n");
-    printf("  :cont | :co                                  Continue execution (exit REPL if in debug stop)\n");
-    printf("  :step | :sp                                  Step one instruction\n");
-    printf("  :next | :ne                                  Step over (current frame)\n");
-    printf("  :finish | :fi                                Run until the current frame returns\n");
+  printf("Commands:\n");
+  printf("  :help | :h                                   Show this help\n");
+  printf("  :quit | :q | :exit                           Exit the REPL\n");
+  printf("  :reset | :re                                 Reset VM state (clears globals)\n");
+  printf("  :dump | :du | :globals | :gl                 Dump current globals\n");
+  printf("  :globals [pattern]                           Dump globals filtering by value substring\n");
+  printf("  :vars | :v [pattern]                         Alias for :globals\n");
+  printf("  :clear | :cl                                 Clear current input buffer\n");
+  printf("  :print | :pr                                 Show current buffer\n");
+  printf("  :run | :ru [file]                            Execute current buffer or the given file immediately\n");
+  printf("  :profile | :pf                               Execute buffer and show timing + instruction count\n");
+  printf("  :save | :sa <file>                           Save current buffer to file\n");
+  printf("  :load | :lo <file>                           Load file into buffer (does not run)\n");
+  printf("  :paste | :pa [run]                           Enter paste mode; end with a single '.' line (optional 'run')\n");
+  printf("  :history | :hi [N]                           Show last N lines of history (default 50)\n");
+  printf("  :time | :ti on|off|toggle                    Toggle/enable/disable timing\n");
+  printf("  :env | :en [NAME[=VALUE]]                    Get or set environment variable\n");
+  printf("  :backtrace | :bt | :ba                       Show backtrace of VM frames (most recent first)\n");
+  printf("  :frame | :fr N                               Select frame N for :locals/:list/:disasm (default: top)\n");
+  printf("  :list | :li [±K]                             Show K lines of source around current frame line (default 5)\n");
+  printf("  :disasm | :di [±N]                           Disassemble around current frame ip (default 5)\n");
+  printf("  :mdump | :md WHAT [offset [len]] [raw] [to <file>] Dump VM memory region\n");
+  printf("           WHAT = code | stack | globals | consts\n");
+  printf("           'raw' writes binary bytes instead of a formatted hexdump\n");
+  printf("  :stack | :st [N]                             Show top N (default all) stack values\n");
+  printf("  :top | :to                                   Show the top of the VM stack\n");
+  printf("  :locals | :lc [FRAME]                        Show locals of frame (default: selected frame)\n");
+  printf("  :printv | :pv WHAT                           Print value: local[i] | stack[i] | global[i]\n");
+  printf("  :break | :br [file:]line                     Set a breakpoint (default file = current frame file)\n");
+  printf("  :info | :in breaks                           List breakpoints\n");
+  printf("  :delete | :de ID                             Delete breakpoint by ID\n");
+  printf("  :clear breaks | :cb                          Remove all breakpoints\n");
+  printf("  :cont | :co                                  Continue execution (exit REPL if in debug stop)\n");
+  printf("  :step | :sp                                  Step one instruction\n");
+  printf("  :next | :ne                                  Step over (current frame)\n");
+  printf("  :finish | :fi                                Run until the current frame returns\n");
 }
 
 static char *read_entire_file(const char *path, size_t *out_len) {
-    FILE *f = fopen(path, "rb");
-    if (!f) return NULL;
-    if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return NULL; }
-    long sz = ftell(f);
-    if (sz < 0) { fclose(f); return NULL; }
-    rewind(f);
-    char *buf = (char*)malloc((size_t)sz + 1);
-    if (!buf) { fclose(f); return NULL; }
-    size_t n = fread(buf, 1, (size_t)sz, f);
+  FILE *f = fopen(path, "rb");
+  if (!f) return NULL;
+  if (fseek(f, 0, SEEK_END) != 0) {
     fclose(f);
-    buf[n] = '\0';
-    if (out_len) *out_len = n;
-    return buf;
+    return NULL;
+  }
+  long sz = ftell(f);
+  if (sz < 0) {
+    fclose(f);
+    return NULL;
+  }
+  rewind(f);
+  char *buf = (char *)malloc((size_t)sz + 1);
+  if (!buf) {
+    fclose(f);
+    return NULL;
+  }
+  size_t n = fread(buf, 1, (size_t)sz, f);
+  fclose(f);
+  buf[n] = '\0';
+  if (out_len) *out_len = n;
+  return buf;
 }
 
 static int write_entire_file(const char *path, const char *data, size_t len) {
-    FILE *f = fopen(path, "wb");
-    if (!f) return 0;
-    size_t n = fwrite(data, 1, len, f);
-    fclose(f);
-    return n == len;
+  FILE *f = fopen(path, "wb");
+  if (!f) return 0;
+  size_t n = fwrite(data, 1, len, f);
+  fclose(f);
+  return n == len;
 }
 
 /* ---------- REPL command matching helper ---------- */
 static int cmd_is_one_of(const char *cmd, const char *const names[]) {
-    if (!cmd || !*cmd) return 0;
-    for (int i = 0; names[i] != NULL; ++i) {
-        if (strcmp(cmd, names[i]) == 0) return 1;
-    }
-    return 0;
+  if (!cmd || !*cmd) return 0;
+  for (int i = 0; names[i] != NULL; ++i) {
+    if (strcmp(cmd, names[i]) == 0) return 1;
+  }
+  return 0;
 }
 
 /* ---------- Hexdump helper ---------- */
 static void hexdump_to(FILE *out, const unsigned char *data, size_t len, size_t base_off) {
-    if (!out || !data || len == 0) return;
-    const size_t width = 16;
-    char ascii[17];
-    ascii[16] = '\0';
-    for (size_t i = 0; i < len; i += width) {
-        size_t chunk = (len - i < width) ? (len - i) : width;
-        /* address */
-        fprintf(out, "%08zx  ", base_off + i);
-        /* hex bytes */
-        for (size_t j = 0; j < width; ++j) {
-            if (j < chunk) {
-                fprintf(out, "%02x ", data[i + j]);
-                unsigned char c = data[i + j];
-                ascii[j] = (c >= 32 && c <= 126) ? (char)c : '.';
-            } else {
-                fputs("   ", out);
-                ascii[j] = ' ';
-            }
-            if (j == 7) fputc(' ', out); /* extra space between 8-byte halves */
-        }
-        ascii[chunk < width ? chunk : width] = '\0';
-        fprintf(out, " |%s|\n", ascii);
+  if (!out || !data || len == 0) return;
+  const size_t width = 16;
+  char ascii[17];
+  ascii[16] = '\0';
+  for (size_t i = 0; i < len; i += width) {
+    size_t chunk = (len - i < width) ? (len - i) : width;
+    /* address */
+    fprintf(out, "%08zx  ", base_off + i);
+    /* hex bytes */
+    for (size_t j = 0; j < width; ++j) {
+      if (j < chunk) {
+        fprintf(out, "%02x ", data[i + j]);
+        unsigned char c = data[i + j];
+        ascii[j] = (c >= 32 && c <= 126) ? (char)c : '.';
+      } else {
+        fputs("   ", out);
+        ascii[j] = ' ';
+      }
+      if (j == 7) fputc(' ', out); /* extra space between 8-byte halves */
     }
+    ascii[chunk < width ? chunk : width] = '\0';
+    fprintf(out, " |%s|\n", ascii);
+  }
 }
 
 static void print_last_n_lines(const char *path, int n) {
-    if (n <= 0) n = 50;
-    size_t flen = 0;
-    char *content = read_entire_file(path, &flen);
-    if (!content) {
-        printf("No history available.\n");
+  if (n <= 0) n = 50;
+  size_t flen = 0;
+  char *content = read_entire_file(path, &flen);
+  if (!content) {
+    printf("No history available.\n");
+    return;
+  }
+  int lines = 0;
+  for (size_t i = flen; i > 0; --i) {
+    if (content[i - 1] == '\n') {
+      lines++;
+      if (lines > n) {
+        content[i] = '\0';
+        printf("%s", content + i);
+        free(content);
         return;
+      }
     }
-    int lines = 0;
-    for (size_t i = flen; i > 0; --i) {
-        if (content[i-1] == '\n') {
-            lines++;
-            if (lines > n) { content[i] = '\0'; printf("%s", content + i); free(content); return; }
-        }
-    }
-    printf("%s", content);
-    free(content);
+  }
+  printf("%s", content);
+  free(content);
 }
 
 static void append_history(FILE *hist, const char *buffer) {
-    if (!hist || !buffer) return;
-    fputs(buffer, hist);
-    if (buffer[0] && buffer[strlen(buffer)-1] != '\n') fputc('\n', hist);
-    fflush(hist);
+  if (!hist || !buffer) return;
+  fputs(buffer, hist);
+  if (buffer[0] && buffer[strlen(buffer) - 1] != '\n') fputc('\n', hist);
+  fflush(hist);
 }
 
 /* ---------- Env helpers ---------- */
 static void env_show_usage(void) {
-    printf("Usage:\n");
-    printf("  :env NAME          Show environment variable NAME\n");
-    printf("  :env NAME=VALUE    Set environment variable NAME to VALUE\n");
-    printf("  :env               Show this usage\n");
+  printf("Usage:\n");
+  printf("  :env NAME          Show environment variable NAME\n");
+  printf("  :env NAME=VALUE    Set environment variable NAME to VALUE\n");
+  printf("  :env               Show this usage\n");
 }
 
 static void env_get(const char *name) {
-    const char *v = getenv(name);
-    if (v) printf("%s=%s\n", name, v);
-    else printf("%s is not set\n", name);
+  const char *v = getenv(name);
+  if (v)
+    printf("%s=%s\n", name, v);
+  else
+    printf("%s is not set\n", name);
 }
 
 static void env_set(const char *name, const char *value) {
 #ifdef _WIN32
-    if (_putenv_s(name, value ? value : "") != 0) {
-        printf("Failed to set %s\n", name);
-    }
+  if (_putenv_s(name, value ? value : "") != 0) {
+    printf("Failed to set %s\n", name);
+  }
 #else
-    if (setenv(name, value ? value : "", 1) != 0) {
-        printf("Failed to set %s\n", name);
-    }
+  if (setenv(name, value ? value : "", 1) != 0) {
+    printf("Failed to set %s\n", name);
+  }
 #endif
 }
 
 /* ---------- REPL Entry ---------- */
 
 int fun_run_repl(VM *vm) {
-    int repl_timing = 0;
-    int selected_frame = -1; /* -1 means use current top frame */
+  int repl_timing = 0;
+  int selected_frame = -1; /* -1 means use current top frame */
 
-    printf("Fun %s REPL\n", FUN_VERSION);
-    printf("Type :help for commands. Submit an empty line to run.\n");
+  printf("Fun %s REPL\n", FUN_VERSION);
+  printf("Type :help for commands. Submit an empty line to run.\n");
 
-    /* Load stdlib symbols for completion */
-    {
-        char libdir[PATH_MAX];
-        const char *envlib = getenv("FUN_LIB_DIR");
-        if (envlib && *envlib) {
-            snprintf(libdir, sizeof(libdir), "%s", envlib);
-        } else {
-#ifdef DEFAULT_LIB_DIR
-            snprintf(libdir, sizeof(libdir), "%s", DEFAULT_LIB_DIR);
-#else
-            snprintf(libdir, sizeof(libdir), "%s", "lib");
-#endif
-        }
-        /* strip trailing slash if present, not strictly necessary */
-        size_t L = strlen(libdir);
-        if (L > 1 && libdir[L - 1] == '/') libdir[L - 1] = '\0';
-        load_stdlib_symbols(libdir);
-    }
-
-    char *buffer = NULL;
-    size_t bufcap = 0;
-    size_t buflen = 0;
-
-    /* History setup */
-    char hist_path[1024];
-    FILE *hist = NULL;
-    const char *home = getenv("HOME");
-    if (!home) home = getenv("USERPROFILE");
-    if (home) {
-        snprintf(hist_path, sizeof(hist_path), "%s/.fun_history", home);
-        rl_hist_load_file(hist_path);
-        hist = fopen(hist_path, "a+");
+  /* Load stdlib symbols for completion */
+  {
+    char libdir[PATH_MAX];
+    const char *envlib = getenv("FUN_LIB_DIR");
+    if (envlib && *envlib) {
+      snprintf(libdir, sizeof(libdir), "%s", envlib);
     } else {
-        snprintf(hist_path, sizeof(hist_path), ".fun_history");
-        rl_hist_load_file(hist_path);
-        hist = fopen(hist_path, "a+");
+#ifdef DEFAULT_LIB_DIR
+      snprintf(libdir, sizeof(libdir), "%s", DEFAULT_LIB_DIR);
+#else
+      snprintf(libdir, sizeof(libdir), "%s", "lib");
+#endif
+    }
+    /* strip trailing slash if present, not strictly necessary */
+    size_t L = strlen(libdir);
+    if (L > 1 && libdir[L - 1] == '/') libdir[L - 1] = '\0';
+    load_stdlib_symbols(libdir);
+  }
+
+  char *buffer = NULL;
+  size_t bufcap = 0;
+  size_t buflen = 0;
+
+  /* History setup */
+  char hist_path[1024];
+  FILE *hist = NULL;
+  const char *home = getenv("HOME");
+  if (!home) home = getenv("USERPROFILE");
+  if (home) {
+    snprintf(hist_path, sizeof(hist_path), "%s/.fun_history", home);
+    rl_hist_load_file(hist_path);
+    hist = fopen(hist_path, "a+");
+  } else {
+    snprintf(hist_path, sizeof(hist_path), ".fun_history");
+    rl_hist_load_file(hist_path);
+    hist = fopen(hist_path, "a+");
+  }
+
+  for (;;) {
+    if (buflen + 1 > bufcap) {
+      size_t newcap = bufcap == 0 ? 1024 : bufcap * 2;
+      while (newcap < buflen + 1)
+        newcap *= 2;
+      buffer = (char *)realloc(buffer, newcap);
+      bufcap = newcap;
+    }
+    buffer[buflen] = '\0';
+    int indent_debt = (buflen > 0) ? compute_open_indent_blocks(buffer) : 0;
+
+    char prompt[64];
+    if (buflen == 0) {
+      snprintf(prompt, sizeof(prompt), "fun> ");
+    } else if (indent_debt > 0) {
+      snprintf(prompt, sizeof(prompt), "...%d> ", indent_debt);
+    } else {
+      snprintf(prompt, sizeof(prompt), "... ");
     }
 
-    for (;;) {
-        if (buflen + 1 > bufcap) {
-            size_t newcap = bufcap == 0 ? 1024 : bufcap * 2;
-            while (newcap < buflen + 1) newcap *= 2;
-            buffer = (char*)realloc(buffer, newcap);
-            bufcap = newcap;
-        }
-        buffer[buflen] = '\0';
-        int indent_debt = (buflen > 0) ? compute_open_indent_blocks(buffer) : 0;
-
-        char prompt[64];
-        if (buflen == 0) {
-            snprintf(prompt, sizeof(prompt), "fun> ");
-        } else if (indent_debt > 0) {
-            snprintf(prompt, sizeof(prompt), "...%d> ", indent_debt);
-        } else {
-            snprintf(prompt, sizeof(prompt), "... ");
-        }
-
-        char line[4096];
+    char line[4096];
 #ifndef _WIN32
-        if (!read_line_edit(line, sizeof(line), prompt)) {
-            puts("");
-            break; // EOF
-        }
+    if (!read_line_edit(line, sizeof(line), prompt)) {
+      puts("");
+      break; // EOF
+    }
 #else
-        fputs(prompt, stdout);
-        fflush(stdout);
-        if (!fgets(line, sizeof(line), stdin)) {
+    fputs(prompt, stdout);
+    fflush(stdout);
+    if (!fgets(line, sizeof(line), stdin)) {
+      puts("");
+      break;
+    }
+#endif
+    if (hist) {
+      const char *lp = line;
+      int only_nl = 1;
+      while (*lp) {
+        if (*lp != '\n' && *lp != '\r') {
+          only_nl = 0;
+          break;
+        }
+        lp++;
+      }
+      if (!only_nl) append_history(hist, line);
+    }
+
+    if (line[0] == ':') {
+      char cmd[64] = {0};
+      char arg[2048] = {0};
+      sscanf(line, ":%63s %2047[^\n]", cmd, arg);
+
+      if (cmd_is_one_of(cmd, (const char *[]){"quit", "q", "qu", "exit", NULL})) {
+        break;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"help", "h", NULL})) {
+        show_repl_help();
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"reset", "re", NULL})) {
+        vm_reset(vm);
+        printf("VM state reset.\n");
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"dump", "du", NULL})) {
+        vm_dump_globals(vm);
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"globals", "vars", "gl", "v", "va", NULL})) {
+        const char *pattern = lstrip(arg);
+        int filtered = (pattern && *pattern);
+        printf("=== globals%s%s ===\n", filtered ? " matching '" : "", filtered ? pattern : "");
+        if (filtered) printf("'\n");
+        for (int i = 0; i < MAX_GLOBALS; ++i) {
+          if (vm->globals[i].type == VAL_NIL) continue;
+          char *sv = value_to_string_alloc(&vm->globals[i]);
+          if (!filtered || (sv && strstr(sv, pattern))) {
+            printf("[%d] %s\n", i, sv ? sv : "nil");
+          }
+          free(sv);
+        }
+        printf("===============\n");
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"clear", "cl", NULL})) {
+        buflen = 0;
+        printf("(buffer cleared)\n");
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"print", "pr", NULL})) {
+        if (buflen == 0)
+          printf("(buffer empty)\n");
+        else {
+          if (buflen >= bufcap) {
+            buffer = (char *)realloc(buffer, buflen + 1);
+            bufcap = buflen + 1;
+          }
+          buffer[buflen] = '\0';
+          printf("%s", buffer);
+          if (buflen > 0 && buffer[buflen - 1] != '\n') printf("\n");
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"run", "ru", "profile", "pf", NULL})) {
+        int is_profile = cmd_is_one_of(cmd, (const char *[]){"profile", "pf", NULL});
+        // 'arg' is a fixed-size local array, so its address is always non-null.
+        // Only check whether it contains a non-empty string.
+        int from_file = (arg[0] != '\0');
+
+        const char *src = NULL;
+        char *filebuf = NULL;
+        if (from_file) {
+          size_t flen = 0;
+          filebuf = read_entire_file(arg, &flen);
+          if (!filebuf) {
+            printf("Failed to load '%s'\n", arg);
+            continue;
+          }
+          src = filebuf;
+        } else {
+          if (buflen == 0) {
+            printf("(buffer empty)\n");
+            continue;
+          }
+          if (buflen + 1 > bufcap) {
+            buffer = (char *)realloc(buffer, buflen + 1);
+            bufcap = buflen + 1;
+          }
+          buffer[buflen] = '\0';
+          src = buffer;
+        }
+
+        clock_t t_parse0 = 0, t_parse1 = 0, t_run0 = 0, t_run1 = 0;
+        if (is_profile) t_parse0 = clock();
+        Bytecode *bc = parse_string_to_bytecode(src);
+        if (is_profile) t_parse1 = clock();
+
+        if (bc) {
+          if (repl_timing || is_profile) t_run0 = clock();
+          vm_run(vm, bc);
+          if (repl_timing || is_profile) t_run1 = clock();
+
+          if (is_profile) {
+            double ms_parse = (double)(t_parse1 - t_parse0) * 1000.0 / (double)CLOCKS_PER_SEC;
+            double ms_run = (double)(t_run1 - t_run0) * 1000.0 / (double)CLOCKS_PER_SEC;
+            printf("[profile] parse: %.2f ms, run: %.2f ms, total: %.2f ms, instr: %lld\n",
+                   ms_parse, ms_run, ms_parse + ms_run, vm->instr_count);
+          } else if (repl_timing) {
+            double ms = (double)(t_run1 - t_run0) * 1000.0 / (double)CLOCKS_PER_SEC;
+            printf("[time] %.2f ms\n", ms);
+          }
+
+          vm_print_output(vm);
+          vm_clear_output(vm);
+          bytecode_free(bc);
+          if (!from_file) append_history(hist, buffer);
+        } else {
+          int line_no = 0, col_no = 0;
+          char emsg[256];
+          if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
+            printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
+            int cur_line = 1;
+            const char *p = src ? src : buffer;
+            while (*p && cur_line < line_no) {
+              if (*p == '\n') cur_line++;
+              p++;
+            }
+            const char *line_start = p;
+            while (*p && *p != '\n')
+              p++;
+            fwrite(line_start, 1, (size_t)(p - line_start), stdout);
+            printf("\n");
+            for (int i = 1; i < col_no; ++i)
+              putchar(' ');
+            printf("^\n");
+#ifdef FUN_DEBUG
+            if (hist && !from_file) {
+              fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
+              fflush(hist);
+            }
+#endif
+          } else {
+            printf("Parse error.\n");
+#ifdef FUN_DEBUG
+            if (hist && !from_file) {
+              fprintf(hist, "// ERROR: parse error\n");
+              fflush(hist);
+            }
+#endif
+          }
+        }
+        if (from_file) {
+          free(filebuf);
+        } else {
+          buflen = 0; /* keep behavior: clear buffer only when running current buffer */
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"save", "sa", NULL})) {
+        if (arg[0] == '\0') {
+          printf("Usage: :save <file>\n");
+          continue;
+        }
+        if (buflen == 0) {
+          printf("(buffer empty)\n");
+          continue;
+        }
+        if (!write_entire_file(arg, buffer, buflen)) {
+          printf("Failed to save to '%s'\n", arg);
+        } else {
+          printf("Saved %zu bytes to '%s'\n", buflen, arg);
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"load", "lo", NULL})) {
+        if (arg[0] == '\0') {
+          printf("Usage: :load <file>\n");
+          continue;
+        }
+        size_t flen = 0;
+        char *filebuf = read_entire_file(arg, &flen);
+        if (!filebuf) {
+          printf("Failed to load '%s'\n", arg);
+          continue;
+        }
+        if (flen + 1 > bufcap) {
+          size_t newcap = flen + 1;
+          buffer = (char *)realloc(buffer, newcap);
+          bufcap = newcap;
+        }
+        memcpy(buffer, filebuf, flen);
+        buflen = flen;
+        buffer[buflen] = '\0';
+        free(filebuf);
+        printf("Loaded %zu bytes into buffer. Use :run or submit an empty line to execute.\n", buflen);
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"paste", "pa", NULL})) {
+        int run_after = 0;
+        const char *opt = lstrip(arg);
+        if (opt && (strcmp(opt, "run") == 0 || strcmp(opt, "exec") == 0)) run_after = 1;
+        printf("(paste mode: end with single '.' line)%s\n", run_after ? " [will run]" : "");
+        for (;;) {
+          fputs("... paste> ", stdout);
+          fflush(stdout);
+          char pline[8192];
+          if (!fgets(pline, sizeof(pline), stdin)) {
             puts("");
             break;
-        }
-#endif
-        if (hist) {
-            const char *lp = line;
-            int only_nl = 1;
-            while (*lp) { if (*lp != '\n' && *lp != '\r') { only_nl = 0; break; } lp++; }
-            if (!only_nl) append_history(hist, line);
-        }
-
-        if (line[0] == ':') {
-            char cmd[64] = {0};
-            char arg[2048] = {0};
-            sscanf(line, ":%63s %2047[^\n]", cmd, arg);
-
-            if (cmd_is_one_of(cmd, (const char*[]){"quit","q","qu","exit", NULL})) {
-                break;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"help","h", NULL})) {
-                show_repl_help();
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"reset","re", NULL})) {
-                vm_reset(vm);
-                printf("VM state reset.\n");
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"dump","du", NULL})) {
-                vm_dump_globals(vm);
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"globals","vars","gl","v","va", NULL})) {
-                const char *pattern = lstrip(arg);
-                int filtered = (pattern && *pattern);
-                printf("=== globals%s%s ===\n", filtered ? " matching '" : "", filtered ? pattern : "");
-                if (filtered) printf("'\n");
-                for (int i = 0; i < MAX_GLOBALS; ++i) {
-                    if (vm->globals[i].type == VAL_NIL) continue;
-                    char *sv = value_to_string_alloc(&vm->globals[i]);
-                    if (!filtered || (sv && strstr(sv, pattern))) {
-                        printf("[%d] %s\n", i, sv ? sv : "nil");
-                    }
-                    free(sv);
-                }
-                printf("===============\n");
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"clear","cl", NULL})) {
-                buflen = 0;
-                printf("(buffer cleared)\n");
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"print","pr", NULL})) {
-                if (buflen == 0) printf("(buffer empty)\n");
-                else {
-                    if (buflen >= bufcap) {
-                        buffer = (char*)realloc(buffer, buflen + 1);
-                        bufcap = buflen + 1;
-                    }
-                    buffer[buflen] = '\0';
-                    printf("%s", buffer);
-                    if (buflen > 0 && buffer[buflen-1] != '\n') printf("\n");
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"run","ru","profile","pf", NULL})) {
-                int is_profile = cmd_is_one_of(cmd, (const char*[]){"profile","pf", NULL});
-                // 'arg' is a fixed-size local array, so its address is always non-null.
-                // Only check whether it contains a non-empty string.
-                int from_file = (arg[0] != '\0');
-
-                const char *src = NULL;
-                char *filebuf = NULL;
-                if (from_file) {
-                    size_t flen = 0;
-                    filebuf = read_entire_file(arg, &flen);
-                    if (!filebuf) {
-                        printf("Failed to load '%s'\n", arg);
-                        continue;
-                    }
-                    src = filebuf;
-                } else {
-                    if (buflen == 0) {
-                        printf("(buffer empty)\n");
-                        continue;
-                    }
-                    if (buflen + 1 > bufcap) {
-                        buffer = (char*)realloc(buffer, buflen + 1);
-                        bufcap = buflen + 1;
-                    }
-                    buffer[buflen] = '\0';
-                    src = buffer;
-                }
-
-                clock_t t_parse0 = 0, t_parse1 = 0, t_run0 = 0, t_run1 = 0;
-                if (is_profile) t_parse0 = clock();
-                Bytecode *bc = parse_string_to_bytecode(src);
-                if (is_profile) t_parse1 = clock();
-
-                if (bc) {
-                    if (repl_timing || is_profile) t_run0 = clock();
-                    vm_run(vm, bc);
-                    if (repl_timing || is_profile) t_run1 = clock();
-
-                    if (is_profile) {
-                        double ms_parse = (double)(t_parse1 - t_parse0) * 1000.0 / (double)CLOCKS_PER_SEC;
-                        double ms_run   = (double)(t_run1 - t_run0)   * 1000.0 / (double)CLOCKS_PER_SEC;
-                        printf("[profile] parse: %.2f ms, run: %.2f ms, total: %.2f ms, instr: %lld\n",
-                               ms_parse, ms_run, ms_parse + ms_run, vm->instr_count);
-                    } else if (repl_timing) {
-                        double ms = (double)(t_run1 - t_run0) * 1000.0 / (double)CLOCKS_PER_SEC;
-                        printf("[time] %.2f ms\n", ms);
-                    }
-
-                    vm_print_output(vm);
-                    vm_clear_output(vm);
-                    bytecode_free(bc);
-                    if (!from_file) append_history(hist, buffer);
-                } else {
-                    int line_no = 0, col_no = 0;
-                    char emsg[256];
-                    if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
-                        printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
-                        int cur_line = 1;
-                        const char *p = src ? src : buffer;
-                        while (*p && cur_line < line_no) {
-                            if (*p == '\n') cur_line++;
-                            p++;
-                        }
-                        const char *line_start = p;
-                        while (*p && *p != '\n') p++;
-                        fwrite(line_start, 1, (size_t)(p - line_start), stdout);
-                        printf("\n");
-                        for (int i = 1; i < col_no; ++i) putchar(' ');
-                        printf("^\n");
-#ifdef FUN_DEBUG
-                        if (hist && !from_file) {
-                            fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
-                            fflush(hist);
-                        }
-#endif
-                    } else {
-                        printf("Parse error.\n");
-#ifdef FUN_DEBUG
-                        if (hist && !from_file) {
-                            fprintf(hist, "// ERROR: parse error\n");
-                            fflush(hist);
-                        }
-#endif
-                    }
-                }
-                if (from_file) {
-                    free(filebuf);
-                } else {
-                    buflen = 0; /* keep behavior: clear buffer only when running current buffer */
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"save","sa", NULL})) {
-                if (arg[0] == '\0') { printf("Usage: :save <file>\n"); continue; }
-                if (buflen == 0) { printf("(buffer empty)\n"); continue; }
-                if (!write_entire_file(arg, buffer, buflen)) {
-                    printf("Failed to save to '%s'\n", arg);
-                } else {
-                    printf("Saved %zu bytes to '%s'\n", buflen, arg);
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"load","lo", NULL})) {
-                if (arg[0] == '\0') { printf("Usage: :load <file>\n"); continue; }
-                size_t flen = 0;
-                char *filebuf = read_entire_file(arg, &flen);
-                if (!filebuf) {
-                    printf("Failed to load '%s'\n", arg);
-                    continue;
-                }
-                if (flen + 1 > bufcap) {
-                    size_t newcap = flen + 1;
-                    buffer = (char*)realloc(buffer, newcap);
-                    bufcap = newcap;
-                }
-                memcpy(buffer, filebuf, flen);
-                buflen = flen;
-                buffer[buflen] = '\0';
-                free(filebuf);
-                printf("Loaded %zu bytes into buffer. Use :run or submit an empty line to execute.\n", buflen);
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"paste","pa", NULL})) {
-                int run_after = 0;
-                const char *opt = lstrip(arg);
-                if (opt && (strcmp(opt, "run") == 0 || strcmp(opt, "exec") == 0)) run_after = 1;
-                printf("(paste mode: end with single '.' line)%s\n", run_after ? " [will run]" : "");
-                for (;;) {
-                    fputs("... paste> ", stdout);
-                    fflush(stdout);
-                    char pline[8192];
-                    if (!fgets(pline, sizeof(pline), stdin)) { puts(""); break; }
-                    if ((strcmp(pline, ".\n") == 0) || (strcmp(pline, ".\r\n") == 0) || (strcmp(pline, ".") == 0)) {
-                        break;
-                    }
-                    size_t pl = strlen(pline);
-                    if (buflen + pl + 1 > bufcap) {
-                        size_t newcap = bufcap == 0 ? 1024 : bufcap * 2;
-                        while (newcap < buflen + pl + 1) newcap *= 2;
-                        buffer = (char*)realloc(buffer, newcap);
-                        bufcap = newcap;
-                    }
-                    memcpy(buffer + buflen, pline, pl);
-                    buflen += pl;
-                }
-                if (run_after) {
-                    if (buflen + 1 > bufcap) { buffer = (char*)realloc(buffer, buflen + 1); bufcap = buflen + 1; }
-                    buffer[buflen] = '\0';
-                    Bytecode *bc = parse_string_to_bytecode(buffer);
-                    if (bc) {
-                        clock_t t0 = clock();
-                        vm_run(vm, bc);
-                        clock_t t1 = clock();
-                        double ms = (double)(t1 - t0) * 1000.0 / (double)CLOCKS_PER_SEC;
-                        printf("[time] %.2f ms\n", ms);
-                        vm_print_output(vm);
-                        vm_clear_output(vm);
-                        bytecode_free(bc);
-                        append_history(hist, buffer);
-                    } else {
-                        int line_no = 0, col_no = 0;
-                        char emsg[256];
-                        if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
-                            printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
-#ifdef FUN_DEBUG
-                            if (hist) {
-                                fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
-                                fflush(hist);
-                            }
-#endif
-                        } else {
-                            printf("Parse error.\n");
-#ifdef FUN_DEBUG
-                            if (hist) {
-                                fprintf(hist, "// ERROR: parse error\n");
-                                fflush(hist);
-                            }
-#endif
-                        }
-                    }
-                    buflen = 0;
-                } else {
-                    printf("(pasted %zu bytes into buffer)\n", buflen);
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"history","hi", NULL})) {
-                int n = 50;
-                if (arg[0] != '\0') n = atoi(arg);
-                if (n <= 0) n = 50;
-                print_last_n_lines(hist_path, n);
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"time","ti", NULL})) {
-                if (strcmp(lstrip(arg), "on") == 0) repl_timing = 1;
-                else if (strcmp(lstrip(arg), "off") == 0) repl_timing = 0;
-                else if (strcmp(lstrip(arg), "toggle") == 0) repl_timing = !repl_timing;
-                else {
-                    printf("Usage: :time on|off|toggle (currently %s)\n", repl_timing ? "on" : "off");
-                    continue;
-                }
-                printf("Timing %s\n", repl_timing ? "enabled" : "disabled");
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"env","en", NULL})) {
-                const char *spec = lstrip(arg);
-                if (!spec || *spec == '\0') {
-                    env_show_usage();
-                    continue;
-                }
-                const char *eq = strchr(spec, '=');
-                if (!eq) {
-                    env_get(spec);
-                } else {
-                    char name[256];
-                    size_t nlen = (size_t)(eq - spec);
-                    if (nlen >= sizeof(name)) nlen = sizeof(name) - 1;
-                    memcpy(name, spec, nlen);
-                    name[nlen] = '\0';
-                    const char *val = eq + 1;
-                    env_set(name, val);
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"backtrace","bt","ba", NULL})) {
-                if (vm->fp < 0) { printf("(no frames)\n"); continue; }
-                printf("Backtrace (most recent call first):\n");
-                for (int i = vm->fp; i >= 0; --i) {
-                    Frame *f = &vm->frames[i];
-                    const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
-                    const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : "<unknown>";
-                    int ip = f->ip - 1;
-                    printf("  #%d %s at %s ip=%d line=%d\n", i, fname, sfile, ip, vm->current_line);
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"stack","st", NULL})) {
-                int n = -1;
-                const char *p = lstrip(arg);
-                if (p && *p) n = atoi(p);
-                int count = vm->sp + 1;
-                if (count <= 0) { printf("(stack empty)\n"); continue; }
-                int start = 0;
-                if (n > 0 && n < count) start = count - n;
-                printf("Stack size=%d\n", count);
-                for (int i = start; i < count; ++i) {
-                    char *sv = value_to_string_alloc(&vm->stack[i]);
-                    printf("[%d] %s\n", i, sv ? sv : "nil");
-                    free(sv);
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"locals","lc", NULL})) {
-                int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
-                const char *p = lstrip(arg);
-                if (p && *p) {
-                    int v = atoi(p);
-                    if (v >= 0 && v <= vm->fp) idx = v;
-                }
-                if (idx < 0) { printf("(no current frame)\n"); continue; }
-                Frame *f = &vm->frames[idx];
-                const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
-                printf("Locals in frame #%d (%s):\n", idx, fname);
-                int any = 0;
-                for (int i = 0; i < MAX_FRAME_LOCALS; ++i) {
-                    if (f->locals[i].type != VAL_NIL) {
-                        char *sv = value_to_string_alloc(&f->locals[i]);
-                        printf("  %d: %s\n", i, sv ? sv : "nil");
-                        free(sv);
-                        any = 1;
-                    }
-                }
-                if (!any) printf("  (no non-nil locals)\n");
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"frame","fr", NULL})) {
-                const char *p = lstrip(arg);
-                if (!p || !*p) { printf("Usage: :frame N\n"); continue; }
-                int v = atoi(p);
-                if (v < 0 || v > vm->fp) { printf("Invalid frame index. Current top is %d\n", vm->fp); continue; }
-                selected_frame = v;
-                Frame *f = &vm->frames[selected_frame];
-                const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
-                const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : "<unknown>";
-                printf("Selected frame #%d: %s (%s)\n", selected_frame, fname, sfile);
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"list","li", NULL})) {
-                int k = 5;
-                const char *p = lstrip(arg);
-                if (p && *p) k = atoi(p);
-                if (k <= 0) k = 5;
-                int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
-                if (idx < 0) { printf("(no current frame)\n"); continue; }
-                Frame *f = &vm->frames[idx];
-                if (!f->fn || !f->fn->source_file) { printf("(no source info)\n"); continue; }
-                /* derive current line for this frame by scanning LINE markers up to ip-1 */
-                int line = vm->current_line;
-                int upto = f->ip - 1;
-                if (upto < 0) upto = 0;
-                for (int i = 0; i <= upto && i < f->fn->instr_count; ++i) {
-                    Instruction ins = f->fn->instructions[i];
-                    if (ins.op == OP_LINE) line = ins.operand;
-                }
-                const char *path = f->fn->source_file;
-                size_t flen = 0;
-                char *src = read_entire_file(path, &flen);
-                if (!src) { printf("Unable to read %s\n", path); continue; }
-                int start = line - k; if (start < 1) start = 1;
-                int end = line + k;
-                int cur = 1;
-                const char *s = src;
-                while (*s && cur <= end) {
-                    const char *ls = s;
-                    while (*s && *s != '\n') s++;
-                    int print = (cur >= start && cur <= end);
-                    if (print) {
-                        printf("%c %5d | ", (cur == line ? '>' : ' '), cur);
-                        fwrite(ls, 1, (size_t)(s - ls), stdout);
-                        printf("\n");
-                    }
-                    if (*s == '\n') s++;
-                    cur++;
-                }
-                free(src);
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"disasm","disassemble","di", NULL})) {
-                int n = 5;
-                const char *p = lstrip(arg);
-                if (p && *p) n = atoi(p);
-                if (n <= 0) n = 5;
-                int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
-                if (idx < 0) { printf("(no current frame)\n"); continue; }
-                Frame *f = &vm->frames[idx];
-                if (!f->fn) { printf("(no function)\n"); continue; }
-
-                /* Ensure we have a valid instruction buffer */
-                if (f->fn->instr_count <= 0 || f->fn->instructions == NULL) {
-                    printf("(no instructions)\n");
-                    continue;
-                }
-
-                int count = f->fn->instr_count;
-                int curip = f->ip - 1;
-                if (curip < 0) curip = 0;
-                if (curip >= count) curip = count - 1;
-
-                int from = curip - n; if (from < 0) from = 0;
-                int to = curip + n;   if (to >= count) to = count - 1;
-                if (to < from) { /* nothing to show */ continue; }
-
-                for (int i = from; i <= to; ++i) {
-                    Instruction ins = f->fn->instructions[i];
-                    const char *opname = opcode_is_valid(ins.op) ? opcode_names[ins.op] : "???";
-                    printf("%c %6d: %-14s %d\n", (i == curip ? '>' : ' '), i, opname, ins.operand);
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"mdump","md", NULL})) {
-                /* Syntax: :mdump WHAT [offset [len]] [raw] [to <file>]
-                   WHAT: code | stack | globals | consts
-                   'raw' writes binary bytes instead of a formatted hexdump */
-                const char *p = lstrip(arg);
-                if (!p || !*p) {
-                    printf("Usage: :mdump WHAT [offset [len]] [raw] [to <file>]\n");
-                    printf("       WHAT = code | stack | globals | consts\n");
-                    printf("       'raw' writes binary bytes instead of a formatted hexdump\n");
-                    continue;
-                }
-
-                char what[32];
-                int consumed = 0;
-                if (sscanf(p, "%31s %n", what, &consumed) != 1) {
-                    printf("Usage: :mdump WHAT [offset [len]] [raw] [to <file>]\n");
-                    continue;
-                }
-                p += consumed;
-
-                size_t off = 0;
-                size_t len = (size_t)-1; /* default later to clamp */
-                int want_raw = 0; /* output raw bytes instead of hexdump */
-
-                /* parse optional off */
-                while (*p == ' ' || *p == '\t') p++;
-                if (*p && (isdigit((unsigned char)*p))) {
-                    char *endp = NULL;
-                    long long v = strtoll(p, &endp, 10);
-                    if (endp && endp != p && v >= 0) {
-                        off = (size_t)v;
-                        p = endp;
-                    }
-                }
-                /* parse optional len */
-                while (*p == ' ' || *p == '\t') p++;
-                if (*p && (isdigit((unsigned char)*p))) {
-                    char *endp = NULL;
-                    long long v = strtoll(p, &endp, 10);
-                    if (endp && endp != p && v >= 0) {
-                        len = (size_t)v;
-                        p = endp;
-                    }
-                }
-
-                /* optional: 'raw' keyword */
-                while (*p == ' ' || *p == '\t') p++;
-                if (strncmp(p, "raw", 3) == 0 && (p[3] == '\0' || isspace((unsigned char)p[3]))) {
-                    want_raw = 1;
-                    p += 3;
-                }
-
-                /* optional: to <file> */
-                while (*p == ' ' || *p == '\t') p++;
-                int to_file = 0;
-                char path[PATH_MAX];
-                path[0] = '\0';
-                if (strncmp(p, "to", 2) == 0 && (p[2] == '\0' || isspace((unsigned char)p[2]))) {
-                    p += 2;
-                    while (*p == ' ' || *p == '\t') p++;
-                    if (!*p) { printf("Missing <file> after 'to'\n"); continue; }
-                    /* read until whitespace end or end of string; simple paths without spaces */
-                    size_t i = 0;
-                    while (*p && !isspace((unsigned char)*p) && i + 1 < sizeof(path)) path[i++] = *p++;
-                    path[i] = '\0';
-                    if (path[0] == '\0') { printf("Invalid file path\n"); continue; }
-                    to_file = 1;
-                }
-
-                const unsigned char *base = NULL;
-                size_t total = 0;
-                int ok_region = 1;
-
-                if (strcmp(what, "code") == 0) {
-                    int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
-                    if (idx < 0) { printf("(no current frame)\n"); continue; }
-                    Frame *fr = &vm->frames[idx];
-                    if (!fr->fn || fr->fn->instr_count <= 0 || fr->fn->instructions == NULL) {
-                        printf("(no code to dump)\n"); continue;
-                    }
-                    base = (const unsigned char*)fr->fn->instructions;
-                    total = (size_t)fr->fn->instr_count * sizeof(Instruction);
-                } else if (strcmp(what, "consts") == 0) {
-                    int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
-                    if (idx < 0) { printf("(no current frame)\n"); continue; }
-                    Frame *fr = &vm->frames[idx];
-                    if (!fr->fn || fr->fn->const_count <= 0 || fr->fn->constants == NULL) {
-                        printf("(no constants to dump)\n"); continue;
-                    }
-                    base = (const unsigned char*)fr->fn->constants;
-                    total = (size_t)fr->fn->const_count * sizeof(Value);
-                } else if (strcmp(what, "stack") == 0) {
-                    int count = vm->sp + 1;
-                    if (count <= 0) { printf("(stack empty)\n"); continue; }
-                    base = (const unsigned char*)vm->stack;
-                    total = (size_t)count * sizeof(Value);
-                } else if (strcmp(what, "globals") == 0) {
-                    base = (const unsigned char*)vm->globals;
-                    total = (size_t)MAX_GLOBALS * sizeof(Value);
-                } else {
-                    ok_region = 0;
-                }
-
-                if (!ok_region) {
-                    printf("Unknown region '%s'. Use one of: code, stack, globals, consts\n", what);
-                    continue;
-                }
-                if (!base || total == 0) { printf("(nothing to dump)\n"); continue; }
-
-                if (off >= total) { printf("(empty range: offset beyond end)\n"); continue; }
-                size_t avail = total - off;
-                if (len == (size_t)-1 || len == 0 || len > avail) {
-                    /* default to min(256, avail) */
-                    len = avail < 256 ? avail : 256;
-                }
-
-                if (!to_file) {
-                    if (want_raw) {
-                        /* Write raw bytes directly to stdout with no header */
-                        fwrite(base + off, 1, len, stdout);
-                        fflush(stdout);
-                    } else {
-                        printf("Hexdump %s: total=%zu, offset=%zu, len=%zu\n", what, total, off, len);
-                        hexdump_to(stdout, base + off, len, off);
-                    }
-                } else {
-                    FILE *fout = fopen(path, "wb");
-                    if (!fout) { printf("Failed to open '%s' for writing\n", path); continue; }
-                    if (want_raw) {
-                        fwrite(base + off, 1, len, fout);
-                        fclose(fout);
-                        printf("Wrote raw bytes (%zu from %s) to %s\n", len, what, path);
-                    } else {
-                        hexdump_to(fout, base + off, len, off);
-                        fclose(fout);
-                        printf("Wrote hexdump (%zu bytes from %s) to %s\n", len, what, path);
-                    }
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"printv","pv", NULL})) {
-                const char *spec = lstrip(arg);
-                if (!spec || !*spec) { printf("Usage: :printv local[i] | stack[i] | global[i]\n"); continue; }
-                int idx = -1;
-                if (sscanf(spec, "local[%d]", &idx) == 1) {
-                    int fidx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
-                    if (fidx < 0 || idx < 0 || idx >= MAX_FRAME_LOCALS) { printf("(out of range)\n"); continue; }
-                    Frame *f = &vm->frames[fidx];
-                    char *sv = value_to_string_alloc(&f->locals[idx]);
-                    printf("%s\n", sv ? sv : "nil");
-                    free(sv);
-                } else if (sscanf(spec, "stack[%d]", &idx) == 1) {
-                    if (idx < 0 || idx > vm->sp) { printf("(out of range)\n"); continue; }
-                    char *sv = value_to_string_alloc(&vm->stack[idx]);
-                    printf("%s\n", sv ? sv : "nil");
-                    free(sv);
-                } else if (sscanf(spec, "global[%d]", &idx) == 1) {
-                    if (idx < 0 || idx >= MAX_GLOBALS) { printf("(out of range)\n"); continue; }
-                    char *sv = value_to_string_alloc(&vm->globals[idx]);
-                    printf("%s\n", sv ? sv : "nil");
-                    free(sv);
-                } else {
-                    printf("Usage: :printv local[i] | stack[i] | global[i]\n");
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"top","to", NULL})) {
-                if (vm->sp < 0) { printf("(stack empty)\n"); continue; }
-                char *sv = value_to_string_alloc(&vm->stack[vm->sp]);
-                printf("%s\n", sv ? sv : "nil");
-                free(sv);
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"break","br", NULL})) {
-                const char *p = lstrip(arg);
-                if (!p || !*p) { printf("Usage: :break [file:]line\n"); continue; }
-                const char *colon = strchr(p, ':');
-                char filebuf[1024];
-                int line = 0;
-                if (colon) {
-                    size_t fl = (size_t)(colon - p);
-                    if (fl >= sizeof(filebuf)) fl = sizeof(filebuf) - 1;
-                    memcpy(filebuf, p, fl);
-                    filebuf[fl] = '\0';
-                    line = atoi(colon + 1);
-                } else {
-                    int idxf = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
-                    if (idxf < 0) { printf("(no current frame)\n"); continue; }
-                    Frame *f = &vm->frames[idxf];
-                    const char *sf = (f->fn && f->fn->source_file) ? f->fn->source_file : NULL;
-                    if (!sf) { printf("(no current source file)\n"); continue; }
-                    snprintf(filebuf, sizeof(filebuf), "%s", sf);
-                    line = atoi(p);
-                }
-                if (line <= 0) { printf("Invalid line\n"); continue; }
-                int id = vm_debug_add_breakpoint(vm, filebuf, line);
-                if (id >= 0) printf("Breakpoint %d set at %s:%d\n", id, filebuf, line);
-                else printf("Failed to set breakpoint\n");
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"info","in", NULL})) {
-                const char *what = lstrip(arg);
-                if (what && strcmp(what, "breaks") == 0) {
-                    vm_debug_list_breakpoints(vm);
-                } else {
-                    printf("Usage: :info breaks\n");
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"delete","de", NULL})) {
-                int id = atoi(lstrip(arg));
-                if (vm_debug_delete_breakpoint(vm, id)) printf("Deleted breakpoint %d\n", id);
-                else printf("No such breakpoint %d\n", id);
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"cb", NULL})) {
-                vm_debug_clear_breakpoints(vm);
-                printf("Cleared all breakpoints\n");
-                continue;
-            } else if (strcmp(cmd, "clear") == 0) {
-                const char *what = lstrip(arg);
-                if (what && strcmp(what, "breaks") == 0) {
-                    vm_debug_clear_breakpoints(vm);
-                    printf("Cleared all breakpoints\n");
-                } else {
-                    printf("Usage: :clear breaks\n");
-                }
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"cont","continue","co", NULL})) {
-                vm_debug_request_continue(vm);
-                printf("Continuing...\n");
-                if (vm->on_error_repl) return 0; /* exit REPL to continue execution */
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"step","sp", NULL})) {
-                vm_debug_request_step(vm);
-                printf("Stepping one instruction...\n");
-                if (vm->on_error_repl) return 0;
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"next","ne", NULL})) {
-                vm_debug_request_next(vm);
-                printf("Stepping over...\n");
-                if (vm->on_error_repl) return 0;
-                continue;
-            } else if (cmd_is_one_of(cmd, (const char*[]){"finish","fi", NULL})) {
-                vm_debug_request_finish(vm);
-                printf("Running until current frame returns...\n");
-                if (vm->on_error_repl) return 0;
-                continue;
-            } else {
-                printf("Unknown command. Use :help\n");
-                continue;
-            }
-        }
-
-        if (is_blank_line(line)) {
-            if (buflen == 0) continue;
-
-            if (buflen + 1 > bufcap) {
-                buffer = (char*)realloc(buffer, buflen + 1);
-                bufcap = buflen + 1;
-            }
-            buffer[buflen] = '\0';
-
-            int indent_debt2 = compute_open_indent_blocks(buffer);
-            if (buffer_looks_incomplete(buffer) || indent_debt2 > 0) {
-                if (indent_debt2 > 0) {
-                    printf("(incomplete, open block indent +%d)\n", indent_debt2);
-                } else {
-                    printf("(incomplete, continue typing)\n");
-                }
-                continue;
-            }
-
-            Bytecode *bc = parse_string_to_bytecode(buffer);
-            if (bc) {
-                clock_t t0 = 0, t1 = 0;
-                if (repl_timing) t0 = clock();
-                vm_run(vm, bc);
-                if (repl_timing) {
-                    t1 = clock();
-                    double ms = (double)(t1 - t0) * 1000.0 / (double)CLOCKS_PER_SEC;
-                    printf("[time] %.2f ms\n", ms);
-                }
-                vm_print_output(vm);
-                vm_clear_output(vm);
-                bytecode_free(bc);
-                append_history(hist, buffer);
-            } else {
-                int line_no = 0, col_no = 0;
-                char emsg[256];
-                if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
-                    printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
-                    int cur_line = 1;
-                    const char *p = buffer;
-                    while (*p && cur_line < line_no) {
-                        if (*p == '\n') cur_line++;
-                        p++;
-                    }
-                    const char *line_start = p;
-                    while (*p && *p != '\n') p++;
-                    fwrite(line_start, 1, (size_t)(p - line_start), stdout);
-                    printf("\n");
-                    for (int i = 1; i < col_no; ++i) putchar(' ');
-                    printf("^\n");
-#ifdef FUN_DEBUG
-                    if (hist) {
-                        fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
-                        fflush(hist);
-                    }
-#endif
-                } else {
-                    printf("Parse error.\n");
-#ifdef FUN_DEBUG
-                    if (hist) {
-                        fprintf(hist, "// ERROR: parse error\n");
-                        fflush(hist);
-                    }
-#endif
-                }
-            }
-            buflen = 0;
-            continue;
-        }
-
-        size_t linelen = strlen(line);
-        if (buflen + linelen + 1 > bufcap) {
+          }
+          if ((strcmp(pline, ".\n") == 0) || (strcmp(pline, ".\r\n") == 0) || (strcmp(pline, ".") == 0)) {
+            break;
+          }
+          size_t pl = strlen(pline);
+          if (buflen + pl + 1 > bufcap) {
             size_t newcap = bufcap == 0 ? 1024 : bufcap * 2;
-            while (newcap < buflen + linelen + 1) newcap *= 2;
-            buffer = (char*)realloc(buffer, newcap);
+            while (newcap < buflen + pl + 1)
+              newcap *= 2;
+            buffer = (char *)realloc(buffer, newcap);
             bufcap = newcap;
+          }
+          memcpy(buffer + buflen, pline, pl);
+          buflen += pl;
         }
-        memcpy(buffer + buflen, line, linelen);
-        buflen += linelen;
+        if (run_after) {
+          if (buflen + 1 > bufcap) {
+            buffer = (char *)realloc(buffer, buflen + 1);
+            bufcap = buflen + 1;
+          }
+          buffer[buflen] = '\0';
+          Bytecode *bc = parse_string_to_bytecode(buffer);
+          if (bc) {
+            clock_t t0 = clock();
+            vm_run(vm, bc);
+            clock_t t1 = clock();
+            double ms = (double)(t1 - t0) * 1000.0 / (double)CLOCKS_PER_SEC;
+            printf("[time] %.2f ms\n", ms);
+            vm_print_output(vm);
+            vm_clear_output(vm);
+            bytecode_free(bc);
+            append_history(hist, buffer);
+          } else {
+            int line_no = 0, col_no = 0;
+            char emsg[256];
+            if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
+              printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
+#ifdef FUN_DEBUG
+              if (hist) {
+                fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
+                fflush(hist);
+              }
+#endif
+            } else {
+              printf("Parse error.\n");
+#ifdef FUN_DEBUG
+              if (hist) {
+                fprintf(hist, "// ERROR: parse error\n");
+                fflush(hist);
+              }
+#endif
+            }
+          }
+          buflen = 0;
+        } else {
+          printf("(pasted %zu bytes into buffer)\n", buflen);
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"history", "hi", NULL})) {
+        int n = 50;
+        if (arg[0] != '\0') n = atoi(arg);
+        if (n <= 0) n = 50;
+        print_last_n_lines(hist_path, n);
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"time", "ti", NULL})) {
+        if (strcmp(lstrip(arg), "on") == 0)
+          repl_timing = 1;
+        else if (strcmp(lstrip(arg), "off") == 0)
+          repl_timing = 0;
+        else if (strcmp(lstrip(arg), "toggle") == 0)
+          repl_timing = !repl_timing;
+        else {
+          printf("Usage: :time on|off|toggle (currently %s)\n", repl_timing ? "on" : "off");
+          continue;
+        }
+        printf("Timing %s\n", repl_timing ? "enabled" : "disabled");
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"env", "en", NULL})) {
+        const char *spec = lstrip(arg);
+        if (!spec || *spec == '\0') {
+          env_show_usage();
+          continue;
+        }
+        const char *eq = strchr(spec, '=');
+        if (!eq) {
+          env_get(spec);
+        } else {
+          char name[256];
+          size_t nlen = (size_t)(eq - spec);
+          if (nlen >= sizeof(name)) nlen = sizeof(name) - 1;
+          memcpy(name, spec, nlen);
+          name[nlen] = '\0';
+          const char *val = eq + 1;
+          env_set(name, val);
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"backtrace", "bt", "ba", NULL})) {
+        if (vm->fp < 0) {
+          printf("(no frames)\n");
+          continue;
+        }
+        printf("Backtrace (most recent call first):\n");
+        for (int i = vm->fp; i >= 0; --i) {
+          Frame *f = &vm->frames[i];
+          const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
+          const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : "<unknown>";
+          int ip = f->ip - 1;
+          printf("  #%d %s at %s ip=%d line=%d\n", i, fname, sfile, ip, vm->current_line);
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"stack", "st", NULL})) {
+        int n = -1;
+        const char *p = lstrip(arg);
+        if (p && *p) n = atoi(p);
+        int count = vm->sp + 1;
+        if (count <= 0) {
+          printf("(stack empty)\n");
+          continue;
+        }
+        int start = 0;
+        if (n > 0 && n < count) start = count - n;
+        printf("Stack size=%d\n", count);
+        for (int i = start; i < count; ++i) {
+          char *sv = value_to_string_alloc(&vm->stack[i]);
+          printf("[%d] %s\n", i, sv ? sv : "nil");
+          free(sv);
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"locals", "lc", NULL})) {
+        int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+        const char *p = lstrip(arg);
+        if (p && *p) {
+          int v = atoi(p);
+          if (v >= 0 && v <= vm->fp) idx = v;
+        }
+        if (idx < 0) {
+          printf("(no current frame)\n");
+          continue;
+        }
+        Frame *f = &vm->frames[idx];
+        const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
+        printf("Locals in frame #%d (%s):\n", idx, fname);
+        int any = 0;
+        for (int i = 0; i < MAX_FRAME_LOCALS; ++i) {
+          if (f->locals[i].type != VAL_NIL) {
+            char *sv = value_to_string_alloc(&f->locals[i]);
+            printf("  %d: %s\n", i, sv ? sv : "nil");
+            free(sv);
+            any = 1;
+          }
+        }
+        if (!any) printf("  (no non-nil locals)\n");
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"frame", "fr", NULL})) {
+        const char *p = lstrip(arg);
+        if (!p || !*p) {
+          printf("Usage: :frame N\n");
+          continue;
+        }
+        int v = atoi(p);
+        if (v < 0 || v > vm->fp) {
+          printf("Invalid frame index. Current top is %d\n", vm->fp);
+          continue;
+        }
+        selected_frame = v;
+        Frame *f = &vm->frames[selected_frame];
+        const char *fname = (f->fn && f->fn->name) ? f->fn->name : "<entry>";
+        const char *sfile = (f->fn && f->fn->source_file) ? f->fn->source_file : "<unknown>";
+        printf("Selected frame #%d: %s (%s)\n", selected_frame, fname, sfile);
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"list", "li", NULL})) {
+        int k = 5;
+        const char *p = lstrip(arg);
+        if (p && *p) k = atoi(p);
+        if (k <= 0) k = 5;
+        int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+        if (idx < 0) {
+          printf("(no current frame)\n");
+          continue;
+        }
+        Frame *f = &vm->frames[idx];
+        if (!f->fn || !f->fn->source_file) {
+          printf("(no source info)\n");
+          continue;
+        }
+        /* derive current line for this frame by scanning LINE markers up to ip-1 */
+        int line = vm->current_line;
+        int upto = f->ip - 1;
+        if (upto < 0) upto = 0;
+        for (int i = 0; i <= upto && i < f->fn->instr_count; ++i) {
+          Instruction ins = f->fn->instructions[i];
+          if (ins.op == OP_LINE) line = ins.operand;
+        }
+        const char *path = f->fn->source_file;
+        size_t flen = 0;
+        char *src = read_entire_file(path, &flen);
+        if (!src) {
+          printf("Unable to read %s\n", path);
+          continue;
+        }
+        int start = line - k;
+        if (start < 1) start = 1;
+        int end = line + k;
+        int cur = 1;
+        const char *s = src;
+        while (*s && cur <= end) {
+          const char *ls = s;
+          while (*s && *s != '\n')
+            s++;
+          int print = (cur >= start && cur <= end);
+          if (print) {
+            printf("%c %5d | ", (cur == line ? '>' : ' '), cur);
+            fwrite(ls, 1, (size_t)(s - ls), stdout);
+            printf("\n");
+          }
+          if (*s == '\n') s++;
+          cur++;
+        }
+        free(src);
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"disasm", "disassemble", "di", NULL})) {
+        int n = 5;
+        const char *p = lstrip(arg);
+        if (p && *p) n = atoi(p);
+        if (n <= 0) n = 5;
+        int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+        if (idx < 0) {
+          printf("(no current frame)\n");
+          continue;
+        }
+        Frame *f = &vm->frames[idx];
+        if (!f->fn) {
+          printf("(no function)\n");
+          continue;
+        }
+
+        /* Ensure we have a valid instruction buffer */
+        if (f->fn->instr_count <= 0 || f->fn->instructions == NULL) {
+          printf("(no instructions)\n");
+          continue;
+        }
+
+        int count = f->fn->instr_count;
+        int curip = f->ip - 1;
+        if (curip < 0) curip = 0;
+        if (curip >= count) curip = count - 1;
+
+        int from = curip - n;
+        if (from < 0) from = 0;
+        int to = curip + n;
+        if (to >= count) to = count - 1;
+        if (to < from) { /* nothing to show */
+          continue;
+        }
+
+        for (int i = from; i <= to; ++i) {
+          Instruction ins = f->fn->instructions[i];
+          const char *opname = opcode_is_valid(ins.op) ? opcode_names[ins.op] : "???";
+          printf("%c %6d: %-14s %d\n", (i == curip ? '>' : ' '), i, opname, ins.operand);
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"mdump", "md", NULL})) {
+        /* Syntax: :mdump WHAT [offset [len]] [raw] [to <file>]
+           WHAT: code | stack | globals | consts
+           'raw' writes binary bytes instead of a formatted hexdump */
+        const char *p = lstrip(arg);
+        if (!p || !*p) {
+          printf("Usage: :mdump WHAT [offset [len]] [raw] [to <file>]\n");
+          printf("       WHAT = code | stack | globals | consts\n");
+          printf("       'raw' writes binary bytes instead of a formatted hexdump\n");
+          continue;
+        }
+
+        char what[32];
+        int consumed = 0;
+        if (sscanf(p, "%31s %n", what, &consumed) != 1) {
+          printf("Usage: :mdump WHAT [offset [len]] [raw] [to <file>]\n");
+          continue;
+        }
+        p += consumed;
+
+        size_t off = 0;
+        size_t len = (size_t)-1; /* default later to clamp */
+        int want_raw = 0;        /* output raw bytes instead of hexdump */
+
+        /* parse optional off */
+        while (*p == ' ' || *p == '\t')
+          p++;
+        if (*p && (isdigit((unsigned char)*p))) {
+          char *endp = NULL;
+          long long v = strtoll(p, &endp, 10);
+          if (endp && endp != p && v >= 0) {
+            off = (size_t)v;
+            p = endp;
+          }
+        }
+        /* parse optional len */
+        while (*p == ' ' || *p == '\t')
+          p++;
+        if (*p && (isdigit((unsigned char)*p))) {
+          char *endp = NULL;
+          long long v = strtoll(p, &endp, 10);
+          if (endp && endp != p && v >= 0) {
+            len = (size_t)v;
+            p = endp;
+          }
+        }
+
+        /* optional: 'raw' keyword */
+        while (*p == ' ' || *p == '\t')
+          p++;
+        if (strncmp(p, "raw", 3) == 0 && (p[3] == '\0' || isspace((unsigned char)p[3]))) {
+          want_raw = 1;
+          p += 3;
+        }
+
+        /* optional: to <file> */
+        while (*p == ' ' || *p == '\t')
+          p++;
+        int to_file = 0;
+        char path[PATH_MAX];
+        path[0] = '\0';
+        if (strncmp(p, "to", 2) == 0 && (p[2] == '\0' || isspace((unsigned char)p[2]))) {
+          p += 2;
+          while (*p == ' ' || *p == '\t')
+            p++;
+          if (!*p) {
+            printf("Missing <file> after 'to'\n");
+            continue;
+          }
+          /* read until whitespace end or end of string; simple paths without spaces */
+          size_t i = 0;
+          while (*p && !isspace((unsigned char)*p) && i + 1 < sizeof(path))
+            path[i++] = *p++;
+          path[i] = '\0';
+          if (path[0] == '\0') {
+            printf("Invalid file path\n");
+            continue;
+          }
+          to_file = 1;
+        }
+
+        const unsigned char *base = NULL;
+        size_t total = 0;
+        int ok_region = 1;
+
+        if (strcmp(what, "code") == 0) {
+          int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+          if (idx < 0) {
+            printf("(no current frame)\n");
+            continue;
+          }
+          Frame *fr = &vm->frames[idx];
+          if (!fr->fn || fr->fn->instr_count <= 0 || fr->fn->instructions == NULL) {
+            printf("(no code to dump)\n");
+            continue;
+          }
+          base = (const unsigned char *)fr->fn->instructions;
+          total = (size_t)fr->fn->instr_count * sizeof(Instruction);
+        } else if (strcmp(what, "consts") == 0) {
+          int idx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+          if (idx < 0) {
+            printf("(no current frame)\n");
+            continue;
+          }
+          Frame *fr = &vm->frames[idx];
+          if (!fr->fn || fr->fn->const_count <= 0 || fr->fn->constants == NULL) {
+            printf("(no constants to dump)\n");
+            continue;
+          }
+          base = (const unsigned char *)fr->fn->constants;
+          total = (size_t)fr->fn->const_count * sizeof(Value);
+        } else if (strcmp(what, "stack") == 0) {
+          int count = vm->sp + 1;
+          if (count <= 0) {
+            printf("(stack empty)\n");
+            continue;
+          }
+          base = (const unsigned char *)vm->stack;
+          total = (size_t)count * sizeof(Value);
+        } else if (strcmp(what, "globals") == 0) {
+          base = (const unsigned char *)vm->globals;
+          total = (size_t)MAX_GLOBALS * sizeof(Value);
+        } else {
+          ok_region = 0;
+        }
+
+        if (!ok_region) {
+          printf("Unknown region '%s'. Use one of: code, stack, globals, consts\n", what);
+          continue;
+        }
+        if (!base || total == 0) {
+          printf("(nothing to dump)\n");
+          continue;
+        }
+
+        if (off >= total) {
+          printf("(empty range: offset beyond end)\n");
+          continue;
+        }
+        size_t avail = total - off;
+        if (len == (size_t)-1 || len == 0 || len > avail) {
+          /* default to min(256, avail) */
+          len = avail < 256 ? avail : 256;
+        }
+
+        if (!to_file) {
+          if (want_raw) {
+            /* Write raw bytes directly to stdout with no header */
+            fwrite(base + off, 1, len, stdout);
+            fflush(stdout);
+          } else {
+            printf("Hexdump %s: total=%zu, offset=%zu, len=%zu\n", what, total, off, len);
+            hexdump_to(stdout, base + off, len, off);
+          }
+        } else {
+          FILE *fout = fopen(path, "wb");
+          if (!fout) {
+            printf("Failed to open '%s' for writing\n", path);
+            continue;
+          }
+          if (want_raw) {
+            fwrite(base + off, 1, len, fout);
+            fclose(fout);
+            printf("Wrote raw bytes (%zu from %s) to %s\n", len, what, path);
+          } else {
+            hexdump_to(fout, base + off, len, off);
+            fclose(fout);
+            printf("Wrote hexdump (%zu bytes from %s) to %s\n", len, what, path);
+          }
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"printv", "pv", NULL})) {
+        const char *spec = lstrip(arg);
+        if (!spec || !*spec) {
+          printf("Usage: :printv local[i] | stack[i] | global[i]\n");
+          continue;
+        }
+        int idx = -1;
+        if (sscanf(spec, "local[%d]", &idx) == 1) {
+          int fidx = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+          if (fidx < 0 || idx < 0 || idx >= MAX_FRAME_LOCALS) {
+            printf("(out of range)\n");
+            continue;
+          }
+          Frame *f = &vm->frames[fidx];
+          char *sv = value_to_string_alloc(&f->locals[idx]);
+          printf("%s\n", sv ? sv : "nil");
+          free(sv);
+        } else if (sscanf(spec, "stack[%d]", &idx) == 1) {
+          if (idx < 0 || idx > vm->sp) {
+            printf("(out of range)\n");
+            continue;
+          }
+          char *sv = value_to_string_alloc(&vm->stack[idx]);
+          printf("%s\n", sv ? sv : "nil");
+          free(sv);
+        } else if (sscanf(spec, "global[%d]", &idx) == 1) {
+          if (idx < 0 || idx >= MAX_GLOBALS) {
+            printf("(out of range)\n");
+            continue;
+          }
+          char *sv = value_to_string_alloc(&vm->globals[idx]);
+          printf("%s\n", sv ? sv : "nil");
+          free(sv);
+        } else {
+          printf("Usage: :printv local[i] | stack[i] | global[i]\n");
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"top", "to", NULL})) {
+        if (vm->sp < 0) {
+          printf("(stack empty)\n");
+          continue;
+        }
+        char *sv = value_to_string_alloc(&vm->stack[vm->sp]);
+        printf("%s\n", sv ? sv : "nil");
+        free(sv);
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"break", "br", NULL})) {
+        const char *p = lstrip(arg);
+        if (!p || !*p) {
+          printf("Usage: :break [file:]line\n");
+          continue;
+        }
+        const char *colon = strchr(p, ':');
+        char filebuf[1024];
+        int line = 0;
+        if (colon) {
+          size_t fl = (size_t)(colon - p);
+          if (fl >= sizeof(filebuf)) fl = sizeof(filebuf) - 1;
+          memcpy(filebuf, p, fl);
+          filebuf[fl] = '\0';
+          line = atoi(colon + 1);
+        } else {
+          int idxf = (selected_frame >= 0 && selected_frame <= vm->fp) ? selected_frame : vm->fp;
+          if (idxf < 0) {
+            printf("(no current frame)\n");
+            continue;
+          }
+          Frame *f = &vm->frames[idxf];
+          const char *sf = (f->fn && f->fn->source_file) ? f->fn->source_file : NULL;
+          if (!sf) {
+            printf("(no current source file)\n");
+            continue;
+          }
+          snprintf(filebuf, sizeof(filebuf), "%s", sf);
+          line = atoi(p);
+        }
+        if (line <= 0) {
+          printf("Invalid line\n");
+          continue;
+        }
+        int id = vm_debug_add_breakpoint(vm, filebuf, line);
+        if (id >= 0)
+          printf("Breakpoint %d set at %s:%d\n", id, filebuf, line);
+        else
+          printf("Failed to set breakpoint\n");
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"info", "in", NULL})) {
+        const char *what = lstrip(arg);
+        if (what && strcmp(what, "breaks") == 0) {
+          vm_debug_list_breakpoints(vm);
+        } else {
+          printf("Usage: :info breaks\n");
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"delete", "de", NULL})) {
+        int id = atoi(lstrip(arg));
+        if (vm_debug_delete_breakpoint(vm, id))
+          printf("Deleted breakpoint %d\n", id);
+        else
+          printf("No such breakpoint %d\n", id);
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"cb", NULL})) {
+        vm_debug_clear_breakpoints(vm);
+        printf("Cleared all breakpoints\n");
+        continue;
+      } else if (strcmp(cmd, "clear") == 0) {
+        const char *what = lstrip(arg);
+        if (what && strcmp(what, "breaks") == 0) {
+          vm_debug_clear_breakpoints(vm);
+          printf("Cleared all breakpoints\n");
+        } else {
+          printf("Usage: :clear breaks\n");
+        }
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"cont", "continue", "co", NULL})) {
+        vm_debug_request_continue(vm);
+        printf("Continuing...\n");
+        if (vm->on_error_repl) return 0; /* exit REPL to continue execution */
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"step", "sp", NULL})) {
+        vm_debug_request_step(vm);
+        printf("Stepping one instruction...\n");
+        if (vm->on_error_repl) return 0;
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"next", "ne", NULL})) {
+        vm_debug_request_next(vm);
+        printf("Stepping over...\n");
+        if (vm->on_error_repl) return 0;
+        continue;
+      } else if (cmd_is_one_of(cmd, (const char *[]){"finish", "fi", NULL})) {
+        vm_debug_request_finish(vm);
+        printf("Running until current frame returns...\n");
+        if (vm->on_error_repl) return 0;
+        continue;
+      } else {
+        printf("Unknown command. Use :help\n");
+        continue;
+      }
     }
 
-    if (hist) fclose(hist);
-    free_stdlib_symbols();
-    free(buffer);
-    return 0;
+    if (is_blank_line(line)) {
+      if (buflen == 0) continue;
+
+      if (buflen + 1 > bufcap) {
+        buffer = (char *)realloc(buffer, buflen + 1);
+        bufcap = buflen + 1;
+      }
+      buffer[buflen] = '\0';
+
+      int indent_debt2 = compute_open_indent_blocks(buffer);
+      if (buffer_looks_incomplete(buffer) || indent_debt2 > 0) {
+        if (indent_debt2 > 0) {
+          printf("(incomplete, open block indent +%d)\n", indent_debt2);
+        } else {
+          printf("(incomplete, continue typing)\n");
+        }
+        continue;
+      }
+
+      Bytecode *bc = parse_string_to_bytecode(buffer);
+      if (bc) {
+        clock_t t0 = 0, t1 = 0;
+        if (repl_timing) t0 = clock();
+        vm_run(vm, bc);
+        if (repl_timing) {
+          t1 = clock();
+          double ms = (double)(t1 - t0) * 1000.0 / (double)CLOCKS_PER_SEC;
+          printf("[time] %.2f ms\n", ms);
+        }
+        vm_print_output(vm);
+        vm_clear_output(vm);
+        bytecode_free(bc);
+        append_history(hist, buffer);
+      } else {
+        int line_no = 0, col_no = 0;
+        char emsg[256];
+        if (parser_last_error(emsg, sizeof(emsg), &line_no, &col_no)) {
+          printf("Parse error at %d:%d: %s\n", line_no, col_no, emsg);
+          int cur_line = 1;
+          const char *p = buffer;
+          while (*p && cur_line < line_no) {
+            if (*p == '\n') cur_line++;
+            p++;
+          }
+          const char *line_start = p;
+          while (*p && *p != '\n')
+            p++;
+          fwrite(line_start, 1, (size_t)(p - line_start), stdout);
+          printf("\n");
+          for (int i = 1; i < col_no; ++i)
+            putchar(' ');
+          printf("^\n");
+#ifdef FUN_DEBUG
+          if (hist) {
+            fprintf(hist, "// ERROR %d:%d: %s\n", line_no, col_no, emsg);
+            fflush(hist);
+          }
+#endif
+        } else {
+          printf("Parse error.\n");
+#ifdef FUN_DEBUG
+          if (hist) {
+            fprintf(hist, "// ERROR: parse error\n");
+            fflush(hist);
+          }
+#endif
+        }
+      }
+      buflen = 0;
+      continue;
+    }
+
+    size_t linelen = strlen(line);
+    if (buflen + linelen + 1 > bufcap) {
+      size_t newcap = bufcap == 0 ? 1024 : bufcap * 2;
+      while (newcap < buflen + linelen + 1)
+        newcap *= 2;
+      buffer = (char *)realloc(buffer, newcap);
+      bufcap = newcap;
+    }
+    memcpy(buffer + buflen, line, linelen);
+    buflen += linelen;
+  }
+
+  if (hist) fclose(hist);
+  free_stdlib_symbols();
+  free(buffer);
+  return 0;
 }
 
 #endif /* FUN_WITH_REPL */

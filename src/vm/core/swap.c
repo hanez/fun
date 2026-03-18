@@ -8,7 +8,7 @@
  */
 
 /**
-* @file swap.c
+ * @file swap.c
  * @brief Implements the OP_SWAP opcode for stack manipulation in the VM.
  *
  * This file handles the OP_SWAP instruction, which swaps the top two values
@@ -26,13 +26,13 @@
  */
 
 case OP_SWAP: {
-    if (vm->sp < 1) {
-        fprintf(stderr, "Runtime error: stack underflow for SWAP\n");
-        exit(1);
-    }
-    Value a = vm->stack[vm->sp];
-    Value b = vm->stack[vm->sp - 1];
-    vm->stack[vm->sp] = b;
-    vm->stack[vm->sp - 1] = a;
-    break;
+  if (vm->sp < 1) {
+    fprintf(stderr, "Runtime error: stack underflow for SWAP\n");
+    exit(1);
+  }
+  Value a = vm->stack[vm->sp];
+  Value b = vm->stack[vm->sp - 1];
+  vm->stack[vm->sp] = b;
+  vm->stack[vm->sp - 1] = a;
+  break;
 }

@@ -8,7 +8,7 @@
  */
 
 /**
-* @file min.c
+ * @file min.c
  * @brief Implements the OP_MIN opcode for finding the minimum of two values in the VM.
  *
  * This file handles the OP_MIN instruction, which finds the minimum of two integer values.
@@ -32,10 +32,14 @@
  */
 
 case OP_MIN: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    if (a.type != VAL_INT || b.type != VAL_INT) { fprintf(stderr, "MIN expects ints\n"); exit(1); }
-    push_value(vm, make_int(a.i < b.i ? a.i : b.i));
-    free_value(a); free_value(b);
-    break;
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  if (a.type != VAL_INT || b.type != VAL_INT) {
+    fprintf(stderr, "MIN expects ints\n");
+    exit(1);
+  }
+  push_value(vm, make_int(a.i < b.i ? a.i : b.i));
+  free_value(a);
+  free_value(b);
+  break;
 }

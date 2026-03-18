@@ -10,27 +10,27 @@
  */
 
 /**
-* @file log.c
+ * @file log.c
  * @brief Implements the OP_LOG opcode using C99 math.h log() (natural logarithm).
  */
 
 #include <math.h>
 
 case OP_LOG: {
-    Value v = pop_value(vm);
-    if (v.type == VAL_INT || v.type == VAL_FLOAT) {
-        double x = (v.type == VAL_FLOAT) ? v.d : (double)v.i;
-        if (x <= 0.0) {
-            /* Domain error: return NaN to signal invalid input */
-            push_value(vm, make_float(NAN));
-        } else {
-            double r = log(x);
-            push_value(vm, make_float(r));
-        }
-        free_value(v);
+  Value v = pop_value(vm);
+  if (v.type == VAL_INT || v.type == VAL_FLOAT) {
+    double x = (v.type == VAL_FLOAT) ? v.d : (double)v.i;
+    if (x <= 0.0) {
+      /* Domain error: return NaN to signal invalid input */
+      push_value(vm, make_float(NAN));
     } else {
-        fprintf(stderr, "Runtime type error: LOG expects number, got %s\n", value_type_name(v.type));
-        exit(1);
+      double r = log(x);
+      push_value(vm, make_float(r));
     }
-    break;
+    free_value(v);
+  } else {
+    fprintf(stderr, "Runtime type error: LOG expects number, got %s\n", value_type_name(v.type));
+    exit(1);
+  }
+  break;
 }

@@ -8,7 +8,7 @@
  */
 
 /**
-* @file jump.c
+ * @file jump.c
  * @brief Implements the OP_JUMP opcode for unconditional jumps in the VM.
  *
  * This file handles the OP_JUMP instruction, which performs an unconditional
@@ -28,6 +28,6 @@
  */
 
 case OP_JUMP: {
-    f->ip = inst.operand;
-    break;
+  f->ip = inst.operand;
+  break;
 }

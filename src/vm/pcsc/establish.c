@@ -12,15 +12,25 @@
 /* PCSC establish */
 case OP_PCSC_ESTABLISH: {
 #ifdef FUN_WITH_PCSC
-    int slot = pcsc_alloc_ctx_slot();
-    if (!slot) { push_value(vm, make_int(0)); break; }
-    pcsc_ctx_entry *e = pcsc_get_ctx(slot);
-    if (!e) { push_value(vm, make_int(0)); break; }
-    LONG rv = SCardEstablishContext(SCARD_SCOPE_SYSTEM, NULL, NULL, &e->ctx);
-    if (rv != SCARD_S_SUCCESS) { e->in_use = 0; push_value(vm, make_int(0)); break; }
-    push_value(vm, make_int(slot));
-#else
+  int slot = pcsc_alloc_ctx_slot();
+  if (!slot) {
     push_value(vm, make_int(0));
-#endif
     break;
+  }
+  pcsc_ctx_entry *e = pcsc_get_ctx(slot);
+  if (!e) {
+    push_value(vm, make_int(0));
+    break;
+  }
+  LONG rv = SCardEstablishContext(SCARD_SCOPE_SYSTEM, NULL, NULL, &e->ctx);
+  if (rv != SCARD_S_SUCCESS) {
+    e->in_use = 0;
+    push_value(vm, make_int(0));
+    break;
+  }
+  push_value(vm, make_int(slot));
+#else
+  push_value(vm, make_int(0));
+#endif
+  break;
 }

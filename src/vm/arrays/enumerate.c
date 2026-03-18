@@ -8,7 +8,7 @@
  */
 
 /**
-* @file enumerate.c
+ * @file enumerate.c
  * @brief Implements the OP_ENUMERATE opcode for enumerating arrays in the VM.
  *
  * This file handles the OP_ENUMERATE instruction, which creates an array of [index, value] pairs
@@ -32,13 +32,13 @@
  */
 
 case OP_ENUMERATE: {
-    Value arr = pop_value(vm);
-    if (arr.type != VAL_ARRAY) {
-        fprintf(stderr, "Runtime type error: ENUMERATE expects array\n");
-        exit(1);
-    }
-    Value out = bi_enumerate(&arr);
-    free_value(arr);
-    push_value(vm, out);
-    break;
+  Value arr = pop_value(vm);
+  if (arr.type != VAL_ARRAY) {
+    fprintf(stderr, "Runtime type error: ENUMERATE expects array\n");
+    exit(1);
+  }
+  Value out = bi_enumerate(&arr);
+  free_value(arr);
+  push_value(vm, out);
+  break;
 }

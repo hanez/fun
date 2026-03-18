@@ -8,7 +8,7 @@
  */
 
 /**
-* @file eq.c
+ * @file eq.c
  * @brief Implements the OP_EQ opcode for equality comparison in the VM.
  *
  * This file handles the OP_EQ instruction, which checks if two values are equal.
@@ -32,29 +32,42 @@
  */
 
 case OP_EQ: {
-    Value b = pop_value(vm);
-    Value a = pop_value(vm);
-    int eq = 0;
-    if (a.type == b.type) {
-        switch (a.type) {
-            case VAL_INT:      eq = (a.i == b.i); break;
-            case VAL_BOOL:     eq = ((a.i != 0) == (b.i != 0)); break;
-            case VAL_STRING:   eq = (a.s && b.s) ? (strcmp(a.s, b.s) == 0) : (a.s == b.s); break;
-            case VAL_FUNCTION: eq = (a.fn == b.fn); break;
-            case VAL_NIL:      eq = 1; break;
-            default:           eq = 0; break;
-        }
-    } else {
-        /* interop: bool vs int (0/1) */
-        if ((a.type == VAL_BOOL && b.type == VAL_INT) || (a.type == VAL_INT && b.type == VAL_BOOL)) {
-            int ai = (a.type == VAL_BOOL) ? (a.i != 0) : (a.i != 0);
-            int bi = (b.type == VAL_BOOL) ? (b.i != 0) : (b.i != 0);
-            eq = (ai == bi);
-        } else {
-            eq = 0;
-        }
+  Value b = pop_value(vm);
+  Value a = pop_value(vm);
+  int eq = 0;
+  if (a.type == b.type) {
+    switch (a.type) {
+    case VAL_INT:
+      eq = (a.i == b.i);
+      break;
+    case VAL_BOOL:
+      eq = ((a.i != 0) == (b.i != 0));
+      break;
+    case VAL_STRING:
+      eq = (a.s && b.s) ? (strcmp(a.s, b.s) == 0) : (a.s == b.s);
+      break;
+    case VAL_FUNCTION:
+      eq = (a.fn == b.fn);
+      break;
+    case VAL_NIL:
+      eq = 1;
+      break;
+    default:
+      eq = 0;
+      break;
     }
-    push_value(vm, make_bool(eq));
-    free_value(a); free_value(b);
-    break;
+  } else {
+    /* interop: bool vs int (0/1) */
+    if ((a.type == VAL_BOOL && b.type == VAL_INT) || (a.type == VAL_INT && b.type == VAL_BOOL)) {
+      int ai = (a.type == VAL_BOOL) ? (a.i != 0) : (a.i != 0);
+      int bi = (b.type == VAL_BOOL) ? (b.i != 0) : (b.i != 0);
+      eq = (ai == bi);
+    } else {
+      eq = 0;
+    }
+  }
+  push_value(vm, make_bool(eq));
+  free_value(a);
+  free_value(b);
+  break;
 }

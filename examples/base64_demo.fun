@@ -1,26 +1,26 @@
 #!/usr/bin/env fun
 
 /*
- * This file is part of the Fun programming language.
- * https://fun-lang.xyz/
- *
- * Copyright 2026 Johannes Findeisen <you@hanez.org>
- * Licensed under the terms of the Apache-2.0 license.
- * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-13
- */
+  * This file is part of the Fun programming language.
+  * https://fun-lang.xyz/
+  *
+  * Copyright 2026 Johannes Findeisen <you@hanez.org>
+  * Licensed under the terms of the Apache-2.0 license.
+  * https://opensource.org/license/apache-2-0
+  *
+  * Added: 2026-01-13
+  */
 
 /*
- * Base64 usage demo (RFC 4648, standard alphabet)
- *
- * Run without installing:
- *   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/base64_demo.fun
- */
+  * Base64 usage demo (RFC 4648, standard alphabet)
+  *
+  * Run without installing:
+  *   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/base64_demo.fun
+  */
 
 #include <encoding/base64.fun>
 
-print("=== Base64 demo ===")
+  print("=== Base64 demo ===")
 
 // Bytes for the ASCII string "Hello"
 bytes = [0x48, 0x65, 0x6c, 0x6c, 0x6f]

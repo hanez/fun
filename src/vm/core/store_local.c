@@ -8,7 +8,7 @@
  */
 
 /**
-* @file store_local.c
+ * @file store_local.c
  * @brief Implements the OP_STORE_LOCAL opcode for storing local variables in the VM.
  *
  * This file handles the OP_STORE_LOCAL instruction, which stores a value into a local variable
@@ -31,14 +31,14 @@
  */
 
 case OP_STORE_LOCAL: {
-    int slot = inst.operand;
-    if (slot < 0 || slot >= MAX_FRAME_LOCALS) {
-        fprintf(stderr, "Runtime error: local slot out of range\n");
-        exit(1);
-    }
-    Value v = pop_value(vm);
-    /* free previous local then move v into it */
-    free_value(f->locals[slot]);
-    f->locals[slot] = v;
-    break;
+  int slot = inst.operand;
+  if (slot < 0 || slot >= MAX_FRAME_LOCALS) {
+    fprintf(stderr, "Runtime error: local slot out of range\n");
+    exit(1);
+  }
+  Value v = pop_value(vm);
+  /* free previous local then move v into it */
+  free_value(f->locals[slot]);
+  f->locals[slot] = v;
+  break;
 }

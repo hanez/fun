@@ -1,5 +1,5 @@
 /**
-* This file is part of the Fun programming language.
+ * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
@@ -8,7 +8,7 @@
  */
 
 case OP_LINE: {
-    /* operand holds the source line number */
-    vm->current_line = inst.operand;
-    break;
+  /* operand holds the source line number */
+  vm->current_line = inst.operand;
+  break;
 }

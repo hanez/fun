@@ -10,15 +10,15 @@
  */
 
 case OP_THREAD_JOIN: {
-    Value vtid = pop_value(vm);
-    if (vtid.type != VAL_INT) {
-        fprintf(stderr, "Runtime type error: thread_join expects thread id (int)\n");
-        push_value(vm, make_nil());
-        free_value(vtid);
-        break;
-    }
-    Value res = fun_thread_join((int)vtid.i);
+  Value vtid = pop_value(vm);
+  if (vtid.type != VAL_INT) {
+    fprintf(stderr, "Runtime type error: thread_join expects thread id (int)\n");
+    push_value(vm, make_nil());
     free_value(vtid);
-    push_value(vm, res); /* takes ownership */
     break;
+  }
+  Value res = fun_thread_join((int)vtid.i);
+  free_value(vtid);
+  push_value(vm, res); /* takes ownership */
+  break;
 }

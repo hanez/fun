@@ -8,7 +8,7 @@
  */
 
 /**
-* @file load_global.c
+ * @file load_global.c
  * @brief Implements the OP_LOAD_GLOBAL opcode for loading global variables in the VM.
  *
  * This file handles the OP_LOAD_GLOBAL instruction, which loads a global variable
@@ -31,14 +31,14 @@
  */
 
 case OP_LOAD_GLOBAL: {
-    int idx = inst.operand;
-    if (idx < 0 || idx >= MAX_GLOBALS) {
-        fprintf(stderr, "Runtime error: global index out of range\n");
-        exit(1);
-    }
+  int idx = inst.operand;
+  if (idx < 0 || idx >= MAX_GLOBALS) {
+    fprintf(stderr, "Runtime error: global index out of range\n");
+    exit(1);
+  }
 #ifdef FUN_DEBUG
-    fprintf(stderr, "DEBUG LOAD_GLOBAL[%d]: type=%d\n", idx, vm->globals[idx].type);
+  fprintf(stderr, "DEBUG LOAD_GLOBAL[%d]: type=%d\n", idx, vm->globals[idx].type);
 #endif
-    push_value(vm, copy_value(&vm->globals[idx]));
-    break;
+  push_value(vm, copy_value(&vm->globals[idx]));
+  break;
 }

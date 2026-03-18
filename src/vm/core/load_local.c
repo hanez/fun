@@ -8,7 +8,7 @@
  */
 
 /**
-* @file load_local.c
+ * @file load_local.c
  * @brief Implements the OP_LOAD_LOCAL opcode for loading local variables in the VM.
  *
  * This file handles the OP_LOAD_LOCAL instruction, which loads a local variable
@@ -31,12 +31,12 @@
  */
 
 case OP_LOAD_LOCAL: {
-    int slot = inst.operand;
-    if (slot < 0 || slot >= MAX_FRAME_LOCALS) {
-        fprintf(stderr, "Runtime error: local slot out of range\n");
-        exit(1);
-    }
-    Value val = copy_value(&f->locals[slot]);
-    push_value(vm, val);
-    break;
+  int slot = inst.operand;
+  if (slot < 0 || slot >= MAX_FRAME_LOCALS) {
+    fprintf(stderr, "Runtime error: local slot out of range\n");
+    exit(1);
+  }
+  Value val = copy_value(&f->locals[slot]);
+  push_value(vm, val);
+  break;
 }
