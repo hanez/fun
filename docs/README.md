@@ -23,6 +23,7 @@ This file serves as an index of the documents in this directory. Links are relat
 
 - [build.md](./build.md) - How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL, FUN_WITH_LIBRESSL).
 - [cli.md](./cli.md) - Command-line usage of the `fun` executable: synopsis, options, exit codes, includes and library paths.
+- [funstx.md](./funstx.md) - Syntax checker for .fun files with optional --fix auto-corrections; usage, exit codes, and limitations.
 - [contributing.md](./contributing.md) - How to contribute: project structure, coding style, running tests, and PR guidelines.
 - [style-guide.md](./style-guide.md) - Coding conventions for C and Fun (indentation, naming, idioms).
 - [stdlib.md](./stdlib.md) - Overview of the standard library modules under ./lib with one-line summaries.
