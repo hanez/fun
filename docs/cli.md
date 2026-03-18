@@ -2,6 +2,8 @@
 
 Reference for the `fun` command-line interface.
 
+For a complete usage guide (including REPL details, environment variables, include paths, examples, and install locations), see [fun.md](./fun.md).
+
 ## Synopsis
 ```
 fun [options] <script.fun> [-- args...]
