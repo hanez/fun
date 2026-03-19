@@ -1,0 +1,74 @@
+.TH fun 1 "March 2026" "fun" "User Commands"
+.SH NAME
+fun \- Fun language runner and REPL
+.SH SYNOPSIS
+.B fun
+\fR[\fIoptions\fR] [\fIscript.fun\fR] [\fB--\fR \fIargs...\fR]
+.SH DESCRIPTION
+\fBfun\fR runs programs written for the Fun virtual machine. When invoked
+with a script path, it parses, compiles and executes the script. If no
+script is provided and the binary was built with REPL support, \fBfun\fR
+starts an interactive Read\-Eval\-Print Loop.
+.SH OPTIONS
+.TP
+.B -i , --repl
+Start the interactive REPL explicitly (if built with REPL support).
+.TP
+.B -v , --version
+Print version and exit.
+.TP
+.B -h , --help
+Show usage information and exit.
+.PP
+Note: Available options may vary by build configuration. Check
+\fBfun --help\fR for your binary.
+.SH ENVIRONMENT
+.TP
+.B FUN_LIB_DIR
+Top\-priority search path for included Fun modules. Set this when running
+from the source tree to point to \fI./lib\fR.
+.TP
+.B DEFAULT_LIB_DIR
+Compiled\-in default library directory searched after \fBFUN_LIB_DIR\fR.
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B non\-zero
+Error during parse, compile, or runtime.
+.SH EXAMPLES
+.TP
+Run an installed example:
+.nf
+  fun /usr/share/fun/examples/hello.fun
+.fi
+.TP
+Run from a build tree without installing (point stdlib to repo):
+.nf
+  FUN_LIB_DIR=./lib /path/to/build_dir/fun examples/hello.fun
+.fi
+.TP
+Pass arguments to a script (after -- they are forwarded):
+.nf
+  fun myscript.fun -- arg1 arg2
+.fi
+.SH FILES
+.TP
+Binary (default install)
+\fI/usr/bin/fun\fR
+.TP
+Standard library (default install)
+\fI/usr/share/fun/lib\fR
+.TP
+Examples (optional, default install)
+\fI/usr/share/fun/examples\fR
+.SH SEE ALSO
+\fBfunstx\fR(1)
+.br
+Project documentation: \fIdocs/fun.md\fR, \fIdocs/cli.md\fR, \fIdocs/includes.md\fR
+.SH AUTHORS
+The Fun project authors.
+.SH COPYRIGHT
+\(co The Fun authors. Licensed under the project license; see the
+\fILICENSE\fR file distributed with this source.

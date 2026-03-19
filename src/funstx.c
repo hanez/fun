@@ -16,7 +16,7 @@
 #include "parser.h"
 
 static void usage(const char *prog) {
-  fprintf(stderr, "Usage: %s [--fix] <file1.fun> [file2.fun ...]\n", prog);
+  fprintf(stderr, "Usage: %s [--fix] [--quiet] <file1.fun> [file2.fun ...]\n", prog);
 }
 
 /* Read entire file into a malloc'd buffer terminated with '\0'. Returns 1 on success. */
@@ -244,16 +244,32 @@ static char *apply_fixes(const char *src, size_t len, size_t *out_len) {
 
 int main(int argc, char **argv) {
   int do_fix = 0;
+  int quiet = 0;
   int first_file_arg = 1;
+
+  // Parse leading flags
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "--fix") == 0) {
       do_fix = 1;
       first_file_arg++;
-    } else
-      break;
+      continue;
+    }
+    if (strcmp(argv[i], "--quiet") == 0) {
+      quiet = 1;
+      first_file_arg++;
+      continue;
+    }
+    // stop on first non-flag
+    if (argv[i][0] != '-') break;
+    // unknown flag -> usage error
+    if (strncmp(argv[i], "--", 2) == 0) {
+      usage(argv[0]);
+      return 2;
+    }
+    break;
   }
 
-  if (argc < 1 + (do_fix ? 1 : 0) + 1) {
+  if (first_file_arg >= argc) {
     usage(argv[0]);
     return 2;
   }
@@ -328,7 +344,7 @@ int main(int argc, char **argv) {
       continue; // keep checking remaining files
     }
 
-    fprintf(stdout, "%s: OK\n", path);
+    if (!quiet) fprintf(stdout, "%s: OK\n", path);
     bytecode_free(bc);
   }
 

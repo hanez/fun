@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.39.2 LANGUAGES C)
+project(fun VERSION 0.39.3 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -432,4 +432,12 @@ endif()
 # - Docs
 install(FILES README.md LICENSE
   DESTINATION /usr/share/doc/fun
+)
+
+# - Manpages
+# Install section 1 manpages for the CLI tools
+install(FILES
+  man/fun.1
+  man/funstx.1
+  DESTINATION /usr/share/man/man1
 )

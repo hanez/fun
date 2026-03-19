@@ -1,0 +1,77 @@
+.TH funstx 1 "March 2026" "fun" "User Commands"
+.SH NAME
+funstx \- Fun syntax checker and fixer
+.SH SYNOPSIS
+.B funstx
+\fR[\fB--fix\fR] \fIfile1.fun\fR [\fIfile2.fun\fR ...]
+.SH DESCRIPTION
+\fBfunstx\fR parses one or more \fI.fun\fR source files to verify syntax
+without executing them. With \fB--fix\fR, it attempts conservative,
+idempotent edits to align files with parser expectations and then
+re\-checks before writing changes.
+.SH OPTIONS
+.TP
+.B --fix
+Attempt safe automatic corrections before re\-checking. Only writes a file
+if the fixed version parses successfully.
+.SH OUTPUT
+.TP
+On success
+Prints "\fIpath/to/file.fun\fR: OK".
+.TP
+On failure
+Prints "\fIpath/to/file.fun\fR:line:col: syntax error: <message>".
+.SH EXIT STATUS
+.TP
+.B 0
+All provided files parsed successfully.
+.TP
+.B 1
+At least one file failed to parse (after optional fixing).
+.TP
+.B 2
+Incorrect usage (e.g., no files provided).
+.SH AUTO\-FIX RULES
+The fixer applies a small set of conservative transformations:
+.IP \(bu 2
+Normalize line endings: CRLF/CR \(-> LF.
+.IP \(bu 2
+Convert leading tabs to spaces; normalize indentation to multiples of two spaces.
+.IP \(bu 2
+Trim trailing spaces.
+.IP \(bu 2
+Ensure the file ends with a single newline.
+.IP \(bu 2
+Normalize type aliases: \fIsint8|sint16|sint32|sint64\fR \(-> \fIint8|int16|int32|int64\fR (word\-boundary aware).
+.PP
+Structural issues that require semantic changes are not auto\-fixed; if
+parsing still fails, the original file is left unchanged and an error is
+reported.
+.SH EXAMPLES
+.TP
+Check a single file
+.nf
+  funstx examples/arrays.fun
+.fi
+.TP
+Check and auto\-fix a file
+.nf
+  funstx --fix examples/arrays.fun
+.fi
+.TP
+Bulk check and auto\-fix all examples
+.nf
+  find examples -type f -name '*.fun' -print0 | xargs -0 -n 50 funstx --fix
+.fi
+.SH BUILD AND INSTALL
+Built as CMake target \fBfunstx\fR and installed alongside \fBfun\fR into
+\fI/usr/bin\fR by default.
+.SH SEE ALSO
+\fBfun\fR(1)
+.br
+Project documentation: \fIdocs/funstx.md\fR
+.SH AUTHORS
+The Fun project authors.
+.SH COPYRIGHT
+\(co The Fun authors. Licensed under the project license; see the
+\fILICENSE\fR file distributed with this source.
