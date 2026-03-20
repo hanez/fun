@@ -2437,6 +2437,118 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         free(name);
         return 1;
       }
+      if (strcmp(name, "nc_get_size") == 0) {
+        (*pos)++; /* '(' */
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "nc_get_size expects ()");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_NC_GET_SIZE, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "nc_set_style") == 0) {
+        (*pos)++; /* '(' */
+        /* (style, bg_rgb, fg_rgb) */
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_set_style expects (style, bg_rgb, fg_rgb)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_set_style expects (style, bg_rgb, fg_rgb)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_set_style expects (style, bg_rgb, fg_rgb)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_set_style expects (style, bg_rgb, fg_rgb)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_set_style expects (style, bg_rgb, fg_rgb)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_set_style args"); free(name); return 0; }
+        bytecode_add_instruction(bc, OP_NC_SET_STYLE, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "nc_draw_char") == 0) {
+        (*pos)++; /* '(' */
+        /* (y, x, ch) */
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_char expects (y, x, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_char expects (y, x, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_char expects (y, x, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_char expects (y, x, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_char expects (y, x, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_draw_char args"); free(name); return 0; }
+        bytecode_add_instruction(bc, OP_NC_DRAW_CHAR, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "nc_draw_hline") == 0) {
+        (*pos)++; /* '(' */
+        /* (y, x, len, ch) */
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_hline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_hline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_hline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_hline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_hline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_hline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_hline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_draw_hline args"); free(name); return 0; }
+        bytecode_add_instruction(bc, OP_NC_DRAW_HLINE, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "nc_draw_vline") == 0) {
+        (*pos)++; /* '(' */
+        /* (y, x, len, ch) */
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_vline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_vline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_vline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_vline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_vline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_draw_vline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_draw_vline expects (y, x, len, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_draw_vline args"); free(name); return 0; }
+        bytecode_add_instruction(bc, OP_NC_DRAW_VLINE, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "nc_box") == 0) {
+        (*pos)++; /* '(' */
+        /* (x, y, w, h, style) -- wrapper may reorder */
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_box expects (x, y, w, h, style)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_box args"); free(name); return 0; }
+        bytecode_add_instruction(bc, OP_NC_BOX, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "nc_fill") == 0) {
+        (*pos)++; /* '(' */
+        /* (x, y, w, h, ch) */
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ',')) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!emit_expression(bc, src, len, pos)) { parser_fail(*pos, "nc_fill expects (x, y, w, h, ch)"); free(name); return 0; }
+        if (!consume_char(src, len, pos, ')')) { parser_fail(*pos, "Expected ')' after nc_fill args"); free(name); return 0; }
+        bytecode_add_instruction(bc, OP_NC_FILL, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "nc_render") == 0) {
+        (*pos)++; /* '(' */
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "nc_render expects ()");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_NC_RENDER, 0);
+        free(name);
+        return 1;
+      }
       if (strcmp(name, "pcsc_release") == 0) {
         (*pos)++; /* '(' */
         if (!emit_expression(bc, src, len, pos)) {
@@ -5686,18 +5798,18 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
       *pos = local_pos;
       skip_to_eol(src, len, pos);
       return;
-    } else if (local_pos < len && src[local_pos] == '(') {
-      /* call as a statement: compile full call expression and drop result */
-      /* rewind to statement start and emit as expression */
+    } else {
+      /* Treat as a generic expression-statement (e.g., method calls like obj.method(...),
+         property access chains, or builtin calls behind wrappers). We rewind to the
+         start of the statement, emit the full expression, and drop its result. */
       local_pos = *pos;
       if (emit_expression(bc, src, len, &local_pos)) {
-        bytecode_add_instruction(bc, OP_POP, 0); /* dApache-2.0ard return value */
+        bytecode_add_instruction(bc, OP_POP, 0); /* discard return value of standalone expr */
+        *pos = local_pos;
+        skip_to_eol(src, len, pos);
+        return;
       }
-      *pos = local_pos;
-      skip_to_eol(src, len, pos);
-      return;
-    } else {
-      /* invalid statement: identifier not followed by assignment or call */
+      /* if it wasn't a valid expression either, report a meaningful error */
       parser_fail(local_pos, "Expected assignment '=' or call '(...)' after identifier");
       return;
     }

@@ -232,6 +232,14 @@ This document provides an overview of the available VM opcodes implemented under
 - OP_NC_CLEAR: Clear screen; pushes 1/0.
 - OP_NC_DRAW_TEXT: Draw text at (x,y); pops text, x, y; pushes 1/0.
 - OP_NC_GETCH: Get key with timeout; pops timeout_ms:int; pushes int key or -1.
+- OP_NC_GET_SIZE: Get stdplane size; pushes [rows:int, cols:int] or -1 if unavailable.
+- OP_NC_SET_STYLE: Set stdplane style/colors; pops style:int, bg_rgb:int, fg_rgb:int; pushes 0/-1.
+- OP_NC_DRAW_CHAR: Draw a single codepoint at y,x; pops ch:int, x:int, y:int; pushes 0/-1.
+- OP_NC_DRAW_HLINE: Draw horizontal line; pops len:int, x:int, y:int, ch:int; pushes 0/-1.
+- OP_NC_DRAW_VLINE: Draw vertical line; pops len:int, x:int, y:int, ch:int; pushes 0/-1.
+- OP_NC_BOX: Draw a rectangular box; pops x:int, y:int, w:int, h:int, style:int; pushes 0/-1.
+- OP_NC_FILL: Fill rectangle with codepoint; pops x:int, y:int, w:int, h:int, ch:int; pushes 0/-1.
+- OP_NC_RENDER: Force a render; pushes 0/-1.
 
 ## SQLite-compatible lib (libSQL)
 

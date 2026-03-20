@@ -939,6 +939,14 @@ void vm_run(VM *vm, Bytecode *entry) {
 #include "vm/notcurses/getch.c"
 #include "vm/notcurses/init.c"
 #include "vm/notcurses/shutdown.c"
+#include "vm/notcurses/get_size.c"
+#include "vm/notcurses/set_style.c"
+#include "vm/notcurses/draw_char.c"
+#include "vm/notcurses/hline.c"
+#include "vm/notcurses/vline.c"
+#include "vm/notcurses/box.c"
+#include "vm/notcurses/fill.c"
+#include "vm/notcurses/render.c"
 #endif
 
 /* SQLite ops */

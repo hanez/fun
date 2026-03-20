@@ -290,7 +290,15 @@ typedef enum {
   OP_NC_SHUTDOWN,  // shuts down Notcurses; returns 0
   OP_NC_CLEAR,     // clears screen/plane; returns 0
   OP_NC_DRAW_TEXT, // pops text, x, y; draws; returns 0
-  OP_NC_GETCH      // pops timeout_ms; returns codepoint or -1 on timeout/error
+  OP_NC_GETCH,     // pops timeout_ms; returns codepoint or -1 on timeout/error
+  OP_NC_GET_SIZE,  // pushes [rows:int, cols:int] or -1 when unavailable
+  OP_NC_SET_STYLE, // pops style:int, bg_rgb:int, fg_rgb:int; returns 0/-1
+  OP_NC_DRAW_CHAR, // pops ch:int, x:int, y:int; returns 0/-1
+  OP_NC_DRAW_HLINE,// pops len:int, x:int, y:int, ch:int; returns 0/-1
+  OP_NC_DRAW_VLINE,// pops len:int, x:int, y:int, ch:int; returns 0/-1
+  OP_NC_BOX,       // pops x:int, y:int, w:int, h:int, style:int; returns 0/-1
+  OP_NC_FILL,      // pops x:int, y:int, w:int, h:int, ch:int; returns 0/-1
+  OP_NC_RENDER     // forces a render; returns 0/-1
 } OpCode;
 
 typedef struct {

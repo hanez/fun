@@ -61,7 +61,9 @@ static const char *opcode_names[] = {
   /* C++ demo */
   "CPP_ADD",
   /* Notcurses TUI (optional) */
-  "NC_INIT", "NC_SHUTDOWN", "NC_CLEAR", "NC_DRAW_TEXT", "NC_GETCH"};
+  "NC_INIT", "NC_SHUTDOWN", "NC_CLEAR", "NC_DRAW_TEXT", "NC_GETCH",
+  "NC_GET_SIZE", "NC_SET_STYLE", "NC_DRAW_CHAR", "NC_DRAW_HLINE", "NC_DRAW_VLINE",
+  "NC_BOX", "NC_FILL", "NC_RENDER"};
 
 typedef struct {
   Bytecode *fn;
@@ -145,7 +147,7 @@ void vm_debug_request_finish(VM *vm);
 void vm_debug_request_continue(VM *vm);
 
 static inline int opcode_is_valid(int op) {
-  return op >= OP_NOP && op <= OP_NC_GETCH; // all current opcodes (including optional NC_*)
+  return op >= OP_NOP && op <= OP_NC_RENDER; // all current opcodes (including optional NC_*)
 }
 
 /* --- Minimal C ABI helpers for FFI (Rust opcode experiments) --- */
