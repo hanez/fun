@@ -43,7 +43,60 @@ class CGI()
     // Params from POST (x-www-form-urlencoded only)
     ct = this.env["CONTENT_TYPE"]
     pd = this.env["POST_DATA"]
-    if (typeof(ct) == "String" && len(ct) > 0 && find(str_to_lower(ct), "application/x-www-form-urlencoded") >= 0)
+    // Fallback: when running under a real CGI, POST data comes from stdin, not env.
+    // Only attempt to read stdin if method is POST, content-length > 0, and POST_DATA is empty.
+    if (!(typeof(pd) == "String" && len(pd) > 0))
+      if (str_to_upper(this.env["REQUEST_METHOD"]) == "POST")
+        cl = to_number(this.env["CONTENT_LENGTH"])
+        if (cl > 0)
+          // Read up to CONTENT_LENGTH bytes from stdin. Some CGI runners may deliver
+          // urlencoded chunks split at '&' without including the delimiter; reconstruct
+          // by inserting '&' between successive chunks.
+          parts = []
+          total = 0
+          // Safeguard: cap iterations to avoid infinite loops on unexpected behavior
+          iter = 0
+          while (total < cl && iter < 100000)
+            chunk = input("")
+            if (!(typeof(chunk) == "String"))
+              break
+            if (len(chunk) == 0)
+              // EOF without newline
+              break
+            push(parts, chunk)
+            total = total + len(chunk)
+            iter = iter + 1
+          // Rebuild with '&' between pieces to restore typical form encoding
+          if (len(parts) > 0)
+            rebuilt = parts[0]
+            idx = 1
+            np = len(parts)
+            while (idx < np)
+              rebuilt = rebuilt + "&" + parts[idx]
+              idx = idx + 1
+            tmp = rebuilt
+          else
+            tmp = ""
+          // Trim to declared content length to drop any stray newline added by the CGI runner
+          if (len(tmp) > cl)
+            pd = substr(tmp, 0, cl)
+          else
+            pd = tmp
+          this.env["POST_DATA"] = pd
+        else
+          // No declared length; try to read a single line (common with simple runners)
+          tmp = input("")
+          if (typeof(tmp) == "String" && len(tmp) > 0)
+            this.env["POST_DATA"] = tmp
+          // Keep local variable in sync so parsing below sees the data
+          pd = this.env["POST_DATA"]
+    // Decide whether to treat body as urlencoded: default yes for POST unless explicitly multipart
+    is_urlencoded = 1
+    if (typeof(ct) == "String" && len(ct) > 0)
+      lct = str_to_lower(ct)
+      if (find(lct, "multipart/form-data") >= 0)
+        is_urlencoded = 0
+    if (is_urlencoded)
       if (typeof(pd) == "String" && len(pd) > 0)
         parsed_pd = this._parse_urlencoded(pd)
         this._merge_params(parsed_pd)
@@ -202,11 +255,46 @@ class CGI()
     resp = resp + "Connection: close\r\n\r\n" + b
     return resp
 
-  // Minimal url-decoder: '+' -> space; %XX for ASCII printable
+  // Minimal url-decoder: '+' -> space; %XX for ASCII hex
   fun url_decode(this, s)
     src = to_string(s)
-    // Simplified for parser-compatibility: only translate '+' to space
-    return str_replace_all(src, "+", " ")
+    out = []
+    i = 0
+    n = len(src)
+    while (i < n)
+      ch = substr(src, i, 1)
+      if (ch == "+")
+        push(out, " ")
+        i = i + 1
+      else if (ch == "%" && i + 2 < n)
+        h1 = substr(src, i + 1, 1)
+        h2 = substr(src, i + 2, 1)
+        // Convert two hex digits to a single character (uppercase/lowercase allowed)
+        hexdigits = "0123456789ABCDEF"
+        hexdigits_l = "0123456789abcdef"
+        v1 = find(hexdigits, str_to_upper(h1))
+        v2 = find(hexdigits, str_to_upper(h2))
+        if (v1 >= 0 && v2 >= 0)
+          code = v1 * 16 + v2
+          // Build single-byte string from code using substr on a constant table
+          // Table of 256 bytes isn't available; approximate by mapping common ASCII 0x20..0x7E
+          ascii = "\x20!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+          if (code >= 32 && code <= 126)
+            push(out, substr(ascii, code - 32, 1))
+          else
+            // Non-printable: keep percent sequence as-is
+            push(out, "%")
+            push(out, h1)
+            push(out, h2)
+          i = i + 3
+        else
+          // Not hex, keep as-is
+          push(out, ch)
+          i = i + 1
+      else
+        push(out, ch)
+        i = i + 1
+    return join(out, "")
 
   fun _merge_params(this, pairs)
     // pairs: array of [key, value] entries
@@ -231,23 +319,43 @@ class CGI()
     src = to_string(s)
     if (len(src) == 0)
       return out
-    parts = str_split(src, "&")
-    i = 0
-    lp = len(parts)
-    while (i < lp)
-      kv = parts[i]
-      if (typeof(kv) == "String" && len(kv) > 0)
-        eq = find(kv, "=")
-        if (eq >= 0)
-          k = substr(kv, 0, eq)
-          v = substr(kv, eq + 1, len(kv) - eq - 1)
-        else
-          k = kv
-          v = ""
-        key = this.url_decode(k)
-        val = this.url_decode(v)
-        push(out, [key, val])
+    // Manually scan so we can treat both '&' and ';' as pair separators (robust across environments)
+    pairs = []
+    buf = []
+    number i = 0
+    number n = len(src)
+    while (i < n)
+      ch = substr(src, i, 1)
+      if (ch == "&" || ch == ";")
+        push(pairs, join(buf, ""))
+        buf = []
+      else
+        push(buf, ch)
       i = i + 1
+    // tail
+    push(pairs, join(buf, ""))
+
+    j = 0
+    lp = len(pairs)
+    while (j < lp)
+      kv = pairs[j]
+      if (typeof(kv) == "String")
+        token = kv
+        // Trim CR/LF that might trail if body ended with a newline
+        // Reuse str_trim which trims spaces and CR/LF
+        token = str_trim(token)
+        if (len(token) > 0)
+          eq = find(token, "=")
+          if (eq >= 0)
+            k = substr(token, 0, eq)
+            v = substr(token, eq + 1, len(token) - eq - 1)
+          else
+            k = token
+            v = ""
+          key = this.url_decode(k)
+          val = this.url_decode(v)
+          push(out, [key, val])
+      j = j + 1
     return out
   
   fun _parse_cookies(this, cookie_str)
