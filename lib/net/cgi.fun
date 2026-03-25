@@ -127,6 +127,81 @@ class CGI()
     a = str_replace_all(a, "'", "&#39;")
     return a
 
+  // Translate CGI output (headers + body) into a full HTTP/1.1 response string
+  // Input: raw string as emitted by a CGI script (e.g., via CGI.send()), containing
+  // CGI headers followed by an empty line and then the body.
+  // Output: a single HTTP/1.1 response string ready to be written to a socket.
+  fun cgi_to_http_response(this, raw)
+    out = to_string(raw)
+    // Find header/body separator
+    sep = find(out, "\r\n\r\n")
+    seplen = 4
+    if (sep < 0)
+      sep = find(out, "\n\n")
+      seplen = 2
+    if (sep < 0)
+      // No CGI headers, treat whole as body
+      b = out
+      resp = "HTTP/1.1 200 OK\r\n"
+      resp = resp + "Content-Type: text/html; charset=utf-8\r\n"
+      resp = resp + "Content-Length: " + to_string(len(b)) + "\r\n"
+      resp = resp + "Connection: close\r\n\r\n" + b
+      return resp
+
+    header_str = substr(out, 0, sep)
+    body = substr(out, sep + seplen, len(out) - sep - seplen)
+
+    // Parse headers
+    lines = str_split(header_str, "\n")
+    code = 200
+    text = "OK"
+    // Accumulate headers (excluding Status)
+    hh = []  // array of [k, v]
+    i = 0
+    n = len(lines)
+    while (i < n)
+      ln = str_trim(lines[i])
+      if (len(ln) > 0)
+        colon = find(ln, ":")
+        if (colon > 0)
+          k = str_trim(substr(ln, 0, colon))
+          v = str_trim(substr(ln, colon + 1, len(ln) - colon - 1))
+          if (str_to_upper(k) == "STATUS")
+            // Expect like: 200 OK
+            sp = find(v, " ")
+            if (sp > 0)
+              code = to_number(substr(v, 0, sp))
+              text = str_trim(substr(v, sp + 1, len(v) - sp - 1))
+            else
+              code = to_number(v)
+              if (code == 0) code = 200
+              text = "OK"
+          else
+            // Keep other headers
+            push(hh, [k, v])
+      i = i + 1
+
+    // Build HTTP response
+    b = to_string(body)
+    resp = "HTTP/1.1 " + to_string(code) + " " + text + "\r\n"
+    // Emit collected headers
+    j = 0
+    m = len(hh)
+    has_len = false
+    while (j < m)
+      p = hh[j]
+      if (typeof(p) == "Array" && len(p) >= 2)
+        hk = to_string(p[0])
+        hv = to_string(p[1])
+        if (str_to_upper(hk) == "CONTENT-LENGTH")
+          has_len = true
+        resp = resp + hk + ": " + hv + "\r\n"
+      j = j + 1
+    if (!has_len)
+      resp = resp + "Content-Length: " + to_string(len(b)) + "\r\n"
+    resp = resp + "Connection: close\r\n\r\n" + b
+    return resp
+
   // Minimal url-decoder: '+' -> space; %XX for ASCII printable
   fun url_decode(this, s)
     src = to_string(s)
@@ -174,7 +249,7 @@ class CGI()
         push(out, [key, val])
       i = i + 1
     return out
-
+  
   fun _parse_cookies(this, cookie_str)
     out = {}
     if (len(cookie_str) == 0)

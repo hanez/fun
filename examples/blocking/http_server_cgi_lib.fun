@@ -12,7 +12,8 @@
  */
 
 /*
- * Minimal CGI-capable HTTP server (blocking)
+ * Minimal blocking HTTP server that serves static files and
+ * handles a built-in CGI endpoint using the net/cgi.fun library.
  *
  * Try:
  *   - http://127.0.0.1:8080/
@@ -20,11 +21,11 @@
   +  - http://127.0.0.1:8080/info.fun?name=Fun
  */
 
-#include <net/http_cgi_server.fun>
+#include <net/http_cgi_lib_server.fun>
 
 port = 8080
 htdocs = "./examples/data/htdocs"
 
-server = HTTPCGIServer(port)
+server = HTTPCGILibServer(port)
 server.set_htdocs(htdocs)
 server.start()

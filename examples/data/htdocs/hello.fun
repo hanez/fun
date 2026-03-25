@@ -32,7 +32,22 @@ html = html + "<h1>Hello, " + cgi.escape_html(name) + "!</h1>"
 html = html + "<p>REQUEST_METHOD: " + cgi.escape_html(cgi.env["REQUEST_METHOD"]) + "</p>"
 html = html + "<p>QUERY_STRING: " + cgi.escape_html(cgi.env["QUERY_STRING"]) + "</p>"
 html = html + "<p>User-Agent cookie: " + cgi.escape_html(ua) + "</p>"
-html = html + "<h2>Params</h2><pre>" + to_string(cgi.params()) + "</pre>"
+// Render parsed CGI params as key => value(s)
+pmap = cgi.params()
+html = html + "<h2>Params</h2><ul>"
+for k in keys(pmap)
+  vals = cgi.param_all(k)
+  // Join multiple values with ", "
+  i = 0
+  n = len(vals)
+  joined = ""
+  while (i < n)
+    if (i > 0)
+      joined = joined + ", "
+    joined = joined + cgi.escape_html(vals[i])
+    i = i + 1
+  html = html + "<li><b>" + cgi.escape_html(k) + "</b>: " + joined + "</li>"
+html = html + "</ul>"
 html = html + "</body></html>"
 
 // Send CGI headers + body
