@@ -13,7 +13,7 @@
 
 // Boolean datatype usage examples (first-class booleans)
 // Run like:
-//   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/booleans.fun
+//   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/basics/booleans.fun
 
 // Literals
 boolean t = true
@@ -73,4 +73,3 @@ false == 0 => true
 if t: branch taken
 if f: else branch taken
 */
-

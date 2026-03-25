@@ -8,16 +8,17 @@ How to run:
 - For CGI examples under `examples/data/htdocs`, start one of the blocking HTTP servers from `examples/blocking/` and visit the URL noted in the file headers.
 
 Categories:
-- basics: hello_world, fizzbuzz, fibonacci, collections
-- strings: split_join_trim, templating_min, urlencode_decode
+- basics: hello_world, fizzbuzz, fibonacci, collections, boolean_decl, booleans, builtins_conversions
+- arrays: arrays, arrays_advanced, arrays_iter
+- strings: split_join_trim, templating_min, urlencode_decode, base64_demo
 - io: read_write_file, csv_reader (uses examples/io/sample.csv), word_count
 - algos: sort_and_search, deduplicate, stack_queue
-- cli: env_echo, args_parse (parse ARGS env)
+- cli: env_echo, args_parse (parse ARGS env), cli_parse_example
 - net: tcp_echo_server, tcp_echo_client, http_static_server (blocking)
 - data/htdocs (CGI): hello.fun, info.fun, counter.fun, form_post.fun, redirect.fun, json_like_api.fun
 - compose: run_other_fun, pipeline
 - patterns: assert_like, logging_min
-- snippets: escape_html_demo, maps_iterate
+- snippets: escape_html_demo, maps_iterate, include_namespace
 
 Notes:
 - Scripts that start servers (tcp_echo_server, http_static_server, http_server_cgi*.fun) are blocking; run them in a separate terminal.

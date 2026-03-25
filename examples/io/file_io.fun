@@ -20,7 +20,7 @@
  */
 
 // file I/O (writes then reads)
-path = "/tmp/fun_io_example.txt"
+path = "./tmp/fun_io_example.txt"
 ok = write_file(path, "hello-io")
 print(ok)                        // -> 1
 content = read_file(path)

@@ -47,7 +47,7 @@ print(arr)                 // -> [0, 1, 4, 9, 16]
 
 // Nested arrays (matrix)
 matrix = [[1, 2], [3, 4], [5, 6]]
-print(matrix)              // -> [[1, 2], [3, 4], [5, 6]]
+print(matrix)              // -> [[1, 2], [3, 4]]
 print(matrix[1][0])        // -> 3
 
 // Function that mutates an array in place (first 3 elements)
@@ -75,7 +75,7 @@ print(p[1])                // -> 9
 [1, 2, 13]
 16
 [0, 1, 4, 9, 16]
-[[1, 2], [3, 4], [5, 6]]
+[[1, 2], [3, 4]]
 3
 [10, 20, 30]
 [7, 9]

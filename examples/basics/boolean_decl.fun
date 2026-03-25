@@ -20,4 +20,3 @@ print("typeof(b) => " + typeof(b))
 b => false
 typeof(b) => Boolean
 */
-

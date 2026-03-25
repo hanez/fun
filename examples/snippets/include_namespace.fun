@@ -15,11 +15,11 @@
 //
 // Run examples (without installing) by pointing FUN_LIB_DIR to the repo lib:
 //   Linux/macOS/FreeBSD:
-//     FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/include_namespace.fun
+//     FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/snippets/include_namespace.fun
 //   Windows (CMD):
-//     set FUN_LIB_DIR=%CD%\lib && build-debug\fun.exe examples\include_namespace.fun
+//     set FUN_LIB_DIR=%CD%\lib && build-debug\fun.exe examples\snippets\include_namespace.fun
 //   Windows (PowerShell):
-//     $env:FUN_LIB_DIR="$PWD\lib"; .\build\fun.exe examples\include_namespace.fun
+//     $env:FUN_LIB_DIR="$PWD\lib"; .\build\fun.exe examples\snippets\include_namespace.fun
 
 // Import stdlib math helpers into alias 'm'
 #include <utils/math.fun> as m

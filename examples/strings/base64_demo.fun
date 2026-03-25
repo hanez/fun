@@ -15,7 +15,7 @@
   * Base64 usage demo (RFC 4648, standard alphabet)
   *
   * Run without installing:
-  *   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/base64_demo.fun
+  *   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/strings/base64_demo.fun
   */
 
 #include <encoding/base64.fun>
