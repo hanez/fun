@@ -52,3 +52,11 @@ html = html + "</body></html>"
 
 // Send CGI headers + body
 cgi.send(html)
+
+/* Expected output (GET /hello.fun?name=Fun with no ua cookie):
+Status: 200 OK
+Content-Type: text/html; charset=utf-8
+Set-Cookie: ua=FunClient; Path=/; HttpOnly
+
+<html><head><title>Fun CGI</title></head><body><h1>Hello, Fun!</h1><p>REQUEST_METHOD: GET</p><p>QUERY_STRING: name=Fun</p><p>User-Agent cookie: </p><h2>Params</h2><ul><li><b>name</b>: Fun</li></ul></body></html>
+*/
