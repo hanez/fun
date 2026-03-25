@@ -63,6 +63,29 @@ static int g_err_col = 0;
 /* ---- compiler-generated temporary counter ---- */
 static int g_temp_counter = 0;
 
+/* ---- runtime debug control (for suppressing noisy stdout in production/CGI) ---- */
+static int env_truthy(const char *name) {
+  const char *v = getenv(name);
+  if (!v) return 0;
+  if (strcmp(v, "1") == 0) return 1;
+  if (strcmp(v, "true") == 0) return 1;
+  if (strcmp(v, "TRUE") == 0) return 1;
+  if (strcmp(v, "yes") == 0) return 1;
+  if (strcmp(v, "YES") == 0) return 1;
+  if (strcmp(v, "on") == 0) return 1;
+  if (strcmp(v, "ON") == 0) return 1;
+  return 0;
+}
+
+static int fun_debug_enabled(void) {
+  /* Allow enabling debug dumps at runtime via environment.
+   * Default is OFF to avoid contaminating stdout (e.g., CGI responses).
+   */
+  if (env_truthy("FUN_TRACE")) return 1;
+  if (env_truthy("FUN_DEBUG")) return 1;
+  return 0;
+}
+
 /* Declared type metadata encoding in types[]:
    0 = dynamic/untyped;
    positive/negative 8/16/32/64 = integers (negative means signed);
@@ -4308,8 +4331,10 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         return 0;
       }
 #ifdef FUN_DEBUG
-      /* DEBUG: show compiled call */
-      printf("compile: CALL %s with %d arg(s)\n", name, argc);
+      /* DEBUG: show compiled call (only when FUN_DEBUG/FUN_TRACE enabled at runtime) */
+      if (fun_debug_enabled()) {
+        printf("compile: CALL %s with %d arg(s)\n", name, argc);
+      }
 #endif
       bytecode_add_instruction(bc, OP_CALL, argc);
       /* postfix indexing, slice, and dot access/method calls */
@@ -5502,7 +5527,12 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
     int gi = (lidx < 0) ? sym_index(name) : -1;
     skip_spaces(src, len, &local_pos);
 
-    /* object field assignment: name.field = expr (only if '=' follows) */
+    /* object field assignment: supports
+       - name.field = expr
+       - name.field[expr] = expr
+       - name.field[expr1][expr2] = expr
+       If pattern doesn't match an assignment, fall back to expression stmt (e.g., method call).
+     */
     if (local_pos < len && src[local_pos] == '.') {
       size_t stmt_start = *pos;    /* for expression fallback */
       size_t look = local_pos + 1; /* point after '.' */
@@ -5514,7 +5544,104 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         return;
       }
       skip_spaces(src, len, &look);
-      if (look >= len || src[look] != '=') {
+      if (look < len && src[look] == '[') {
+        /* Handle name.field[...][...] = value */
+        /* Load base container and resolve field: base[field] -> inner container on stack */
+        if (lidx >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+        }
+        int fci = bytecode_add_constant(bc, make_string(fname));
+        free(fname);
+        bytecode_add_instruction(bc, OP_LOAD_CONST, fci);
+        bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+
+        /* Now parse one or more [expr] */
+        for (;;) {
+          if (!(look < len && src[look] == '[')) break;
+          look++; /* consume '[' */
+          if (!emit_expression(bc, src, len, &look)) {
+            parser_fail(look, "Expected index expression after '['");
+            free(name);
+            return;
+          }
+          if (!consume_char(src, len, &look, ']')) {
+            parser_fail(look, "Expected ']' after index");
+            free(name);
+            return;
+          }
+          skip_spaces(src, len, &look);
+          if (look < len && src[look] == '[') {
+            /* Need to dereference one level: inner = inner[index] */
+            bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+            continue;
+          }
+          break;
+        }
+        /* Expect '=' to assign into the last container with last index on stack */
+        if (look >= len || src[look] != '=') {
+          /* Not an assignment: fallback to expression statement */
+          free(name);
+          size_t expr_pos = stmt_start;
+          if (emit_expression(bc, src, len, &expr_pos)) {
+            bytecode_add_instruction(bc, OP_POP, 0);
+          }
+          *pos = expr_pos;
+          skip_to_eol(src, len, pos);
+          return;
+        }
+        look++; /* skip '=' */
+        if (!emit_expression(bc, src, len, &look)) {
+          parser_fail(look, "Expected expression after '='");
+          free(name);
+          return;
+        }
+        bytecode_add_instruction(bc, OP_INDEX_SET, 0);
+        free(name);
+        *pos = look;
+        skip_to_eol(src, len, pos);
+        return;
+      } else if (look < len && src[look] == '=') {
+        /* Simple name.field = value
+         * Previous implementation pushed (container, key) first and then evaluated value.
+         * That relies on CALL preserving underlying stack entries. To be robust,
+         * we first evaluate the value into a temporary local, then push (container, key),
+         * then load the temporary and perform INDEX_SET.
+         */
+
+        /* Advance to after '=' and parse value into a temporary local */
+        local_pos = look + 1;
+        if (!emit_expression(bc, src, len, &local_pos)) {
+          parser_fail(local_pos, "Expected expression after '='");
+          free(fname);
+          free(name);
+          return;
+        }
+        /* store value to a hidden temp local */
+        int tmp_local = local_add("__assign_tmp");
+        bytecode_add_instruction(bc, OP_STORE_LOCAL, tmp_local);
+
+        /* Load container variable */
+        if (lidx >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+        }
+        /* Push key */
+        int kci = bytecode_add_constant(bc, make_string(fname));
+        free(fname);
+        bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
+
+        /* Load value from temp and set */
+        bytecode_add_instruction(bc, OP_LOAD_LOCAL, tmp_local);
+        bytecode_add_instruction(bc, OP_INDEX_SET, 0);
+
+        free(name);
+        *pos = local_pos;
+        skip_to_eol(src, len, pos);
+        return;
+      } else {
         /* Not an assignment: treat as expression statement (e.g., obj.method(...)) */
         free(fname);
         free(name);
@@ -5526,33 +5653,6 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
         skip_to_eol(src, len, pos);
         return;
       }
-
-      /* Confirmed assignment: emit container, key, value, then INDEX_SET */
-      /* Load container variable */
-      if (lidx >= 0) {
-        bytecode_add_instruction(bc, OP_LOAD_LOCAL, lidx);
-      } else {
-        bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
-      }
-      /* Push key */
-      int kci = bytecode_add_constant(bc, make_string(fname));
-      free(fname);
-      bytecode_add_instruction(bc, OP_LOAD_CONST, kci);
-
-      /* Advance local_pos to after '=' and parse value expression */
-      local_pos = look + 1; /* skip '=' */
-      if (!emit_expression(bc, src, len, &local_pos)) {
-        parser_fail(local_pos, "Expected expression after '='");
-        free(name);
-        return;
-      }
-      /* perform set: pops value, key, container (in that order) */
-      bytecode_add_instruction(bc, OP_INDEX_SET, 0);
-
-      free(name);
-      *pos = local_pos;
-      skip_to_eol(src, len, pos);
-      return;
     }
 
     /* array element assignment: name[expr] = expr and nested: name[expr1][expr2] = expr */
@@ -5879,7 +5979,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
     }
 
     /* class definition -> factory function */
-    if (starts_with(src, len, *pos, "class")) {
+    if (starts_with(src, len, *pos, "class") && (*pos + 5 < len) && (src[*pos + 5] == ' ' || src[*pos + 5] == '\t')) {
       *pos += 5;
       skip_spaces(src, len, pos);
       /* class name */
@@ -6417,7 +6517,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
       continue;
     }
 
-    if (starts_with(src, len, *pos, "fun")) {
+    if (starts_with(src, len, *pos, "fun") && (*pos + 3 < len) && (src[*pos + 3] == ' ' || src[*pos + 3] == '\t')) {
       /* parse header: fun name(arg, ...) */
       *pos += 3;
       skip_spaces(src, len, pos);
@@ -6498,10 +6598,12 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
       bytecode_add_instruction(fn_bc, OP_RETURN, 0);
 
 #ifdef FUN_DEBUG
-      /* DEBUG: dump compiled function bytecode */
-      printf("=== compiled function %s (%d params) ===\n", fname, env.count);
-      bytecode_dump(fn_bc);
-      printf("=== end function %s ===\n", fname);
+      /* DEBUG: dump compiled function bytecode (guarded by runtime env) */
+      if (fun_debug_enabled()) {
+        printf("=== compiled function %s (%d params) ===\n", fname, env.count);
+        bytecode_dump(fn_bc);
+        printf("=== end function %s ===\n", fname);
+      }
 #endif
 
       /* bind function to global: LOAD_CONST <fn> ; STORE_GLOBAL fgi */
@@ -6517,16 +6619,51 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
     /* for-sugar:
      *   - for <ident> in range(a, b)
      *   - for <ident> in <array-expr>
+     *   - for (<keyIdent>, <valIdent>) in <map-expr>
      */
     if (starts_with(src, len, *pos, "for")) {
       *pos += 3;
       skip_spaces(src, len, pos);
 
-      /* loop variable name */
-      char *ivar = NULL;
-      if (!read_identifier_into(src, len, pos, &ivar)) {
-        parser_fail(*pos, "Expected loop variable after 'for'");
-        return;
+      /* Optional tuple '(k, v)' for map iteration */
+      int tuple_mode = 0; /* 0 = single var, 1 = (k,v) */
+      char *ivar = NULL;      /* single variable name OR key variable when tuple */
+      char *vvar = NULL;      /* value variable when tuple */
+
+      if (*pos < len && src[*pos] == '(') {
+        /* Parse '(k, v)' */
+        (*pos)++;
+        skip_spaces(src, len, pos);
+        if (!read_identifier_into(src, len, pos, &ivar)) {
+          parser_fail(*pos, "Expected identifier after '(' in for tuple");
+          return;
+        }
+        skip_spaces(src, len, pos);
+        if (!consume_char(src, len, pos, ',')) {
+          parser_fail(*pos, "Expected ',' between key and value in for tuple");
+          free(ivar);
+          return;
+        }
+        skip_spaces(src, len, pos);
+        if (!read_identifier_into(src, len, pos, &vvar)) {
+          parser_fail(*pos, "Expected value identifier after ',' in for tuple");
+          free(ivar);
+          return;
+        }
+        skip_spaces(src, len, pos);
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' to close for tuple");
+          free(ivar);
+          free(vvar);
+          return;
+        }
+        tuple_mode = 1;
+      } else {
+        /* loop variable name */
+        if (!read_identifier_into(src, len, pos, &ivar)) {
+          parser_fail(*pos, "Expected loop variable after 'for'");
+          return;
+        }
       }
 
       skip_spaces(src, len, pos);
@@ -6672,7 +6809,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
 
         free(ivar);
         continue;
-      } else {
+      } else if (!tuple_mode) {
         /* ===== array iteration: for ivar in <expr> ===== */
         /* Evaluate the iterable once and store in a temp */
         if (!emit_expression(bc, src, len, pos)) {
@@ -6818,6 +6955,199 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
         g_loop_ctx = ctx.prev;
 
         free(ivar);
+        continue;
+      } else {
+        /* ===== map iteration with tuple: for (k, v) in <expr> ===== */
+        /* Evaluate the map expr once: store in temp */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "Expected map expression after 'in'");
+          free(ivar);
+          free(vvar);
+          return;
+        }
+        char mapname[64];
+        snprintf(mapname, sizeof(mapname), "__for_map_%d", g_temp_counter++);
+        int lmap = -1, gmap = -1;
+        if (g_locals) {
+          lmap = local_add(mapname);
+          bytecode_add_instruction(bc, OP_STORE_LOCAL, lmap);
+        } else {
+          gmap = sym_index(mapname);
+          bytecode_add_instruction(bc, OP_STORE_GLOBAL, gmap);
+        }
+
+        /* keys = keys(map) */
+        if (lmap >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, lmap);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gmap);
+        }
+        bytecode_add_instruction(bc, OP_KEYS, 0);
+        char keysname[64];
+        snprintf(keysname, sizeof(keysname), "__for_keys_%d", g_temp_counter++);
+        int lkeys = -1, gkeys = -1;
+        if (g_locals) {
+          lkeys = local_add(keysname);
+          bytecode_add_instruction(bc, OP_STORE_LOCAL, lkeys);
+        } else {
+          gkeys = sym_index(keysname);
+          bytecode_add_instruction(bc, OP_STORE_GLOBAL, gkeys);
+        }
+
+        /* len(keys) */
+        if (lkeys >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, lkeys);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gkeys);
+        }
+        bytecode_add_instruction(bc, OP_LEN, 0);
+        char lenname[64];
+        snprintf(lenname, sizeof(lenname), "__for_klen_%d", g_temp_counter++);
+        int llen = -1, glen = -1;
+        if (g_locals) {
+          llen = local_add(lenname);
+          bytecode_add_instruction(bc, OP_STORE_LOCAL, llen);
+        } else {
+          glen = sym_index(lenname);
+          bytecode_add_instruction(bc, OP_STORE_GLOBAL, glen);
+        }
+
+        /* i = 0 */
+        int c0m = bytecode_add_constant(bc, make_int(0));
+        bytecode_add_instruction(bc, OP_LOAD_CONST, c0m);
+        char iname[64];
+        snprintf(iname, sizeof(iname), "__for_ki_%d", g_temp_counter++);
+        int li = -1, gi = -1;
+        if (g_locals) {
+          li = local_add(iname);
+          bytecode_add_instruction(bc, OP_STORE_LOCAL, li);
+        } else {
+          gi = sym_index(iname);
+          bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+        }
+
+        /* end of header line */
+        skip_to_eol(src, len, pos);
+
+        /* loop start */
+        int loop_start = bc->instr_count;
+        /* condition: i < len */
+        if (li >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, li);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+        }
+        if (llen >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, llen);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, glen);
+        }
+        bytecode_add_instruction(bc, OP_LT, 0);
+        int jmp_false = bytecode_add_instruction(bc, OP_JUMP_IF_FALSE, 0);
+
+        /* key = keys[i] */
+        if (lkeys >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, lkeys);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gkeys);
+        }
+        if (li >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, li);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+        }
+        bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+
+        /* assign to key variable (ivar) */
+        int lk = local_find(ivar);
+        int gk = -1;
+        if (lk < 0) {
+          if (g_locals)
+            lk = local_add(ivar);
+          else
+            gk = sym_index(ivar);
+        }
+        if (lk >= 0) {
+          bytecode_add_instruction(bc, OP_STORE_LOCAL, lk);
+        } else {
+          bytecode_add_instruction(bc, OP_STORE_GLOBAL, gk);
+        }
+
+        /* value = map[key] */
+        if (lmap >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, lmap);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gmap);
+        }
+        /* load key again */
+        if (lk >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, lk);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gk);
+        }
+        bytecode_add_instruction(bc, OP_INDEX_GET, 0);
+
+        /* assign to value variable (vvar) */
+        int lv = local_find(vvar);
+        int gv = -1;
+        if (lv < 0) {
+          if (g_locals)
+            lv = local_add(vvar);
+          else
+            gv = sym_index(vvar);
+        }
+        if (lv >= 0) {
+          bytecode_add_instruction(bc, OP_STORE_LOCAL, lv);
+        } else {
+          bytecode_add_instruction(bc, OP_STORE_GLOBAL, gv);
+        }
+
+        /* enter loop context */
+        LoopCtx ctx = {{0}, 0, {0}, 0, g_loop_ctx};
+        g_loop_ctx = &ctx;
+
+        /* body */
+        int body_indent = 0;
+        size_t look_body = *pos;
+        if (read_line_start(src, len, &look_body, &body_indent) && body_indent > current_indent) {
+          parse_block(bc, src, len, pos, body_indent);
+        } else {
+          /* empty body ok */
+        }
+
+        /* continue target: i = i + 1 */
+        int cont_label = bc->instr_count;
+        int c1m = bytecode_add_constant(bc, make_int(1));
+        if (li >= 0) {
+          bytecode_add_instruction(bc, OP_LOAD_LOCAL, li);
+          bytecode_add_instruction(bc, OP_LOAD_CONST, c1m);
+          bytecode_add_instruction(bc, OP_ADD, 0);
+          bytecode_add_instruction(bc, OP_STORE_LOCAL, li);
+        } else {
+          bytecode_add_instruction(bc, OP_LOAD_GLOBAL, gi);
+          bytecode_add_instruction(bc, OP_LOAD_CONST, c1m);
+          bytecode_add_instruction(bc, OP_ADD, 0);
+          bytecode_add_instruction(bc, OP_STORE_GLOBAL, gi);
+        }
+
+        /* back edge */
+        bytecode_add_instruction(bc, OP_JUMP, loop_start);
+
+        /* end label */
+        int end_label = bc->instr_count;
+        bytecode_set_operand(bc, jmp_false, end_label);
+
+        /* patch continue/break */
+        for (int bi = 0; bi < ctx.cont_count; ++bi) {
+          bytecode_set_operand(bc, ctx.continue_jumps[bi], cont_label);
+        }
+        for (int bi = 0; bi < ctx.break_count; ++bi) {
+          bytecode_set_operand(bc, ctx.break_jumps[bi], end_label);
+        }
+        g_loop_ctx = ctx.prev;
+
+        free(ivar);
+        free(vvar);
         continue;
       }
     }
