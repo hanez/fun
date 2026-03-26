@@ -35,9 +35,23 @@ class HTTPCGIServer(number port)
         this.handle_client(fd)
     return 1
 
+  // Safe header getter: returns string or empty string when missing/invalid
+  fun _hget(this, hdrs, key)
+    if (typeof(hdrs) == "Map")
+      v = hdrs[key]
+      if (typeof(v) == "String")
+        return v
+      if (v != nil)
+        // Coerce non-strings to string just in case
+        return to_string(v)
+    return ""
+
   fun _parse_headers(this, request)
     headers = {}
     lines = str_split(request, "\n")
+    // str_split should return an Array; if not, bail out with empty headers
+    if (!(typeof(lines) == "Array"))
+      return headers
     i = 1  // start after request line
     while (i < len(lines))
       ln = str_trim(lines[i])
@@ -57,19 +71,29 @@ class HTTPCGIServer(number port)
       sock_close(fd)
       return 0
 
-    lines = str_split(request, "\n")
-    if (len(lines) == 0)
+    // Robustly extract request line without relying on array indexing
+    reqstr = to_string(request)
+    // debug: mark start of handle_client
+    // print("[DBG] handle_client: received request bytes=" + to_string(len(reqstr)))
+    nl = find(reqstr, "\n")
+    if (nl < 0)
+      nl = find(reqstr, "\r")
+    if (nl < 0)
       sock_close(fd)
       return 0
+    reqline = str_trim(substr(reqstr, 0, nl))
+    // print("[DBG] request line=\"" + reqline + "\"")
 
-    reqline = str_trim(lines[0])
     parts = str_split(reqline, " ")
-    if (len(parts) < 2)
+    // Guard against unexpected splitter behavior
+    if (!(typeof(parts) == "Array") || len(parts) < 2)
       sock_close(fd)
       return 0
+    // print("[DBG] parts ok, count=" + to_string(len(parts)) + ", t0=" + typeof(parts))
 
     method = str_trim(parts[0])
     target = str_trim(parts[1])
+    // print("[DBG] method=" + method + ", target=" + target)
 
     // Split query string
     path = target
@@ -85,7 +109,12 @@ class HTTPCGIServer(number port)
     file_path = this.htdocs + path
 
     // Headers and body
-    headers = this._parse_headers(request)
+    // Parse headers; if anything goes wrong, fall back to an empty map
+    headers = {}
+    tmp_headers = this._parse_headers(request)
+    if (typeof(tmp_headers) == "Map")
+      headers = tmp_headers
+    // print("[DBG] headers parsed, type=" + typeof(headers))
 
     // Extract POST body
     body = ""
@@ -99,19 +128,19 @@ class HTTPCGIServer(number port)
 
     // Serve CGI when file ends with .fun
     if (str_ends_with(path, ".fun"))
-      // Build env vars according to CGI conventions
-      host = headers["HOST"]
+      // Build env vars according to CGI conventions.
+      // Extract selected request headers safely (map lookups may yield nil).
+      host = this._hget(headers, "HOST")
       if (len(host) == 0) host = "localhost"
-      ua = headers["USER-AGENT"]
-      cookie = headers["COOKIE"]
-      ctype = headers["CONTENT-TYPE"]
-      clen = headers["CONTENT-LENGTH"]
+      ua = this._hget(headers, "USER-AGENT")
+      cookie = this._hget(headers, "COOKIE")
+      ctype = this._hget(headers, "CONTENT-TYPE")
+      clen = this._hget(headers, "CONTENT-LENGTH")
 
       envs = []
       // Ensure Fun stdlib is available to CGI child process
       funlib = env("FUN_LIB_DIR")
       if (len(funlib) == 0)
-        // Best-effort default when running from project root
         funlib = "./lib"
       push(envs, "FUN_LIB_DIR='" + funlib + "'")
       push(envs, "REQUEST_METHOD='" + method + "'")
@@ -146,16 +175,41 @@ class HTTPCGIServer(number port)
 
       // Run the Fun script as a CGI program
       cmd = join(envs, " ") + " " + exec + " " + file_path
+      // print("[DBG] CGI exec: " + cmd)
       res = proc_run(cmd)
-      out = res["out"]
+
+      // Be defensive: proc_run() may fail or return a non-map depending on platform
+      if (res == nil || typeof(res) != "Map")
+        print("[CGI] proc_run failed for: " + file_path)
+        this._send(fd, 500, "Internal Server Error", "<h1>Failed to execute CGI</h1>")
+        sock_close(fd)
+        return 0
+      
+      // Safely extract fields from result map; guard each access
+      out = ""
+      code = 0
+      tmp = nil
+      if (typeof(res) == "Map")
+        tmp = res["out"]
+      if (tmp != nil)
+        out = tmp
+      tmpc = nil
+      if (typeof(res) == "Map")
+        tmpc = res["code"]
+      if (tmpc != nil)
+        code = tmpc
 
       if (len(out) == 0)
-        this._send(fd, 500, "Internal Server Error", "<h1>CGI produced no output</h1>")
+        if (to_string(code) != "0")
+          this._send(fd, 500, "Internal Server Error", "<h1>CGI failed (exit " + to_string(code) + ")</h1>")
+        else
+          this._send(fd, 500, "Internal Server Error", "<h1>CGI produced no output</h1>")
       else
         this._send_cgi_response(fd, out)
     else
       // Static file
       content = read_file(file_path)
+      // print("[DBG] static path: " + file_path + ", content_len=" + to_string(len(content)))
       if (len(content) > 0)
         this._send(fd, 200, "OK", content)
       else
