@@ -36,6 +36,9 @@
 #include <unistd.h>
 /* For hidden input (password) handling in OP_INPUT_LINE */
 #include <termios.h>
+/* For non-blocking sockets and polling */
+#include <fcntl.h>
+#include <poll.h>
 // #include <arpa/inet.h>
 #endif
 
@@ -856,6 +859,11 @@ void vm_run(VM *vm, Bytecode *entry) {
 #include "vm/os/socket_tcp_listen.c"
 #include "vm/os/socket_unix_connect.c"
 #include "vm/os/socket_unix_listen.c"
+
+/* Async-friendly FD helpers (UNIX) */
+#include "vm/os/fd_set_nonblock.c"
+#include "vm/os/fd_poll_read.c"
+#include "vm/os/fd_poll_write.c"
 
 #ifdef FUN_WITH_PCSC
 #include "vm/pcsc/connect.c"

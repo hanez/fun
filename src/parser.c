@@ -2853,6 +2853,88 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         free(name);
         return 1;
       }
+      /* Async-friendly FD helpers */
+      if (strcmp(name, "fd_set_nonblock") == 0) {
+        (*pos)++; /* '(' */
+        /* Expect (fd, on) -> push fd then on so VM pops on first */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "fd_set_nonblock expects (fd, on)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ',')) {
+          parser_fail(*pos, "fd_set_nonblock expects (fd, on)");
+          free(name);
+          return 0;
+        }
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "fd_set_nonblock expects (fd, on)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after fd_set_nonblock args");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_FD_SET_NONBLOCK, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "fd_poll_read") == 0) {
+        (*pos)++; /* '(' */
+        /* Expect (fd, timeout_ms) -> push fd then timeout so VM pops timeout first */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "fd_poll_read expects (fd, timeout_ms)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ',')) {
+          parser_fail(*pos, "fd_poll_read expects (fd, timeout_ms)");
+          free(name);
+          return 0;
+        }
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "fd_poll_read expects (fd, timeout_ms)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after fd_poll_read args");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_FD_POLL_READ, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "fd_poll_write") == 0) {
+        (*pos)++; /* '(' */
+        /* Expect (fd, timeout_ms) */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "fd_poll_write expects (fd, timeout_ms)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ',')) {
+          parser_fail(*pos, "fd_poll_write expects (fd, timeout_ms)");
+          free(name);
+          return 0;
+        }
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "fd_poll_write expects (fd, timeout_ms)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after fd_poll_write args");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_FD_POLL_WRITE, 0);
+        free(name);
+        return 1;
+      }
       /* Serial builtins */
       if (strcmp(name, "serial_open") == 0) {
         (*pos)++; /* '(' */

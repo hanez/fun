@@ -220,6 +220,11 @@ typedef enum {
   OP_SOCK_UNIX_LISTEN,  // pops backlog, path; returns listen fd (>0) or 0
   OP_SOCK_UNIX_CONNECT, // pops path; returns fd (>0) or 0
 
+  // Async-friendly FD helpers (UNIX platforms)
+  OP_FD_SET_NONBLOCK,   // pops on:int (0/1), fd:int; returns 1 on success, 0 on error/unsupported
+  OP_FD_POLL_READ,      // pops timeout_ms:int, fd:int; returns 1 if readable, 0 if timeout/EOF, -1 on error
+  OP_FD_POLL_WRITE,     // pops timeout_ms:int, fd:int; returns 1 if writable, 0 if timeout, -1 on error
+
   // process control
   OP_EXIT, // pops code (or uses operand) and terminates script with exit code
 
