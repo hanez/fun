@@ -189,6 +189,10 @@ This document provides an overview of the available VM opcodes implemented under
   - OP_SOCK_SEND: Send bytes; pops data:string, fd:int; pushes bytesSent:int or -1.
   - OP_SOCK_RECV: Receive bytes; pops max:int, fd:int; pushes data:string or Nil.
   - OP_SOCK_CLOSE: Close socket; pops fd:int; pushes 1/0.
+ - Async I/O (FD helpers):
+  - OP_FD_SET_NONBLOCK: Enable/disable O_NONBLOCK on a file descriptor; pops on:int(0/1), fd:int; pushes 1 on success, 0 on error. (os/fd_set_nonblock.c)
+  - OP_FD_POLL_READ: Wait until fd is readable; pops timeout_ms:int, fd:int; pushes >0 if ready, 0 on timeout, -1 on error. (os/fd_poll_read.c)
+  - OP_FD_POLL_WRITE: Wait until fd is writable; pops timeout_ms:int, fd:int; pushes >0 if ready, 0 on timeout, -1 on error. (os/fd_poll_write.c)
 - Serial (TTY):
   - OP_SERIAL_OPEN: Open serial port; pops baud:int, path:string; pushes fd:int or -1.
   - OP_SERIAL_CONFIG: Configure port; pops flow_ctrl, stop_bits, parity, data_bits, fd; pushes 1/0.
