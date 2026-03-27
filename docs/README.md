@@ -40,7 +40,7 @@ This file serves as an index of the documents in this directory. Links are relat
 
 ## Example deep-dives
 
-- [httpserver.md](./httpserver.md) - Design and walkthrough of all HTTP server examples under ./examples/net (static, CGI, and multi-threaded variants), how they route requests, run CGI, and which stdlib modules they use. Future example-focused docs will be collected in this section.
+- [examples/httpserver.md](./examples/httpserver.md) - Design and walkthrough of all HTTP server examples under ./examples/net (static, CGI, and multi-threaded variants), how they route requests, run CGI, and which stdlib modules they use. Future example-focused docs will be collected in this section.
 
 ## External extensions
 
