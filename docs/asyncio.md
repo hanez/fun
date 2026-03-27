@@ -99,7 +99,7 @@ Because Fun keeps the primitives low-level and explicit, you can build simple co
 
 Run client example from a build tree:
 ```
-FUN_LIB_DIR=./lib ./build_debug/fun examples/io/async_http_client.fun
+FUN_LIB_DIR=./lib ./build/fun examples/io/async_http_client.fun
 ```
 
 If installed system-wide, just:
@@ -126,7 +126,7 @@ A: You can prototype small non-blocking fragments in the REPL, but full networki
 
 ## See also
 
-- docs/examples.md — Running bundled examples
-- docs/includes.md — Include paths and library discovery
-- docs/opcodes.md — VM opcodes overview
-- docs/troubleshooting.md — Common issues and quick fixes
+- [examples.md](./examples.md) — Running bundled examples
+- [includes.md](./includes.md) — Include paths and library discovery
+- [opcodes.md](./opcodes.md) — VM opcodes overview
+- [troubleshooting.md](./troubleshooting.md) — Common issues and quick fixes
