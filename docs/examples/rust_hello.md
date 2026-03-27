@@ -1,0 +1,12 @@
+# rust_hello.fun — overview
+
+What it shows
+- Using Rust opcodes from Fun (when built with Rust support).
+
+How to run
+- export FUN_LIB_DIR="./lib"
+- ./build_debug/fun examples/rust_hello.fun
+- Or: fun examples/rust_hello.fun
+
+Notes
+- Requires building with FUN_WITH_RUST; otherwise this example will be unavailable.

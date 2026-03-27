@@ -14,8 +14,6 @@ Notes
 - Networking examples often bind to 127.0.0.1 on high ports; read the file header for the exact port.
 
 Deep‑dives
-- HTTP servers: docs/examples/httpserver.md — end‑to‑end walkthrough of all HTTP server variants in examples/net/
-
 
 ## Top‑level examples (./examples)
 
@@ -25,52 +23,75 @@ Run pattern:
 - fun examples/<file>.fun
 
 Highlights (selection):
-- builtins_extended.fun — tour of core built‑ins beyond the basics
-- byte_for_demo.fun — iterating bytes with for
-- byte_overflow_try_catch.fun — error handling on overflow
-- cast_demo.fun — conversions and casting helpers
-- class_constructor.fun, class_test.fun, classes_demo.fun — class basics and usage
-- class_without_object.fun — class features without an instance helper
-- cli_argv_dump.fun — prints argv/argc handling
-- conversions_showcase.fun — numbers, strings, bytes conversions
-- cpp_add.fun — calling into the optional C++ extension (if enabled)
-- datetime_basic.fun, datetime_extended.fun, datetime_timer.fun — time/date helpers
-- echo_example.fun — simple echo of input/args
-- env_all.fun, os_env.fun — reading environment variables
-- error_handling.fun, try_catch_finally.fun — error patterns
-- expressions_test.fun — precedence and grouping
-- features.fun — grab bag of language features
-- file_print_for_file_line_by_line.fun — iterate file content
-- floats.fun — float ops and formatting
-- for_range_test.fun — ranges and loops
-- functions_test.fun — functions, closures, returns
-- have_fun.fun, have_fun_function.fun — playful demos
-- hex_example.fun — hex encode/decode
-- if_else_test.fun, nested_loops.fun, loops_break_continue.fun — control flow
-- include_local.fun, include_lib.fun, include_local_util.fun — include mechanics
-- inheritance_demo.fun — simple class inheritance
-- maps.fun, match.fun — data structures and pattern matching
-- namespaced_mod.fun — namespaced includes with as
-- objects_basic.fun, objects_more.fun — OO basics
-- process_example.fun — spawn and capture subprocess output
-- progress.fun, progress_inline.fun — simple progress displays
-- random_demo.fun, random_number_example.fun — RNG usage
-- regex_demo.fun, regex_procedural.fun — regex helpers (PCRE2 when enabled)
-- rust_hello.fun, rust_hello_args*.fun — Rust opcodes (if FUN_WITH_RUST)
-- serial_demo.fun, test_serial.fun — serial port (when available)
-- short_circuit_test.fun — boolean evaluation order
-- signed_ints.fun, uint_types.fun, types_integers.fun — integer families
-- stdlib_showcase.fun — sampler of common stdlib modules
-- strings_test.fun — string helpers and edge cases
-- tcp_http_get.fun, tcp_http_get_class.fun — manual HTTP client over sockets
-- test_bits/rol/shl/xor/dec_to_hex/hex_to_dec — bitwise utilities
-- thread_class_example.fun, threads_demo.fun — threading building blocks
-- typeof*.fun — type inspection
-- type_safety*.fun — static/dynamic type checks
-- types_overview.fun — language types tour
-- unix_socket_echo.fun — local domain socket echo demo
-- version.fun — print VM/version info
-- while_test.fun — simple while loop example
+
+- [builtins_extended.fun](./builtins_extended.md) — tour of core built‑ins beyond the basics
+- [byte_for_demo.fun](./byte_for_demo.md) — iterating bytes with for
+- [byte_overflow_try_catch.fun](./byte_overflow_try_catch.md) — error handling on overflow
+- [cast_demo.fun](./cast_demo.md) — conversions and casting helpers
+- [class_constructor.fun](./class_constructor.md) — basic constructor usage and init patterns
+- [class_test.fun](./class_test.md) — small class feature checks
+- [classes_demo.fun](classes_demo.md) — class basics and usage
+- [class_without_object.fun](./class_without_object.md) — class features without an instance helper
+- [cli_argv_dump.fun](./cli_argv_dump.md) — prints argv/argc handling
+- [conversions_showcase.fun](./conversions_showcase.md) — numbers, strings, bytes conversions
+- [cpp_add.fun](./cpp_add.md) — calling into the optional C++ extension (if enabled)
+- [datetime_basic.fun](./datetime_basic.md) — minimal date/time helpers
+- [datetime_extended.fun](./datetime_extended.md) — richer date/time operations
+- [datetime_timer.fun](datetime_timer.md) — time/date helpers
+- [echo_example.fun](./echo_example.md) — simple echo of input/args
+- [env_all.fun](./env_all.md) — enumerate environment variables
+- [os_env.fun](./os_env.md) — reading environment variables
+- [error_handling.fun](./error_handling.md) — try/catch and error objects
+- [try_catch_finally.fun](try_catch_finally.md) — error patterns
+- [expressions_test.fun](./expressions_test.md) — precedence and grouping
+- [features.fun](./features.md) — grab bag of language features
+- [file_print_for_file_line_by_line.fun](./file_print_for_file_line_by_line.md) — iterate file content
+- [floats.fun](./floats.md) — float ops and formatting
+- [for_range_test.fun](./for_range_test.md) — ranges and loops
+- [functions_test.fun](./functions_test.md) — functions, closures, returns
+- [have_fun.fun](./have_fun.md) — playful starter demo
+- [have_fun_function.fun](have_fun_function.md) — playful demos
+- [hex_example.fun](./hex_example.md) — hex encode/decode
+- [if_else_test.fun](./if_else_test.md) — conditional branching examples
+- [nested_loops.fun](./nested_loops.md) — loops inside loops
+- [loops_break_continue.fun](loops_break_continue.md) — control flow
+- [include_local.fun](./include_local.md) — include a local file/module
+- [include_lib.fun](./include_lib.md) — include from the stdlib path
+- [include_local_util.fun](include_local_util.md) — include mechanics
+- [inheritance_demo.fun](./inheritance_demo.md) — simple class inheritance
+- [maps.fun](./maps.md), [match.fun](match.md) — data structures and pattern matching
+- [namespaced_mod.fun](./namespaced_mod.md) — namespaced includes with as
+- [objects_basic.fun](./objects_basic.md) — simple objects and methods
+- [objects_more.fun](./objects_more.md) — OO basics
+- [process_example.fun](./process_example.md) — spawn and capture subprocess output
+- [progress.fun](./progress.md) — progress bar helper
+- [progress_inline.fun](./progress_inline.md) — simple progress displays
+- [random_demo.fun](./random_demo.md) — random helpers overview
+- [random_number_example.fun](random_number_example.md) — RNG usage
+- [regex_demo.fun](./regex_demo.md) — regex basics (PCRE2 when enabled)
+- [regex_procedural.fun](./regex_procedural.md) — regex helpers (PCRE2 when enabled)
+- [rust_hello.fun](./rust_hello.md), rust_hello_args*.fun — Rust opcodes (if FUN_WITH_RUST)
+- [serial_demo.fun](./serial_demo.md) — serial port usage
+- [test_serial.fun](./test_serial.md) — serial port (when available)
+- [short_circuit_test.fun](./short_circuit_test.md) — boolean evaluation order
+- [signed_ints.fun](./signed_ints.md) — signed integers overview
+- [uint_types.fun](./uint_types.md) — unsigned integers overview
+- [types_integers.fun](./types_integers.md) — integer families
+- [stdlib_showcase.fun](./stdlib_showcase.md) — sampler of common stdlib modules
+- [strings_test.fun](./strings_test.md) — string helpers and edge cases
+- [tcp_http_get.fun](./tcp_http_get.md) — simple HTTP GET over raw TCP
+- [tcp_http_get_class.fun](./tcp_http_get_class.md) — manual HTTP client over sockets
+- [test_bits.fun](./test_bits.md) — /rol/shl/xor/dec_to_hex/hex_to_dec bitwise utilities
+- [thread_class_example.fun](./thread_class_example.md) — define and run a thread class
+- [threads_demo.fun](./threads_demo.md) — threading building blocks
+- [typeof.fun](./typeof.md) — type inspection
+- [typeof_features.fun](./typeof_features.md) — type inspection of declared integer subtypes and runtime categories
+- [type_safety.fun](./type_safety.md) — static/dynamic type checks
+- [type_safety_fails.fun](./type_safety_fails.md) — static/dynamic type checks
+- [types_overview.fun](./types_overview.md) — language types tour
+- [unix_socket_echo.fun](./unix_socket_echo.md) — local domain socket echo demo
+- [version.fun](./version.md) — print VM/version info
+- [while_test.fun](./while_test.md) — simple while loop example
 
 Tip: If a file name is listed above but not present on your build, it may depend on an extension you did not enable.
 
@@ -152,7 +173,8 @@ Small, focused math helpers and demonstrations:
 - math_gcd_lcm
 
 ## Networking (./examples/net)
-Servers and socket utilities. See docs/examples/httpserver.md for the HTTP family.
+Servers and socket utilities. See docs/examples/net/httpserver.md for the HTTP family.
+- HTTP servers: [httpserver.md](./net/httpserver.md) — end‑to‑end walkthrough of all HTTP server variants in examples/net/
 - http_static_server.fun — minimal static server over sockets
 - http_server.fun — blocking static/CGI dispatcher using lib/net/http_server.fun
 - http_server_cgi.fun — blocking server with CGI via lib/net/http_cgi_server.fun
@@ -181,7 +203,6 @@ Historical or intentionally broken examples kept for reference/regression.
 - notcurses_* — experiments around Notcurses
 - ripemd160* — legacy or experimental hash routines
 
-
 ### Running examples reliably
 
 Prefer the local build when running from the repository root:
@@ -189,8 +210,8 @@ Prefer the local build when running from the repository root:
 - or: ./build_release/fun <path/to/example.fun>
 
 Set up env if needed:
-- export FUN_LIB_DIR="./lib"           # to find stdlib
-- export FUN_EXEC="./build_debug/fun"  # used by CGI examples
-- export FUN_HTDOCS="./examples/data/htdocs"  # override docroot
+- export FUN_LIB_DIR="./lib" # to find stdlib
+- export FUN_EXEC="./build_debug/fun" # used by CGI examples
+- export FUN_HTDOCS="./examples/data/htdocs" # override docroot
 
 When optional extensions are not enabled, their examples will not run; reconfigure the build with the required -D flags shown in docs/external/.
