@@ -38,6 +38,10 @@ This file serves as an index of the documents in this directory. Links are relat
 - [bytecode-format.md](./bytecode-format.md) - Reference for the bytecode format (split out from internals for convenience).
 - [roadmap.md](./roadmap.md) - High-level direction, planned features, and pointers to issues.
 
+## Example deep-dives
+
+- [httpserver.md](./httpserver.md) - Design and walkthrough of all HTTP server examples under ./examples/net (static, CGI, and multi-threaded variants), how they route requests, run CGI, and which stdlib modules they use. Future example-focused docs will be collected in this section.
+
 ## External extensions
 
 Documentation for optional, build-time selectable integrations lives in [external/](./external/):
