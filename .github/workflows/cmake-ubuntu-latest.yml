@@ -24,7 +24,7 @@ jobs:
         run: sudo apt upgrade -y
 
       - name: Install dependencies
-        run: sudo apt install cmake -y
+        run: sudo apt install cmake libjson-c-dev -y
 
       - name: Configure CMake
         run: >
@@ -37,16 +37,15 @@ jobs:
           -DFUN_WITH_CURL=OFF \
           -DFUN_WITH_PCRE2=OFF \
           -DFUN_WITH_XML2=OFF \
-          -DFUN_WITH_JSON=OFF \
+          -DFUN_WITH_JSON=ON \
           -DFUN_WITH_TCLTK=OFF \
           -DFUN_WITH_INI=OFF \
           -DFUN_WITH_NOTCURSES=OFF \
-          -DFUN_WITH_CPP=OFF \
+          -DFUN_WITH_CPP=ON \
           -DFUN_WITH_OPENSSL=OFF \
           -DFUN_WITH_LIBRESSL=OFF \
           -DFUN_WITH_YAML=OFF \
           -DFUN_USE_MUSL=OFF \
-          -DFUN_WITH_CPP=OFF \
           -DFUN_WITH_RUST=OFF
 
       - name: Build
@@ -59,5 +58,32 @@ jobs:
       - name: Run Examples
         run: ./scripts/run_examples.sh
 
-      - name: Run Examples
+      - name: Run Examples (algos)
+        run: ./scripts/run_examples.sh algos
+
+      - name: Run Examples (arrays)
+        run: ./scripts/run_examples.sh arrays
+
+      - name: Run Examples (basics)
+        run: ./scripts/run_examples.sh basics
+
+      - name: Run Examples (compose)
+        run: ./scripts/run_examples.sh compose
+
+      - name: Run Examples (crypto)
+        run: ./scripts/run_examples.sh crypto
+
+      - name: Run Examples (extra)
+        run: ./scripts/run_examples.sh extra
+
+      - name: Run Examples (io)
+        run: ./scripts/run_examples.sh io
+
+      - name: Run Examples (math)
         run: ./scripts/run_examples.sh math
+
+      - name: Run Examples (patterns)
+        run: ./scripts/run_examples.sh patterns
+
+      - name: Run Examples (strings)
+        run: ./scripts/run_examples.sh strings
