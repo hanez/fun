@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.39.13 LANGUAGES C)
+project(fun VERSION 0.39.14 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -401,6 +401,28 @@ if(BUILD_TESTING)
   fun_add_example_test(crypto_crc32         examples/crypto/crc32_example.fun)
   fun_add_example_test(crypto_crc32c        examples/crypto/crc32c_example.fun)
   fun_add_example_test(crypto_aes256        examples/crypto/aes256.fun)
+
+  # Include-line mapping regression test:
+  # This script intentionally triggers a runtime error inside an included file.
+  # The VM augments the error with a precise (file:line) from the included file.
+  # We assert that stderr/stdout contain the correct mapped location and that the
+  # program exits with a non-zero status (WILL_FAIL).
+  set(_inc_map_script "${CMAKE_SOURCE_DIR}/examples/error/include_line_mapping_test.fun")
+  if(EXISTS "${_inc_map_script}")
+    add_test(NAME include_line_mapping
+      COMMAND $<TARGET_FILE:fun> "${_inc_map_script}"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    # Ensure the interpreter resolves <...> includes to the repo lib/
+    set_tests_properties(include_line_mapping PROPERTIES
+      ENVIRONMENT "FUN_LIB_DIR=${CMAKE_SOURCE_DIR}/lib"
+      # The runtime error message should contain the mapped file path and line 7
+      PASS_REGULAR_EXPRESSION "lib/test/include_divzero.fun:7"
+      WILL_FAIL TRUE
+    )
+  else()
+    message(WARNING "include_line_mapping_test.fun not found; skipping include_line_mapping CTest")
+  endif()
 endif()
 
 # Install rules

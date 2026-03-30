@@ -6035,7 +6035,7 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
 static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, int current_indent) {
   while (*pos < len) {
     if (g_has_error) return;
-    size_t line_start = *pos;
+    size_t line_start = *pos; /* remember raw line start for dedent backtracking */
     int indent = 0;
     if (!read_line_start(src, len, pos, &indent)) {
       /* EOF or error */
@@ -6053,10 +6053,12 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
     }
 
     /* at same indent -> parse statement */
-    /* Insert a line marker for better runtime error reporting */
+    /* Insert a line marker for better runtime error reporting. Use the current
+     * position (start of the actual statement) returned by read_line_start(),
+     * not the pre-scan position which may point to a comment/blank line. */
     {
       int stmt_line = 1, stmt_col = 1;
-      calc_line_col(src, len, line_start, &stmt_line, &stmt_col);
+      calc_line_col(src, len, *pos, &stmt_line, &stmt_col);
       bytecode_add_instruction(bc, OP_LINE, stmt_line);
     }
 
@@ -7643,6 +7645,20 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     }
 
     if (inner_line > 0 && inc_path[0] != '\0') {
+      /* Adjust for shebang stripping in included file: if it starts with '#!' we
+       * removed that entire first line during preprocessing, so add +1 to map
+       * back to the physical file line number. */
+      {
+        FILE *sf = fopen(inc_path, "rb");
+        if (sf) {
+          int c1 = fgetc(sf);
+          int c2 = fgetc(sf);
+          if (c1 == '#' && c2 == '!') {
+            inner_line += 1;
+          }
+          fclose(sf);
+        }
+      }
       fprintf(stderr, "Parse error %s:%d:%d: %s (in %s:%d)\n",
               path ? path : "<input>", line, col, g_err_msg, inc_path, inner_line);
     } else {

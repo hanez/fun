@@ -661,17 +661,6 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                 free(inc);
                 free(inc_clean);
                 if (exp) {
-                  /* If alias requested, initialize namespace map before including content */
-                  if (ns[0] != '\0') {
-                    /* Announce alias so the parser can treat dot-call without implicit 'this' */
-                    sb_append(&out, "// __ns_alias__: ");
-                    sb_append(&out, ns);
-                    sb_append(&out, "\n");
-
-                    sb_append(&out, ns);
-                    sb_append(&out, " = {}\n");
-                  }
-
                   /* mark file origin for better error messages */
                   sb_append(&out, "// __include_begin__: ");
                   sb_append(&out, resolved);
@@ -685,22 +674,6 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                   sb_append(&out, exp);
                   /* ensure included chunk ends with newline to preserve line structure */
                   if (out.len == 0 || out.buf[out.len - 1] != '\n') sb_append_ch(&out, '\n');
-
-                  /* If alias is present, export top-level fun/class into alias map */
-                  if (ns[0] != '\0') {
-                    NameList nl;
-                    nl_init(&nl);
-                    collect_exports_top_level(exp, &nl);
-                    for (int ei = 0; ei < nl.count; ++ei) {
-                      sb_append(&out, ns);
-                      sb_append(&out, ".");
-                      sb_append(&out, nl.names[ei]);
-                      sb_append(&out, " = ");
-                      sb_append(&out, nl.names[ei]);
-                      sb_append(&out, "\n");
-                    }
-                    nl_free(&nl);
-                  }
 
                   free(exp);
                 }
@@ -820,6 +793,150 @@ static char *preprocess_includes_internal(const char *src, int depth) {
 
 char *preprocess_includes(const char *src) {
   return preprocess_includes_internal(src, 0);
+}
+
+/*
+ * Public helper: map a line number in the include-expanded top-level source file
+ * back to the original included file path and inner line number, using the
+ * `// __include_begin__: <path>[ as <alias>]` markers injected by the
+ * preprocessor. Returns 1 on success and fills out_path/out_line; 0 otherwise.
+ */
+int map_expanded_line_to_include_path(const char *path, int line,
+                                      char *out_path, size_t out_path_cap,
+                                      int *out_line) {
+  if (!path || line <= 0 || !out_path || out_path_cap == 0 || !out_line) return 0;
+  out_path[0] = '\0';
+  *out_line = line;
+
+  /* read original top-level file */
+  size_t fsz = 0;
+  char *orig = read_file_all(path, &fsz);
+  if (!orig) return 0;
+
+  char *prep = preprocess_includes_internal(orig, 0);
+  free(orig);
+  if (!prep) return 0;
+
+  /* find start offset of requested 1-based line */
+  size_t len = strlen(prep);
+  size_t pos = 0;
+  int cur = 1;
+  while (pos < len && cur < line) {
+    if (prep[pos] == '\n') cur++;
+    pos++;
+  }
+  if (cur != line) { free(prep); return 0; }
+
+  /* scan backward to find last include marker line */
+  const char *marker = "// __include_begin__: ";
+  const char *end_marker = "// __include_end__: ";
+  size_t mlen = strlen(marker);
+  size_t elen = strlen(end_marker);
+  size_t scan = pos;
+  while (scan > 0) {
+    /* find start of current line */
+    size_t ls = scan;
+    while (ls > 0 && prep[ls - 1] != '\n') ls--;
+    /* check if this line starts with marker */
+    if (ls + mlen <= len && strncmp(prep + ls, marker, mlen) == 0) {
+      /* extract included path until EOL or " as " */
+      size_t p = ls + mlen;
+      size_t pe = p;
+      while (pe < len && prep[pe] != '\n' && !(prep[pe] == ' ' && pe + 3 < len && strncmp(prep + pe, " as ", 4) == 0)) pe++;
+      size_t copy = (pe - p) < (out_path_cap - 1) ? (pe - p) : (out_path_cap - 1);
+      memcpy(out_path, prep + p, copy);
+      out_path[copy] = '\0';
+
+      /* determine the span end by scanning forward with nesting to match the
+       * corresponding __include_end__ marker. Lines between begin and its
+       * matching end belong to this include. */
+      size_t q = pe; /* end of path segment on the begin line */
+      /* move to first content line after begin marker */
+      while (q < len && prep[q] != '\n') q++;
+      if (q < len && prep[q] == '\n') q++;
+
+      /* forward scan to find matching end marker accounting for nested includes */
+      size_t span_start = q;
+      size_t span_end = len; /* default to EOF if no end marker is found */
+      int depth = 0;
+      size_t fwd = q;
+      while (fwd < len) {
+        /* find start of current line */
+        size_t ls2 = fwd;
+        if (ls2 > 0) {
+          while (ls2 > 0 && prep[ls2 - 1] != '\n') ls2--;
+        }
+        if (ls2 + mlen <= len && strncmp(prep + ls2, marker, mlen) == 0) {
+          /* nested begin */
+          depth++;
+        } else if (ls2 + elen <= len && strncmp(prep + ls2, end_marker, elen) == 0) {
+          if (depth == 0) {
+            /* matching end for our begin */
+            span_end = ls2; /* end before this line */
+            break;
+          } else {
+            depth--;
+          }
+        }
+        /* advance to next line */
+        while (fwd < len && prep[fwd] != '\n') fwd++;
+        if (fwd < len && prep[fwd] == '\n') fwd++;
+      }
+
+      /* If the requested position is not within [span_start, span_end), this
+       * begin marker does not apply; continue scanning backward. */
+      if (!(pos >= span_start && pos < span_end)) {
+        /* not inside this include span */
+        goto next_scan_back;
+      }
+
+      /* compute inner line as number of newlines from span_start to current pos */
+      int inner = 1;
+      size_t cnt = span_start;
+      while (cnt < pos) { if (prep[cnt] == '\n') inner++; cnt++; }
+
+      /* Adjust for stripped shebang in included file: if the physical file
+       * starts with "#!" (with or without a UTF-8 BOM), add +1 so the reported
+       * line matches what the user sees in the editor. */
+      do {
+        size_t inc_sz = 0;
+        char *inc_src = read_file_all(out_path, &inc_sz);
+        if (!inc_src) break;
+        const unsigned char *u = (const unsigned char *)inc_src;
+        size_t off = 0;
+        if (inc_sz >= 3 && u[0] == 0xEF && u[1] == 0xBB && u[2] == 0xBF) off = 3; /* UTF-8 BOM */
+        if (inc_sz >= off + 2 && inc_src[off] == '#' && inc_src[off + 1] == '!') {
+          inner += 1;
+        }
+        free(inc_src);
+      } while (0);
+
+      /* Adjust for shebang stripping: if the real included file starts with '#!',
+       * preprocessing removed that entire first line, so the visible "inner" line
+       * number in the expanded text is one less than the actual file line. */
+      int adjusted = inner;
+      if (copy > 2) {
+        FILE *sf = fopen(out_path, "rb");
+        if (sf) {
+          int c1 = fgetc(sf);
+          int c2 = fgetc(sf);
+          if (c1 == '#' && c2 == '!') {
+            adjusted += 1;
+          }
+          fclose(sf);
+        }
+      }
+      *out_line = adjusted;
+      free(prep);
+      return 1;
+    }
+    if (ls == 0) break;
+next_scan_back:
+    scan = (ls > 0) ? (ls - 1) : 0;
+  }
+
+  free(prep);
+  return 0;
 }
 
 /* Float literal parser: supports decimal and scientific notation. Returns parsed double and advances pos on success. */

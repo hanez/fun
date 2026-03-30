@@ -20,6 +20,9 @@
 #include "value.h"
 #include "vm.h"
 
+/* include mapping helper from parser_utils.c */
+extern int map_expanded_line_to_include_path(const char *path, int line, char *out_path, size_t out_path_cap, int *out_line);
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1662,6 +1665,13 @@ int fun_run_repl(VM *vm) {
           if (ins.op == OP_LINE) line = ins.operand;
         }
         const char *path = f->fn->source_file;
+        /* Map to included file if the current line belongs to an included chunk */
+        char mapped_path[1024];
+        int mapped_line = line;
+        if (map_expanded_line_to_include_path(path, line, mapped_path, sizeof(mapped_path), &mapped_line)) {
+          path = mapped_path;
+          line = mapped_line;
+        }
         size_t flen = 0;
         char *src = read_entire_file(path, &flen);
         if (!src) {
