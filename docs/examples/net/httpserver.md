@@ -35,7 +35,7 @@ See docs/stdlib.md → net/ for a quick index of these modules.
   - Sends the response with `sock_send()` and closes the client
 - Run:
   - `./examples/net/http_static_server.fun`
-  - Open http://127.0.0.1:8088/
+  - Open http://127.0.0.1:8080/
 
 ## Example: http_server.fun (static + simple .fun CGI)
 - File: `examples/net/http_server.fun`

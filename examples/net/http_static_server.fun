@@ -13,7 +13,7 @@
 
 #include <io/socket.fun>
 
-port = 8088
+port = 8080
 srv = TcpServer(port, 10)
 if (srv.listen() <= 0)
   print("HTTP static server: listen failed on :" + to_string(port))

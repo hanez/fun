@@ -13,6 +13,8 @@ This lets a single Fun script handle many concurrent connections efficiently wit
 
 There is no special syntax (like async/await) — you compose ordinary control flow with a few focused opcodes and stdlib functions.
 
+However, for more ergonomic, "await-like" workflows without changing the VM, a tiny cooperative scheduler is provided in the stdlib at lib/async/scheduler.fun. It lets you write small step functions that advance per tick and use await_read/await_write wrappers for readability.
+
 ## Building blocks
 
 Core helpers wired into the VM (see src/vm/os/*):
@@ -93,6 +95,7 @@ Because Fun keeps the primitives low-level and explicit, you can build simple co
 ## Examples in the repository
 
 - examples/io/async_http_client.fun — Minimal HTTP GET over non-blocking TCP using fd_poll_* helpers
+- examples/io/await_http_client.fun — Same goal, but written using lib/async/scheduler.fun with await_* helpers
 - examples/net/http_mt_server.fun — Multi-tenant HTTP server scaffold (compare patterns for concurrency)
 - examples/net/http_mt_server_cgi.fun — Server variant that dispatches CGI-like handlers
 - lib/net/http_cgi_server.fun — Library helpers used by the server examples
@@ -106,6 +109,81 @@ If installed system-wide, just:
 ```
 fun /usr/share/fun/examples/io/async_http_client.fun
 ```
+
+Or to try the await-style client using the cooperative scheduler:
+```
+FUN_LIB_DIR=./lib ./build/fun examples/io/await_http_client.fun
+```
+
+## Cooperative scheduler helpers (library-level)
+
+The file lib/async/scheduler.fun provides a minimal cooperative scheduler built on the existing primitives. There is no VM-level suspension: each task is a small state machine advanced one step per tick. API summary:
+
+- task_spawn(step_fn, state_map) → task_handle
+  - Registers a task. step_fn is a function that takes a Map state; mutate state and set state.done = 1 when complete.
+- run_once() → 1
+  - Performs one scheduling tick over all runnable tasks.
+- run_until_done() → 1
+  - Repeats run_once() with a tiny sleep_ms(1) until all tasks finish.
+- await_read(fd, timeout_ms) → int
+  - Wrapper over fd_poll_read; returns 1 if readable, 0 on timeout/EOF, -1 on error.
+- await_write(fd, timeout_ms) → int
+  - Wrapper over fd_poll_write; returns 1 if writable, 0 on timeout, -1 on error.
+- yield() → 1
+  - No-op helper to make intent explicit in step functions.
+- async_sleep_mark(state, ms) → 1
+  - Mark the task to be skipped for roughly ms milliseconds; cleared automatically when it wakes.
+
+Example skeleton using the scheduler:
+```
+#include <async/scheduler.fun>
+
+fun my_task_step(t)
+  if (t.phase == nil)
+    t.phase = 0
+
+  if (t.phase == 0)
+    t.fd = tcp_connect("example.org", 80)
+    if (t.fd == 0)
+      t.done = 1
+      return
+    fd_set_nonblock(t.fd, 1)
+    t.phase = 1
+    return
+
+  if (t.phase == 1)
+    if (await_write(t.fd, 50) == 1)
+      sock_send(t.fd, "GET / HTTP/1.1\r\nHost: example.org\r\n\r\n")
+      t.buf = ""
+      t.phase = 2
+    return
+
+  if (t.phase == 2)
+    rd = await_read(t.fd, 100)
+    if (rd < 0)
+      t.done = 1
+      return
+    if (rd == 0)
+      // try a small read to detect EOF
+      data = sock_recv(t.fd, 4096)
+      if (len(data) == 0)
+        t.done = 1
+      else
+        t.buf = t.buf + data
+      return
+    // readable
+    data = sock_recv(t.fd, 4096)
+    if (len(data) == 0)
+      t.done = 1
+    else
+      t.buf = t.buf + data
+    return
+
+task = task_spawn(my_task_step, {})
+run_until_done()
+```
+
+This approach is 100% compatible with current runtimes and serves as a stepping stone towards potential future VM-level async/await opcodes.
 
 ## Error handling and cleanup
 

@@ -159,6 +159,7 @@ These require optional external libraries. See docs/external/.
 
 ## IO (./examples/io)
 - async_http_client.fun — non‑blocking HTTP client
+- await_http_client.fun — non‑blocking HTTP client using lib/async/scheduler.fun (await-style helpers)
 - csv_reader.fun — parse CSV files
 - file_io.fun, read_write_file.fun — file operations
 - word_count.fun — classic WC example
