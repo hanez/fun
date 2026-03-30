@@ -15,7 +15,7 @@
  * Debugging and error reporting demo for Fun.
  *
  * How to run:
- *   fun --repl-on-error examples/debug_reporting.fun
+ *   fun --repl-on-error ./examples/error/debug_reporting.fun
  *
  * What happens:
  *   - The program runs compute(), then triggers a runtime error in crash().
@@ -27,14 +27,14 @@
  *   :stack               # show the value stack
  *   :top                 # show the top-of-stack value
  *   :list                # show source around the current line
- *   :disas               # disassemble around current instruction pointer (ip)
+ *   :disasm              # disassemble around current instruction pointer (ip)
  *   :frame 1             # select a lower frame, then try :locals, :list, :disas again
  *   :printv local[0]     # print a single value (also: stack[i], global[i])
  *
  * Stepping and breakpoints:
  *   - Before re-running the script, you can set a breakpoint at the marker below.
  *     For example (adjust the line number as needed in your copy):
- *       :break examples/debug_reporting.fun:LINE_BK_1
+ *       :break ./examples/error/debug_reporting.fun:1
  *       :info breaks
  *       :cont
  *     On hit, try stepping:
@@ -73,16 +73,16 @@ fun main()
 
 main()
 
-/* Expected when run with --repl-on-error (your version and line/ip may vary):
+/* Expected when run with --repl-on-error (your version and line/@ip may vary):
 Runtime error: index out of range
- (at ./examples/debug_reporting.fun:68 in crash, op INDEX_GET @ip 9)
+ (at ./examples/error/debug_reporting.fun:68 in crash, op INDEX_GET @ip 9)
 Entering REPL due to runtime error (code 1)
 Fun VERSION REPL
 Type :help for commands. Submit an empty line to run.
 fun> :backtrace
 Backtrace (most recent call first):
-  #TOP crash at ./examples/debug_reporting.fun ip=... line=...
-  #... main at ./examples/debug_reporting.fun ip=... line=...
+  #TOP crash at ./examples/error/debug_reporting.fun ip=... line=...
+  #... main at ./examples/error/debug_reporting.fun ip=... line=...
 fun> :list
 >    <current line> ...
 fun> :locals
@@ -94,7 +94,7 @@ fun> :stack
 [... stack values ...]
 
 Then try breakpoints and stepping on a new run:
-fun> :break ./examples/debug_reporting.fun:<line for LINE_BK_1>
+fun> :break ./examples/error/debug_reporting.fun:<line for LINE_BK_1>
 fun> :info breaks
 fun> :cont
 ... Breakpoint hit ...
