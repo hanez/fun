@@ -45,7 +45,7 @@ ij_shell_use_unix_line_separator = true
 
 [*.c]
 indent_style = space
-indent_size = 4
+indent_size = 2
 tab_width = 1
 
 [*.csv]
