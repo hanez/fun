@@ -150,14 +150,57 @@ fun str_repeat(s, count)
     i = i + 1
   return join(parts, "")
 
-/*
-// ASCII string to bytes (printable ASCII 0x20..0x7E)
-// Temporarily disabled due to parser incompatibilities with certain string
-// literals in this function on some environments. Re-enable after the
-// language parser updates to support these cases.
+// ASCII string to array of byte codes (0..255)
+// For printable ASCII (0x20..0x7E) returns the exact code; for any other
+// character it returns 0 as a fallback. This mirrors legacy helpers used by
+// crypto libs that expect ASCII input.
 fun string_to_bytes_ascii(s)
   str = to_string(s)
   out = []
   number i = 0
+  // ASCII printable ranges buckets for quick lookup
+  P1 = " !\"#$%&'()*+,-./"          // 32..47
+  P2 = "0123456789"                 // 48..57
+  P3 = ":;<=>?@"                    // 58..64
+  P4 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" // 65..90
+  P5 = "[\\]^_`"                    // 91..96
+  P6 = "abcdefghijklmnopqrstuvwxyz" // 97..122
+  P7 = "{|}~"                       // 123..126
+  while (true)
+    ch = substr(str, i, 1)
+    if (typeof(ch) != "String" || ch == "")
+      break
+    number code = -1
+    idx = find(P1, ch)
+    if (idx >= 0)
+      code = 32 + idx
+    else
+      idx = find(P2, ch)
+      if (idx >= 0)
+        code = 48 + idx
+      else
+        idx = find(P3, ch)
+        if (idx >= 0)
+          code = 58 + idx
+        else
+          idx = find(P4, ch)
+          if (idx >= 0)
+            code = 65 + idx
+          else
+            idx = find(P5, ch)
+            if (idx >= 0)
+              code = 91 + idx
+            else
+              idx = find(P6, ch)
+              if (idx >= 0)
+                code = 97 + idx
+              else
+                idx = find(P7, ch)
+                if (idx >= 0)
+                  code = 123 + idx
+                else
+                  // non-printable -> 0
+                  code = 0
+    push(out, code)
+    i = i + 1
   return out
-*/

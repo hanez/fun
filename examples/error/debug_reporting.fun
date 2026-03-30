@@ -75,7 +75,7 @@ main()
 
 /* Expected when run with --repl-on-error (your version and line/ip may vary):
 Runtime error: index out of range
- (at ./examples/debug_reporting.fun:XX in crash, op INDEX_GET @ip YY)
+ (at ./examples/debug_reporting.fun:68 in crash, op INDEX_GET @ip 9)
 Entering REPL due to runtime error (code 1)
 Fun VERSION REPL
 Type :help for commands. Submit an empty line to run.

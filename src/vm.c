@@ -123,13 +123,27 @@ static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
         /* fallback to VM's last recorded line if no marker found */
         if (line <= 0) line = g_active_vm->current_line > 0 ? g_active_vm->current_line : 1;
 
-        /* If this function was compiled from an include-expanded source, map to the included file */
-        if (sfile && line > 0) {
-          char mapped_path[1024];
-          int mapped_line = line;
-          if (map_expanded_line_to_include_path(sfile, line, mapped_path, sizeof(mapped_path), &mapped_line)) {
-            sfile = strdup(mapped_path); /* leak on purpose for simplicity; this is rare */
-            line = mapped_line;
+        /* Map expanded line back to the real included file.
+         * Important: OP_LINE operands refer to the expanded, top-level source produced by
+         * the preprocessor. Therefore we must pass the TOP-LEVEL script path to the mapper,
+         * not the current function's own source_file (which may point at an included file).
+         */
+        if (line > 0) {
+          /* Attempt to retrieve the entry frame's source file as the true top-level path */
+          const char *top_path = NULL;
+          if (g_active_vm->fp >= 0) {
+            Frame *entry = &g_active_vm->frames[0];
+            if (entry && entry->fn && entry->fn->source_file) top_path = entry->fn->source_file;
+          }
+          /* Fallback: use current function's source when entry is unavailable */
+          if (!top_path) top_path = sfile;
+          if (top_path) {
+            char mapped_path[1024];
+            int mapped_line = line;
+            if (map_expanded_line_to_include_path(top_path, line, mapped_path, sizeof(mapped_path), &mapped_line)) {
+              sfile = strdup(mapped_path); /* leak acceptable on error paths */
+              line = mapped_line;
+            }
           }
         }
       }

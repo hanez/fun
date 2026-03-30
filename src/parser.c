@@ -51,6 +51,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+/* from parser_utils.c */
+extern char *preprocess_includes_with_path(const char *src, const char *current_path);
 
 /* ---- parser error state ---- */
 static const char *g_current_source_path = NULL; /* for propagating filename into nested bytecodes */
@@ -7572,8 +7574,8 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     return NULL;
   }
 
-  /* Preprocess includes before compiling */
-  char *prep = preprocess_includes(src);
+  /* Preprocess includes before compiling (with path for accurate markers) */
+  char *prep = preprocess_includes_with_path(src, path);
   const char *compile_src = prep ? prep : src;
   size_t compile_len = strlen(compile_src);
 
@@ -7604,6 +7606,43 @@ Bytecode *parse_file_to_bytecode(const char *path) {
   if (g_has_error) {
     int line = 1, col = 1;
     calc_line_col(compile_src, compile_len, g_err_pos, &line, &col);
+
+    /* If the preprocessor injected an initial include marker line, compensate
+     * it in the outward-reported top-level line number so it matches the
+     * physical file. The marker may appear on the first line OR on the second
+     * line if a shebang was preserved as line 1. We therefore check the first
+     * non-shebang line for the marker and, if the error lies after that line,
+     * subtract exactly one from the reported line. */
+    {
+      const char *marker0 = "// __include_begin__: ";
+      size_t m0 = strlen(marker0);
+
+      /* Determine start of first logical line to examine (skip shebang) */
+      size_t start = 0;
+      if (compile_len >= 2 && compile_src[0] == '#' && compile_src[1] == '!') {
+        /* skip to end of shebang line (handle CR/LF/CRLF) */
+        while (start < compile_len && compile_src[start] != '\n' && compile_src[start] != '\r') start++;
+        if (start < compile_len && compile_src[start] == '\r') {
+          start++;
+          if (start < compile_len && compile_src[start] == '\n') start++;
+        } else if (start < compile_len && compile_src[start] == '\n') {
+          start++;
+        }
+      }
+
+      /* Find beginning and end of that (first non-shebang) line */
+      size_t ls = start;
+      size_t eol0 = ls;
+      while (eol0 < compile_len && compile_src[eol0] != '\n') eol0++;
+
+      if (ls + m0 <= compile_len && strncmp(compile_src + ls, marker0, m0) == 0) {
+        /* If the error is positioned after the synthetic marker line, reduce the outward line */
+        if (g_err_pos > eol0) {
+          if (line > 1) line -= 1;
+        }
+      }
+    }
+
     g_err_line = line;
     g_err_col = col;
 
@@ -7611,6 +7650,7 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     const char *marker = "// __include_begin__: ";
     size_t mlen = strlen(marker);
     int inner_line = -1;
+    int base_line = 1;
     char inc_path[512];
     inc_path[0] = '\0';
     /* scan backward to find last marker line */
@@ -7622,16 +7662,40 @@ Bytecode *parse_file_to_bytecode(const char *path) {
         ls--;
       /* check if this line starts with marker */
       if (ls + mlen <= compile_len && strncmp(compile_src + ls, marker, mlen) == 0) {
-        /* extract path until end-of-line */
+        /* Parse marker: path [as alias] [@line N] */
         size_t p = ls + mlen;
-        size_t pe = p;
-        while (pe < compile_len && compile_src[pe] != '\n' && (pe - p) < sizeof(inc_path) - 1)
-          pe++;
-        memcpy(inc_path, compile_src + p, pe - p);
-        inc_path[pe - p] = '\0';
-        /* compute inner line as number of newlines from (pe+1) to error position */
+        size_t eol = p;
+        while (eol < compile_len && compile_src[eol] != '\n') eol++;
+        /* locate separators */
+        size_t pos_as = eol, pos_line = eol;
+        for (size_t t = p; t + 3 < eol; ++t) {
+          if (compile_src[t] == ' ' && strncmp(compile_src + t, " as ", 4) == 0) { pos_as = t; break; }
+        }
+        for (size_t t = p; t + 6 < eol; ++t) {
+          if (compile_src[t] == ' ' && strncmp(compile_src + t, " @line ", 7) == 0) { pos_line = t; break; }
+        }
+        size_t path_end = pos_as < pos_line ? pos_as : pos_line;
+        if (path_end < p) path_end = eol;
+        size_t copy = (path_end - p) < sizeof(inc_path) - 1 ? (path_end - p) : sizeof(inc_path) - 1;
+        memcpy(inc_path, compile_src + p, copy);
+        inc_path[copy] = '\0';
+
+        /* parse optional base line value */
+        base_line = 1;
+        if (pos_line < eol) {
+          size_t num_start = pos_line + 7;
+          while (num_start < eol && compile_src[num_start] == ' ') num_start++;
+          int v = 0;
+          while (num_start < eol && compile_src[num_start] >= '0' && compile_src[num_start] <= '9') {
+            v = v * 10 + (compile_src[num_start] - '0');
+            num_start++;
+          }
+          if (v > 0) base_line = v;
+        }
+
+        /* compute inner line as number of newlines from (eol+1) to error position */
         int count = 1;
-        size_t q = (pe < compile_len && compile_src[pe] == '\n') ? (pe + 1) : pe;
+        size_t q = (eol < compile_len && compile_src[eol] == '\n') ? (eol + 1) : eol;
         while (q < g_err_pos) {
           if (compile_src[q] == '\n') count++;
           q++;
@@ -7645,22 +7709,24 @@ Bytecode *parse_file_to_bytecode(const char *path) {
     }
 
     if (inner_line > 0 && inc_path[0] != '\0') {
-      /* Adjust for shebang stripping in included file: if it starts with '#!' we
-       * removed that entire first line during preprocessing, so add +1 to map
-       * back to the physical file line number. */
-      {
-        FILE *sf = fopen(inc_path, "rb");
-        if (sf) {
-          int c1 = fgetc(sf);
-          int c2 = fgetc(sf);
-          if (c1 == '#' && c2 == '!') {
-            inner_line += 1;
-          }
-          fclose(sf);
-        }
+      /* Adjust for shebang in included physical file */
+      int shebang_adjust = 0;
+      FILE *sf = fopen(inc_path, "rb");
+      if (sf) {
+        int c1 = fgetc(sf);
+        int c2 = fgetc(sf);
+        if (c1 == '#' && c2 == '!') shebang_adjust = 1;
+        fclose(sf);
       }
-      fprintf(stderr, "Parse error %s:%d:%d: %s (in %s:%d)\n",
-              path ? path : "<input>", line, col, g_err_msg, inc_path, inner_line);
+      int mapped_inner = inner_line + (base_line - 1) + shebang_adjust;
+      /* If the include context points to the same top-level path, suppress the redundant trailer. */
+      if (path && strcmp(path, inc_path) == 0) {
+        fprintf(stderr, "Parse error %s:%d:%d: %s\n",
+                path, line, col, g_err_msg);
+      } else {
+        fprintf(stderr, "Parse error %s:%d:%d: %s (in %s:%d)\n",
+                path ? path : "<input>", line, col, g_err_msg, inc_path, mapped_inner);
+      }
     } else {
       fprintf(stderr, "Parse error %s:%d:%d: %s\n", path ? path : "<input>", line, col, g_err_msg);
     }

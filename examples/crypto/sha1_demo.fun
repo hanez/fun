@@ -18,7 +18,7 @@
  *   FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/sha1_demo.fun
  */
 
-#include <crypt/sha1.fun> as sha1
+include <crypt/sha1.fun>
 
 print("=== SHA-1 demo ===")
 
@@ -27,15 +27,15 @@ hex_abc = "616263"   // "abc" in hex
 empty = ""
 
 // Hash ASCII string directly
-d1 = sha1.SHA1().sha1_str(s)
+d1 = SHA1().sha1_str(s)
 print("SHA-1('abc')        = " + d1)
 
 // Hash pre-encoded hex bytes
-d2 = sha1.SHA1().sha1_hex(hex_abc)
+d2 = SHA1().sha1_hex(hex_abc)
 print("SHA-1(616263 hex)   = " + d2)
 
 // Empty string
-d3 = sha1.SHA1().sha1_str(empty)
+d3 = SHA1().sha1_str(empty)
 print("SHA-1('')           = " + d3)
 
 print("=== done ===")

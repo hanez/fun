@@ -499,7 +499,7 @@ static void collect_exports_top_level(const char *text, NameList *out) {
   }
 }
 
-static char *preprocess_includes_internal(const char *src, int depth) {
+static char *preprocess_includes_internal(const char *src, const char *current_path, int depth) {
   if (!src) return NULL;
   if (depth > 64) {
     fprintf(stderr, "Include error: include nesting too deep\n");
@@ -515,10 +515,44 @@ static char *preprocess_includes_internal(const char *src, int depth) {
   size_t len = strlen(src);
   StrBuf out;
   sb_init(&out);
+
+  /* Preserve shebang on the very first line before inserting the initial marker. */
+  size_t shebang_end = 0;
+  int shebang_lines = 0;
+  if (src[0] == '#' && src[1] == '!') {
+    /* find end of line (handle CR, LF, or CRLF) */
+    size_t j = 0;
+    while (src[j] && src[j] != '\n' && src[j] != '\r') j++;
+    /* include line ending */
+    if (src[j] == '\r') {
+      j++;
+      if (src[j] == '\n') j++;
+    } else if (src[j] == '\n') {
+      j++;
+    }
+    /* count lines in shebang we are copying */
+    for (size_t t = 0; t < j; ++t) if (src[t] == '\n') shebang_lines++;
+    if (shebang_lines == 0) shebang_lines = 1; /* single shebang line without LF */
+    shebang_end = j;
+    sb_append_n(&out, src, shebang_end);
+  }
+
+  /* When we know the current file path, emit a leading marker so mapping
+   * can always recover the correct file for regions before any include. */
+  if (current_path && current_path[0]) {
+    sb_append(&out, "// __include_begin__: ");
+    sb_append(&out, current_path);
+    /* annotate physical base line in the original file */
+    char lb[32];
+    int base_line = 1 + (shebang_end ? shebang_lines : 0);
+    snprintf(lb, sizeof(lb), " @line %d", base_line);
+    sb_append(&out, lb);
+    sb_append(&out, "\n");
+  }
   int in_line = 0, in_block = 0, in_sq = 0, in_dq = 0, esc = 0;
   int bol = 1; /* beginning of line */
 
-  for (size_t i = 0; i < len;) {
+  for (size_t i = shebang_end; i < len;) {
     char c = src[i];
 
     /* Detect include directive at BOL, outside comments/strings */
@@ -657,7 +691,7 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                   startp = q;
                 }
                 char *inc_clean = strdup(startp);
-                char *exp = preprocess_includes_internal(inc_clean, depth + 1);
+                char *exp = preprocess_includes_internal(inc_clean, resolved, depth + 1);
                 free(inc);
                 free(inc_clean);
                 if (exp) {
@@ -668,12 +702,30 @@ static char *preprocess_includes_internal(const char *src, int depth) {
                     sb_append(&out, " as ");
                     sb_append(&out, ns);
                   }
+                  sb_append(&out, " @line 1");
                   sb_append(&out, "\n");
 
                   /* append expanded included content */
                   sb_append(&out, exp);
                   /* ensure included chunk ends with newline to preserve line structure */
                   if (out.len == 0 || out.buf[out.len - 1] != '\n') sb_append_ch(&out, '\n');
+
+                  /* After including, if we know the parent file path, emit a marker to
+                   * resume mapping to the including (parent) file for the subsequent text. */
+                  if (current_path && current_path[0]) {
+                    sb_append(&out, "// __include_begin__: ");
+                    sb_append(&out, current_path);
+                    /* compute resume line number in parent: next line after include directive */
+                    char lb2[32];
+                    /* crude estimate: resume at next physical line */
+                    snprintf(lb2, sizeof(lb2), " @line %d", 0); /* will be patched below */
+                    /* We need actual parent line number. Compute by scanning from start to 'i' */
+                    int parent_line = 1 + (shebang_end ? shebang_lines : 0);
+                    for (size_t tt = shebang_end; tt < k; ++tt) if (src[tt] == '\n') parent_line++;
+                    snprintf(lb2, sizeof(lb2), " @line %d", parent_line);
+                    sb_append(&out, lb2);
+                    sb_append(&out, "\n");
+                  }
 
                   free(exp);
                 }
@@ -792,7 +844,12 @@ static char *preprocess_includes_internal(const char *src, int depth) {
 }
 
 char *preprocess_includes(const char *src) {
-  return preprocess_includes_internal(src, 0);
+  return preprocess_includes_internal(src, NULL, 0);
+}
+
+/* Variant with known current file path to allow precise resume markers. */
+char *preprocess_includes_with_path(const char *src, const char *current_path) {
+  return preprocess_includes_internal(src, current_path, 0);
 }
 
 /*
@@ -813,7 +870,7 @@ int map_expanded_line_to_include_path(const char *path, int line,
   char *orig = read_file_all(path, &fsz);
   if (!orig) return 0;
 
-  char *prep = preprocess_includes_internal(orig, 0);
+  char *prep = preprocess_includes_internal(orig, path, 0);
   free(orig);
   if (!prep) return 0;
 
@@ -827,11 +884,9 @@ int map_expanded_line_to_include_path(const char *path, int line,
   }
   if (cur != line) { free(prep); return 0; }
 
-  /* scan backward to find last include marker line */
+  /* scan backward to find the nearest include/resume marker line */
   const char *marker = "// __include_begin__: ";
-  const char *end_marker = "// __include_end__: ";
   size_t mlen = strlen(marker);
-  size_t elen = strlen(end_marker);
   size_t scan = pos;
   while (scan > 0) {
     /* find start of current line */
@@ -839,46 +894,51 @@ int map_expanded_line_to_include_path(const char *path, int line,
     while (ls > 0 && prep[ls - 1] != '\n') ls--;
     /* check if this line starts with marker */
     if (ls + mlen <= len && strncmp(prep + ls, marker, mlen) == 0) {
-      /* extract included path until EOL or " as " */
+      /* Parse marker line: path [as alias] [@line N] */
       size_t p = ls + mlen;
-      size_t pe = p;
-      while (pe < len && prep[pe] != '\n' && !(prep[pe] == ' ' && pe + 3 < len && strncmp(prep + pe, " as ", 4) == 0)) pe++;
-      size_t copy = (pe - p) < (out_path_cap - 1) ? (pe - p) : (out_path_cap - 1);
+      size_t eol = p;
+      while (eol < len && prep[eol] != '\n') eol++;
+      /* find separators */
+      size_t pos_as = eol, pos_line = eol;
+      for (size_t t = p; t + 3 < eol; ++t) {
+        if (prep[t] == ' ' && strncmp(prep + t, " as ", 4) == 0) { pos_as = t; break; }
+      }
+      for (size_t t = p; t + 6 < eol; ++t) {
+        if (prep[t] == ' ' && strncmp(prep + t, " @line ", 7) == 0) { pos_line = t; break; }
+      }
+      size_t path_end = pos_as < pos_line ? pos_as : pos_line;
+      if (path_end < p) path_end = eol;
+      size_t copy = (path_end - p) < (out_path_cap - 1) ? (path_end - p) : (out_path_cap - 1);
       memcpy(out_path, prep + p, copy);
       out_path[copy] = '\0';
 
-      /* determine the span end by scanning forward with nesting to match the
-       * corresponding __include_end__ marker. Lines between begin and its
-       * matching end belong to this include. */
-      size_t q = pe; /* end of path segment on the begin line */
-      /* move to first content line after begin marker */
-      while (q < len && prep[q] != '\n') q++;
-      if (q < len && prep[q] == '\n') q++;
+      /* parse optional base line number */
+      int base_line = 1;
+      if (pos_line < eol) {
+        size_t num_start = pos_line + 7; /* after ' @line ' */
+        int v = 0;
+        while (num_start < eol && prep[num_start] == ' ') num_start++;
+        while (num_start < eol && prep[num_start] >= '0' && prep[num_start] <= '9') {
+          v = v * 10 + (prep[num_start] - '0');
+          num_start++;
+        }
+        if (v > 0) base_line = v;
+      }
 
-      /* forward scan to find matching end marker accounting for nested includes */
+      /* determine the span: from the end of this marker line to the start of the next marker line */
+      size_t q = eol;
+      if (q < len && prep[q] == '\n') q++;
       size_t span_start = q;
-      size_t span_end = len; /* default to EOF if no end marker is found */
-      int depth = 0;
+      size_t span_end = len;
       size_t fwd = q;
       while (fwd < len) {
-        /* find start of current line */
+        /* find start of next line */
         size_t ls2 = fwd;
-        if (ls2 > 0) {
-          while (ls2 > 0 && prep[ls2 - 1] != '\n') ls2--;
-        }
+        while (ls2 > 0 && prep[ls2 - 1] != '\n') ls2--;
         if (ls2 + mlen <= len && strncmp(prep + ls2, marker, mlen) == 0) {
-          /* nested begin */
-          depth++;
-        } else if (ls2 + elen <= len && strncmp(prep + ls2, end_marker, elen) == 0) {
-          if (depth == 0) {
-            /* matching end for our begin */
-            span_end = ls2; /* end before this line */
-            break;
-          } else {
-            depth--;
-          }
+          span_end = ls2; /* region ends right before the next marker */
+          break;
         }
-        /* advance to next line */
         while (fwd < len && prep[fwd] != '\n') fwd++;
         if (fwd < len && prep[fwd] == '\n') fwd++;
       }
@@ -894,39 +954,7 @@ int map_expanded_line_to_include_path(const char *path, int line,
       int inner = 1;
       size_t cnt = span_start;
       while (cnt < pos) { if (prep[cnt] == '\n') inner++; cnt++; }
-
-      /* Adjust for stripped shebang in included file: if the physical file
-       * starts with "#!" (with or without a UTF-8 BOM), add +1 so the reported
-       * line matches what the user sees in the editor. */
-      do {
-        size_t inc_sz = 0;
-        char *inc_src = read_file_all(out_path, &inc_sz);
-        if (!inc_src) break;
-        const unsigned char *u = (const unsigned char *)inc_src;
-        size_t off = 0;
-        if (inc_sz >= 3 && u[0] == 0xEF && u[1] == 0xBB && u[2] == 0xBF) off = 3; /* UTF-8 BOM */
-        if (inc_sz >= off + 2 && inc_src[off] == '#' && inc_src[off + 1] == '!') {
-          inner += 1;
-        }
-        free(inc_src);
-      } while (0);
-
-      /* Adjust for shebang stripping: if the real included file starts with '#!',
-       * preprocessing removed that entire first line, so the visible "inner" line
-       * number in the expanded text is one less than the actual file line. */
-      int adjusted = inner;
-      if (copy > 2) {
-        FILE *sf = fopen(out_path, "rb");
-        if (sf) {
-          int c1 = fgetc(sf);
-          int c2 = fgetc(sf);
-          if (c1 == '#' && c2 == '!') {
-            adjusted += 1;
-          }
-          fclose(sf);
-        }
-      }
-      *out_line = adjusted;
+      *out_line = base_line + inner - 1;
       free(prep);
       return 1;
     }
