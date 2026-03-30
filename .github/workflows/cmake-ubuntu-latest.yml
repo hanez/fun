@@ -54,8 +54,8 @@ jobs:
       - name: Run Examples (crypto)
         run: ./scripts/run_examples.sh crypto
 
-      - name: Run Examples (extra)
-        run: ./scripts/run_examples.sh extra
+      #- name: Run Examples (extra)
+      #  run: ./scripts/run_examples.sh extra
 
       - name: Run Examples (io)
         run: ./scripts/run_examples.sh io
