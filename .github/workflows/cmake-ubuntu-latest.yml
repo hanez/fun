@@ -1,4 +1,4 @@
-name: CMake for Fun on Ubuntu-Slim
+name: CMake for Fun on Ubuntu-Latest
 
 on:
   push:
@@ -9,7 +9,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ${{github.workspace}}
