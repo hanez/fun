@@ -24,7 +24,7 @@ jobs:
         run: sudo apt upgrade -y
 
       - name: Install dependencies
-        run: sudo apt install cmake libjson-c-dev libssl-dev -y
+        run: sudo apt install cmake libjson-c-dev libssl-dev libxml2 -y
 
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFUN_DEBUG=OFF -DFUN_WITH_REPL=OFF -DFUN_WITH_PCSC=OFF -DFUN_WITH_LIBSQL=OFF -DFUN_WITH_SQLITE=OFF -DFUN_WITH_CURL=OFF -DFUN_WITH_PCRE2=OFF -DFUN_WITH_XML2=OFF -DFUN_WITH_JSON=ON -DFUN_WITH_TCLTK=OFF -DFUN_WITH_INI=OFF -DFUN_WITH_NOTCURSES=OFF -DFUN_WITH_CPP=ON -DFUN_WITH_OPENSSL=ON -DFUN_WITH_LIBRESSL=OFF -DFUN_WITH_YAML=OFF -DFUN_USE_MUSL=OFF -DFUN_WITH_RUST=OFF
@@ -54,8 +54,41 @@ jobs:
       - name: Run Examples (crypto)
         run: ./scripts/run_examples.sh crypto
 
-      #- name: Run Examples (extra)
-      #  run: ./scripts/run_examples.sh extra
+      #- name: Run Examples (external/curl)
+      #  run: ./scripts/run_examples.sh external/curl
+        
+      #- name: Run Examples (external/ini)
+      #  run: ./scripts/run_examples.sh external/ini
+        
+      - name: Run Examples (external/json)
+        run: ./scripts/run_examples.sh external/json
+        
+      #- name: Run Examples (external/libressl)
+      #  run: ./scripts/run_examples.sh external/libressl
+        
+      #- name: Run Examples (external/libsql)
+      #  run: ./scripts/run_examples.sh external/libsql
+
+      #- name: Run Examples (external/notcurses)
+      #  run: ./scripts/run_examples.sh external/notcurses
+        
+      - name: Run Examples (external/openssl)
+        run: ./scripts/run_examples.sh external/openssl
+        
+      #- name: Run Examples (external/pcre2)
+      #  run: ./scripts/run_examples.sh external/pcre2
+        
+      #- name: Run Examples (external/pcsc)
+      #  run: ./scripts/run_examples.sh external/pcsc
+        
+      #- name: Run Examples (external/sqlite)
+      #  run: ./scripts/run_examples.sh external/sqlite
+        
+      #- name: Run Examples (external/tcltk)
+      #  run: ./scripts/run_examples.sh external/tcltk
+        
+      - name: Run Examples (external/xml2)
+        run: ./scripts/run_examples.sh external/xml2
 
       - name: Run Examples (io)
         run: ./scripts/run_examples.sh io
