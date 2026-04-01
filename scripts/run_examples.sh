@@ -19,9 +19,8 @@ pick_bin() {
   local cands=(
     "$ROOT/fun"
     "$ROOT/build/fun"
-    "$ROOT/build/bin/fun"
-    "$ROOT/cmake-build-debug/fun"
-    "$ROOT/cmake-build-release/fun"
+    "$ROOT/build_debug/fun"
+    "$ROOT/build_release/fun"
   )
   for p in "${cands[@]}"; do
     [[ -x "$p" ]] && { echo "$p"; return 0; }
