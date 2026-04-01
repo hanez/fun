@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      #- name: Update apt
-      #  run: sudo apt update
+      - name: Update apt
+        run: sudo apt update
 
       #- name: Upgrade apt
       #  run: sudo apt upgrade -y
