@@ -17,11 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update apt
-        run: sudo apt update
+      #- name: Update apt
+      #  run: sudo apt update
 
-      - name: Upgrade apt
-        run: sudo apt upgrade -y
+      #- name: Upgrade apt
+      #  run: sudo apt upgrade -y
 
       - name: Install dependencies
         run: sudo apt install cmake libjson-c-dev libssl-dev -y
