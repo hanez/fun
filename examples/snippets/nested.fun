@@ -15,8 +15,6 @@
 fun outer(x)
   fun inner(y)
     return y * 2
-  end
   return inner(x) + inner(3)
-end
 
 print(outer(5))

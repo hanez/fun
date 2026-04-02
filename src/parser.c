@@ -54,6 +54,11 @@
 /* from parser_utils.c */
 extern char *preprocess_includes_with_path(const char *src, const char *current_path);
 
+/* Forward declarations for helpers used before their definitions */
+static void skip_to_eol(const char *src, size_t len, size_t *pos);
+static int read_line_start(const char *src, size_t len, size_t *pos, int *out_indent);
+static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, int current_indent);
+
 /* ---- parser error state ---- */
 static const char *g_current_source_path = NULL; /* for propagating filename into nested bytecodes */
 static int g_has_error = 0;
@@ -219,6 +224,22 @@ typedef struct {
 
 static LocalEnv *g_locals = NULL;
 
+/* --- nested function environment tracking (for no-capture enforcement) --- */
+static LocalEnv *g_func_env_stack[64];
+static int g_func_env_depth = 0; /* number of valid outer env entries */
+
+static int name_in_outer_envs(const char *name) {
+  if (g_func_env_depth <= 0) return 0;
+  for (int d = g_func_env_depth - 1; d >= 0; --d) {
+    LocalEnv *e = g_func_env_stack[d];
+    if (!e) continue;
+    for (int i = 0; i < e->count; ++i) {
+      if (e->names[i] && strcmp(e->names[i], name) == 0) return 1;
+    }
+  }
+  return 0;
+}
+
 /* loop context for break/continue patching */
 typedef struct LoopCtx {
   int break_jumps[64];
@@ -255,6 +276,94 @@ static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *po
 /* primary: (expr) | string | number | true/false | identifier */
 static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   skip_spaces(src, len, pos);
+
+  /* anonymous function literal: fn(arg, ...) <newline> indented-body end */
+  if (*pos + 2 < len && starts_with(src, len, *pos, "fn") && (src[*pos + 2] == '(' || src[*pos + 2] == ' ' || src[*pos + 2] == '\t')) {
+    *pos += 2;
+    skip_spaces(src, len, pos);
+    if (!consume_char(src, len, pos, '(')) {
+      parser_fail(*pos, "Expected '(' after 'fn'");
+      return 0;
+    }
+
+    /* build locals from parameters */
+    LocalEnv env = {{0}, {0}, 0};
+    LocalEnv *prev = g_locals;
+    int saved_depth = g_func_env_depth;
+    /* push outer env for no-capture checks */
+    if (prev != NULL) {
+      if (g_func_env_depth >= (int)(sizeof(g_func_env_stack) / sizeof(g_func_env_stack[0]))) {
+        parser_fail(*pos, "Too many nested functions (env stack overflow)");
+        return 0;
+      }
+      g_func_env_stack[g_func_env_depth++] = prev;
+    }
+    g_locals = &env;
+
+    skip_spaces(src, len, pos);
+    if (*pos < len && src[*pos] != ')') {
+      for (;;) {
+        char *pname = NULL;
+        if (!read_identifier_into(src, len, pos, &pname)) {
+          parser_fail(*pos, "Expected parameter name");
+          g_locals = prev;
+          g_func_env_depth = saved_depth;
+          return 0;
+        }
+        if (local_find(pname) >= 0) {
+          parser_fail(*pos, "Duplicate parameter name '%s'", pname);
+          free(pname);
+          g_locals = prev;
+          g_func_env_depth = saved_depth;
+          return 0;
+        }
+        local_add(pname);
+        free(pname);
+        skip_spaces(src, len, pos);
+        if (*pos < len && src[*pos] == ',') {
+          (*pos)++;
+          skip_spaces(src, len, pos);
+          continue;
+        }
+        break;
+      }
+    }
+    if (!consume_char(src, len, pos, ')')) {
+      parser_fail(*pos, "Expected ')' after parameter list");
+      g_locals = prev;
+      g_func_env_depth = saved_depth;
+      return 0;
+    }
+    /* end header line */
+    skip_to_eol(src, len, pos);
+
+    /* compile body into separate Bytecode */
+    Bytecode *fn_bc = bytecode_new();
+    if (fn_bc) {
+      if (fn_bc->name) free((void *)fn_bc->name);
+      fn_bc->name = strdup("<fn>");
+      if (fn_bc->source_file) free((void *)fn_bc->source_file);
+      if (g_current_source_path) fn_bc->source_file = strdup(g_current_source_path);
+    }
+
+    /* parse body at increased indent if present */
+    int body_indent = 0;
+    size_t look_body = *pos;
+    if (read_line_start(src, len, &look_body, &body_indent) && body_indent > 0) {
+      parse_block(fn_bc, src, len, pos, body_indent);
+    } else {
+      /* empty body ok */
+    }
+    bytecode_add_instruction(fn_bc, OP_RETURN, 0);
+
+    /* restore env stack */
+    g_locals = prev;
+    g_func_env_depth = saved_depth;
+
+    int fci = bytecode_add_constant(bc, make_function(fn_bc));
+    bytecode_add_instruction(bc, OP_LOAD_CONST, fci);
+    return 1;
+  }
 
   /* parenthesized */
   if (*pos < len && src[*pos] == '(') {
@@ -4386,6 +4495,12 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
       }
 
       /* push function value first */
+      if (local_idx < 0 && name_in_outer_envs(name)) {
+        const char *fname = (bc && bc->name) ? bc->name : "<function>";
+        parser_fail(*pos, "Nested function '%s' cannot access outer local '%s'. Pass it as a parameter instead.", fname, name);
+        free(name);
+        return 0;
+      }
       if (local_idx >= 0) {
         bytecode_add_instruction(bc, OP_LOAD_LOCAL, local_idx);
       } else {
@@ -4541,6 +4656,12 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
       free(name);
       return 1;
     } else {
+      if (local_idx < 0 && name_in_outer_envs(name)) {
+        const char *fname = (bc && bc->name) ? bc->name : "<function>";
+        parser_fail(*pos, "Nested function '%s' cannot access outer local '%s'. Pass it as a parameter instead.", fname, name);
+        free(name);
+        return 0;
+      }
       if (local_idx >= 0) {
         bytecode_add_instruction(bc, OP_LOAD_LOCAL, local_idx);
       } else {
@@ -6621,8 +6742,17 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
       }
 
       /* build locals from parameters */
-      LocalEnv env = {{0}, 0};
+      LocalEnv env = {{0}, {0}, 0};
       LocalEnv *prev = g_locals;
+      int saved_depth = g_func_env_depth;
+      if (prev != NULL) {
+        if (g_func_env_depth >= (int)(sizeof(g_func_env_stack) / sizeof(g_func_env_stack[0]))) {
+          parser_fail(*pos, "Too many nested functions (env stack overflow)");
+          free(fname);
+          return;
+        }
+        g_func_env_stack[g_func_env_depth++] = prev;
+      }
       g_locals = &env;
 
       skip_spaces(src, len, pos);
@@ -6713,7 +6843,16 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
           free(fname);
           return;
         }
+        /* We want sibling inner functions to be able to call this nested function
+         * without closures. Strategy: also expose it as a global symbol so that
+         * inner functions (compiled into separate frames) can resolve the name
+         * via global lookup. Keep the local binding for the outer function body. */
+        /* Duplicate the function value so we can store to both local and global. */
+        bytecode_add_instruction(bc, OP_DUP, 0);
         bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+        /* Bind a global under the same name for call resolution inside deeper nested functions. */
+        int gsym = sym_index(fname);
+        bytecode_add_instruction(bc, OP_STORE_GLOBAL, gsym);
         /* restore current env (will be reset to prev below) */
         g_locals = save_env;
       } else {
@@ -6722,6 +6861,7 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
       }
 
       g_locals = prev;
+      g_func_env_depth = saved_depth;
       free(fname);
       continue;
     }
