@@ -6692,10 +6692,34 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
       }
 #endif
 
-      /* bind function to global: LOAD_CONST <fn> ; STORE_GLOBAL fgi */
+      /* If we are inside another function (prev != NULL), bind this function as a local
+       * so that it is only visible within the current function scope. Otherwise, bind
+       * it as a global (top-level behavior unchanged). */
       int fci = bytecode_add_constant(bc, make_function(fn_bc));
       bytecode_add_instruction(bc, OP_LOAD_CONST, fci);
-      bytecode_add_instruction(bc, OP_STORE_GLOBAL, fgi);
+      if (prev != NULL) {
+        /* Bind into the OUTER function's local env (prev), not the inner temp env. */
+        LocalEnv *save_env = g_locals;
+        g_locals = prev;
+        /* declare a local with the function name if not present */
+        int lidx = local_find(fname);
+        if (lidx < 0) {
+          lidx = local_add(fname);
+        }
+        if (lidx < 0) {
+          /* failed to allocate local slot */
+          g_locals = save_env; /* restore before returning */
+          g_locals = prev;
+          free(fname);
+          return;
+        }
+        bytecode_add_instruction(bc, OP_STORE_LOCAL, lidx);
+        /* restore current env (will be reset to prev below) */
+        g_locals = save_env;
+      } else {
+        /* top-level: global binding (backward compatible) */
+        bytecode_add_instruction(bc, OP_STORE_GLOBAL, fgi);
+      }
 
       g_locals = prev;
       free(fname);

@@ -12,13 +12,11 @@
  * Added: 2026-04-02
  */
 
-#include <net/cgi.fun>
+fun outer(x)
+  fun inner(y)
+    return y * 2
+  end
+  return inner(x) + inner(3)
+end
 
-cgi = CGI()
-pairs = cgi._parse_urlencoded("a=1&b=2&c=3")
-i = 0
-n = len(pairs)
-while (i < n)
-  p = pairs[i]
-  print(to_string(p[0]) + "=" + to_string(p[1]))
-  i = i + 1
+print(outer(5))
