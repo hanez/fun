@@ -90,6 +90,9 @@ jobs:
       #- name: Run Examples (external/xml2)
       #  run: ./scripts/run_examples.sh external/xml2
 
+      - name: Run Examples (functions)
+        run: ./scripts/run_examples.sh functions
+
       - name: Run Examples (io)
         run: ./scripts/run_examples.sh io
 
