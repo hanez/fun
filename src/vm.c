@@ -70,7 +70,6 @@
 /* Note: INI opcode handlers are included below; changes in vm/ini/ .c files
  * require vm.c to rebuild. */
 #include "external/json.c"
-#include "external/libressl.c"
 #include "external/libsql.c"
 #include "external/openssl.c"
 #include "external/pcre2.c"
@@ -851,13 +850,6 @@ void vm_run(VM *vm, Bytecode *entry) {
 #include "vm/openssl/sha512.c"
 #endif
 
-/* LibreSSL ops (md5/sha256/sha512/ripemd160) */
-#ifdef FUN_WITH_LIBRESSL
-#include "vm/libressl/md5.c"
-#include "vm/libressl/ripemd160.c"
-#include "vm/libressl/sha256.c"
-#include "vm/libressl/sha512.c"
-#endif
 
 /* Tk (Tcl/Tk) ops */
 #ifdef FUN_WITH_TCLTK

@@ -21,7 +21,7 @@ This file serves as an index of the documents in this directory. Links are relat
 
 ## New and supplemental guides
 
-- [build.md](./build.md) - How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL, FUN_WITH_LIBRESSL).
+- [build.md](./build.md) - How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL).
 - [cli.md](./cli.md) - Command-line usage of the `fun` executable: synopsis, options, exit codes, includes and library paths.
 - [fun.md](./fun.md) - Full usage guide for the `fun` executable: invocation patterns, REPL, env vars, include paths, examples, and install locations.
 - [asyncio.md](./asyncio.md) - Async I/O primitives and patterns: non-blocking sockets, fd polling, examples, and best practices.
@@ -47,7 +47,7 @@ This file serves as an index of the documents in this directory. Links are relat
 Documentation for optional, build-time selectable integrations lives in [external/](./external/):
 
 - [Index of extensions](./external/README.md)
- - Highlights: [cURL](./external/curl.md), [INI](./external/ini.md), [JSON](./external/json.md), [XML (libxml2)](./external/xml2.md), [SQLite](./external/sqlite.md), [libSQL](./external/libsql.md), [PCRE2](./external/pcre2.md), [PC/SC](./external/pcsc.md), [Notcurses](./external/notcurses.md), [Tcl/Tk](./external/tcltk.md), [OpenSSL](./external/openssl.md), [LibreSSL](./external/libressl.md)
+ - Highlights: [cURL](./external/curl.md), [INI](./external/ini.md), [JSON](./external/json.md), [XML (libxml2)](./external/xml2.md), [SQLite](./external/sqlite.md), [libSQL](./external/libsql.md), [PCRE2](./external/pcre2.md), [PC/SC](./external/pcsc.md), [Notcurses](./external/notcurses.md), [Tcl/Tk](./external/tcltk.md), [OpenSSL](./external/openssl.md)
 
 ## Tips
 
@@ -55,4 +55,3 @@ Documentation for optional, build-time selectable integrations lives in [externa
 - For a broader project overview and quickstart, see the repository root [README.md](../README.md).
 - Crypto examples:
   - If built with `-DFUN_WITH_OPENSSL=ON`, try `examples/crypto/openssl_md5.fun`.
-  - If built with `-DFUN_WITH_LIBRESSL=ON`, try `examples/crypto/libressl_md5.fun`.

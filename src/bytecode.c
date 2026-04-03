@@ -291,14 +291,6 @@ static const char *opcode_name(OpCode op) {
     return "OPENSSL_SHA512";
   case OP_OPENSSL_RIPEMD160:
     return "OPENSSL_RIPEMD160";
-  case OP_LIBRESSL_MD5:
-    return "LIBRESSL_MD5";
-  case OP_LIBRESSL_SHA256:
-    return "LIBRESSL_SHA256";
-  case OP_LIBRESSL_SHA512:
-    return "LIBRESSL_SHA512";
-  case OP_LIBRESSL_RIPEMD160:
-    return "LIBRESSL_RIPEMD160";
   case OP_INI_LOAD:
     return "INI_LOAD";
   case OP_INI_FREE:

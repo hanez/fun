@@ -37,8 +37,7 @@ foreach(var_pair
     LIBXML2
     TCL
     NOTCURSES
-    OPENSSL
-    LIBRESSL)
+    OPENSSL)
   if(${var_pair}_INCLUDE_DIRS)
     target_include_directories(fun_core PRIVATE ${${var_pair}_INCLUDE_DIRS})
   endif()
@@ -97,9 +96,6 @@ endif()
 
 # LibreSSL toggle: ensure compile definitions are applied to fun_core so
 # the LibreSSL code paths are compiled, and linking vars are handled above.
-if(FUN_WITH_LIBRESSL)
-  target_compile_definitions(fun_core PUBLIC FUN_WITH_LIBRESSL=1)
-endif()
 
 # Workaround: provide a dummy rust_eh_personality to satisfy linker when using
 # no_std Rust staticlib with panic abort (some toolchains still reference it).
