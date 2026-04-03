@@ -157,12 +157,7 @@ This document provides an overview of the available VM opcodes implemented under
 - OP_SQLITE_EXEC: Execute statement; pops handle:int, sql:string; pushes rc:int (0=OK).
 - OP_SQLITE_QUERY: Run query; pops handle:int, sql:string; pushes array<map<string,any>>.
 
-## libSQL
-
-- OP_LIBSQL_OPEN: Open database (url or path); pops string; pushes handle (>0) or 0.
-- OP_LIBSQL_CLOSE: Close database; pops handle; pushes Nil.
-- OP_LIBSQL_EXEC: Execute statement; pops handle:int, sql:string; pushes rc:int (0=OK).
-- OP_LIBSQL_QUERY: Run query; pops handle:int, sql:string; pushes array<map<string,any>>.
+<!-- libSQL opcodes removed -->
 
 ## OS, Time, Processes, Threads, Sockets, Serial
 
@@ -245,9 +240,7 @@ This document provides an overview of the available VM opcodes implemented under
 - OP_NC_FILL: Fill rectangle with codepoint; pops x:int, y:int, w:int, h:int, ch:int; pushes 0/-1.
 - OP_NC_RENDER: Force a render; pushes 0/-1.
 
-## SQLite-compatible lib (libSQL)
-
-- See “libSQL” section above; identical opcode set with different backend.
+<!-- libSQL backend removed -->
 
 ## TK (Tcl/Tk UI)
 

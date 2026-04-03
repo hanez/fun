@@ -65,7 +65,6 @@
 /* Note: INI opcode handlers are included below; changes in vm/ini/ .c files
  * require vm.c to rebuild. */
 #include "external/json.c"
-#include "external/libsql.c"
 #include "external/openssl.c"
 #include "external/pcre2.c"
 #include "external/pcsc.c"
@@ -884,13 +883,7 @@ void vm_run(VM *vm, Bytecode *entry) {
     }
 #endif
 
-/* libsql ops (independent) */
-#ifdef FUN_WITH_LIBSQL
-#include "vm/libsql/close.c"
-#include "vm/libsql/exec.c"
-#include "vm/libsql/open.c"
-#include "vm/libsql/query.c"
-#endif
+/* libsql support removed */
 
 /* PCRE2 ops */
 #ifdef FUN_WITH_PCRE2

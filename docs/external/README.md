@@ -13,13 +13,10 @@ This section documents Fun's optional, build-time selectable extensions. Each pa
 - [JSON (json-c)](./json.md)
 - [libxml2 (XML)](./xml2.md)
 - [SQLite](./sqlite.md)
-- [libSQL (SQLite-compatible)](./libsql.md)
 - [PCRE2 (Perl-compatible regex)](./pcre2.md)
 - [PC/SC (Smart cards)](./pcsc.md)
-- [Notcurses (TUI)](./notcurses.md)
 - [Tcl/Tk (GUI)](./tcltk.md)
 - [OpenSSL](./openssl.md)
-- [LibreSSL](./libressl.md)
 
 ## Notes:
 
