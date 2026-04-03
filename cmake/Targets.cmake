@@ -35,7 +35,6 @@ foreach(var_pair
     INIPARSER
     LIBSQL
     LIBXML2
-    TCL
     OPENSSL)
   if(${var_pair}_INCLUDE_DIRS)
     target_include_directories(fun_core PRIVATE ${${var_pair}_INCLUDE_DIRS})
@@ -82,9 +81,6 @@ if(FUN_WITH_SQLITE)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_SQLITE=1)
 endif()
 
-if(FUN_WITH_TCLTK)
-  target_compile_definitions(fun_core PUBLIC FUN_WITH_TCLTK=1)
-endif()
 
 if(FUN_WITH_OPENSSL)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_OPENSSL=1)

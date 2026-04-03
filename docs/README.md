@@ -47,7 +47,7 @@ This file serves as an index of the documents in this directory. Links are relat
 Documentation for optional, build-time selectable integrations lives in [external/](./external/):
 
 - [Index of extensions](./external/README.md)
- - Highlights: [cURL](./external/curl.md), [INI](./external/ini.md), [JSON](./external/json.md), [XML (libxml2)](./external/xml2.md), [SQLite](./external/sqlite.md), [PCRE2](./external/pcre2.md), [PC/SC](./external/pcsc.md), [Tcl/Tk](./external/tcltk.md), [OpenSSL](./external/openssl.md)
+ - Highlights: [cURL](./external/curl.md), [INI](./external/ini.md), [JSON](./external/json.md), [XML (libxml2)](./external/xml2.md), [SQLite](./external/sqlite.md), [PCRE2](./external/pcre2.md), [PC/SC](./external/pcsc.md), [OpenSSL](./external/openssl.md)
 
 ## Tips
 

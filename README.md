@@ -95,7 +95,6 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 - [PCSC (smart cards)](./docs/external/pcsc.md) (optional) &#9745;
 - [OpenSSL](./docs/external/openssl.md) (optional) &#9745;
 - [SQLite](./docs/external/sqlite.md) (optional) &#9745;
-- [Tk (Tcl/Tk GUI)](./docs/external/tcltk.md) (optional) &#9745;
 - [XML (libxml2)](./docs/external/xml2.md) (optional) &#9745;
 
 &#9745; = Done / &#9744; = Planned or in progress.

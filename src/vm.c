@@ -69,7 +69,6 @@
 #include "external/pcre2.c"
 #include "external/pcsc.c"
 #include "external/sqlite.c"
-#include "external/tcltk.c"
 #include "external/xml2.c"
 
 /* forward declarations for include mapping used in error reporting */
@@ -845,17 +844,7 @@ void vm_run(VM *vm, Bytecode *entry) {
 #endif
 
 
-/* Tk (Tcl/Tk) ops */
-#ifdef FUN_WITH_TCLTK
-#include "vm/tk/bind.c"
-#include "vm/tk/button.c"
-#include "vm/tk/eval.c"
-#include "vm/tk/label.c"
-#include "vm/tk/loop.c"
-#include "vm/tk/pack.c"
-#include "vm/tk/result.c"
-#include "vm/tk/wm_title.c"
-#endif
+/* Tcl/Tk support removed */
 
 /* Notcurses TUI ops removed */
 

@@ -93,15 +93,12 @@ Pass all options as -DNAME=VALUE. The most relevant toggles are:
 - FUN_DEBUG=ON|OFF — verbose VM debug logging (default OFF)
 - FUN_WITH_CURL=ON|OFF — enable CURL (libcurl) support (default OFF)
 - FUN_WITH_JSON=ON|OFF — enable JSON (json-c) support  (default OFF)
-- FUN_WITH_LIBSQL=ON|OFF — enable libSQL (Turso) client support (default OFF)
 - FUN_WITH_XML2=ON|OFF — enable XML (libxml2) support (default OFF)
 - FUN_WITH_PCRE2=ON|OFF — enable PCRE2 (Perl-Compatible Regular Expressions) (default OFF)
 - FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card (PCSC lite) support (default OFF)
 - FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
 - FUN_WITH_SQLITE=ON|OFF — enable SQLite (sqlite3) support (default OFF)
-- FUN_WITH_TCLTK=ON|OFF — enable Tk (GUI via Tcl/Tk) support (default OFF)
 - FUN_WITH_INI=ON|OFF — enable INI (iniparser) support (default OFF)
-- FUN_WITH_NOTCURSES=ON|OFF — enable Notcurses TUI support (default OFF)
 
 You can also set the default search path for the bundled stdlib with DEFAULT_LIB_DIR:
 
@@ -130,27 +127,6 @@ sqlite3 ./database.sqlite < ./examples/data/database.sql
 # Run the example
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlite_example.fun
 ```
-
-#### libSQL example (optional feature)
-
-libSQL support is optional and disabled by default. It is implemented as an independent extension and can coexist with SQLite. To build with it and run the example:
-
-```
-cmake -S . -B build -DFUN_WITH_LIBSQL=ON
-cmake --build build --target fun
-
-# Create the sample database using the sqlite3 CLI (libSQL implements the sqlite C API)
-sqlite3 ./database.sqlite < ./examples/data/database.sql
-
-# Run the libSQL example
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/libsql_example.fun
-```
-
-Available builtins when built with -DFUN_WITH_LIBSQL=ON:
-- libsql_open(path_or_url) -> handle (>0) or 0 on error
-- libsql_close(handle) -> Nil
-- libsql_exec(handle, sql) -> rc (0 on success)
-- libsql_query(handle, sql) -> array of map rows
 
 #### XML example (optional feature)
 
@@ -195,52 +171,6 @@ else
 Notes:
 - Handles are simple integers managed by the VM; nodes are owned by their document.
 - This initial integration focuses on parsing and basic navigation. Attributes, children iteration, and XPath may be added later.
-
-#### Tk GUI example (optional feature)
-
-Tk GUI support is optional and disabled by default. It embeds a Tcl/Tk interpreter and exposes a small, Tk-only API to Fun code (no raw Tcl required).
-
-To build with Tk and run the example:
-
-```
-cmake -S . -B build -DFUN_WITH_TCLTK=ON
-cmake --build build --target fun
-
-# Run the example
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/tk_hello.fun
-```
-
-Available VM builtins when built with -DFUN_WITH_TCLTK=ON:
-- tk_title(title: string) -> rc
-- tk_label(id: string, text: string) -> rc
-- tk_button(id: string, text: string) -> rc
-- tk_pack(id: string) -> rc
-- tk_loop() -> Nil (enters event loop until the window is closed)
-
-Standard library wrapper (lib/ui/tk.fun):
-- class TK
-  - title(title: string): int
-  - label(id: string, text: string): int
-  - button(id: string, text: string): int
-  - pack(id: string): int
-  - loop(): Nil
-
-Example Fun code:
-```
-include <ui/tk.fun>
-
-tk = TK()
-tk.title("Fun + Tk GUI")
-tk.label("hello", "Hello, world!")
-tk.pack("hello")
-tk.button("ok", "OK")
-tk.pack("ok")
-tk.loop()
-```
-
-Notes:
-- Ensure Tcl/Tk is installed (8.6+). On Linux install tcl/tk packages; on macOS install Homebrew tcl-tk; on Windows ensure the DLLs are available.
-- The Fun process terminates when the main window is closed or when the example's OK button is clicked.
 
 ### Install Fun to the OS (optional)
 
@@ -534,7 +464,7 @@ Notes:
 - JSON types map to Fun types: object -> map, array -> array, string -> string, number -> number/float, true/false -> 1/0, null -> nil.
 - When writing, prettyFlag=1 enables pretty printing.
 
-### CURL (optional)
+### cURL (optional)
 
 Build flag: -DFUN_WITH_CURL=ON; requires libcurl.
 
@@ -658,28 +588,6 @@ else
   ini_free(h)
 ```
 
-### Notcurses (optional)
-
-Build flag: -DFUN_WITH_NOTCURSES=ON; requires notcurses (pkg-config: notcurses or notcurses-core).
-
-VM API:
-- nc_init() -> 1/0 (initialize TUI; call once)
-- nc_draw_text(x, y, text) -> 0 on success, -1 on error
-- nc_clear() -> 0 on success, -1 on error
-- nc_getch(timeout_ms) -> key code (int), -1 if timeout/no input
-- nc_shutdown() -> 1/0 (restore terminal)
-
-Example:
-```
-if (nc_init())
-  nc_draw_text(2, 1, "Fun + Notcurses")
-  print("Press any key...")
-  k = nc_getch(0)  // 0 = blocking
-  nc_shutdown()
-else
-  print("Notcurses init failed")
-```
-
 ### XML (optional)
 
 Build flag: -DFUN_WITH_XML2=ON; requires libxml2.
@@ -715,22 +623,6 @@ else
 Notes:
 - Handles are integers managed by the VM; nodes belong to their document.
 
-### libSQL (optional)
-
-Build flag: -DFUN_WITH_LIBSQL=ON; requires libSQL client (compatible with sqlite3 C API).
-
-VM API:
-- libsql_open(path_or_url) -> handle (>0) or 0 on error
-- libsql_close(handle) -> nil
-- libsql_exec(handle, sql) -> rc (0 on success)
-- libsql_query(handle, sql) -> array of row maps
-
-Example flow:
-1) h = libsql_open("./database.sqlite")
-2) rows = libsql_query(h, "SELECT id, title FROM tasks;")
-3) rc = libsql_exec(h, "INSERT INTO tasks (title) VALUES ('Try libSQL');")
-4) libsql_close(h)
-
 ### PCRE2 / Regex (optional)
 
 Build flag: -DFUN_WITH_PCRE2=ON; requires PCRE2 (8-bit API).
@@ -748,35 +640,6 @@ Examples: regex_demo.fun, regex_procedural.fun
 Notes:
 - Patterns use PCRE2 syntax.
 
-### Tcl/Tk GUI (optional)
-
-Build flag: -DFUN_WITH_TCLTK=ON; requires Tcl/Tk (8.6+).
-
-VM API:
-- tk_title(title) -> rc
-- tk_label(id, text) -> rc
-- tk_button(id, text) -> rc
-- tk_pack(id) -> rc
-- tk_loop() -> nil (enters event loop)
-
-Stdlib wrapper:
-- class TK (lib/ui/tk.fun) mirrors the VM API.
-
-Example:
-```
-include <ui/tk.fun>
-
-tk = TK()
-tk.title("Fun + Tk GUI")
-tk.label("hello", "Hello, world!")
-tk.pack("hello")
-tk.button("ok", "OK")
-tk.pack("ok")
-tk.loop()
-```
-
-Notes:
-- Ensure Tcl/Tk runtime libraries are available on your system.
 
 ### REPL (optional)
 

@@ -15,7 +15,6 @@ This section documents Fun's optional, build-time selectable extensions. Each pa
 - [SQLite](./sqlite.md)
 - [PCRE2 (Perl-compatible regex)](./pcre2.md)
 - [PC/SC (Smart cards)](./pcsc.md)
-- [Tcl/Tk (GUI)](./tcltk.md)
 - [OpenSSL](./openssl.md)
 
 ## Notes:

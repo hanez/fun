@@ -10,8 +10,7 @@ function(_fun_print_feature name flag)
   endif()
 endfunction()
 
-# Include each extension module
-include(${CMAKE_SOURCE_DIR}/cmake/Extensions/TCLTK.cmake)
+# Include each extension module (Tcl/Tk removed)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/SQLITE.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/PCSC.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/JSON.cmake)
@@ -24,7 +23,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/Extensions/OPENSSL.cmake)
 
 # Summary of extension toggles
 message(STATUS "---- Fun extension summary ----")
-_fun_print_feature("Tcl/Tk (FUN_WITH_TCLTK)" FUN_WITH_TCLTK)
 _fun_print_feature("SQLite (FUN_WITH_SQLITE)" FUN_WITH_SQLITE)
 _fun_print_feature("PCSC (FUN_WITH_PCSC)" FUN_WITH_PCSC)
 _fun_print_feature("JSON-C (FUN_WITH_JSON)" FUN_WITH_JSON)

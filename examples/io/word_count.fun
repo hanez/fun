@@ -320,9 +320,6 @@ using: 1
 cards)](./docs/external/pcsc.md): 1
 [openssl](./docs/external/openssl.md): 1
 [sqlite](./docs/external/sqlite.md): 1
-[tk: 1
-(tcl/tk: 1
-gui)](./docs/external/tcltk.md): 1
 [xml: 1
 (libxml2)](./docs/external/xml2.md): 1
 =: 2
