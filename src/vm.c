@@ -53,12 +53,7 @@
 #include "value.h"
 #include "vm.h"
 
-/* Shared Notcurses state (optional) */
-#ifdef FUN_WITH_NOTCURSES
-#include <notcurses/notcurses.h>
-#include <wchar.h> /* ensure wcwidth/wcswidth prototypes present before notcurses.h on some systems */
-#endif
-#include "vm/notcurses/common.h"
+/* Notcurses support removed */
 
 // Optional by extensions commonly used code. #ifdef's are in each single file.
 #include "external/curl.c"
@@ -863,22 +858,7 @@ void vm_run(VM *vm, Bytecode *entry) {
 #include "vm/tk/wm_title.c"
 #endif
 
-/* Notcurses TUI ops (optional) */
-#ifdef FUN_WITH_NOTCURSES
-#include "vm/notcurses/clear.c"
-#include "vm/notcurses/draw_text.c"
-#include "vm/notcurses/getch.c"
-#include "vm/notcurses/init.c"
-#include "vm/notcurses/shutdown.c"
-#include "vm/notcurses/get_size.c"
-#include "vm/notcurses/set_style.c"
-#include "vm/notcurses/draw_char.c"
-#include "vm/notcurses/hline.c"
-#include "vm/notcurses/vline.c"
-#include "vm/notcurses/box.c"
-#include "vm/notcurses/fill.c"
-#include "vm/notcurses/render.c"
-#endif
+/* Notcurses TUI ops removed */
 
 /* SQLite ops */
 #ifdef FUN_WITH_SQLITE

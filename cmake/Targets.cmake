@@ -36,7 +36,6 @@ foreach(var_pair
     LIBSQL
     LIBXML2
     TCL
-    NOTCURSES
     OPENSSL)
   if(${var_pair}_INCLUDE_DIRS)
     target_include_directories(fun_core PRIVATE ${${var_pair}_INCLUDE_DIRS})
@@ -78,9 +77,6 @@ if(FUN_WITH_CURL)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_CURL=1)
 endif()
 
-if(FUN_WITH_NOTCURSES)
-  target_compile_definitions(fun_core PUBLIC FUN_WITH_NOTCURSES=1)
-endif()
 
 if(FUN_WITH_SQLITE)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_SQLITE=1)
