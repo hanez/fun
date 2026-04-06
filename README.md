@@ -90,7 +90,6 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 - [cURL (libcurl)](./docs/external/curl.md) (optional) &#9745;
 - [INI (iniparser)](./docs/external/ini.md) (optional) &#9745;
 - [JSON (json-c)](./docs/external/json.md) (optional) &#9745;
-- [libSQL](./docs/external/libsql.md) (optional) &#9745;
 - [PCRE2](./docs/external/pcre2.md) (optional) &#9745;
 - [PCSC (smart cards)](./docs/external/pcsc.md) (optional) &#9745;
 - [OpenSSL](./docs/external/openssl.md) (optional) &#9745;
