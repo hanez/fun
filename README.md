@@ -80,6 +80,8 @@ Fun may not change the world — but it will make programming a little more fun.
 - if/else if/else
 - try/catch/finally
 
+And much more...! Look at the specs in [spec/](./spec/) for more detailed information.
+
 ### Lib (./lib/)
 
 See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the standard library provides.
@@ -119,7 +121,8 @@ Looking for docs? Start here:
 
 Additional references:
 
-- Specification: [spec/v0.3.md](./spec/v0.3.md) (work in progress)
+- Specification: [spec/v0.4.md](./spec/v0.4.md) (work in progress)
+- Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Examples demonstrating most features: [examples/](./examples/)
 - Internals and VM opcodes live in [src/](./src/) (see [src/vm/](./src/vm) for opcode implementations)
 
