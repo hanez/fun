@@ -33,3 +33,10 @@ endif()
 
 # Debug option to enable verbose parser/VM logging
 option(FUN_DEBUG "Enable extra debug logging in Fun" OFF)
+
+# VM settings (configurable via -D...)
+set(MAX_FRAMES 128 CACHE STRING "Maximum depth of the call stack (frames)")
+set(MAX_FRAME_LOCALS 64 CACHE STRING "Maximum number of local variables per frame")
+set(MAX_GLOBALS 128 CACHE STRING "Maximum number of global variables")
+set(OUTPUT_SIZE 1024 CACHE STRING "Size of the VM output buffer (number of values)")
+set(STACK_SIZE 1024 CACHE STRING "Size of the VM evaluation stack")

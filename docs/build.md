@@ -24,6 +24,17 @@ Fun exposes several options you can toggle at configure time:
 - `FUN_WITH_RUST` (ON/OFF) - Build and link Rust staticlib from `src/rust/`
 - `FUN_WITH_OPENSSL` (ON/OFF) - Enable OpenSSL-backed helpers (MD5/SHA-256/SHA-512/RIPEMD-160)
 
+### VM configuration constants
+You can override internal VM limits at compile time by passing `-D<VAR>=<VALUE>` to CMake:
+
+- `MAX_FRAMES` (default: 128) - Maximum depth of the call stack (frames)
+- `MAX_FRAME_LOCALS` (default: 64) - Maximum number of local variables per frame
+- `MAX_GLOBALS` (default: 128) - Maximum number of global variables
+- `OUTPUT_SIZE` (default: 1024) - Size of the VM output buffer (number of values)
+- `STACK_SIZE` (default: 1024) - Size of the VM evaluation stack (number of `Value` slots)
+
+These are defined as `CACHE` variables, so they will persist in your `CMakeCache.txt`.
+
 When configuring, the build prints a summary like:
 
 ```
@@ -57,6 +68,12 @@ cmake --build build_release --target build
 cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
   -DFUN_WITH_CPP=ON -DFUN_WITH_RUST=ON -DFUN_WITH_OPENSSL=ON
 cmake --build build_release --target build
+```
+
+### Customizing VM limits
+```
+cmake -S . -B build_custom -DSTACK_SIZE=4096 -DMAX_GLOBALS=512
+cmake --build build_custom --target fun
 ```
 
 If `FUN_WITH_RUST` is enabled, ensure `cargo` is available in PATH; the build will invoke it and link the produced static library.

@@ -25,6 +25,13 @@ endif()
 target_compile_definitions(fun_core PUBLIC FUN_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(fun_core PUBLIC DEFAULT_LIB_DIR="${DEFAULT_LIB_DIR}")
 
+# VM configuration
+target_compile_definitions(fun_core PUBLIC MAX_FRAMES=${MAX_FRAMES})
+target_compile_definitions(fun_core PUBLIC MAX_FRAME_LOCALS=${MAX_FRAME_LOCALS})
+target_compile_definitions(fun_core PUBLIC MAX_GLOBALS=${MAX_GLOBALS})
+target_compile_definitions(fun_core PUBLIC OUTPUT_SIZE=${OUTPUT_SIZE})
+target_compile_definitions(fun_core PUBLIC STACK_SIZE=${STACK_SIZE})
+
 # Apply extension include/link variables discovered in cmake/Extensions
 foreach(var_pair
     PCSC

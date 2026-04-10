@@ -13,11 +13,25 @@
 #include "bytecode.h"
 #include <stddef.h>
 
+#ifndef MAX_FRAMES
 #define MAX_FRAMES 128
+#endif
+
+#ifndef MAX_FRAME_LOCALS
 #define MAX_FRAME_LOCALS 64
+#endif
+
+#ifndef MAX_GLOBALS
 #define MAX_GLOBALS 128
+#endif
+
+#ifndef OUTPUT_SIZE
 #define OUTPUT_SIZE 1024
+#endif
+
+#ifndef STACK_SIZE
 #define STACK_SIZE 1024
+#endif
 
 static const char *opcode_names[] = {
   "NOP", "LOAD_CONST", "LOAD_LOCAL", "STORE_LOCAL",
