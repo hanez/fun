@@ -30,19 +30,37 @@ The `./web/` directory follows the standard Jekyll structure:
 - `about/`, `community/`, `faq/`, `documentation/`, etc.: Static pages and subdirectories.
 - `Gemfile`: Ruby dependencies for building the site.
 
+## Makefile Targets
+
+The `./web/` directory contains a `Makefile` to simplify common tasks:
+
+- `make build`: Builds the static site using Jekyll (`bundle exec jekyll build --incremental`).
+- `make clean`: Removes the generated `_site/` directory content.
+- `make run`: Runs the Jekyll development server with drafts and incremental build enabled.
+- `make runreload`: Same as `run`, but with live reload enabled.
+- `make minify`: Minifies HTML, CSS, and XML files in the `_site/` directory using the `minify` tool.
+- `make sync`: Deploys the `_site/` directory to the production server using `rsync`.
+- `make release`: A full release cycle: `build`, `minify`, and `sync`.
+- `make local`: Performs a `clean`, `build`, and `minify` for local testing.
+
 ## Local Development
 
 To run the website locally for development:
 
-1.  **Prerequisites:** Ensure you have Ruby and Bundler installed.
+1.  **Prerequisites:** Ensure you have Ruby, Bundler, and optionally the `minify` tool installed.
 2.  **Install dependencies:**
     ```bash
     cd web/
     bundle install
     ```
 3.  **Run the development server:**
+    Using the Makefile:
     ```bash
-    bundle exec jekyll serve
+    make run
+    ```
+    Or with live reload:
+    ```bash
+    make runreload
     ```
     The website will be available at `http://localhost:4000`.
 
@@ -54,4 +72,11 @@ To run the website locally for development:
 
 ## Deployment
 
-The website is automatically built and deployed to [fun-lang.xyz](https://fun-lang.xyz) (details depend on the hosting environment, but typically involve running `jekyll build` and uploading the `_site/` directory).
+The website can be deployed using the Makefile:
+
+```bash
+cd web/
+make release
+```
+
+The `release` target builds the site, minifies the assets, and syncs the files to [fun-lang.xyz](https://fun-lang.xyz) via `rsync`. Ensure you have the necessary SSH permissions for the sync to succeed.
