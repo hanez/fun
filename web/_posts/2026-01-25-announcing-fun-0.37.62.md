@@ -148,8 +148,8 @@ If you're curious about Fun, check out:
 
 - [Website](https://fun-lang.xyz)
 - [Git Repository](https://git.xw3.org/fun/fun){:class="git"}
-- [Fun Handbook](https://git.xw3.org/fun/fun/src/branch/main/docs/handbook.md){:class="git"}
-- [Fun REPL Guide](https://git.xw3.org/fun/fun/src/branch/main/docs/repl.md){:class="git"}
+- [Fun Handbook](https://fun-lang.xyz/documentation/handbook/){:class="git"}
+- [Fun REPL Guide](https://fun-lang.xyz/documentation/repl/){:class="git"}
 - [Specification v0.3](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3.md){:class="git"}
 - [Examples](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"}
 - [Standard Library](https://git.xw3.org/fun/fun/src/branch/main/lib){:class="git"}
@@ -159,9 +159,9 @@ The examples directory contains demonstrations of most Fun features, from basic 
 
 ### For Developers
 
-- [Fun Internals](https://git.xw3.org/fun/fun/src/branch/main/docs/internals.md){:class="git"}
-- [Fun Opcodes](https://git.xw3.org/fun/fun/src/branch/main/docs/opcodes.md){:class="git"}
-- [Basic Rust Opcodes Support](https://git.xw3.org/fun/fun/src/branch/main/docs/rust.md){:class="git"}
+- [Fun Internals](https://fun-lang.xyz/documentation/internals/){:class="git"}
+- [Fun Opcodes](https://fun-lang.xyz/documentation/opcodes/){:class="git"}
+- [Basic Rust Opcodes Support](https://fun-lang.xyz/documentation/rust/){:class="git"}
 
 ### The Road Ahead
 
