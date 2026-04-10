@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - JSON (json-c) extension (optional)
@@ -10,21 +10,11 @@ description: Documentation for JSON (json-c) extension (optional)
 permalink: /documentation/external/json/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- extension
+- json
+- optional
 ---
 
-# JSON (json-c) extension (optional)
 
 - CMake option: FUN_WITH_JSON=ON
 - Purpose: JSON parse/stringify and file helpers via json-c.

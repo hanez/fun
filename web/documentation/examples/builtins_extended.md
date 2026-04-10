@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - builtins_extended.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for builtins_extended.fun — overview
 permalink: /documentation/examples/builtins_extended/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- builtins_extended
+- example
 ---
 
-# builtins_extended.fun — overview
 
 What it shows
 - A tour of core built‑ins beyond the basics: printing, typing, math helpers, conversions, and utility functions commonly used in small scripts.

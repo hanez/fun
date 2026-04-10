@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - expressions_test.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for expressions_test.fun — overview
 permalink: /documentation/examples/expressions_test/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- expressions_test
 ---
 
-# expressions_test.fun — overview
 
 What it shows
 - Operator precedence and expression grouping tests/demonstrations.

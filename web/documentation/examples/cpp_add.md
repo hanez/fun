@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - cpp_add.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for cpp_add.fun — overview
 permalink: /documentation/examples/cpp_add/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cpp_add
+- example
 ---
 
-# cpp_add.fun — overview
 
 What it shows
 - Calling into the optional C++ extension from Fun.

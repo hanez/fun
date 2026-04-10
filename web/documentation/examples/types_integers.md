@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - types_integers.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for types_integers.fun — overview
 permalink: /documentation/examples/types_integers/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- types_integers
 ---
 
-# types_integers.fun — overview
 
 What it shows
 - Integer type families, ranges, and basic operations.

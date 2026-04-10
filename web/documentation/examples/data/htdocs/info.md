@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - info.fun (CGI)
@@ -10,21 +10,11 @@ description: Documentation for info.fun (CGI)
 permalink: /documentation/examples/data/htdocumentation/info/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cgi
+- example
+- info
 ---
 
-# info.fun (CGI)
 
 - Location: examples/data/htdocumentation/info.fun
 - Category: CGI script used by HTTP server examples

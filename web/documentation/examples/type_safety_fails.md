@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - type_safety_fails.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for type_safety_fails.fun — overview
 permalink: /documentation/examples/type_safety_fails/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- type_safety_fails
 ---
 
-# type_safety_fails.fun — overview
 
 What it shows
 - Examples that intentionally violate type expectations to illustrate safety checks.

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - namespaced_mod.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for namespaced_mod.fun — overview
 permalink: /documentation/examples/namespaced_mod/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- namespaced_mod
 ---
 
-# namespaced_mod.fun — overview
 
 What it shows
 - Namespaced includes and using the "as" aliasing pattern for modules.

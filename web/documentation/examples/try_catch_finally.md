@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - try_catch_finally.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for try_catch_finally.fun — overview
 permalink: /documentation/examples/try_catch_finally/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- try_catch_finally
 ---
 
-# try_catch_finally.fun — overview
 
 What it shows
 - Structured error handling with try/catch/finally blocks.

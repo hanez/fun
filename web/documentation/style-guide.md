@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Fun Style Guide
@@ -10,21 +10,14 @@ description: Coding conventions for C and Fun (indentation, naming, idioms).
 permalink: /documentation/style-guide/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- coding
+- conventions
+- idioms
+- indentation
+- naming
+- style
 ---
 
-# Fun Style Guide
 
 Conventions for writing C and Fun code in this repository.
 

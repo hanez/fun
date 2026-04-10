@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - rust_hello.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for rust_hello.fun — overview
 permalink: /documentation/examples/rust_hello/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- rust_hello
 ---
 
-# rust_hello.fun — overview
 
 What it shows
 - Using Rust opcodes from Fun (when built with Rust support).

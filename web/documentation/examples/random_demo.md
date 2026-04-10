@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - random_demo.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for random_demo.fun — overview
 permalink: /documentation/examples/random_demo/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- random_demo
 ---
 
-# random_demo.fun — overview
 
 What it shows
 - Random number generator usage and seeding basics.

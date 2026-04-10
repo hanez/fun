@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - objects_basic.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for objects_basic.fun — overview
 permalink: /documentation/examples/objects_basic/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- objects_basic
 ---
 
-# objects_basic.fun — overview
 
 What it shows
 - OO basics: defining objects, fields, and invoking methods.

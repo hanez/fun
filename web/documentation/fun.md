@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Fun executable: full usage guide
@@ -10,21 +10,19 @@ description: Full usage guide for the `fun` executable, invocation patterns, REP
 permalink: /documentation/fun/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- env
+- examples
+- executable
+- full
+- include
+- install
+- invocation
+- locations
+- paths
+- patterns
+- vars
 ---
 
-# Fun executable: full usage guide
 
 This document explains how to use the `fun` binary after building or installing it: invocation patterns, options, environment variables, include/search paths, REPL, and examples.
 

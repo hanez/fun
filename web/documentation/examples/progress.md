@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - progress.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for progress.fun — overview
 permalink: /documentation/examples/progress/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- progress
 ---
 
-# progress.fun — overview
 
 What it shows
 - Simple progress display in the terminal.

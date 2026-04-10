@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Fun Handbook (Second Edition)
@@ -10,21 +10,17 @@ description: Comprehensive handbook for the Fun language and VM, install/build, 
 permalink: /documentation/handbook/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- build
+- configuration
+- edition
+- feature
+- flags
+- full
+- install
+- language
+- second
 ---
 
-# Fun Handbook (Second Edition)
 
 This is a refreshed, de-duplicated, and fully up-to-date handbook for the Fun programming language and its virtual machine (VM). It keeps the same section layout as the original handbook while consolidating repeated content and documenting all currently available features, including the latest SQLite support.
 
@@ -76,7 +72,7 @@ cd fun
 Configure and build (examples shown with several optional features enabled):
 
 ```
-# Every -D flag must be NAME=VALUE (e.g., -DFUN_WITH_REPL=ON)
+
 cmake -S . -B build \
   -DFUN_DEBUG=OFF \
   -DFUN_WITH_REPL=ON \
@@ -147,10 +143,10 @@ SQLite support is optional and disabled by default. To build with it and run the
 cmake -S . -B build -DFUN_WITH_SQLITE=ON
 cmake --build build --target fun
 
-# Create the sample database (requires the sqlite3 CLI):
+
 sqlite3 ./database.sqlite < ./examples/data/database.sql
 
-# Run the example
+
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlite_example.fun
 ```
 
@@ -162,7 +158,7 @@ XML support (via libxml2) is optional and disabled by default. To build with it 
 cmake -S . -B build -DFUN_WITH_XML2=ON
 cmake --build build --target fun
 
-# Run the example using the stdlib XML class wrapper
+
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/xml_class_example.fun
 ```
 

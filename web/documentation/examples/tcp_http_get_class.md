@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - tcp_http_get_class.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for tcp_http_get_class.fun — overview
 permalink: /documentation/examples/tcp_http_get_class/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- tcp_http_get_class
 ---
 
-# tcp_http_get_class.fun — overview
 
 What it shows
 - Manual HTTP client implemented with a small helper class over sockets.

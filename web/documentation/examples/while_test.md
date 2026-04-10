@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - while_test.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for while_test.fun — overview
 permalink: /documentation/examples/while_test/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- while_test
 ---
 
-# while_test.fun — overview
 
 What it shows
 - Simple while loop example; loop conditions and counters.

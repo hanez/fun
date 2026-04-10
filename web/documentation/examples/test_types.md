@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - test_types.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for test_types.fun — overview
 permalink: /documentation/examples/test_types/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- test_types
 ---
 
-# test_types.fun — overview
 
 What it shows
 - Type checks and simple assertions around type behavior.

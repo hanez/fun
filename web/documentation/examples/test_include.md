@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - test_include.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for test_include.fun — overview
 permalink: /documentation/examples/test_include/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- test_include
 ---
 
-# test_include.fun — overview
 
 What it shows
 - Small include mechanics test; ensures local and stdlib includes work.

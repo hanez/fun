@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - test_dec_to_hex.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for test_dec_to_hex.fun — overview
 permalink: /documentation/examples/test_dec_to_hex/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- test_dec_to_hex
 ---
 
-# test_dec_to_hex.fun — overview
 
 What it shows
 - Decimal to hexadecimal conversion helper/tests.

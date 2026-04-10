@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - have_fun.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for have_fun.fun — overview
 permalink: /documentation/examples/have_fun/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- have_fun
 ---
 
-# have_fun.fun — overview
 
 What it shows
 - Playful demo showing off small language tricks.

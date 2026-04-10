@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Security and Sandboxing
@@ -10,21 +10,15 @@ description: Trust boundaries, I/O expectations, and capability restrictions.
 permalink: /documentation/security-and-sandboxing/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- boundaries
+- capability
+- expectations
+- restrictions
+- sandboxing
+- security
+- trust
 ---
 
-# Security and Sandboxing
 
 Understand the trust boundaries and how to run Fun code safely.
 

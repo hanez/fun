@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - test_xor.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for test_xor.fun — overview
 permalink: /documentation/examples/test_xor/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- test_xor
 ---
 
-# test_xor.fun — overview
 
 What it shows
 - Bitwise XOR helper/tests.

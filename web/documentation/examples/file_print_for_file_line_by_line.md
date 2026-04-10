@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - file_print_for_file_line_by_line.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for file_print_for_file_line_by_line.fun — overview
 permalink: /documentation/examples/file_print_for_file_line_by_line/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- file_print_for_file_line_by_line
 ---
 
-# file_print_for_file_line_by_line.fun — overview
 
 What it shows
 - Iterate a file line-by-line and print each line; basic file IO idioms.

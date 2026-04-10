@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - FAQ
@@ -10,21 +10,14 @@ description: Frequently asked questions and quick answers.
 permalink: /documentation/faq/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- answers
+- asked
+- faq
+- frequently
+- questions
+- quick
 ---
 
-# FAQ
 
 Answers to common questions.
 

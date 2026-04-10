@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - unix_socket_echo.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for unix_socket_echo.fun — overview
 permalink: /documentation/examples/unix_socket_echo/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- unix_socket_echo
 ---
 
-# unix_socket_echo.fun — overview
 
 What it shows
 - Local domain (UNIX) socket echo server/client demonstration.

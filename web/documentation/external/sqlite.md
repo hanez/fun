@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - SQLite extension (optional)
@@ -10,21 +10,11 @@ description: Documentation for SQLite extension (optional)
 permalink: /documentation/external/sqlite/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- extension
+- optional
+- sqlite
 ---
 
-# SQLite extension (optional)
 
 - CMake option: FUN_WITH_SQLITE=ON
 - Purpose: Access SQLite databases via the native C API.

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - test_rol.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for test_rol.fun — overview
 permalink: /documentation/examples/test_rol/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- test_rol
 ---
 
-# test_rol.fun — overview
 
 What it shows
 - Bit rotation (ROL) helper/tests.

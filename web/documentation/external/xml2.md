@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - XML (libxml2) extension (optional)
@@ -10,21 +10,12 @@ description: Documentation for XML (libxml2) extension (optional)
 permalink: /documentation/external/xml2/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- extension
+- libxml2
+- optional
+- xml
 ---
 
-# XML (libxml2) extension (optional)
 
 - CMake option: FUN_WITH_XML2=ON
 - Purpose: Minimal XML parsing helpers using libxml2.

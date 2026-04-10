@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - nested_loops.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for nested_loops.fun — overview
 permalink: /documentation/examples/nested_loops/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- nested_loops
 ---
 
-# nested_loops.fun — overview
 
 What it shows
 - Control flow with nested loops; inner/outer loop coordination.

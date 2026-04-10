@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - test_serial.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for test_serial.fun — overview
 permalink: /documentation/examples/test_serial/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- test_serial
 ---
 
-# test_serial.fun — overview
 
 What it shows
 - Serial port test; opens a port and exchanges a few bytes (when available).

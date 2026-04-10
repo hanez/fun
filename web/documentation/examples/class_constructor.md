@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - class_constructor.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for class_constructor.fun — overview
 permalink: /documentation/examples/class_constructor/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- class_constructor
+- example
 ---
 
-# class_constructor.fun — overview
 
 What it shows
 - Class basics and constructor behavior; initializing fields and using methods.

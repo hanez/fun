@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - tcp_http_get.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for tcp_http_get.fun — overview
 permalink: /documentation/examples/tcp_http_get/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- tcp_http_get
 ---
 
-# tcp_http_get.fun — overview
 
 What it shows
 - Manual HTTP client over raw TCP sockets: connect, write request, read response.

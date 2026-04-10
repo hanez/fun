@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Running the Examples
@@ -10,21 +10,17 @@ description: How to run the examples and the interactive showcase script, with e
 permalink: /documentation/examples/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- environment
+- example
+- examples
+- interactive
+- run
+- running
+- script
+- showcase
+- tips
 ---
 
-# Running the Examples
 
 This page shows how to run the example programs included with the repository and how to use the interactive showcase script.
 

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Roadmap
@@ -10,21 +10,16 @@ description: High-level direction, planned features, and pointers to issues.
 permalink: /documentation/roadmap/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- direction
+- features
+- high
+- issues
+- level
+- planned
+- pointers
+- roadmap
 ---
 
-# Roadmap
 
 This page outlines high-level areas of focus and points to places where you can help.
 

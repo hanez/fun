@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - version.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for version.fun — overview
 permalink: /documentation/examples/version/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- version
 ---
 
-# version.fun — overview
 
 What it shows
 - Prints VM and version info for the Fun interpreter/runtime.

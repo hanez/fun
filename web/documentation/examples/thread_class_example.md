@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - thread_class_example.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for thread_class_example.fun — overview
 permalink: /documentation/examples/thread_class_example/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- thread_class_example
 ---
 
-# thread_class_example.fun — overview
 
 What it shows
 - Threading building blocks using a small thread class; start/join patterns.

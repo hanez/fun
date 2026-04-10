@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - uint_types.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for uint_types.fun — overview
 permalink: /documentation/examples/uint_types/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- uint_types
 ---
 
-# uint_types.fun — overview
 
 What it shows
 - Unsigned integer types and operations; ranges and conversions.

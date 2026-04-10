@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Fun Internals
@@ -10,21 +10,18 @@ description: Implementation details, bytecode format, VM architecture, stacks/fr
 permalink: /documentation/internals/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- architecture
+- bytecode
+- details
+- dispatch
+- format
+- frames
+- implementation
+- internals
+- parser
+- stacks
 ---
 
-# Fun Internals
 
 This document describes how Fun is implemented under the hood: the bytecode format, the virtual machine (VM) execution model, how opcodes are organized, error handling and debugging, and how the parser translates source code into bytecode.
 

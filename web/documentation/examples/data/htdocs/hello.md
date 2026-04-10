@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - hello.fun (CGI)
@@ -10,21 +10,11 @@ description: Documentation for hello.fun (CGI)
 permalink: /documentation/examples/data/htdocumentation/hello/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cgi
+- example
+- hello
 ---
 
-# hello.fun (CGI)
 
 - Location: examples/data/htdocumentation/hello.fun
 - Category: CGI script used by HTTP server examples

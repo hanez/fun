@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - cast_demo.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for cast_demo.fun — overview
 permalink: /documentation/examples/cast_demo/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cast_demo
+- example
 ---
 
-# cast_demo.fun — overview
 
 What it shows
 - Conversions and casting helpers; demonstrates changing between numeric and string types safely.

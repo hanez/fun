@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - threads_demo.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for threads_demo.fun — overview
 permalink: /documentation/examples/threads_demo/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- threads_demo
 ---
 
-# threads_demo.fun — overview
 
 What it shows
 - Threading building blocks and concurrent execution demo.

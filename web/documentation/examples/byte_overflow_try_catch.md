@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - byte_overflow_try_catch.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for byte_overflow_try_catch.fun — overview
 permalink: /documentation/examples/byte_overflow_try_catch/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- byte_overflow_try_catch
+- example
 ---
 
-# byte_overflow_try_catch.fun — overview
 
 What it shows
 - Error handling around byte/integer overflow using try/catch.

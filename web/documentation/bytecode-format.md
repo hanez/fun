@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Bytecode Format (Overview)
@@ -10,21 +10,15 @@ description: Reference for the bytecode format (split out from internals for con
 permalink: /documentation/bytecode-format/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- bytecode
+- convenience
+- format
+- internals
+- out
+- reference
+- split
 ---
 
-# Bytecode Format (Overview)
 
 This document summarizes the Fun bytecode format. For deep VM details, see [internals.md](./internals/).
 

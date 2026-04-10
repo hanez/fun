@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - form_post.fun (CGI)
@@ -10,21 +10,11 @@ description: Documentation for form_post.fun (CGI)
 permalink: /documentation/examples/data/htdocumentation/form_post/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cgi
+- example
+- form_post
 ---
 
-# form_post.fun (CGI)
 
 - Location: examples/data/htdocumentation/form_post.fun
 - Category: CGI script used by HTTP server examples

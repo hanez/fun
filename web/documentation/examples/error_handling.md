@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - error_handling.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for error_handling.fun — overview
 permalink: /documentation/examples/error_handling/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- error_handling
+- example
 ---
 
-# error_handling.fun — overview
 
 What it shows
 - Error patterns and handling strategies using try/catch/finally.

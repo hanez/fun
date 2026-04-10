@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Writing Tests
@@ -10,21 +10,14 @@ description: How to author new tests for Fun and opcode components.
 permalink: /documentation/writing-tests/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- author
+- components
+- new
+- opcode
+- tests
+- writing
 ---
 
-# Writing Tests
 
 How to author tests for Fun and its opcode implementations.
 

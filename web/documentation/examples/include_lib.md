@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - include_lib.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for include_lib.fun — overview
 permalink: /documentation/examples/include_lib/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- include_lib
 ---
 
-# include_lib.fun — overview
 
 What it shows
 - Including modules from the standard library path using #include <...>.

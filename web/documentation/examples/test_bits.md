@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - test_bits.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for test_bits.fun — overview
 permalink: /documentation/examples/test_bits/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- test_bits
 ---
 
-# test_bits.fun — overview
 
 What it shows
 - Bitwise utilities demonstration (and/or/xor/shifts) and small tests.

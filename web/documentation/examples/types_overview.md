@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - types_overview.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for types_overview.fun — overview
 permalink: /documentation/examples/types_overview/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- types_overview
 ---
 
-# types_overview.fun — overview
 
 What it shows
 - Overview of language types with small examples.

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - class_test.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for class_test.fun — overview
 permalink: /documentation/examples/class_test/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- class_test
+- example
 ---
 
-# class_test.fun — overview
 
 What it shows
 - Simple class usage and method invocation; small sanity checks around classes.

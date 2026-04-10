@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - http_mt_server_cgi.fun
@@ -10,21 +10,11 @@ description: Documentation for http_mt_server_cgi.fun
 permalink: /documentation/examples/net/http_mt_server_cgi/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- http_mt_server_cgi
+- network
 ---
 
-# http_mt_server_cgi.fun
 
 - Location: examples/net/http_mt_server_cgi.fun
 - Category: Networking / HTTP with CGI (multi-threaded)

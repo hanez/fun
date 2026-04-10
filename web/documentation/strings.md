@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Working with strings in Fun
@@ -10,21 +10,16 @@ description: Working with strings, literals/escaping, concatenation, substr/find
 permalink: /documentation/strings/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- concatenation
+- conversions
+- escaping
+- find
+- literals
+- split
+- strings
+- substr
 ---
 
-# Working with strings in Fun
 
 This guide covers string literals, common operations (length, concatenation, substring, search, split), and interop patterns. Strings in Fun are immutable sequences of bytes/text.
 

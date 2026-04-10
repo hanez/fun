@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - http_server_cgi_lib.fun
@@ -10,21 +10,11 @@ description: Documentation for http_server_cgi_lib.fun
 permalink: /documentation/examples/net/http_server_cgi_lib/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- http_server_cgi_lib
+- network
 ---
 
-# http_server_cgi_lib.fun
 
 - Location: examples/net/http_server_cgi_lib.fun
 - Category: Networking / HTTP with CGI (blocking, stdlib helpers)

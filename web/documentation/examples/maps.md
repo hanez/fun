@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - maps.fun — overview
@@ -10,21 +10,17 @@ description: Working with maps, construction, lookup/update, merging, iteration,
 permalink: /documentation/examples/maps/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- common
+- construction
+- example
+- iteration
+- lookup
+- maps
+- merging
+- patterns
+- update
 ---
 
-# maps.fun — overview
 
 What it shows
 - Working with maps: creation, indexing, iteration, and typical idioms.

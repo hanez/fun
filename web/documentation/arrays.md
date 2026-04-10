@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Arrays in Fun
@@ -10,21 +10,16 @@ description: Working with arrays, creation, indexing/slicing, iteration patterns
 permalink: /documentation/arrays/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- arrays
+- creation
+- helpers
+- idioms
+- indexing
+- iteration
+- patterns
+- slicing
 ---
 
-# Arrays in Fun
 
 This guide focuses on arrays: creation, indexing, mutation, iteration, slicing, and common gotchas. It complements the quick overview in types.md with a deeper, example‑driven treatment.
 

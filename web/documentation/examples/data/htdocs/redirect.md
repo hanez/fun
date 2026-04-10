@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - redirect.fun (CGI)
@@ -10,21 +10,11 @@ description: Documentation for redirect.fun (CGI)
 permalink: /documentation/examples/data/htdocumentation/redirect/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cgi
+- example
+- redirect
 ---
 
-# redirect.fun (CGI)
 
 - Location: examples/data/htdocumentation/redirect.fun
 - Category: CGI script used by HTTP server examples

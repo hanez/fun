@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - funstx — Fun syntax checker and fixer
@@ -10,21 +10,20 @@ description: Syntax checker for .fun files with optional --fix auto-corrections;
 permalink: /documentation/funstx/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- auto
+- checker
+- codes
+- corrections
+- exit
+- files
+- fix
+- fixer
+- funstx
+- limitations
+- optional
+- syntax
 ---
 
-# funstx — Fun syntax checker and fixer
 
 funstx is a small command‑line tool that parses .fun source files to verify syntax without executing them. It lives alongside the fun executable in the build directory and is installed by default.
 

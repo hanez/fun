@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Standard Library Overview
@@ -10,21 +10,16 @@ description: Overview of the standard library modules under ./lib with one-line 
 permalink: /documentation/stdlib/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- lib
+- library
+- line
+- modules
+- one
+- standard
+- summaries
+- under
 ---
 
-# Standard Library Overview
 
 This page provides a quick orientation to the standard library located under [`./lib/`](../lib/).
 

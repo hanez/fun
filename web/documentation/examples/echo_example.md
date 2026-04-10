@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - echo_example.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for echo_example.fun — overview
 permalink: /documentation/examples/echo_example/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- echo_example
+- example
 ---
 
-# echo_example.fun — overview
 
 What it shows
 - Simple echo of input/args; prints back what you type or pass as arguments.

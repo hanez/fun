@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - counter.fun (CGI)
@@ -10,21 +10,11 @@ description: Documentation for counter.fun (CGI)
 permalink: /documentation/examples/data/htdocumentation/counter/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cgi
+- counter
+- example
 ---
 
-# counter.fun (CGI)
 
 - Location: examples/data/htdocumentation/counter.fun
 - Category: CGI script used by HTTP server examples

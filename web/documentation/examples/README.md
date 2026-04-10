@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Examples catalog and how to run them
@@ -10,21 +10,23 @@ description: Catalog of all example scripts under ./examples/, what each area co
 permalink: /documentation/examples/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- area
+- catalog
+- contains
+- env
+- example
+- examples
+- extension
+- required
+- requirements
+- run
+- scripts
+- them
+- under
+- vars
+- what
 ---
 
-# Examples catalog and how to run them
 
 This page is a practical catalog of the example areas that ship with the Fun language. It explains what you’ll find in each folder under ./examples/, how to run the scripts, and where deeper walkthroughs live.
 

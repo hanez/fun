@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - for_range_test.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for for_range_test.fun — overview
 permalink: /documentation/examples/for_range_test/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- for_range_test
 ---
 
-# for_range_test.fun — overview
 
 What it shows
 - Ranges and loops; iterating numeric ranges and verifying bounds.

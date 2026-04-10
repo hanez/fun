@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - stdlib_showcase.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for stdlib_showcase.fun — overview
 permalink: /documentation/examples/stdlib_showcase/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- stdlib_showcase
 ---
 
-# stdlib_showcase.fun — overview
 
 What it shows
 - Sampler of common standard library modules and utilities.

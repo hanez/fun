@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - serial_demo.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for serial_demo.fun — overview
 permalink: /documentation/examples/serial_demo/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- serial_demo
 ---
 
-# serial_demo.fun — overview
 
 What it shows
 - Serial port access and basic read/write (when available on your system).

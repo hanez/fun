@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - process_example.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for process_example.fun — overview
 permalink: /documentation/examples/process_example/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- process_example
 ---
 
-# process_example.fun — overview
 
 What it shows
 - Spawning and capturing subprocess output; simple process management.

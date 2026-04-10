@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - HTTP server examples: architecture and how they work
@@ -10,21 +10,16 @@ description: Documentation for HTTP server examples, architecture and how they w
 permalink: /documentation/examples/net/httpserver/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- architecture
+- example
+- examples
+- http
+- network
+- server
+- they
+- work
 ---
 
-# HTTP server examples: architecture and how they work
 
 This guide explains the HTTP server examples under `./examples/net/http_*` and the supporting standard library modules under `./lib/net/`.
 

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Fun CLI
@@ -10,21 +10,19 @@ description: Command-line usage of the `fun` executable, synopsis, options, exit
 permalink: /documentation/cli/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cli
+- codes
+- command
+- executable
+- exit
+- includes
+- library
+- line
+- options
+- paths
+- synopsis
 ---
 
-# Fun CLI
 
 Reference for the `fun` command-line interface.
 

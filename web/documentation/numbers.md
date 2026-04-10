@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Working with numbers and floats in Fun
@@ -10,21 +10,17 @@ description: Working with integers and floats, arithmetic, conversions, clamping
 permalink: /documentation/numbers/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- arithmetic
+- bitwise
+- clamping
+- conversions
+- floats
+- integers
+- numbers
+- ops
+- patterns
 ---
 
-# Working with numbers and floats in Fun
 
 This guide covers the numeric types in Fun, with a focus on the integer "number" type and the 64‑bit floating point "float" type. You’ll find creation, arithmetic, conversion, clamping, bitwise operations, and common patterns.
 

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - cURL (libcurl) extension (optional)
@@ -10,21 +10,12 @@ description: Documentation for cURL (libcurl) extension (optional)
 permalink: /documentation/external/curl/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- curl
+- extension
+- libcurl
+- optional
 ---
 
-# cURL (libcurl) extension (optional)
 
 - CMake option: FUN_WITH_CURL=ON
 - Purpose: HTTP helpers using libcurl.

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - floats.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for floats.fun — overview
 permalink: /documentation/examples/floats/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- floats
 ---
 
-# floats.fun — overview
 
 What it shows
 - Floating point operations and formatting details.

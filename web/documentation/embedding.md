@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Embedding Fun
@@ -10,21 +10,14 @@ description: Embedding the VM from C/Rust, lifecycle, and host integration tips.
 permalink: /documentation/embedding/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- embedding
+- host
+- integration
+- lifecycle
+- rust
+- tips
 ---
 
-# Embedding Fun
 
 This guide outlines how to embed the Fun VM in a host application and extend it from C/Rust.
 

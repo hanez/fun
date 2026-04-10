@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Performance Guide
@@ -10,21 +10,15 @@ description: Build/runtime tuning tips and patterns for better performance.
 permalink: /documentation/performance/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- better
+- build
+- patterns
+- performance
+- runtime
+- tips
+- tuning
 ---
 
-# Performance Guide
 
 Tips for getting good performance from Fun programs and builds.
 

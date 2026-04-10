@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Includes in Fun: local vs. system and the FUN_LIB_DIR environment variable
@@ -10,21 +10,16 @@ description: Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and 
 permalink: /documentation/includes/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- default_lib_dir
+- environment
+- fun_lib_dir
+- includes
+- local
+- namespaced
+- system
+- variable
 ---
 
-# Includes in Fun: local vs. system and the FUN_LIB_DIR environment variable
 
 This document explains how to use local and system includes in Fun source files and how `FUN_LIB_DIR` controls where system includes are resolved from. It also covers namespaced includes with `as`.
 

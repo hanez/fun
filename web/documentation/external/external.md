@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - External integrations (optional extensions)
@@ -10,21 +10,27 @@ description: Catalog of all example scripts under ./examples/, what each area co
 permalink: /documentation/external/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- area
+- catalog
+- contains
+- env
+- example
+- examples
+- extension
+- extensions
+- external
+- integrations
+- optional
+- required
+- requirements
+- run
+- scripts
+- them
+- under
+- vars
+- what
 ---
 
-# External integrations (optional extensions)
 
 This section documents Fun's optional, build-time selectable extensions. Each page covers:
 - How to enable the extension via CMake option (FUN_WITH_*)

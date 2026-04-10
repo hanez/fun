@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - env_all.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for env_all.fun — overview
 permalink: /documentation/examples/env_all/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- env_all
+- example
 ---
 
-# env_all.fun — overview
 
 What it shows
 - Reading and listing environment variables.

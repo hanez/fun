@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - hex_example.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for hex_example.fun — overview
 permalink: /documentation/examples/hex_example/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- hex_example
 ---
 
-# hex_example.fun — overview
 
 What it shows
 - Hex encode/decode helpers; working with hexadecimal representations.

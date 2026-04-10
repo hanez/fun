@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - os_env.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for os_env.fun — overview
 permalink: /documentation/examples/os_env/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- os_env
 ---
 
-# os_env.fun — overview
 
 What it shows
 - Reading and writing environment variables from the operating system.

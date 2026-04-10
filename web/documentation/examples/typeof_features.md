@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - typeof_features.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for typeof_features.fun — overview
 permalink: /documentation/examples/typeof_features/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- typeof_features
 ---
 
-# typeof_features.fun — overview
 
 What it shows
 - A tour of typeof-related features and type introspection helpers.

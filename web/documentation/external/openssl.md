@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - OpenSSL extension (optional)
@@ -10,21 +10,11 @@ description: Documentation for OpenSSL extension (optional)
 permalink: /documentation/external/openssl/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- extension
+- openssl
+- optional
 ---
 
-# OpenSSL extension (optional)
 
 - CMake option: FUN_WITH_OPENSSL=ON
 - Purpose: provide small crypto helpers backed by OpenSSL. Includes md5, sha256, sha512, ripemd160 helpers.

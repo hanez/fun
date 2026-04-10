@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Fun REPL Guide
@@ -10,21 +10,15 @@ description: REPL guide, how to build/launch, editing and history, completions, 
 permalink: /documentation/repl/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- build
+- completions
+- editing
+- error
+- history
+- launch
+- tips
 ---
 
-# Fun REPL Guide
 
 This document describes the interactive Read–Eval–Print Loop (REPL) for the Fun programming language: how to build/launch it, how input and execution work, line editing and completion, the REPL buffer workflow, commands, debugging helpers, and tips.
 

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - functions_test.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for functions_test.fun — overview
 permalink: /documentation/examples/functions_test/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- functions_test
 ---
 
-# functions_test.fun — overview
 
 What it shows
 - Functions, closures, and return behavior; call semantics basics.

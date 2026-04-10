@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - http_server.fun
@@ -10,21 +10,11 @@ description: Documentation for http_server.fun
 permalink: /documentation/examples/net/http_server/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- http_server
+- network
 ---
 
-# http_server.fun
 
 - Location: examples/net/http_server.fun
 - Category: Networking / HTTP (blocking)

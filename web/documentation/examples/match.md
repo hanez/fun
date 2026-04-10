@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - match.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for match.fun — overview
 permalink: /documentation/examples/match/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- match
 ---
 
-# match.fun — overview
 
 What it shows
 - Pattern matching constructs and examples of branching by value/shape.

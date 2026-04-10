@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Maps in Fun
@@ -10,21 +10,16 @@ description: Working with maps, construction, lookup/update, merging, iteration,
 permalink: /documentation/maps/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- common
+- construction
+- iteration
+- lookup
+- maps
+- merging
+- patterns
+- update
 ---
 
-# Maps in Fun
 
 This guide focuses on maps: creation, reading/writing by key, checking key presence, iterating keys/values, nesting, and common gotchas. It complements the quick overview in types.md with a deeper, example‑driven treatment.
 

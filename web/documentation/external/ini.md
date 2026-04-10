@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - INI (iniparser) extension (optional)
@@ -10,21 +10,12 @@ description: Documentation for INI (iniparser) extension (optional)
 permalink: /documentation/external/ini/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- extension
+- ini
+- iniparser
+- optional
 ---
 
-# INI (iniparser) extension (optional)
 
 - CMake option: FUN_WITH_INI=ON
 - Purpose: Read/write simple INI configuration files.

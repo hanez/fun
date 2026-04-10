@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Building and Running Tests
@@ -10,21 +10,19 @@ description: How to build and run tests/targets with CMake/CTest, and where to a
 permalink: /documentation/testing/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- add
+- build
+- building
+- cmake
+- ctest
+- new
+- run
+- running
+- targets
+- tests
+- where
 ---
 
-# Building and Running Tests
 
 This page explains how to build and run Fun’s tests using the existing CMake targets. It also points to where opcode and language tests typically live and how to add new ones.
 

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - signed_ints.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for signed_ints.fun — overview
 permalink: /documentation/examples/signed_ints/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- signed_ints
 ---
 
-# signed_ints.fun — overview
 
 What it shows
 - Signed integer types and operations; ranges and conversions.

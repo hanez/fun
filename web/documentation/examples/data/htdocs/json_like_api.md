@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - json_like_api.fun (CGI)
@@ -10,21 +10,11 @@ description: Documentation for json_like_api.fun (CGI)
 permalink: /documentation/examples/data/htdocumentation/json_like_api/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cgi
+- example
+- json_like_api
 ---
 
-# json_like_api.fun (CGI)
 
 - Location: examples/data/htdocumentation/json_like_api.fun
 - Category: CGI script used by HTTP server examples

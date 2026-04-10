@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Building Fun
@@ -10,21 +10,19 @@ description: How to build Fun with CMake, available targets, and build options (
 permalink: /documentation/build/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- available
+- build
+- building
+- cmake
+- fun_debug
+- fun_use_musl
+- fun_with_cpp
+- fun_with_openssl
+- fun_with_rust
+- options
+- targets
 ---
 
-# Building Fun
 
 This guide describes how to build Fun from source using CMake and the available build options.
 

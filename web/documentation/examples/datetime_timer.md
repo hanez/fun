@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - datetime_timer.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for datetime_timer.fun — overview
 permalink: /documentation/examples/datetime_timer/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- datetime_timer
+- example
 ---
 
-# datetime_timer.fun — overview
 
 What it shows
 - Measuring elapsed time and simple timers using datetime helpers.

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - PC/SC (smart cards) extension (optional)
@@ -10,21 +10,12 @@ description: Documentation for PC/SC (smart cards) extension (optional)
 permalink: /documentation/external/pcsc/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- cards
+- extension
+- optional
+- smart
 ---
 
-# PC/SC (smart cards) extension (optional)
 
 - CMake option: FUN_WITH_PCSC=ON
 - Purpose: Access smart card readers/cards via PC/SC (pcsclite).

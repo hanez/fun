@@ -1,39 +1,41 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
-title: Fun - Core datatypes in Fun: arrays, maps, strings, numbers, booleans and nil
+title: Fun - Core datatypes, arrays, maps, strings, numbers, booleans and nil
 subtitle: Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
 description: Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
 permalink: /documentation/types/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- arrays
+- bool
+- booleans
+- common
+- core
+- datatypes
+- interop
+- maps
+- nil
+- notes
+- numbers
+- operations
+- patterns
+- strings
+- types
 ---
 
-# Core datatypes in Fun: arrays, maps, strings, numbers, booleans and nil
 
 This guide shows how to create and use the most common Fun datatypes with practical examples. It focuses on arrays and maps, and also recaps numbers, floats, strings, booleans and nil so examples are self‑contained.
 
 See also:
 
-- [arrays.md](./arrays/) — Deeper dive into array creation, indexing/slicing, iteration, and helpers.
-- [strings.md](./strings/) — Practical guide to string literals, concatenation, substr/find, split, and conversions.
-- [maps.md](./maps/) — Detailed guide to map construction, lookup/update, merging, and patterns.
-- [numbers.md](./numbers/) — Numbers vs floats, arithmetic, conversions, clamping, bitwise ops, and common patterns.
+- [arrays](../arrays/) — Deeper dive into array creation, indexing/slicing, iteration, and helpers.
+- [strings](../strings/) — Practical guide to string literals, concatenation, substr/find, split, and conversions.
+- [maps](../maps/) — Detailed guide to map construction, lookup/update, merging, and patterns.
+- [numbers](../numbers/) — Numbers vs floats, arithmetic, conversions, clamping, bitwise ops, and common patterns.
 
 ## Quick overview
 

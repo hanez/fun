@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - progress_inline.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for progress_inline.fun — overview
 permalink: /documentation/examples/progress_inline/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- progress_inline
 ---
 
-# progress_inline.fun — overview
 
 What it shows
 - Inline progress updates (same line updates) for simple terminal UIs.

@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Troubleshooting Guide
@@ -10,21 +10,15 @@ description: Common issues and quick fixes for build, includes, and REPL usage.
 permalink: /documentation/troubleshooting/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- build
+- common
+- fixes
+- includes
+- issues
+- quick
+- troubleshooting
 ---
 
-# Troubleshooting Guide
 
 This page lists common issues when building and running Fun from a source checkout and how to fix them quickly.
 

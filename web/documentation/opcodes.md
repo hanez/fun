@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Fun VM Opcodes Overview
@@ -10,21 +10,15 @@ description: VM opcodes overview grouped by domain with brief behavior/stack not
 permalink: /documentation/opcodes/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- behavior
+- brief
+- domain
+- grouped
+- notes
+- opcodes
+- stack
 ---
 
-# Fun VM Opcodes Overview
 
 This document provides an overview of the available VM opcodes implemented under src/vm and its subdirectories. Opcodes are grouped by module. For each opcode, we briefly note its purpose and, where available, the expected stack arguments and return value.
 

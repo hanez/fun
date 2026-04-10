@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Async I/O ("asyncio") in Fun
@@ -10,21 +10,19 @@ description: Async I/O primitives and patterns, non-blocking sockets, fd polling
 permalink: /documentation/asyncio/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- async
+- asyncio
+- best
+- blocking
+- examples
+- non
+- patterns
+- polling
+- practices
+- primitives
+- sockets
 ---
 
-# Async I/O ("asyncio") in Fun
 
 This guide explains the new asynchronous I/O primitives in Fun and how to use them to build non-blocking network and file descriptor workflows. It covers the core concepts, available helpers, common patterns, and runnable examples from the repository.
 

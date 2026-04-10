@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - PCRE2 (Perl-Compatible Regex) extension (optional)
@@ -10,21 +10,14 @@ description: Documentation for PCRE2 (Perl-Compatible Regex) extension (optional
 permalink: /documentation/external/pcre2/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- compatible
+- extension
+- optional
+- pcre2
+- perl
+- regex
 ---
 
-# PCRE2 (Perl-Compatible Regex) extension (optional)
 
 - CMake option: FUN_WITH_PCRE2=ON
 - Purpose: Advanced regular expressions via PCRE2.

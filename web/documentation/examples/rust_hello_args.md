@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - rust_hello_args.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for rust_hello_args.fun — overview
 permalink: /documentation/examples/rust_hello_args/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- rust_hello_args
 ---
 
-# rust_hello_args.fun — overview
 
 What it shows
 - Passing arguments into Rust-backed opcodes and handling returns.

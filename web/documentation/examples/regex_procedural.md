@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - regex_procedural.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for regex_procedural.fun — overview
 permalink: /documentation/examples/regex_procedural/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- regex_procedural
 ---
 
-# regex_procedural.fun — overview
 
 What it shows
 - Procedural approach to regex work: compiling patterns and iterating matches.

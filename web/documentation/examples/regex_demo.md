@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - regex_demo.fun — overview
@@ -10,21 +10,10 @@ description: Documentation for regex_demo.fun — overview
 permalink: /documentation/examples/regex_demo/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- example
+- regex_demo
 ---
 
-# regex_demo.fun — overview
 
 What it shows
 - Regex helpers usage; simple matching and replacement tasks.

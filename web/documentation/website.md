@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Website Documentation (fun-lang.xyz)
@@ -10,21 +10,14 @@ description: Documentation for the [fun-lang.xyz](https,//fun-lang.xyz) website 
 permalink: /documentation/website/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- directory
+- https
+- lang
+- web
+- website
+- xyz
 ---
 
-# Website Documentation (fun-lang.xyz)
 
 This document describes the structure and maintenance of the website for the Fun programming language, located in the `./web/` directory. The website is hosted at [https://fun-lang.xyz](https://fun-lang.xyz).
 

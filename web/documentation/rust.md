@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Writing Rust-backed opcodes for Fun VM
@@ -10,21 +10,17 @@ description: Writing Rust-backed opcodes and wiring them into the C VM; build/se
 permalink: /documentation/rust/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- backed
+- build
+- notes
+- opcodes
+- rust
+- setup
+- them
+- wiring
+- writing
 ---
 
-# Writing Rust-backed opcodes for Fun VM
 
 This guide explains how to implement VM opcodes in Rust, wire them into the C VM, and use them from Fun scripts.
 

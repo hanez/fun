@@ -1,7 +1,7 @@
 ---
 layout: page
 published: true
-noToc: true
+noToc: false
 noComments: false
 noDate: false
 title: Fun - Errors and Diagnostics
@@ -10,21 +10,14 @@ description: Understanding parser/runtime errors and enabling diagnostics.
 permalink: /documentation/errors-and-diagnostics/
 lang: en
 tags:
-- documentation
-- handbook
-- installation
-- usage
-- introduction
-- help
-- guide
-- howto
-- docs
-- specifications
-- specs
-- repl
+- diagnostics
+- enabling
+- errors
+- parser
+- runtime
+- understanding
 ---
 
-# Errors and Diagnostics
 
 This guide helps you understand common error messages and how to collect useful diagnostics.
 
