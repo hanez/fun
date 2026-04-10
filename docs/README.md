@@ -34,6 +34,7 @@ This file serves as an index of the documents in this directory. Links are relat
 - [performance.md](./performance.md) - Build/runtime tuning tips and patterns for better performance.
 - [security-and-sandboxing.md](./security-and-sandboxing.md) - Trust boundaries, I/O expectations, and capability restrictions.
 - [faq.md](./faq.md) - Frequently asked questions and quick answers.
+- [website.md](./website.md) - Documentation for the [fun-lang.xyz](https://fun-lang.xyz) website in the `./web/` directory.
 - [writing-tests.md](./writing-tests.md) - How to author new tests for Fun and opcode components.
 - [bytecode-format.md](./bytecode-format.md) - Reference for the bytecode format (split out from internals for convenience).
 - [roadmap.md](./roadmap.md) - High-level direction, planned features, and pointers to issues.
