@@ -1,0 +1,33 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem 'addressable'
+gem 'colorator'
+gem 'concurrent-ruby'
+gem 'csv'
+gem 'em-websocket'
+gem 'i18n'
+gem 'jekyll'
+gem 'jekyll-admin'
+gem 'jekyll-paginate'
+gem 'jekyll-sass-converter'
+gem 'jekyll-seo-tag'
+gem 'jekyll-sitemap'
+gem 'jekyll-toc'
+gem 'jekyll-watch'
+gem 'json'
+gem 'kramdown'
+gem 'kramdown-parser-gfm'
+gem 'liquid'
+gem 'listen'
+gem 'mercenary'
+gem 'nokogiri'
+gem 'pathutil'
+gem 'rack'
+gem 'rackup'
+gem 'rouge'
+gem 'safe_yaml'
+gem 'terminal-table'
+gem 'webrick'
+

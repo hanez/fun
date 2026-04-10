@@ -1,0 +1,115 @@
+document_root: /var/www/fun-lang.xyz/www/htdocs/
+data_dir: /var/www/fun-lang.xyz/www/htdocs/
+title: fun>
+subtitle: The programming language that makes you have fun!
+description: The programming language that makes you have fun!
+keywords:
+  - fun
+  - static
+  - dynamic
+  - programming
+  - language
+  - c
+  - python
+  - scrpts
+  - repl
+  - type
+  - safety
+author: Johannes Findeisen <you@hanez.org>
+email: hanez@fun-lang.xyz
+baseurl:
+url: https://fun-lang.xyz
+url_short: fun-lang.xyz
+lang: en
+os: GNU/Linux
+charset: utf-8
+libdir: /var/www/fun-lang.xyz/www/lib
+license: CC BY-NC-SA
+license_name: Attribution-NonCommercial-ShareAlike 4.0 International
+license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+mastodon: https://fosstodon.org/@fun
+
+truncatewords_length: 100000
+
+# Set to your git root and branch to show a link to the file source in the footer. Unset to disable.
+git: https://git.xw3.org/fun/fun/
+git_short: https://git.xw3.org
+branch: src/branch/main/
+
+lifetime: 3600
+
+challenge_error: Invalid challenge result! Please try again... :(
+
+mail_thank_you: Thank you for contacting me... :)
+
+username: xw3
+
+cookiebanner_text: This website uses cookies to provide you with a better online experience. Leave this site if you don't accept the usage of cookies. No tracking cookies are being used! To find out more, please visit this website's
+cookiebanner_dismiss_text: Got it!
+cookiebanner_link_text: Privacy Policy
+cookiebanner_link: /privacy/
+
+paginate: 2
+paginate_path: /page/:num/
+permalink: /:year/:month/:day/:title/
+
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+#  syntax_highlighter_opts:
+    # Rouge Options › https://github.com/jneen/rouge#full-options
+#    css_class: 'highlight'
+    #line_numbers: true # bad idea, spans don't need linenos and would inherit this option
+#    span:
+#      line_numbers: false
+#    block:
+#      line_numbers: true
+#      start_line: 1
+
+tocTopTag: h2
+anchorPrefix: ""
+showToggleButton: false
+contentsLabel: Table of contents
+
+exclude:
+  - .idea/
+  - lib/
+  - venv/
+  - .project
+  - build.log
+  - Makefile
+  - README.md
+  - requirements.txt
+  - package.json
+  - package-lock.json
+  - xw3.code-workspace
+
+category_archive:
+  path: /category/
+
+plugins:
+  - jekyll-paginate
+#  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-toc
+
+#  - jekyll-admin
+# https://stackoverflow.com/questions/10218779/custom-variables-in-jekyll-front-matter
+# https://github.com/gjtorikian/jekyll-conrefifier
+# https://stackoverflow.com/questions/65989040/bundle-exec-jekyll-serve-cannot-load-such-file
+#  - jekyll-conrefifier
+
+defaults:
+  -
+    scope:
+      path: "cgi/*"
+    values:
+      sitemap: false
+  -
+    scope:
+      path: "files/*"
+    values:
+      sitemap: false
+

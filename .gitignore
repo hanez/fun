@@ -3,8 +3,11 @@ CMakeCache.txt
 !.editorconfig
 !.gitignore
 !.github
+!.gitkeep
 .venv
-build*
+build/*
+build_debug/*
+build_release/*
 cmake_install.cmake
 database.sqlite
 demo_*
@@ -18,3 +21,6 @@ src/rust/Cargo.lock
 src/rust/target
 *.swp
 tmp*
+web/_cache/*
+web/_site/*
+web/Gemfile.lock

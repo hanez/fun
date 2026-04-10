@@ -1,0 +1,31 @@
+---
+layout:
+---
+
+<!DOCTYPE html>
+<html lang="{% if page.lang %}{{ page.lang }}{% else %}{{ site.lang }}{% endif %}" id="top">
+{% include head.html %}
+  <body>
+  <div class="site">
+  <div id="loader" class="lds-dual-ring hidden overlay"></div>
+{% include header.html %}
+    <div class="page-content">
+      <div class="wrapper">
+{{ content }}
+      </div>
+    </div>
+{% include footer.html %}
+  </div>
+
+  <p style="text-align: center; color: #e8e8e8; font-size: 12px;">
+  Page generated at: {{ site.time | date: "%b %-d, %Y" }} ({{ site.time | date: "%Z" }}) using <a href="https://jekyllrb.com/">Jekyll</a> and <a href="https://git.xw3.org/xw3/xw3">xw3</a> on {{ site.os }}<br>
+  <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" style="text-decoration:none;" title="License"><img src="/images/by-nc-sa-88x31.png"></a></p>
+
+  <script src="/js/sorttable-2.min.js" charset="utf-8"></script>
+  <script src="/js/cookieconsent.min.js" data-cfasync="false"></script>
+  <!-- Source for documentation and download: https://www.osano.com/cookieconsent/download/ - https://www.osano.com/cookieconsent/documentation/compliance/ -->
+  <script>window.cookieconsent.initialise({"palette":{"popup":{"background":"#000","text":"#e8e8e8"},"button":{"background":"#bc6c21"}},"theme":"classic","position":"bottom","static":false,"content":{"message":"{{ site.cookiebanner_text }}  ","dismiss":"{{ site.cookiebanner_dismiss_text }}","link":"{{ site.cookiebanner_link_text }}.","href":"{{ site.cookiebanner_link }}"}});</script>
+
+  </body>
+</html>
+

@@ -1,0 +1,126 @@
+// Contact form
+#contactform {
+  //padding: 20px;
+  //border: 1px solid $grey-color;
+  //background: $grey-color-light;
+  //display: inline;
+}
+
+#contactform label, #contactform input, #contactform textarea {
+  display: block;
+  width: 98%;
+  resize: none;
+}
+
+#contactform textarea {
+  height: 120px;
+}
+
+#contactform label { margin: 10px 0; }
+
+#contactform label:first-child { margin-top: 0; }
+
+#contactform input, #contactform textarea {
+  font-family: $base-font-family;
+  font-size: $base-font-size;
+  line-height: $base-line-height;
+  font-weight: 300;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid $grey-color;
+}
+
+#contactform input[type=submit] {
+  border: 0;
+  color: #fff;
+  background: $brand-color;
+  cursor: pointer;
+  width: 100%;
+}
+
+#contactform input[type=submit]:hover {
+  background: $headline-color;
+}
+
+// Login form
+#loginform {
+  //background: $grey-color-light;
+  //border: 1px solid $grey-color;
+  display: inline;
+  //padding: 20px;
+  //width: 380px;
+}
+
+#loginform label, #loginform input{
+  //display: block;
+  resize: none;
+}
+
+#loginform label { margin: 10px 0; }
+
+#loginform label:first-child { margin-top: 0; }
+
+#loginform input {
+  border: 1px solid $grey-color;
+  font-family: $base-font-family;
+  line-height: $base-line-height;
+  font-size: $base-font-size;
+  //font-weight: 300;
+  margin: 10px;
+  padding: 10px;
+}
+
+#loginform input[type=submit] {
+  border: 0;
+  background: $brand-color;
+  color: #fff;
+  cursor: pointer;
+}
+
+#loginform input[type=submit]:hover {
+  background: $headline-color;
+}
+
+// Search form
+#searchform {
+  //padding: 20px;
+  //border: 1px solid $grey-color;
+  //background: $grey-color-light;
+}
+
+#searchform label, #searchform input, #searchform textarea {
+  display: block;
+  width: 98%;
+  resize: none;
+}
+
+#searchform textarea {
+  height: 120px;
+}
+
+#searchform label { margin: 10px 0; }
+
+#searchform label:first-child { margin-top: 0; }
+
+#searchform input, #searchform textarea {
+  font-family: $base-font-family;
+  font-size: $base-font-size;
+  line-height: $base-line-height;
+  font-weight: 300;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid $grey-color;
+}
+
+#searchform input[type=submit] {
+  border: 0;
+  color: #fff;
+  background: $brand-color;
+  cursor: pointer;
+  width: 100%;
+}
+
+#searchform input[type=submit]:hover {
+    background: $headline-color;
+}
+
