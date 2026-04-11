@@ -29,55 +29,41 @@ The REPL is optional at build time. It provides a fast feedback loop for experim
 - Build flag: -DFUN_WITH_REPL=ON
 - Typical CMake configuration example:
 
-```
-cmake -S . -B build \
+<pre>cmake -S . -B build \
   -DFUN_WITH_REPL=ON
 cmake --build build --target fun
-```
-
+</pre>
 You can also set a default search path for the bundled stdlib using DEFAULT_LIB_DIR at configure time (used for completions and library loading):
 
-```
-cmake -S . -B build -DFUN_WITH_REPL=ON -DDEFAULT_LIB_DIR="/usr/share/fun/lib"
-```
-
+<pre>cmake -S . -B build -DFUN_WITH_REPL=ON -DDEFAULT_LIB_DIR="/usr/share/fun/lib"
+</pre>
 ## Launching the REPL
 
 - Directly run the main executable (ensure FUN_WITH_REPL=ON):
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun
+</pre>
 - With the CMake “repl” convenience target (available only if built with FUN_WITH_REPL=ON):
 
-```
-cmake --build build --target repl
-```
-
+<pre>cmake --build build --target repl
+</pre>
 On startup, you should see something like:
 
-```
-Fun X.Y.Z REPL
+<pre>Fun X.Y.Z REPL
 Type :help for commands. Submit an empty line to run.
-```
-
+</pre>
 Environment variable FUN_LIB_DIR can be used to point the REPL to the standard library directory for symbol completion and library loading. If not set, a compile-time DEFAULT_LIB_DIR (if provided) or "lib" is used.
 
 ## Running scripts and REPL-on-error
 
 - Run a script file normally:
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
+</pre>
 - Enable tracing, and drop into a REPL automatically when a runtime error occurs:
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
+</pre>
 Inside REPL-on-error, you can inspect frames, locals, disassembly, set breakpoints, and continue or step. Use :help to see available commands.
 
 ## Prompts and input model

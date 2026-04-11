@@ -77,8 +77,7 @@ Example: integer addition opcode implemented in Rust.
 
 In src/rust/src/lib.rs:
 
-```
-#![no_std]
+<pre>#![no_std]
 
  #[repr(C)]
  pub struct Vm;
@@ -100,8 +99,7 @@ In src/rust/src/lib.rs:
 
  #[panic_handler]
  fn panic(_info: &core::panic::PanicInfo) -> ! { loop {} }
-```
-
+</pre>
 What this does:
 - Pops two 64-bit integers from the VM stack.
 - Pushes back their sum.
@@ -115,8 +113,7 @@ To make the VM call your Rust opcode, add a small C-side case that invokes the e
 
 String demo wiring (already present): src/vm/rust/hello.c
 
-```
-case OP_RUST_HELLO: {
+<pre>case OP_RUST_HELLO: {
 #ifdef FUN_WITH_RUST
    const char *s = fun_rust_get_string();
    if (!s) s = "";
@@ -127,12 +124,10 @@ case OP_RUST_HELLO: {
 #endif
    break;
 }
-```
-
+</pre>
 For a stack-based math opcode (like fun_op_radd), you would declare and call the Rust function similarly:
 
-```
-#ifdef FUN_WITH_RUST
+<pre>#ifdef FUN_WITH_RUST
 extern int fun_op_radd(void* vm); // or use the proper VM type if available
 #endif
 
@@ -145,8 +140,7 @@ case OP_RADD: {
 #endif
    break;
 }
-```
-
+</pre>
 Notes:
 
 - Follow the existing opcode conventions for your module (core, math, strings, etc.).

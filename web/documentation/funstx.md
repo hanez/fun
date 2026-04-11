@@ -36,10 +36,8 @@ funstx is a small command‑line tool that parses .fun source files to verify sy
 
 ## Usage
 
-```
-funstx [--fix] <file1.fun> [file2.fun ...]
-```
-
+<pre>funstx [--fix] <file1.fun> [file2.fun ...]
+</pre>
 - Provide one or more .fun files to check.
 - Add `--fix` to attempt safe, automatic corrections before re‑checking.
 

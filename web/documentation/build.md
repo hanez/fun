@@ -61,45 +61,35 @@ These are defined as `CACHE` variables, so they will persist in your `CMakeCache
 
 When configuring, the build prints a summary like:
 
-```
-==== Fun build options ====
+<pre>==== Fun build options ====
   FUN_DEBUG: ENABLED|DISABLED
   FUN_USE_MUSL: ENABLED|DISABLED
   FUN_WITH_CPP: ENABLED|DISABLED
   FUN_WITH_RUST: ENABLED|DISABLED
 ===========================
-```
-
+</pre>
 ## Example commands
 Use the CLion-provided build directories or your own. Typical invocations:
 
 ### Debug
-```
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug \
+<pre>cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug \
   -DFUN_DEBUG=ON -DFUN_WITH_RUST=OFF
 cmake --build build --target build
-```
-
+</pre>
 ### Release
-```
-cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
+<pre>cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
   -DFUN_DEBUG=OFF -DFUN_WITH_RUST=OFF
 cmake --build build_release --target build
-```
-
+</pre>
 ### Enabling optional extensions
-```
-cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
+<pre>cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
   -DFUN_WITH_CPP=ON -DFUN_WITH_RUST=ON -DFUN_WITH_OPENSSL=ON
 cmake --build build_release --target build
-```
-
+</pre>
 ### Customizing VM limits
-```
-cmake -S . -B build_custom -DSTACK_SIZE=4096 -DMAX_GLOBALS=512
+<pre>cmake -S . -B build_custom -DSTACK_SIZE=4096 -DMAX_GLOBALS=512
 cmake --build build_custom --target fun
-```
-
+</pre>
 If `FUN_WITH_RUST` is enabled, ensure `cargo` is available in PATH; the build will invoke it and link the produced static library.
 
 If `FUN_WITH_OPENSSL` is enabled, CMake must detect your system OpenSSL (libcrypto).

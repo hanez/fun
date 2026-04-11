@@ -351,8 +351,7 @@ This provides zero‑copy hand‑off without coupling VMs or their collectors.
 
 #### Minimal API (illustrative)
 
-```c
-// Zero-copy shared buffers (immutable inside VMs)
+<pre>// Zero-copy shared buffers (immutable inside VMs)
 fun_shared_buffer_t* fun_shared_buffer_new(size_t n);
 void* fun_shared_buffer_data(fun_shared_buffer_t*);
 void fun_shared_buffer_retain(fun_shared_buffer_t*);
@@ -362,8 +361,7 @@ void fun_shared_buffer_release(fun_shared_buffer_t*);
 fun_port_t* fun_port_create(fun_vm_t*);
 int fun_send(fun_port_t*, fun_value_t value);      // can carry a shared buffer handle
 int fun_recv(fun_port_t*, fun_value_t* out, uint64_t timeout_ms);
-```
-
+</pre>
 #### Practical usage tips
 
 - Default to isolates + ports for logic; use `fun_shared_buffer` only for large payloads (images, tensors, blobs).
@@ -393,8 +391,7 @@ We don’t expose shared mutability to VMs. The trick is: publish‑as‑immutab
 
 #### Typical pattern (no locks needed)
 
-```c
-fun_shared_buffer_t* b = fun_shared_buffer_new(n);
+<pre>fun_shared_buffer_t* b = fun_shared_buffer_new(n);
 void* p = fun_shared_buffer_data(b);
 memcpy(p, src, n);                  // fill while private
 
@@ -411,8 +408,7 @@ if (fun_recv(port, &v, 1000) == 0) {
   …
   fun_shared_buffer_release(r);
 }
-```
-
+</pre>
 #### When would the host ever sync?
 
 - Only if you choose shared mutability outside the VM (e.g., a lock‑free ring buffer you manage). For that, we expose optional helpers (`fun_atomic_*`, `fun_mutex_t`, `fun_rwlock_t`), but they’re not required for the standard zero‑copy path.
@@ -477,8 +473,7 @@ It depends on what “shared” means. Our design keeps per‑VM GCs independent
 
 ### Minimal API surface (illustrative)
 
-```c
-// Create/destroy VMs
+<pre>// Create/destroy VMs
 fun_vm_t* vm = fun_vm_create(const fun_vm_config_t*);
 void fun_vm_destroy(fun_vm_t*);
 
@@ -500,8 +495,7 @@ fun_shared_buffer_t* fun_shared_buffer_new(size_t n);
 void* fun_shared_buffer_data(fun_shared_buffer_t*);
 void fun_shared_buffer_retain(fun_shared_buffer_t*);
 void fun_shared_buffer_release(fun_shared_buffer_t*);
-```
-
+</pre>
 ### Glossary
 
 - GC: garbage collection. In our context, each `fun_vm_t` isolate has its own GC (stop‑the‑world, per‑VM). There is no global stop‑the‑world and no global lock; a GC pause in one VM does not affect others.

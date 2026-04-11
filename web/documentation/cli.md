@@ -29,10 +29,8 @@ Reference for the `fun` command-line interface.
 For a complete usage guide (including REPL details, environment variables, include paths, examples, and install locations), see [fun.md](./fun/).
 
 ## Synopsis
-```
-fun [options] <script.fun> [-- args...]
-```
-
+<pre>fun [options] <script.fun> [-- args...]
+</pre>
 If no script is supplied and interactive mode is available, `fun` starts a REPL (see [repl.md](./repl/)).
 
 ## Common options
@@ -54,11 +52,8 @@ See also: [includes.md](./includes/) for namespaced includes and search order.
 
 ## Examples
 Run a script:
-```
-FUN_LIB_DIR=./lib ./build/fun examples/hello.fun
-```
-
+<pre>FUN_LIB_DIR=./lib ./build/fun examples/hello.fun
+</pre>
 Start the REPL:
-```
-./build/fun -i
-```
+<pre>./build/fun -i
+</pre>

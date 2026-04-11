@@ -64,16 +64,12 @@ Linux/UNIX and Cygwin are covered here.
 
 Clone repository:
 
-```
-git clone https://git.xw3.org/fun/fun.git
+<pre>git clone https://git.xw3.org/fun/fun.git
 cd fun
-```
-
+</pre>
 Configure and build (examples shown with several optional features enabled):
 
-```
-
-cmake -S . -B build \
+<pre>cmake -S . -B build \
   -DFUN_DEBUG=OFF \
   -DFUN_WITH_REPL=ON \
   -DFUN_WITH_JSON=ON \
@@ -82,32 +78,23 @@ cmake -S . -B build \
   -DFUN_WITH_PCSC=OFF \
   -DFUN_WITH_SQLITE=OFF
 cmake --build build --target fun
-```
-
+</pre>
 Run the demo (without installing):
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
+</pre>
 Tracing execution:
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun --trace ./demo.fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun --trace ./demo.fun
+</pre>
 Drop into the REPL when an error occurs:
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
+</pre>
 Start the REPL directly (build with -DFUN_WITH_REPL=ON):
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun
+</pre>
 #### CMake options
 
 Pass all options as -DNAME=VALUE. The most relevant toggles are:
@@ -124,10 +111,8 @@ Pass all options as -DNAME=VALUE. The most relevant toggles are:
 
 You can also set the default search path for the bundled stdlib with DEFAULT_LIB_DIR:
 
-```
-cmake -S . -B build -DDEFAULT_LIB_DIR="/usr/share/fun/lib" -DFUN_WITH_REPL=ON
-```
-
+<pre>cmake -S . -B build -DDEFAULT_LIB_DIR="/usr/share/fun/lib" -DFUN_WITH_REPL=ON
+</pre>
 If you encounter a CMake error such as:
 
   CMake Error: Parse error in command line argument: FUN_WITH_JSON
@@ -139,8 +124,7 @@ it means you passed a -D option without a value. Always use the form -DNAME=VALU
 
 SQLite support is optional and disabled by default. To build with it and run the example:
 
-```
-cmake -S . -B build -DFUN_WITH_SQLITE=ON
+<pre>cmake -S . -B build -DFUN_WITH_SQLITE=ON
 cmake --build build --target fun
 
 
@@ -148,20 +132,17 @@ sqlite3 ./database.sqlite < ./examples/data/database.sql
 
 
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlite_example.fun
-```
-
+</pre>
 #### XML example (optional feature)
 
 XML support (via libxml2) is optional and disabled by default. To build with it and run the example:
 
-```
-cmake -S . -B build -DFUN_WITH_XML2=ON
+<pre>cmake -S . -B build -DFUN_WITH_XML2=ON
 cmake --build build --target fun
 
 
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/xml_class_example.fun
-```
-
+</pre>
 Available VM builtins when built with -DFUN_WITH_XML2=ON:
 - xml_parse(text: string) -> doc_handle (int > 0) or 0 on error
 - xml_root(doc_handle: int) -> node_handle (int > 0) or 0 if missing
@@ -177,8 +158,7 @@ Standard library wrapper (lib/io/xml.fun):
   - text(node: int): string
 
 Example Fun code:
-```
-include <io/xml.fun>
+<pre>include <io/xml.fun>
 
 xml = XML()
 doc = xml.from_file("./examples/data/example.xml")
@@ -188,8 +168,7 @@ else
   root = xml.root(doc)
   print(xml.name(root))
   print(xml.text(root))
-```
-
+</pre>
 Notes:
 - Handles are simple integers managed by the VM; nodes are owned by their document.
 - This initial integration focuses on parsing and basic navigation. Attributes, children iteration, and XPath may be added later.
@@ -198,20 +177,16 @@ Notes:
 
 Not recommended during early development, but supported:
 
-```
-sudo cmake --build build --target install
-```
-
+<pre>sudo cmake --build build --target install
+</pre>
 After installation, FUN_LIB_DIR usually isn’t needed because libs are placed in the system default directory (e.g., /usr/share/fun/lib).
 
 ## Usage
 
 Run a script:
 
-```
-fun ./demo.fun
-```
-
+<pre>fun ./demo.fun
+</pre>
 ## Table of contents
 
 - Language overview and VM internals
@@ -470,8 +445,7 @@ Stdlib wrapper:
 - class JSON (lib/io/json.fun) — convenience methods mirroring the VM API.
 
 Example:
-```
-include <io/json.fun>
+<pre>include <io/json.fun>
 
 j = JSON()
 data = j.parse('{"name":"Fun","year":2026,"ok":true,"tags":["vm","lang"]}')
@@ -480,8 +454,7 @@ print(data["name"])
 
 ok = j.to_file("./tmp/out.json", data, 1)  // pretty = 1
 print("saved:", ok)
-```
-
+</pre>
 Notes:
 - JSON types map to Fun types: object -> map, array -> array, string -> string, number -> number/float, true/false -> 1/0, null -> nil.
 - When writing, prettyFlag=1 enables pretty printing.
@@ -499,15 +472,13 @@ Stdlib wrapper:
 - None (call built-ins directly). See examples in examples/extra/.
 
 Example:
-```
-url = "https://httpbin.org/get"
+<pre>url = "https://httpbin.org/get"
 resp = curl_get(url)
 if (len(resp) == 0)
   print("GET failed")
 else
   print(substr(resp, 0, 60), "...")
-```
-
+</pre>
 Examples:
 - curl_get_json.fun, curl_post.fun, curl_download.fun
 
@@ -526,8 +497,7 @@ Stdlib wrapper:
 - class PCSC (lib/io/pcsc.fun) — higher-level helpers for listing readers, connecting, and APDU I/O.
 
 Example:
-```
-include <io/pcsc.fun>
+<pre>include <io/pcsc.fun>
 
 sc = PCSC()
 ctx = pcsc_establish()
@@ -544,8 +514,7 @@ else
       res = pcsc_transmit(h, [0x00, 0xC0, 0x00, 0x00, 0x00])
       print("SW:", res["sw1"], res["sw2"], "code:", res["code"]) 
       pcsc_disconnect(h)
-```
-
+</pre>
 Examples:
 - examples/extra/pcsc_example.fun, examples/extra/pcsc_demo.fun
 
@@ -596,8 +565,7 @@ Notes:
 - Always free handles with ini_free when done.
 
 Example:
-```
-h = ini_load("./examples/data/example.ini")
+<pre>h = ini_load("./examples/data/example.ini")
 if (h == 0)
   print("Failed to load INI")
 else
@@ -608,8 +576,7 @@ else
   if (ok)
     ini_save(h, "./tmp/updated.ini")
   ini_free(h)
-```
-
+</pre>
 ### XML (optional)
 
 Build flag: -DFUN_WITH_XML2=ON; requires libxml2.
@@ -629,8 +596,7 @@ Stdlib wrapper:
   - text(node): string
 
 Example:
-```
-include <io/xml.fun>
+<pre>include <io/xml.fun>
 
 xml = XML()
 doc = xml.from_file("./examples/data/example.xml")
@@ -640,8 +606,7 @@ else
   root = xml.root(doc)
   print(xml.name(root))
   print(xml.text(root))
-```
-
+</pre>
 Notes:
 - Handles are integers managed by the VM; nodes belong to their document.
 

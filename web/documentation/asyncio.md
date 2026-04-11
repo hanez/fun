@@ -57,18 +57,15 @@ Tip: Always check return values. In non-blocking mode, partial writes and short 
 ## Typical patterns
 
 1) Connect and switch to non-blocking
-```
-fd = tcp_connect(host, port)
+<pre>fd = tcp_connect(host, port)
 if (fd == 0)
   // handle connect error
 ok = fd_set_nonblock(fd, 1)
 if (ok == 0)
   // handle mode switch error
-```
-
+</pre>
 2) Non-blocking write loop with readiness polling
-```
-remaining = req
+<pre>remaining = req
 while (len(remaining) > 0)
   wr = fd_poll_write(fd, 1000)  // wait up to 1s
   if (wr < 0)
@@ -79,11 +76,9 @@ while (len(remaining) > 0)
   if (n < 0)
     // send error; abort
   remaining = substr(remaining, n, len(remaining) - n)
-```
-
+</pre>
 3) Non-blocking read-until-close
-```
-buf = ""
+<pre>buf = ""
 while (true)
   rd = fd_poll_read(fd, 2000)  // wait up to 2s
   if (rd < 0)
@@ -99,8 +94,7 @@ while (true)
   if (len(data) == 0)
     break  // closed
   buf = buf + data
-```
-
+</pre>
 ## Timeouts and responsiveness
 
 - timeout_ms controls how long poll waits. Use small timeouts inside loops to interleave work across multiple sockets or tasks.
@@ -125,20 +119,14 @@ Because Fun keeps the primitives low-level and explicit, you can build simple co
 - lib/net/http_cgi_server.fun — Library helpers used by the server examples
 
 Run client example from a build tree:
-```
-FUN_LIB_DIR=./lib ./build/fun examples/io/async_http_client.fun
-```
-
+<pre>FUN_LIB_DIR=./lib ./build/fun examples/io/async_http_client.fun
+</pre>
 If installed system-wide, just:
-```
-fun /usr/share/fun/examples/io/async_http_client.fun
-```
-
+<pre>fun /usr/share/fun/examples/io/async_http_client.fun
+</pre>
 Or to try the await-style client using the cooperative scheduler:
-```
-FUN_LIB_DIR=./lib ./build/fun examples/io/await_http_client.fun
-```
-
+<pre>FUN_LIB_DIR=./lib ./build/fun examples/io/await_http_client.fun
+</pre>
 ## Cooperative scheduler helpers (library-level)
 
 The file lib/async/scheduler.fun provides a minimal cooperative scheduler built on the existing primitives. There is no VM-level suspension: each task is a small state machine advanced one step per tick. API summary:
@@ -159,8 +147,7 @@ The file lib/async/scheduler.fun provides a minimal cooperative scheduler built 
   - Mark the task to be skipped for roughly ms milliseconds; cleared automatically when it wakes.
 
 Example skeleton using the scheduler:
-```
-#include <async/scheduler.fun>
+<pre>#include <async/scheduler.fun>
 
 fun my_task_step(t)
   if (t.phase == nil)
@@ -205,8 +192,7 @@ fun my_task_step(t)
 
 task = task_spawn(my_task_step, {})
 run_until_done()
-```
-
+</pre>
 This approach is 100% compatible with current runtimes and serves as a stepping stone towards potential future VM-level async/await opcodes.
 
 ## Error handling and cleanup

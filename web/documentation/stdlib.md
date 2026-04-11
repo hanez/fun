@@ -80,11 +80,9 @@ The stdlib is written in Fun and organized by domain. Below is the current layou
 Note: Availability of some modules can depend on optional extensions selected at build time (see [build.md](./build/)). For instance, `regex/pcre2.fun` requires PCRE2 support; `ui/*` depends on chosen UI backends.
 
 ## Using modules
-```fun
-#include <strings.fun>
+<pre>#include <strings.fun>
 
 let s = trim("  hello  ")
 print(s)
-```
-
+</pre>
 For search paths and namespacing details, see [includes.md](./includes/) and [cli.md](./cli/) (FUN_LIB_DIR and DEFAULT_LIB_DIR).

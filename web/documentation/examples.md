@@ -33,35 +33,27 @@ All commands assume you are in the repository root.
 
 Example (Linux/macOS/BSD):
 
-```
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/include_lib.fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/include_lib.fun
+</pre>
 Windows (PowerShell):
 
-```
-$env:FUN_LIB_DIR = "$PWD/lib"
+<pre>$env:FUN_LIB_DIR = "$PWD/lib"
 ./build/fun.exe .\examples\include_lib.fun
-```
-
+</pre>
 ## Interactive showcase: play.fun
 
 The script `./play.fun` discovers all `.fun` files under `./examples` and offers to run them one by one:
 
-```
-./play.fun
-```
-
+<pre>./play.fun
+</pre>
 Notes:
 - The script auto-picks your interpreter (FUN_BIN env or `fun` in PATH) and ensures `FUN_LIB_DIR=./lib` so examples resolve includes correctly.
 - It shows the exit code for each run and summarizes failures at the end.
 
 Tip: you can run specific examples directly too:
 
-```
-FUN_LIB_DIR="$(pwd)/lib" fun examples/crypto/openssl_md5.fun
-```
-
+<pre>FUN_LIB_DIR="$(pwd)/lib" fun examples/crypto/openssl_md5.fun
+</pre>
 ## Example categories
 
 Browse the `examples/` tree for areas of interest:
@@ -77,9 +69,7 @@ Browse the `examples/` tree for areas of interest:
 
 Place your `.fun` files anywhere under `examples/` to have them picked up by `play.fun`. Use quoted includes for project-local helpers and angle brackets for stdlib modules:
 
-```
-#include "examples/my_lib/common.fun"
+<pre>#include "examples/my_lib/common.fun"
 #include <io/console.fun>
-```
-
+</pre>
 If you add an example showcasing a new feature, also consider adding a brief note to the relevant doc (types.md, includes.md, opcodes.md, etc.).

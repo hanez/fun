@@ -31,8 +31,7 @@ This guide focuses on arrays: creation, indexing, mutation, iteration, slicing, 
 
 ## Creating arrays
 
-```
-// literals
+<pre>// literals
 a = [1, 2, 3]
 b = ["alpha", "beta"]
 empty = []
@@ -42,30 +41,27 @@ grid = [[1,2], [3,4]]
 
 print(typeof(a))   // "array"
 print(len(a))      // 3
-```
+</pre>
 
 Tip: Prefer square‑bracket literals for clarity and performance versus building via repeated push in a hot loop.
 
 ## Indexing (0‑based) and assignment
 
-```
-a = [10, 20, 30]
+<pre>a = [10, 20, 30]
 print(a[0])   // 10
 print(a[2])   // 30
 
 // update in place
 a[1] = 42
 print(a)      // [10, 42, 30]
-```
-
+</pre>
 Notes:
 - Valid indices are 0..len(a)-1. Using an invalid index raises a runtime error.
 - Assignment updates the existing array; references pointing to it observe the change.
 
 ## Appending, popping, inserting, removing
 
-```
-a = [1]
+<pre>a = [1]
 
 // append to end; returns new length
 push(a, 7)          // => 2, a is now [1, 7]
@@ -79,12 +75,10 @@ insert(a, 1, 99)    // a => [1, 99, 2, 3]
 
 // remove at index (shifts left)
 remove(a, 2)        // a => [1, 99, 3]
-```
-
+</pre>
 ## Slicing and concatenation
 
-```
-a = [0,1,2,3,4]
+<pre>a = [0,1,2,3,4]
 
 // slice(startInclusive, endExclusive)
 head = slice(a, 0, 3)   // [0,1,2]
@@ -93,14 +87,12 @@ mid  = slice(a, 1, 4)   // [1,2,3]
 // concat: join two arrays
 b = ["x", "y"]
 ab = concat(a, b)       // [0,1,2,3,4,"x","y"]
-```
-
+</pre>
 Slicing returns a new array. The original is unchanged.
 
 ## Iteration patterns
 
-```
-a = ["a", "b", "c"]
+<pre>a = ["a", "b", "c"]
 
 // index‑based loop
 for i = 0; i < len(a); i = i + 1 {
@@ -114,14 +106,12 @@ for pair in it.enumerate(a) {
   val = pair[1]
   print(to_string(idx) + ":" + val)
 }
-```
-
+</pre>
 ## Copying vs. referencing
 
 Arrays are reference types. Assigning just copies the reference, not the contents:
 
-```
-orig = [1, 2]
+<pre>orig = [1, 2]
 alias = orig        // points to the same array
 alias[0] = 9
 print(orig)         // [9, 2]
@@ -131,17 +121,14 @@ copy = slice(orig, 0, len(orig))
 copy[1] = 7
 print(orig)         // [9, 2]
 print(copy)         // [9, 7]
-```
-
+</pre>
 Shallow copies duplicate the top‑level array but not nested structures.
 
 ## Equality
 
-```
-print([1,2] == [1,2])   // true
+<pre>print([1,2] == [1,2])   // true
 print([1,2] == [2,1])   // false
-```
-
+</pre>
 Array equality compares length and element‑wise equality recursively.
 
 ## Common utilities
@@ -160,19 +147,16 @@ Check your lib directory (e.g., lib/utils) for additional helpers.
 
 ## Error handling and bounds
 
-```
-a = [0]
+<pre>a = [0]
 // a[1] is out of range → runtime error
-```
-
+</pre>
 Tips:
 - Guard indices: if i < 0 or i >= len(a) { /* handle */ }
 - Use remove/insert carefully inside loops; indices of following items change.
 
 ## Interop with maps and strings
 
-```
-// arrays of maps
+<pre>// arrays of maps
 users = [ {"name":"Ada"}, {"name":"Lin"} ]
 print(users[1]["name"])    // Lin
 
@@ -180,8 +164,7 @@ print(users[1]["name"])    // Lin
 #include <utils/strings.fun> as su  // adjust if present in your tree
 parts = su.split("a,b,c", ",")    // ["a","b","c"]
 csv   = su.join(parts, ",")       // "a,b,c"
-```
-
+</pre>
 ## Performance tips
 
 - Preallocate by building from literals or chunked appends rather than one‑by‑one in very tight loops.
@@ -190,8 +173,7 @@ csv   = su.join(parts, ",")       // "a,b,c"
 
 ## Examples
 
-```
-// filter even numbers
+<pre>// filter even numbers
 src = [0,1,2,3,4,5]
 dst = []
 for i = 0; i < len(src); i = i + 1 {
@@ -210,8 +192,7 @@ for i = 0; i < len(nested); i = i + 1 {
   }
 }
 print(flat) // [1,2,3,4,5]
-```
-
+</pre>
 ## See also
 
 - types.md — broader overview of core types with quick array examples.

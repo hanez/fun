@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Includes in Fun: local vs. system and the FUN_LIB_DIR environment variable
+title: Fun - Includes in Fun, local vs. system and the FUN_LIB_DIR environment variable
 subtitle: Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
 description: Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
 permalink: /documentation/includes/
@@ -39,8 +39,7 @@ This document explains how to use local and system includes in Fun source files 
 Use double quotes to include files relative to the directory you execute `fun` from.
 
 Example:
-```
-#include "examples/include_local_util.fun"
+<pre>#include "examples/include_local_util.fun"
 
 print("== include local demo ==")
 greet("Fun")
@@ -48,8 +47,7 @@ greet("Fun")
 number a = 2
 number b = 3
 print("sum(" + to_string(a) + ", " + to_string(b) + ") = " + to_string(sum(a, b)))
-```
-
+</pre>
 - Resolution rule: quoted includes are read directly from the given path relative to `$PWD`.
 - Typical use: including helper modules that live within your project tree.
 
@@ -58,8 +56,7 @@ print("sum(" + to_string(a) + ", " + to_string(b) + ") = " + to_string(sum(a, b)
 Use angle brackets to include modules from the Fun standard library or any library directory you point `FUN_LIB_DIR` to.
 
 Example:
-```
-#include <hello.fun>
+<pre>#include <hello.fun>
 #include <utils/math.fun>
 
 print("== include lib demo ==")
@@ -69,8 +66,7 @@ number x = 10
 number y = 32
 print("add(" + to_string(x) + ", " + to_string(y) + ") = " + to_string(add(x, y)))
 print("times(" + to_string(x) + ", " + to_string(y) + ") = " + to_string(times(x, y)))
-```
-
+</pre>
 Resolution order for `#include <...>`:
 
 1) `FUN_LIB_DIR` (environment variable), with automatic handling of trailing `/` or `\`
@@ -84,8 +80,7 @@ If the file cannot be read from any location, an "Include error" is printed with
 You can import a module into a namespace to avoid symbol collisions or to make intent explicit.
 
 Examples:
-```
-// Import stdlib helpers under alias 'm'
+<pre>// Import stdlib helpers under alias 'm'
 #include <utils/math.fun> as m
 print("m.add(2, 3) = " + to_string(m.add(2, 3)))
 print("m.times(4, 5) = " + to_string(m.times(4, 5)))
@@ -95,8 +90,7 @@ print("m.times(4, 5) = " + to_string(m.times(4, 5)))
 print(mod.hello("Fun"))
 g = mod.Greeter("Hi")
 g.say("World")
-```
-
+</pre>
 Rules:
 - `as` must be followed by a valid identifier (letters, digits, underscore, starting with a letter or underscore).
 - Works for both local (`"..."`) and system (`<...>`) includes.

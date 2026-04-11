@@ -56,8 +56,7 @@ Helpers used throughout:
 
 Create arrays with square brackets and comma‑separated elements.
 
-```
-// creation
+<pre>// creation
 a = [1, 2, 3]
 b = ["alpha", "beta"]
 c = []  // empty array
@@ -96,8 +95,7 @@ for pair in it.enumerate(["x", "y"]) {
   val = pair[1]
   print(idx + ":" + val)
 }
-```
-
+</pre>
 Notes:
 - Indexing is bounds‑checked; invalid indices cause a runtime error that you can inspect with --trace or REPL‑on‑error.
 - Arrays are mutable; operations modify in place unless documented otherwise.
@@ -106,8 +104,7 @@ Notes:
 
 Create maps with curly braces. Keys are typically strings; values can be any type.
 
-```
-// creation
+<pre>// creation
 user = { "name": "Ada", "age": 37 }
 cfg  = {}
 
@@ -134,57 +131,48 @@ for i = 0; i < len(keys); i = i + 1 {
   k = keys[i]
   print(k + " = " + to_string(user[k]))
 }
-```
-
+</pre>
 Notes:
 - Accessing a non‑existing key returns nil; write a guard before using it as another type.
 - Maps are mutable; assigning with map["k"] = v updates in place.
 
 ## Strings (brief)
 
-```
-s = "hello, world"
+<pre>s = "hello, world"
 print(len(s))              // 12
 print(substr(s, 7, 5))     // world
 print(find(s, ","))       // 5 (index) or -1 if not found
 
 parts = split("a,b,c", ",")  // ["a","b","c"]
 print(join(parts, ";"))      // a;b;c
-```
-
+</pre>
 ## Numbers and floats (brief)
 
-```
-n = 10
+<pre>n = 10
 f = 3.14
 print(n + 2)               // 12
 print(f * 2)               // 6.28
 
 // clamp to widths when needed
 print(uclamp(300, 8))      // 44 (300 mod 256)
-```
-
+</pre>
 ## Booleans and nil
 
-```
-ok = 1        // true
+<pre>ok = 1        // true
 no = 0        // false
 none = nil
 
 if ok && !no { print("yay") }
 if none == nil { print("is nil") }
-```
-
+</pre>
 ## Conversions and typing
 
-```
-x = "42"
+<pre>x = "42"
 print(to_number(x) + 1)    // 43
 
 print(typeof([1,2,3]))     // "array"
 print(typeof({}))          // "map"
-```
-
+</pre>
 ## Common patterns
 
 - Accumulate values:

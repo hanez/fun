@@ -33,29 +33,24 @@ This guide focuses on maps: creation, reading/writing by key, checking key prese
 
 ## Creating maps
 
-```
-// literals
+<pre>// literals
 user = { "name": "Ada", "age": 37 }
 empty = {}
 
 print(typeof(user))     // "map"
-```
-
+</pre>
 Nested structures are natural and common:
 
-```
-book = {
+<pre>book = {
   "title": "Fun Handbook",
   "meta": { "pages": 120, "isbn": "123-456" },
   "tags": ["lang", "vm"]
 }
 print(book["meta"]["pages"])   // 120
-```
-
+</pre>
 ## Getting and setting by key
 
-```
-profile = { "name": "Lin" }
+<pre>profile = { "name": "Lin" }
 
 // read existing key
 print(profile["name"])       // Lin
@@ -67,35 +62,29 @@ print(profile["email"])      // nil
 profile["email"] = "lin@example.org"
 profile["name"]  = "Linus"
 print(profile)                 // {"name":"Linus","email":"lin@example.org"}
-```
-
+</pre>
 Notes:
 - Using a non‑string key is allowed only if your build/runtime supports it; most code uses string keys for portability.
 - Missing keys produce nil. Compare against nil before converting or indexing:
 
-```
-v = profile["phone"]
+<pre>v = profile["phone"]
 if v == nil { print("no phone on file") }
-```
-
+</pre>
 ## Checking key existence
 
 Use has(m, key) to check if a key is present (returns 1 or 0):
 
-```
-cfg = { "debug": 1 }
+<pre>cfg = { "debug": 1 }
 print(has(cfg, "debug"))   // 1
 print(has(cfg, "port"))    // 0
 
 if has(cfg, "port") { print(cfg["port"]) } else { print("using default port") }
-```
-
+</pre>
 ## Iterating maps
 
 Maps are not inherently ordered. To iterate, first obtain an array of keys or values.
 
-```
-user = { "name": "Ada", "age": 38 }
+<pre>user = { "name": "Ada", "age": 38 }
 
 // iterate known keys (explicit order you choose)
 order = ["name", "age"]
@@ -114,8 +103,7 @@ for i = 0; i < len(ks); i = i + 1 {
 // values only
 vs = values(user)         // -> ["Ada", 38]
 for i = 0; i < len(vs); i = i + 1 { print(to_string(vs[i])) }
-```
-
+</pre>
 Tip:
 - If you need deterministic output, either define the order array explicitly or sort the result of keys(user) using your available utilities before looping.
 
@@ -123,8 +111,7 @@ Tip:
 
 Maps are reference types. Assigning copies the reference, not the contents:
 
-```
-orig = { "a": 1 }
+<pre>orig = { "a": 1 }
 alias = orig
 alias["a"] = 9
 print(orig["a"])   // 9
@@ -138,17 +125,14 @@ for i = 0; i < len(ks); i = i + 1 { k = ks[i]; dst[k] = src[k] }
 dst["x"] = 7
 print(src["x"])     // 1
 print(dst["x"])     // 7
-```
-
+</pre>
 Shallow copies duplicate only the top‑level mapping; nested arrays/maps inside are still shared unless you clone them manually.
 
 ## Equality
 
-```
-print({"a":1,"b":2} == {"b":2,"a":1})  // true
+<pre>print({"a":1,"b":2} == {"b":2,"a":1})  // true
 print({"a":1} == {"a":2})                // false
-```
-
+</pre>
 Map equality compares sets of keys and their corresponding values for equality (order does not matter).
 
 ## Common utilities
@@ -164,8 +148,7 @@ Check your lib or VM docs (e.g., src/vm/maps) and documentation/types.md for ava
 
 ## Interop with arrays and strings
 
-```
-// maps inside arrays
+<pre>// maps inside arrays
 users = [ {"name":"Ada"}, {"name":"Lin"} ]
 for i = 0; i < len(users); i = i + 1 {
   print(users[i]["name"])   // Ada, Lin
@@ -180,8 +163,7 @@ print(m["nums"])           // [1,2,3,4]
 // JSON interop is typically via lib/io/json.fun (if enabled in your build)
 #include <io/json.fun> as json    // adjust to your tree and build flags
 s = json.stringify({"ok":1})     // "{"ok":1}"
-```
-
+</pre>
 ## Error handling and edge cases
 
 - Accessing a missing key returns nil. Guard before arithmetic or nested indexing.
@@ -196,8 +178,7 @@ s = json.stringify({"ok":1})     // "{"ok":1}"
 
 ## Examples
 
-```
-// merge defaults into config (without overwriting explicit keys)
+<pre>// merge defaults into config (without overwriting explicit keys)
 defaults = { "host":"127.0.0.1", "port":8080, "debug":0 }
 cfg      = { "port": 9000 }
 
@@ -216,8 +197,7 @@ for i = 0; i < len(rows); i = i + 1 {
   by_id[r["id"]] = r
 }
 print(by_id["u2"]["name"])  // Lin
-```
-
+</pre>
 ## See also
 
 - types.md — broader overview of core types with quick map examples.

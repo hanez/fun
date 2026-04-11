@@ -2,11 +2,13 @@
 layout: post
 published: true
 author: hanez
+author_email: you@hanez.org
+author_url: https://hanez.org
 noToc: false
 title: Announcing Fun 0.37.62
 description: Homepage and Blog
 date: 2026-01-25
-date_updated: 2026-01-31 21:45:03
+date_updated: 2026-04-11 00:56:03
 categories:
 - news
 - project
@@ -54,26 +56,22 @@ This release brings Fun closer to its vision with significant language enhanceme
 - Private members by convention (leading underscore)
 - Dot-call syntax sugar for clean method invocations: obj.method(a, b)
 
-<pre>
-class Counter
+<pre>class Counter
   value = 0
   fun inc(this)
     this.value = this.value + 1
     return this.value
 
 c = Counter()
-print(c.inc())  // 1
-</pre>
+print(c.inc())  // 1</pre>
 
 ### Module System
 
 - Namespaced includes with #include <path> as alias for clean imports
 - Organize code into reusable modules without naming conflicts
 
-<pre>
-#include <utils/math.fun> as m
-print(m.add(2, 3))  // 5
-</pre>
+<pre>#include <utils/math.fun> as m
+print(m.add(2, 3))  // 5</pre>
 
 ### Enhanced Type System
 
@@ -87,14 +85,12 @@ print(m.add(2, 3))  // 5
 - Thread primitives: thread_spawn, thread_join, and sleep
 - Write concurrent programs with ease
 
-<pre>
-fun square(n)
+<pre>fun square(n)
   sleep(100)
   return n * n
 
 tid = thread_spawn(square, 5)
-print(thread_join(tid))  // 25
-</pre>
+print(thread_join(tid))  // 25</pre>
 
 ### Control Flow Improvements
 
@@ -146,22 +142,21 @@ Important: Fun is not developed on third-party Git servers like GitHub or GitLab
 
 If you're curious about Fun, check out:
 
-- [Website](https://fun-lang.xyz)
 - [Git Repository](https://git.xw3.org/fun/fun){:class="git"}
-- [Fun Handbook](https://fun-lang.xyz/documentation/handbook/){:class="git"}
-- [Fun REPL Guide](https://fun-lang.xyz/documentation/repl/){:class="git"}
+- [Fun Handbook](/documentation/handbook/)
+- [Fun REPL Guide](/documentation/repl/)
 - [Specification v0.3](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3.md){:class="git"}
 - [Examples](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"}
 - [Standard Library](https://git.xw3.org/fun/fun/src/branch/main/lib){:class="git"}
-- [Community](https://fun-lang.xyz/community/)
+- [Community](/community/)
 
 The examples directory contains demonstrations of most Fun features, from basic "Hello, World!" to threading, networking, classes, and more. The lib directory includes modules written in Fun itself — and in the future, most enhancements will be written in Fun rather than C.
 
 ### For Developers
 
-- [Fun Internals](https://fun-lang.xyz/documentation/internals/){:class="git"}
-- [Fun Opcodes](https://fun-lang.xyz/documentation/opcodes/){:class="git"}
-- [Basic Rust Opcodes Support](https://fun-lang.xyz/documentation/rust/){:class="git"}
+- [Fun Internals](/documentation/internals/){:class="git"}
+- [Fun Opcodes](/documentation/opcodes/){:class="git"}
+- [Basic Rust Opcodes Support](/documentation/rust/){:class="git"}
 
 ### The Road Ahead
 
@@ -173,5 +168,4 @@ Fun is and will always be 100% free under the terms of the [Apache-2.0 License](
 
 Happy hacking, and remember: Fun is Fun!
 
-Johannes Findeisen (hanez) - [hanez@fun-lang.org](mailto:hanez@fun-lang.org){:class="mail"}
-
+Johannes Findeisen (hanez) - [hanez@fun-lang.xyz](mailto:hanez@fun-lang.xyz){:class="mail"}

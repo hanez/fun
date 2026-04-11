@@ -5,7 +5,7 @@ noToc: false
 noComments: false
 noDate: false
 title: Fun - Documentation
-subtitle: Detailed documentation for the Fun programming language.
+subtitle: Detailed documentation for the Fun programming language.<br><br><span style="color:red;">The documentation is always a work in progress! It will always be behind the development of the code. It will be 100% aligned with a 1.0 release... ;)</span>
 description: The Fun Documentation Index
 permalink: /documentation/
 lang: en
@@ -68,7 +68,7 @@ The examples directory contains demonstrations of most Fun features, from basic 
 
 ## Examples
 
- - [examples/README/](./examples/README/) - Catalog of all example scripts under ./examples/: what each area contains, how to run them, required env vars, and extension requirements.
+ - [examples/](./examples/) - Catalog of all example scripts under [https://git.xw3.org/fun/fun/src/branch/main/examples](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"}: what each area contains, how to run them, required env vars, and extension requirements.
 
 ## External extensions
 

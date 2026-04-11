@@ -5,8 +5,8 @@ noToc: false
 noComments: false
 noDate: false
 title: Fun - Website Documentation (fun-lang.xyz)
-subtitle: Documentation for the [fun-lang.xyz](https,//fun-lang.xyz) website in the `./web/` directory.
-description: Documentation for the [fun-lang.xyz](https,//fun-lang.xyz) website in the `./web/` directory.
+subtitle: Documentation for the fun-lang.xyz website in the `./web/` directory.
+description: Documentation for the fun-lang.xyz website in the `./web/` directory.
 permalink: /documentation/website/
 lang: en
 tags:
@@ -93,9 +93,7 @@ To run the website locally for development:
 
 The website can be deployed using the Makefile:
 
-```bash
-cd web/
+<pre>cd web/
 make release
-```
-
+</pre>
 The `release` target builds the site, minifies the assets, and syncs the files to [fun-lang.xyz](https://fun-lang.xyz) via `rsync`. Ensure you have the necessary SSH permissions for the sync to succeed.

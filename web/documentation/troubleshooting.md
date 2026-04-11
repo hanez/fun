@@ -26,27 +26,21 @@ This page lists common issues when building and running Fun from a source checko
 
 Error example:
 
-```
-Include error: cannot read '<io/console.fun>'
-```
-
+<pre>Include error: cannot read '<io/console.fun>'
+</pre>
 Fix:
 - When running from the repository without installing, set `FUN_LIB_DIR` to the local `./lib` directory so angle‑bracket includes resolve correctly.
 
 Linux/macOS/BSD:
 
-```
-export FUN_LIB_DIR="$(pwd)/lib"
+<pre>export FUN_LIB_DIR="$(pwd)/lib"
 ./build/fun examples/include_lib.fun
-```
-
+</pre>
 Windows (PowerShell):
 
-```
-$env:FUN_LIB_DIR = "$PWD/lib"
+<pre>$env:FUN_LIB_DIR = "$PWD/lib"
 ./build/fun.exe .\examples\include_lib.fun
-```
-
+</pre>
 If `FUN_LIB_DIR` is not set, the interpreter tries a compile‑time `DEFAULT_LIB_DIR`, and finally falls back to `./lib` relative to the current working directory. Be mindful of where you run the `fun` binary from.
 
 See includes.md for more details.
@@ -59,12 +53,10 @@ Symptoms:
 Fix:
 - Build with `-DFUN_WITH_REPL=ON` and rebuild the `fun` target. Then launch without arguments:
 
-```
-cmake -S . -B build -DFUN_WITH_REPL=ON
+<pre>cmake -S . -B build -DFUN_WITH_REPL=ON
 cmake --build build --target fun
 FUN_LIB_DIR="$(pwd)/lib" ./build/fun
-```
-
+</pre>
 See repl.md for usage tips and features.
 
 ## Linker errors for optional libraries (JSON, PCRE2, CURL, SQLite, etc.)

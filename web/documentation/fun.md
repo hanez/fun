@@ -27,10 +27,8 @@ tags:
 This document explains how to use the `fun` binary after building or installing it: invocation patterns, options, environment variables, include/search paths, REPL, and examples.
 
 ## Synopsis
-```
-fun [options] [<script.fun>] [-- args...]
-```
-
+<pre>fun [options] [<script.fun>] [-- args...]
+</pre>
 - If `<script.fun>` is provided, `fun` runs the script.
 - If omitted and the build enables the REPL, `fun` starts an interactive session.
 
@@ -66,20 +64,14 @@ Useful commands/patterns in REPL:
 
 ## Running scripts
 Basic run (installed system‑wide):
-```
-fun /usr/share/fun/examples/hello.fun
-```
-
+<pre>fun /usr/share/fun/examples/hello.fun
+</pre>
 Running from a build tree (not installed):
-```
-FUN_LIB_DIR=./lib /path/to/build_dir/fun examples/hello.fun
-```
-
+<pre>FUN_LIB_DIR=./lib /path/to/build_dir/fun examples/hello.fun
+</pre>
 Passing arguments to scripts (arguments after `--` are forwarded to the script environment):
-```
-fun myscript.fun -- arg1 arg2
-```
-
+<pre>fun myscript.fun -- arg1 arg2
+</pre>
 ## Build and install locations
 - Build targets: `fun` is produced by the `fun` target. In CLion/CMake, typical build directories are `build_debug` or `build_release`.
 - Install locations (by default):
@@ -88,11 +80,9 @@ fun myscript.fun -- arg1 arg2
   - Examples (optional): `/usr/share/fun/examples`
 
 To stage an install without touching the system:
-```
-DESTDIR=./tmp/stage cmake --build <build_dir> --target install
+<pre>DESTDIR=./tmp/stage cmake --build <build_dir> --target install
 ./tmp/stage/usr/bin/fun ./examples/hello.fun
-```
-
+</pre>
 ## See also
 - `documentation/cli.md` — concise CLI reference (synopsis/options/exit codes)
 - `documentation/funstx.md` — syntax checker for `.fun` files with optional `--fix`
