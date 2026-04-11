@@ -73,7 +73,7 @@ Fun is not about being the fastest or the most feature-rich. It’s about sharin
 
 Like the name says: Fun Unites Nerds.
 
-Please visit the [Fun Community Page](https://fun-lang.xyz/community/){:class="git"} to get in touch.
+Use the [Fun Community Page](../community/) to get in touch.
 
 ## The Goal
 
@@ -116,9 +116,8 @@ See [https://git.xw3.org/fun/fun/src/branch/main/lib](https://git.xw3.org/fun/fu
 
 Note: Not all of the above features will be implemented. Those who are marked "Done" will probably remain in Fun, but I don't know actually... ;)
 
-There are some libs written in Fun available in the [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib){:class="ext"} diretory. In the future most Fun enhancements should be written in Fun itself.
+There are some libs written in Fun available in the [https://git.xw3.org/fun/fun/src/branch/main/lib/](https://git.xw3.org/fun/fun/src/branch/main/lib){:class="git"} diretory. In the future most Fun enhancements should be written in Fun itself.
 
 ## Code
 
  - [https://git.xw3.org/fun/fun/](https://git.xw3.org/fun/fun/){:class="git"}
-
