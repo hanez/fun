@@ -41,6 +41,7 @@ The examples directory contains demonstrations of most Fun features, from basic 
 - [includes/](./includes/) - Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
 - [opcodes/](./opcodes/) - VM opcodes overview grouped by domain with brief behavior/stack notes.
 - [internals/](./internals/) - Implementation details: bytecode format, VM architecture, stacks/frames, parser, and dispatch.
+- [vm/](./vm/) - VM configuration constants: maximum stack depth, local/global variable limits, and output buffer size.
 - [rust/](./rust/) - Writing Rust-backed opcodes and wiring them into the C VM; build/setup notes.
 - [examples/](./examples/) - How to run the examples and the interactive showcase script, with environment tips.
 - [testing/](./testing/) - How to build and run tests/targets with CMake/CTest, and where to add new tests.
