@@ -8,7 +8,7 @@ noToc: false
 title: Announcing Fun 0.40.5
 description: Nested functions, Rust integration, and CI automation
 date: 2026-04-17
-date_updated: 2026-04-17 23:55:00
+date_updated: 2026-04-18 00:17:13
 categories:
 - news
 - project
