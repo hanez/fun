@@ -38,15 +38,19 @@ f = outer(10)
 print(f(5))  // 15</pre>
 
 #### Rust & C++ Integration
+
 Fun is getting more "multi-lingual." We've introduced support for implementing opcodes in **Rust**, allowing developers to leverage Rust's safety and performance within the Fun VM. Additionally, we've started evaluating C++ integration for those who need it.
 
 #### Improved Tooling: funstx
+
 We've introduced `funstx`, a dedicated linter for Fun. It helps maintain the "Indentation is Truth" philosophy by ensuring your code follows the strict 2-space indentation rule and other stylistic consistency checks.
 
 #### CI Automation & Reliability
+
 To ensure the stability of the language as it grows, we've implemented a full **GitHub Actions CI workflow**. Every commit now triggers automated execution of our extensive examples library, catching regressions early.
 
 #### VM Configuration & Performance
+
 The Fun VM is now more flexible than ever. Key parameters like `MAX_FRAMES`, `STACK_SIZE`, and `OUTPUT_SIZE` can now be configured at build time via CMake defines (`-D`), allowing you to tune the VM for specific environments (from embedded systems to beefy servers).
 
 ### Changelog (v0.37.62 to v0.40.5)
