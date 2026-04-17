@@ -26,6 +26,7 @@ We are thrilled to announce the release of Fun version 0.40.5! This update repre
 ### Key Highlights of Version 0.40.5
 
 #### Nested Functions & Higher-Order Patterns
+
 The most significant language enhancement is the addition of **nested functions** in the Fun parser. This allows for cleaner encapsulation and enables powerful functional programming patterns, such as closures and advanced higher-order function implementations.
 
 <pre>fun outer(x)
@@ -52,20 +53,20 @@ The Fun VM is now more flexible than ever. Key parameters like `MAX_FRAMES`, `ST
 
 #### Added
 
-- Nested Functions - Full support in the parser (v0.40.0).
-- Rust Integration - Build and link Rust-based opcode libraries (v0.38.0).
-- GitHub Actions - CI Automated testing and example validation (v0.39.15).
-- Linter (funstx) - New tool to enforce code style and indentation (v0.39.0).
-- Configurable VM - Build-time tuning of memory limits via CMake (v0.40.5).
-- Specification v0.4 - Updated language specification.
-- New Stdlib Modules - AES256 support, improved asyncio/scheduler, and more.
+- Nested Functions: Full support in the parser (v0.40.0).
+- Rust Integration: Build and link Rust-based opcode libraries (v0.38.0).
+- GitHub Actions: CI Automated testing and example validation (v0.39.15).
+- Linter (funstx): New tool to enforce code style and indentation (v0.39.0).
+- Configurable VM: Build-time tuning of memory limits via CMake (v0.40.5).
+- Specification v0.4: Updated language specification.
+- New Stdlib Modules: AES256 support, improved asyncio/scheduler, and more.
 
 #### Changed
 
-- Documentation Relocation - All documentation moved to `./web/documentation/` for better website integration.
-- Website Overhaul - The website code was moved to `./web/` for easier maintenance.
-- Example Refactoring - Reorganized the `./examples` directory for better clarity and CI integration.
-- Code Style - Standardized all C files to two-space indentation.
+- Documentation Relocation: All documentation moved to `./web/documentation/` for better website integration.
+- Website Overhaul: The website code was moved to `./web/` for easier maintenance.
+- Example Refactoring: Reorganized the `./examples` directory for better clarity and CI integration.
+- Code Style: Standardized all C files to two-space indentation.
 
 #### Removed (Cleanup & Focus)
 
