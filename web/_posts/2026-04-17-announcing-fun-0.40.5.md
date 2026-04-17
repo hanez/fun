@@ -27,7 +27,7 @@ We are thrilled to announce the release of Fun version 0.40.5! This update repre
 
 #### Nested Functions & Higher-Order Patterns
 
-The most significant language enhancement is the addition of **nested functions** in the Fun parser. This allows for cleaner encapsulation and enables powerful functional programming patterns, such as closures and advanced higher-order function implementations.
+The most significant language enhancement is the addition of nested functions in the Fun parser. This allows for cleaner encapsulation and enables powerful functional programming patterns, such as closures and advanced higher-order function implementations.
 
 <pre>fun outer(x)
   fun inner(y)
@@ -39,7 +39,7 @@ print(f(5))  // 15</pre>
 
 #### Rust & C++ Integration
 
-Fun is getting more "multi-lingual." We've introduced support for implementing opcodes in **Rust**, allowing developers to leverage Rust's safety and performance within the Fun VM. Additionally, we've started evaluating C++ integration for those who need it.
+Fun is getting more "multi-lingual." We've introduced support for implementing opcodes in Rust, allowing developers to leverage Rust's safety and performance within the Fun VM. Additionally, we've started evaluating C++ integration for those who need it.
 
 #### Improved Tooling: funstx
 
@@ -47,7 +47,7 @@ We've introduced `funstx`, a dedicated linter for Fun. It helps maintain the "In
 
 #### CI Automation & Reliability
 
-To ensure the stability of the language as it grows, we've implemented a full **GitHub Actions CI workflow**. Every commit now triggers automated execution of our extensive examples library, catching regressions early.
+To ensure the stability of the language as it grows, we've implemented a full GitHub Actions CI workflow. Every commit now triggers automated execution of our extensive examples library, catching regressions early.
 
 #### VM Configuration & Performance
 
@@ -77,14 +77,16 @@ The Fun VM is now more flexible than ever. Key parameters like `MAX_FRAMES`, `ST
 - Removed support for `libsql`, `tcltk`, `notcurses`, and `libressl` to streamline the core and focus on more modern alternatives (v0.40.2 - v0.40.5).
 
 #### Fixed
+
 - Improved line number reporting in error messages (v0.39.15).
 - Various bug fixes in the VM and standard library modules.
 
 ### The Road to 1.0
+
 As always, Fun remains an experiment, but with version 0.40.5, we are closer than ever to a stable 1.0. We've focused on cleaning up experimental features that didn't fit our minimalism philosophy while adding the powerful primitives needed for real-world hacking.
 
 Want to try it out? Head over to our [Git Repository](https://git.xw3.org/fun/fun){:class="git"} or check out the updated [Documentation](/documentation/).
 
-Happy hacking, and remember: **Fun is Fun!**
+Happy hacking, and remember: Fun is Fun!
 
 Johannes Findeisen (hanez) - [hanez@fun-lang.xyz](mailto:hanez@fun-lang.xyz){:class="mail"}
