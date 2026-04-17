@@ -204,7 +204,7 @@ Fun supports a lightweight include mechanism at the source text level (handled b
 
 - map_expanded_line_to_include(path, line, out_path, out_line) uses these markers to map a line in the expanded text back to the original file:line that contributed it.
 
-When stderr output is produced by the VM, fun_vm_vfprintf annotates messages with the mapped file and line if possible.
+When the VM produces stderr output, fun_vm_vfprintf annotates messages with the mapped file and line if possible.
 
 ## Parser and compiler pipeline (src/parser.c)
 
@@ -222,26 +222,22 @@ Key components:
   - emit_expression: entry point that threads all the above
 
 - Statement and block parsing:
-- 
   - read_line_start and skip_to_eol implement indentation and line/whitespace/comment handling (Fun uses indentation‑based blocks).
   - parse_simple_statement emits bytecode for assignments, declarations, expression statements, control flow (if/elif/else, while/for), returns, breaks/continues, try/catch/finally constructs, print/echo, etc.
   - parse_block handles nested blocks, indentation tracking, and emits OP_LINE markers for accurate source positioning.
 
 - Control‑flow codegen:
-- 
+
   - Conditional and loop constructs emit OP_JUMP/OP_JUMP_IF_FALSE with forward jump placeholders patched later via bytecode_set_operand.
   - try/catch/finally: emit OP_TRY_PUSH/OP_TRY_POP and arrange handler ips; OP_THROW for explicit throw.
 
 - Functions and calls:
-- 
   - Functions compile to their own Bytecode with a fresh LocalEnv; callers use OP_CALL with operand = arg count. Arguments are pushed left‑to‑right; the callee consumes them from the stack into local slots as per the compiler’s calling convention.
 
 - Constants and literals:
-- 
   - String/number/boolean/nil literals are interned into the Bytecode.constants table. OP_LOAD_CONST references them by index.
 
 - Line information and files:
-- 
   - The parser emits OP_LINE as it advances through source lines. Bytecode.source_file is set so the VM can report accurate errors.
 
 Front‑end entry points:
