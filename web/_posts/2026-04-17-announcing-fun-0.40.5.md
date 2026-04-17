@@ -51,6 +51,7 @@ The Fun VM is now more flexible than ever. Key parameters like `MAX_FRAMES`, `ST
 ### Changelog (v0.37.62 to v0.40.5)
 
 #### Added
+
 - Nested Functions - Full support in the parser (v0.40.0).
 - Rust Integration - Build and link Rust-based opcode libraries (v0.38.0).
 - GitHub Actions - CI Automated testing and example validation (v0.39.15).
@@ -60,12 +61,14 @@ The Fun VM is now more flexible than ever. Key parameters like `MAX_FRAMES`, `ST
 - New Stdlib Modules - AES256 support, improved asyncio/scheduler, and more.
 
 #### Changed
+
 - Documentation Relocation - All documentation moved to `./web/documentation/` for better website integration.
 - Website Overhaul - The website code was moved to `./web/` for easier maintenance.
 - Example Refactoring - Reorganized the `./examples` directory for better clarity and CI integration.
 - Code Style - Standardized all C files to two-space indentation.
 
 #### Removed (Cleanup & Focus)
+
 - Removed support for `libsql`, `tcltk`, `notcurses`, and `libressl` to streamline the core and focus on more modern alternatives (v0.40.2 - v0.40.5).
 
 #### Fixed
