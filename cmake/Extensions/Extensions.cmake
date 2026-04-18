@@ -10,7 +10,7 @@ function(_fun_print_feature name flag)
   endif()
 endfunction()
 
-# Include each extension module (Tcl/Tk removed)
+# Include each extension module
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/SQLITE.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/PCSC.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/JSON.cmake)
