@@ -72,7 +72,7 @@ The examples directory contains demonstrations of most Fun features, from basic 
 
 ## Extensions
 
-Documentation for optional, build-time selectable integrations lives in [extensions/](./extensions/):
+Documentation for optional, build-time selectable integrations lives in [./extensions/](./extensions/):
 
 - [Index of extensions](./extensions/)
  - Highlights: [cURL](./extensions/curl/), [INI](./extensions/ini/), [JSON](./extensions/json/), [XML (libxml2)](./extensions/xml2/), [SQLite](./extensions/sqlite/), [PCRE2](./extensions/pcre2/), [PC/SC](./extensions/pcsc/), [OpenSSL](./extensions/openssl/)
@@ -80,6 +80,6 @@ Documentation for optional, build-time selectable integrations lives in [extensi
 ## Tips
 
 - When building from the repo without installing, set `FUN_LIB_DIR` to the local `./lib` directory so examples and the REPL can locate the stdlib.
-- For a broader project overview and quickstart, see the repository root [README/](./../README/).
+- For a broader project overview and quickstart, see the repository root [README](./../README/).
 - Crypto examples:
   - If built with `-DFUN_WITH_OPENSSL=ON`, try `examples/crypto/openssl_md5.fun`.
