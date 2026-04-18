@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Documentation
+title: Documentation
 subtitle: Detailed documentation for the Fun programming language.<br><br><span style="color:red;">The documentation is always a work in progress! It will always be behind the development of the code. It will be 100% aligned with a 1.0 release... ;)</span>
 description: The Fun Documentation Index
 permalink: /documentation/
@@ -52,12 +52,12 @@ The examples directory contains demonstrations of most Fun features, from basic 
 - [CLI](./cli/) - Command-line usage of the `fun` executable: synopsis, options, exit codes, includes and library paths.
 - [fun](./fun/) - Full usage guide for the `fun` executable: invocation patterns, REPL, env vars, include paths, examples, and install locations.
 - [Asyncio](./asyncio/) - Async I/O primitives and patterns: non-blocking sockets, fd polling, examples, and best practices.
-- [Funstx](./funstx/) - Syntax checker for .fun files with optional --fix auto-corrections; usage, exit codes, and limitations.
+- [funstx](./funstx/) - Syntax checker for .fun files with optional --fix auto-corrections; usage, exit codes, and limitations.
 - [Contributing](./contributing/) - How to contribute: project structure, coding style, running tests, and PR guidelines.
-- [Style-guide](./style-guide/) - Coding conventions for C and Fun (indentation, naming, idioms).
+- [Style-Guide](./style-guide/) - Coding conventions for C and Fun (indentation, naming, idioms).
 - [stdlib](./stdlib/) - Overview of the standard library modules under ./lib with one-line summaries.
 - [Embedding](./embedding/) - Embedding the VM from C/Rust, lifecycle, and host integration tips.
-- [Errors-and-diagnostics](./errors-and-diagnostics/) - Understanding parser/runtime errors and enabling diagnostics.
+- [Errors-and-Diagnostics](./errors-and-diagnostics/) - Understanding parser/runtime errors and enabling diagnostics.
 - [Performance](./performance/) - Build/runtime tuning tips and patterns for better performance.
 - [Security-and-Sandboxing](./security-and-sandboxing/) - Trust boundaries, I/O expectations, and capability restrictions.
 - [FAQ](./faq/) - Frequently asked questions and quick answers.
