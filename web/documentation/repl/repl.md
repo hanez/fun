@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - REPL Guide
+title: REPL Guide
 subtitle: REPL guide, how to build/launch, editing and history, completions, REPL-on-error, and tips.
 description: REPL guide, how to build/launch, editing and history, completions, REPL-on-error, and tips.
 permalink: /documentation/repl/
@@ -243,5 +243,5 @@ Program output produced by VM execution is collected and then printed after each
 
 ## See also
 
-- [../handbook/](../handbook/) — full language and VM handbook, including build options and ecosystem overview.
+- [Handbook](../handbook/) — full language and VM handbook, including build options and ecosystem overview.
 - [https://git.xw3.org/fun/fun/src/branch/main/examples/error/repl_on_error.fun](https://git.xw3.org/fun/fun/src/branch/main/examples/error/repl_on_error.fun){:class="git"} — example showing the REPL-on-error workflow.

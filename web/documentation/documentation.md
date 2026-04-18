@@ -21,10 +21,11 @@ This file serves as an index of the documents in this directory. Links are relat
 
 - [Handbook](./handbook/) - Comprehensive handbook for the Fun language and VM: install/build, configuration flags, usage, and full feature overview.
 - [REPL](./repl/) - REPL user guide: how to build/launch, editing and history, completions, REPL-on-error, and tips.
-- [Specification v0.4](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.4/){:class="git"}
-- [Specification v0.3](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3/){:class="git"}
-- [Specification v0.2](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.2/){:class="git"}
-- [Specification v0.1](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.1/){:class="git"}
+- Specification
+  - [v0.4](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.4/){:class="git"}
+  - [v0.3](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3/){:class="git"}
+  - [v0.2](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.2/){:class="git"}
+  - [v0.1](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.1/){:class="git"}
 - [Examples](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"}
 - [Standard Library](https://git.xw3.org/fun/fun/src/branch/main/lib){:class="git"}
 
@@ -33,15 +34,15 @@ The examples directory contains demonstrations of most Fun features, from basic 
 ## Overview
 
 - [Types](./types/) - Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
-- [Numbers](./numbers/) - Working with integers and floats: arithmetic, conversions, clamping, bitwise ops, and patterns.
-- [Strings](./strings/) - Working with strings: literals/escaping, concatenation, substr/find, split, and conversions.
-- [Arrays](./arrays/) - Working with arrays: creation, indexing/slicing, iteration patterns, helpers, and idioms.
-- [Mmaps](./maps/) - Working with maps: construction, lookup/update, merging, iteration, and common patterns.
+  - [Numbers](./numbers/) - Working with integers and floats: arithmetic, conversions, clamping, bitwise ops, and patterns.
+  - [Strings](./strings/) - Working with strings: literals/escaping, concatenation, substr/find, split, and conversions.
+  - [Arrays](./arrays/) - Working with arrays: creation, indexing/slicing, iteration patterns, helpers, and idioms.
+  - [Maps](./maps/) - Working with maps: construction, lookup/update, merging, iteration, and common patterns.
 - [Includes](./includes/) - Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
 - [Opcodes](./opcodes/) - VM opcodes overview grouped by domain with brief behavior/stack notes.
 - [Internals](./internals/) - Implementation details: bytecode format, VM architecture, stacks/frames, parser, and dispatch.
-- [VM](./vm/) - VM configuration constants: maximum stack depth, local/global variable limits, and output buffer size.
-- [Rust](./rust/) - Writing Rust-backed opcodes and wiring them into the C VM; build/setup notes.
+  - [VM](./vm/) - VM configuration constants: maximum stack depth, local/global variable limits, and output buffer size.
+  - [Rust](./rust/) - Writing Rust-backed opcodes and wiring them into the C VM; build/setup notes.
 - [Examples](./examples/) - How to run the examples and the interactive showcase script, with environment tips.
 - [Testing](./testing/) - How to build and run tests/targets with CMake/CTest, and where to add new tests.
 - [Troubleshooting](./troubleshooting/) - Common issues and quick fixes for build, includes, and REPL usage.
