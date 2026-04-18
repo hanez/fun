@@ -7,7 +7,7 @@ noDate: false
 title: Fun - INI (iniparser) extension (optional)
 subtitle: Documentation for INI (iniparser) extension (optional)
 description: Documentation for INI (iniparser) extension (optional)
-permalink: /documentation/external/ini/
+permalink: /documentation/extensions/ini/
 lang: en
 tags:
 - extension

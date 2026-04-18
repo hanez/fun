@@ -7,7 +7,7 @@ noDate: false
 title: Fun - OpenSSL extension (optional)
 subtitle: Documentation for OpenSSL extension (optional)
 description: Documentation for OpenSSL extension (optional)
-permalink: /documentation/external/openssl/
+permalink: /documentation/extensions/openssl/
 lang: en
 tags:
 - extension

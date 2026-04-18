@@ -7,7 +7,7 @@ noDate: false
 title: Fun - cURL (libcurl) extension (optional)
 subtitle: Documentation for cURL (libcurl) extension (optional)
 description: Documentation for cURL (libcurl) extension (optional)
-permalink: /documentation/external/curl/
+permalink: /documentation/extensions/curl/
 lang: en
 tags:
 - curl

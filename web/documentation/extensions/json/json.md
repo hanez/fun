@@ -7,7 +7,7 @@ noDate: false
 title: Fun - JSON (json-c) extension (optional)
 subtitle: Documentation for JSON (json-c) extension (optional)
 description: Documentation for JSON (json-c) extension (optional)
-permalink: /documentation/external/json/
+permalink: /documentation/extensions/json/
 lang: en
 tags:
 - extension

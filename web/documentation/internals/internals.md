@@ -111,7 +111,7 @@ Opcode handlers organization:
 
 - To keep vm.c readable, most opcode implementations are factored into small .c files included directly into vm.c (e.g., vm/core/load_const.c, vm/logic/and.c, vm/arrays/push.c, vm/math/abs.c, vm/os/thread_spawn.c, etc.).
 - This is a deliberate “amalgamation” style: small single-purpose C units compiled as part of vm.c.
-- Optional subsystems (JSON, PCRE2, CURL, SQLite, libSQL, PC/SC, XML2, Tcl/Tk, Notcurses, INI, OpenSSL/LibreSSL crypto helpers, sockets, serial, OS helpers) are grouped under src/external and src/vm/<domain>/.
+- Optional subsystems (JSON, PCRE2, CURL, SQLite, libSQL, PC/SC, XML2, Tcl/Tk, Notcurses, INI, OpenSSL/LibreSSL crypto helpers, sockets, serial, OS helpers) are grouped under src/extensions and src/vm/<domain>/.
 
 Dispatch naming and visibility:
 
@@ -152,7 +152,7 @@ The VM is dynamically typed. Values carry a tag; operations check types at runti
 - Maps: OP_MAKE_MAP/KEYS/VALUES/HAS_KEY.
 - Conversions/reflection: OP_TO_NUMBER/TO_STRING/CAST/TYPEOF, OP_UCLAMP/SCLAMP.
 - I/O and OS: OP_READ_FILE/WRITE_FILE/INPUT_LINE/ENV/PROC_RUN/PROC_SYSTEM/TIME_NOW_MS/CLOCK_MONO_MS/DATE_FORMAT/OS_LIST_DIR/RANDOM_NUMBER, sockets, serial.
-- External integrations (optional): JSON, CURL, SQLite, libSQL, PC/SC, XML2, Tcl/Tk, Notcurses, INI, OpenSSL/LibreSSL.
+- Extensions (optional): JSON, CURL, SQLite, libSQL, PC/SC, XML2, Tcl/Tk, Notcurses, INI, OpenSSL/LibreSSL.
 
 Each handler enforces argument types and returns clear error messages via vm_raise_error on misuse.
 
@@ -257,7 +257,7 @@ The VM includes small, standalone C files for each feature group under src/vm/�
 - Collections and strings: src/vm/arrays/*.c, src/vm/maps/*.c, src/vm/strings/*.c
 - Conversions/reflection: src/vm/*.c (to_number, to_string, cast, typeof, uclamp, sclamp)
 - OS and I/O: src/vm/io/*.c, src/vm/os/*.c, sockets and serial
-- External integrations: src/external/*.c glue with opcode handlers in src/vm/<domain> when enabled by CMake options
+- Extensions: src/extensions/*.c glue with opcode handlers in src/vm/<domain> when enabled by CMake options
 
 Feature flags (CMake):
 
@@ -297,7 +297,7 @@ From vm.h defaults (tuned for simplicity; adjust if needed):
 - src/bytecode.h — instruction set and bytecode container
 - src/parser.c — compiler, expression/statement/block parsing, emission, indentation handling
 - src/vm/* — small focused opcode handlers by domain
-- src/external/* — integration shims for optional dependencies
+- src/extensions/* — integration shims for optional dependencies
 
 ## Concurrency, isolates, and garbage collection
 

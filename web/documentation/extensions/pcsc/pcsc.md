@@ -7,7 +7,7 @@ noDate: false
 title: Fun - PC/SC (smart cards) extension (optional)
 subtitle: Documentation for PC/SC (smart cards) extension (optional)
 description: Documentation for PC/SC (smart cards) extension (optional)
-permalink: /documentation/external/pcsc/
+permalink: /documentation/extensions/pcsc/
 lang: en
 tags:
 - cards

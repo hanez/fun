@@ -89,14 +89,14 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 ### Optional extensions (build-time selectable / only testing this on Linux actually):
 
 - [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) &#9744;
-- [cURL (libcurl)](./docs/external/curl.md) (optional) &#9745;
-- [INI (iniparser)](./docs/external/ini.md) (optional) &#9745;
-- [JSON (json-c)](./docs/external/json.md) (optional) &#9745;
-- [PCRE2](./docs/external/pcre2.md) (optional) &#9745;
-- [PCSC (smart cards)](./docs/external/pcsc.md) (optional) &#9745;
-- [OpenSSL](./docs/external/openssl.md) (optional) &#9745;
-- [SQLite](./docs/external/sqlite.md) (optional) &#9745;
-- [XML (libxml2)](./docs/external/xml2.md) (optional) &#9745;
+- [cURL (libcurl)](./docs/extensions/curl.md) (optional) &#9745;
+- [INI (iniparser)](./docs/extensions/ini.md) (optional) &#9745;
+- [JSON (json-c)](./docs/extensions/json.md) (optional) &#9745;
+- [PCRE2](./docs/extensions/pcre2.md) (optional) &#9745;
+- [PCSC (smart cards)](./docs/extensions/pcsc.md) (optional) &#9745;
+- [OpenSSL](./docs/extensions/openssl.md) (optional) &#9745;
+- [SQLite](./docs/extensions/sqlite.md) (optional) &#9745;
+- [XML (libxml2)](./docs/extensions/xml2.md) (optional) &#9745;
 
 &#9745; = Done / &#9744; = Planned or in progress.
 
@@ -106,7 +106,7 @@ There are some libs written in Fun available in the [./lib/](https://git.xw3.org
 
 ### OpenSSL quickstart (MD5)
 
-See the dedicated page: ./docs/external/openssl.md
+See the dedicated page: ./docs/extensions/openssl.md
 
 ## Documentation
 

@@ -56,20 +56,20 @@
 /* Notcurses support removed */
 
 // Optional by extensions commonly used code. #ifdef's are in each single file.
-#include "external/curl.c"
-#include "external/ini.c"
+#include "extensions/curl.c"
+#include "extensions/ini.c"
 #ifdef FUN_WITH_INI
 /* Central INI handle registry and helpers */
 #include "vm/ini/handles.c"
 #endif
 /* Note: INI opcode handlers are included below; changes in vm/ini/ .c files
  * require vm.c to rebuild. */
-#include "external/json.c"
-#include "external/openssl.c"
-#include "external/pcre2.c"
-#include "external/pcsc.c"
-#include "external/sqlite.c"
-#include "external/xml2.c"
+#include "extensions/json.c"
+#include "extensions/openssl.c"
+#include "extensions/pcre2.c"
+#include "extensions/pcsc.c"
+#include "extensions/sqlite.c"
+#include "extensions/xml2.c"
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);

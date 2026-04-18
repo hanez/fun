@@ -19,8 +19,8 @@ This file serves as an index of the documents in this directory. Links are relat
 
 ## Basics
 
-- [./handbook/](./handbook/) - Comprehensive handbook for the Fun language and VM: install/build, configuration flags, usage, and full feature overview.
-- [./repl/](./repl/) - REPL user guide: how to build/launch, editing and history, completions, REPL-on-error, and tips.
+- [Handbook](./handbook/) - Comprehensive handbook for the Fun language and VM: install/build, configuration flags, usage, and full feature overview.
+- [REPL](./repl/) - REPL user guide: how to build/launch, editing and history, completions, REPL-on-error, and tips.
 - [Specification v0.4](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.4/){:class="git"}
 - [Specification v0.3](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3/){:class="git"}
 - [Specification v0.2](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.2/){:class="git"}
@@ -32,50 +32,50 @@ The examples directory contains demonstrations of most Fun features, from basic 
 
 ## Overview
 
-- [./types/](./types/) - Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
-- [./numbers/](./numbers/) - Working with integers and floats: arithmetic, conversions, clamping, bitwise ops, and patterns.
-- [./strings/](./strings/) - Working with strings: literals/escaping, concatenation, substr/find, split, and conversions.
-- [./arrays/](./arrays/) - Working with arrays: creation, indexing/slicing, iteration patterns, helpers, and idioms.
-- [./maps/](./maps/) - Working with maps: construction, lookup/update, merging, iteration, and common patterns.
-- [./includes/](./includes/) - Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
-- [./opcodes/](./opcodes/) - VM opcodes overview grouped by domain with brief behavior/stack notes.
-- [./internals/](./internals/) - Implementation details: bytecode format, VM architecture, stacks/frames, parser, and dispatch.
-- [./vm/](./vm/) - VM configuration constants: maximum stack depth, local/global variable limits, and output buffer size.
-- [./rust/](./rust/) - Writing Rust-backed opcodes and wiring them into the C VM; build/setup notes.
-- [./examples/](./examples/) - How to run the examples and the interactive showcase script, with environment tips.
-- [./testing/](./testing/) - How to build and run tests/targets with CMake/CTest, and where to add new tests.
-- [./troubleshooting/](./troubleshooting/) - Common issues and quick fixes for build, includes, and REPL usage.
+- [Types](./types/) - Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
+- [Numbers](./numbers/) - Working with integers and floats: arithmetic, conversions, clamping, bitwise ops, and patterns.
+- [Strings](./strings/) - Working with strings: literals/escaping, concatenation, substr/find, split, and conversions.
+- [Arrays](./arrays/) - Working with arrays: creation, indexing/slicing, iteration patterns, helpers, and idioms.
+- [Mmaps](./maps/) - Working with maps: construction, lookup/update, merging, iteration, and common patterns.
+- [Includes](./includes/) - Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
+- [Opcodes](./opcodes/) - VM opcodes overview grouped by domain with brief behavior/stack notes.
+- [Internals](./internals/) - Implementation details: bytecode format, VM architecture, stacks/frames, parser, and dispatch.
+- [VM](./vm/) - VM configuration constants: maximum stack depth, local/global variable limits, and output buffer size.
+- [Rust](./rust/) - Writing Rust-backed opcodes and wiring them into the C VM; build/setup notes.
+- [Examples](./examples/) - How to run the examples and the interactive showcase script, with environment tips.
+- [Testing](./testing/) - How to build and run tests/targets with CMake/CTest, and where to add new tests.
+- [Troubleshooting](./troubleshooting/) - Common issues and quick fixes for build, includes, and REPL usage.
 
 ## New and supplemental guides
 
-- [./build/](./build/) - How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL).
-- [./cli/](./cli/) - Command-line usage of the `fun` executable: synopsis, options, exit codes, includes and library paths.
-- [./fun/](./fun/) - Full usage guide for the `fun` executable: invocation patterns, REPL, env vars, include paths, examples, and install locations.
-- [./asyncio/](./asyncio/) - Async I/O primitives and patterns: non-blocking sockets, fd polling, examples, and best practices.
-- [./funstx/](./funstx/) - Syntax checker for .fun files with optional --fix auto-corrections; usage, exit codes, and limitations.
-- [./contributing/](./contributing/) - How to contribute: project structure, coding style, running tests, and PR guidelines.
-- [./style-guide/](./style-guide/) - Coding conventions for C and Fun (indentation, naming, idioms).
-- [./stdlib/](./stdlib/) - Overview of the standard library modules under ./lib with one-line summaries.
-- [./embedding/](./embedding/) - Embedding the VM from C/Rust, lifecycle, and host integration tips.
-- [./errors-and-diagnostics/](./errors-and-diagnostics/) - Understanding parser/runtime errors and enabling diagnostics.
-- [./performance/](./performance/) - Build/runtime tuning tips and patterns for better performance.
-- [./security-and-sandboxing/](./security-and-sandboxing/) - Trust boundaries, I/O expectations, and capability restrictions.
-- [,/faq/](./faq/) - Frequently asked questions and quick answers.
-- [./website/](./website/) - Documentation for the [fun-lang.xyz](https://fun-lang.xyz) website in the `./web/` directory.
-- [./writing-tests/](./writing-tests/) - How to author new tests for Fun and opcode components.
-- [./bytecode-format/](./bytecode-format/) - Reference for the bytecode format (split out from internals for convenience).
-- [./roadmap/](./roadmap/) - High-level direction, planned features, and pointers to issues.
+- [Build](./build/) - How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL).
+- [CLI](./cli/) - Command-line usage of the `fun` executable: synopsis, options, exit codes, includes and library paths.
+- [fun](./fun/) - Full usage guide for the `fun` executable: invocation patterns, REPL, env vars, include paths, examples, and install locations.
+- [Asyncio](./asyncio/) - Async I/O primitives and patterns: non-blocking sockets, fd polling, examples, and best practices.
+- [Funstx](./funstx/) - Syntax checker for .fun files with optional --fix auto-corrections; usage, exit codes, and limitations.
+- [Contributing](./contributing/) - How to contribute: project structure, coding style, running tests, and PR guidelines.
+- [Style-guide](./style-guide/) - Coding conventions for C and Fun (indentation, naming, idioms).
+- [stdlib](./stdlib/) - Overview of the standard library modules under ./lib with one-line summaries.
+- [Embedding](./embedding/) - Embedding the VM from C/Rust, lifecycle, and host integration tips.
+- [Errors-and-diagnostics](./errors-and-diagnostics/) - Understanding parser/runtime errors and enabling diagnostics.
+- [Performance](./performance/) - Build/runtime tuning tips and patterns for better performance.
+- [Security-and-Sandboxing](./security-and-sandboxing/) - Trust boundaries, I/O expectations, and capability restrictions.
+- [FAQ](./faq/) - Frequently asked questions and quick answers.
+- [Website](./website/) - Documentation for the [fun-lang.xyz](https://fun-lang.xyz) website in the `./web/` directory.
+- [Writing-Tests](./writing-tests/) - How to author new tests for Fun and opcode components.
+- [Bytecode-Format](./bytecode-format/) - Reference for the bytecode format (split out from internals for convenience).
+- [Roadmap](./roadmap/) - High-level direction, planned features, and pointers to issues.
 
 ## Examples
 
- - [./examples/](./examples/) - Catalog of all example scripts under [https://git.xw3.org/fun/fun/src/branch/main/examples](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"}: what each area contains, how to run them, required env vars, and extension requirements.
+ - [Examples](./examples/) - Catalog of all example scripts under [https://git.xw3.org/fun/fun/src/branch/main/examples](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"}: what each area contains, how to run them, required env vars, and extension requirements.
 
-## External extensions
+## Extensions
 
-Documentation for optional, build-time selectable integrations lives in [external/](./external/):
+Documentation for optional, build-time selectable integrations lives in [extensions/](./extensions/):
 
-- [Index of extensions](./external/)
- - Highlights: [cURL](./external/curl/), [INI](./external/ini/), [JSON](./external/json/), [XML (libxml2)](./external/xml2/), [SQLite](./external/sqlite/), [PCRE2](./external/pcre2/), [PC/SC](./external/pcsc/), [OpenSSL](./external/openssl/)
+- [Index of extensions](./extensions/)
+ - Highlights: [cURL](./extensions/curl/), [INI](./extensions/ini/), [JSON](./extensions/json/), [XML (libxml2)](./extensions/xml2/), [SQLite](./extensions/sqlite/), [PCRE2](./extensions/pcre2/), [PC/SC](./extensions/pcsc/), [OpenSSL](./extensions/openssl/)
 
 ## Tips
 

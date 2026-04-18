@@ -7,7 +7,7 @@ noDate: false
 title: Fun - SQLite extension (optional)
 subtitle: Documentation for SQLite extension (optional)
 description: Documentation for SQLite extension (optional)
-permalink: /documentation/external/sqlite/
+permalink: /documentation/extensions/sqlite/
 lang: en
 tags:
 - extension

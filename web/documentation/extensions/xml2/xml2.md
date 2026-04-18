@@ -7,7 +7,7 @@ noDate: false
 title: Fun - XML (libxml2) extension (optional)
 subtitle: Documentation for XML (libxml2) extension (optional)
 description: Documentation for XML (libxml2) extension (optional)
-permalink: /documentation/external/xml2/
+permalink: /documentation/extensions/xml2/
 lang: en
 tags:
 - extension

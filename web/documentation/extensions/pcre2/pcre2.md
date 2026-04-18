@@ -7,7 +7,7 @@ noDate: false
 title: Fun - PCRE2 (Perl-Compatible Regex) extension (optional)
 subtitle: Documentation for PCRE2 (Perl-Compatible Regex) extension (optional)
 description: Documentation for PCRE2 (Perl-Compatible Regex) extension (optional)
-permalink: /documentation/external/pcre2/
+permalink: /documentation/extensions/pcre2/
 lang: en
 tags:
 - compatible

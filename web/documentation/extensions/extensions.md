@@ -4,10 +4,10 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - External integrations (optional extensions)
-subtitle: Catalog of all example scripts under ./examples/, what each area contains, how to run them, required env vars, and extension requirements.
-description: Catalog of all example scripts under ./examples/, what each area contains, how to run them, required env vars, and extension requirements.
-permalink: /documentation/external/
+title: Fun - Optional extensions
+subtitle: Catalog of optional, build-time selectable extensions for the Fun VM (e.g., cURL, SQLite, JSON).
+description: Catalog of optional, build-time selectable extensions for the Fun VM (e.g., cURL, SQLite, JSON).
+permalink: /documentation/extensions/
 lang: en
 tags:
 - area
@@ -18,7 +18,7 @@ tags:
 - examples
 - extension
 - extensions
-- external
+- extensions
 - integrations
 - optional
 - required
