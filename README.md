@@ -80,7 +80,7 @@ Fun may not change the world — but it will make programming a little more fun.
 - if/else if/else
 - try/catch/finally
 
-And much more...! Look at the specs in [spec/](./spec/) for more detailed information.
+And much more...! Look at the specs in [Spec](./spec/) for more detailed information.
 
 ### Lib (./lib/)
 
@@ -98,7 +98,7 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 - [SQLite](./docs/extensions/sqlite.md) (optional) &#9745;
 - [XML (libxml2)](./docs/extensions/xml2.md) (optional) &#9745;
 
-&#9745; = Done / &#9744; = Planned or in progress.
+&#9745; = Done (or basics implemented) / &#9744; = Planned or in progress.
 
 Note: Not all of the above features will be implemented. Those who are marked "Done" will probaly remain in Fun, but I don't know actually... ;)
 
@@ -106,27 +106,27 @@ There are some libs written in Fun available in the [./lib/](https://git.xw3.org
 
 ### OpenSSL quickstart (MD5)
 
-See the dedicated page: ./docs/extensions/openssl.md
+See the dedicated page: [./web/documentation/extensions/openssl/](./web/documentation/extensions/openssl/openssl.md)
 
 ## Documentation
 
 Looking for docs? Start here:
 
-- Local documentation index: [docs/README.md](./docs/README.md)
-  - Handbook: [docs/handbook.md](./docs/handbook.md)
-  - Types overview: [docs/types.md](./docs/types.md)
-  - REPL guide: [docs/repl.md](./docs/repl.md)
-  - Testing: [docs/testing.md](./docs/testing.md)
-  - Troubleshooting: [docs/troubleshooting.md](./docs/troubleshooting.md)
+- Local documentation index: [./web/documentation/documenatation.md](./web/documentation/documentation.md)
+  - Handbook: [./web/documentation/handbook/handbook.md](./web/documentation/handbook/handbook.md)
+  - Types overview: [./web/documentation/types/types.md](./web/documentation/types/types.md)
+  - REPL guide: [./web/documentation/repl/repl.md](./web/documentation/repl/repl.md)
+  - Testing: [./web/documentation/testing/testing.md](./web/documentation/testing/testing.md)
+  - Troubleshooting: [./web/documentation/troubleshooting/troubleshooting.md](./web/documentation/troubleshooting/troubleshooting.md)
 
 Additional references:
 
-- Specification: [spec/v0.4.md](./spec/v0.4.md) (work in progress)
+- Specification: [./web/documentation/spec/v0.4.md](./web/documentation/spec/v0.4.md) (work in progress)
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
-- Examples demonstrating most features: [examples/](./examples/)
-- Internals and VM opcodes live in [src/](./src/) (see [src/vm/](./src/vm) for opcode implementations)
+- Examples demonstrating most features: [./examples/](./examples/)
+- Internals and VM opcodes live in [./src/](./src/) (see [./src/vm/](./src/vm) for opcode implementations)
 
-Note: The project is evolving; some documents may lag behind. The docs index in `./docs/README.md` is the most up‑to‑date entry point.
+Note: The project is evolving; some documents may lag behind. The docs index in [./web/documentation/documenatation.md](./web/documentation/documentation.md) is the most up‑to‑date entry point.
 
 ## Author
 
