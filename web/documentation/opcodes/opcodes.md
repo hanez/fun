@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Fun VM Opcodes Overview
+title: VM Opcodes Overview
 subtitle: VM opcodes overview grouped by domain with brief behavior/stack notes.
 description: VM opcodes overview grouped by domain with brief behavior/stack notes.
 permalink: /documentation/opcodes/
@@ -176,8 +176,6 @@ This document provides an overview of the available VM opcodes implemented under
 - OP_SQLITE_EXEC: Execute statement; pops handle:int, sql:string; pushes rc:int (0=OK).
 - OP_SQLITE_QUERY: Run query; pops handle:int, sql:string; pushes array<map<string,any>>.
 
-<!-- libSQL opcodes removed -->
-
 ## OS, Time, Processes, Threads, Sockets, Serial
 
 - OP_ENV: Get environment variable; pops key:string; pushes value:string or Nil.
@@ -242,35 +240,6 @@ This document provides an overview of the available VM opcodes implemented under
 - OP_PCSC_TRANSMIT: Send APDU; pops apdu:array<byte>/string, handle; pushes response bytes or map incl. SW.
 - OP_PCSC_DISCONNECT: Disconnect; pops handle; pushes 1/0.
 - OP_PCSC_RELEASE: Release context; pops scope/id; pushes 1/0.
-
-## Notcurses (Terminal UI)
-
-- OP_NC_INIT: Initialize notcurses; pushes handle or 0.
-- OP_NC_SHUTDOWN: Shutdown; no args; pushes 1/0.
-- OP_NC_CLEAR: Clear screen; pushes 1/0.
-- OP_NC_DRAW_TEXT: Draw text at (x,y); pops text, x, y; pushes 1/0.
-- OP_NC_GETCH: Get key with timeout; pops timeout_ms:int; pushes int key or -1.
-- OP_NC_GET_SIZE: Get stdplane size; pushes [rows:int, cols:int] or -1 if unavailable.
-- OP_NC_SET_STYLE: Set stdplane style/colors; pops style:int, bg_rgb:int, fg_rgb:int; pushes 0/-1.
-- OP_NC_DRAW_CHAR: Draw a single codepoint at y,x; pops ch:int, x:int, y:int; pushes 0/-1.
-- OP_NC_DRAW_HLINE: Draw horizontal line; pops len:int, x:int, y:int, ch:int; pushes 0/-1.
-- OP_NC_DRAW_VLINE: Draw vertical line; pops len:int, x:int, y:int, ch:int; pushes 0/-1.
-- OP_NC_BOX: Draw a rectangular box; pops x:int, y:int, w:int, h:int, style:int; pushes 0/-1.
-- OP_NC_FILL: Fill rectangle with codepoint; pops x:int, y:int, w:int, h:int, ch:int; pushes 0/-1.
-- OP_NC_RENDER: Force a render; pushes 0/-1.
-
-<!-- libSQL backend removed -->
-
-## TK (Tcl/Tk UI)
-
-- OP_TK_EVAL: Evaluate Tcl code; pops text:string; pushes result string or error.
-- OP_TK_LABEL: Create/update label; pops text, id; pushes 1/0.
-- OP_TK_BUTTON: Create/update button; pops text, id; pushes 1/0.
-- OP_TK_PACK: Pack widget; pops id; pushes 1/0.
-- OP_TK_BIND: Bind event; pops command, event, id; pushes 1/0.
-- OP_TK_WM_TITLE: Set window title; pops title; pushes 1/0.
-- OP_TK_LOOP: Enter main event loop; no args; blocks until exit.
-- OP_TK_RESULT: Retrieve last Tcl result; pushes string.
 
 ## Miscellaneous
 

@@ -17,6 +17,9 @@ tags:
 - history
 - launch
 - tips
+- repl
+- cli
+- fun_with_repl
 ---
 
 This document describes the interactive Read–Eval–Print Loop (REPL) for the Fun programming language: how to build/launch it, how input and execution work, line editing and completion, the REPL buffer workflow, commands, debugging helpers, and tips.
@@ -95,10 +98,10 @@ History is persisted in a file named .fun_history in your home directory (HOME/U
 
 Tab provides two kinds of completions:
 
-1) :load path completion
+- :load path completion
    - When typing a :load command, Tab completes filesystem paths, including directories. A trailing slash is handled as expected. Completion attempts to compute common suffixes across candidates.
 
-2) Standard library identifier completion
+- Standard library identifier completion
    - For general input, Tab attempts to complete identifiers from the standard library symbols scanned from FUN_LIB_DIR (or DEFAULT_LIB_DIR/lib). If there are multiple matches, a menu of candidates is printed; otherwise the identifier is completed in place.
 
 If Tab is pressed in the middle of the line (not at end), the REPL beeps instead of completing.
@@ -107,115 +110,115 @@ If Tab is pressed in the middle of the line (not at end), the REPL beeps instead
 
 You typically build code incrementally:
 
-1) Type lines; they accumulate in an internal buffer.
-2) Press Enter on a blank line to parse and execute the buffer.
-3) Output is printed and the buffer is cleared.
+- Type lines; they accumulate in an internal buffer.
+- Press Enter on a blank line to parse and execute the buffer.
+- Output is printed and the buffer is cleared.
 
 Alternatively, use the :run command to execute the buffer immediately (without needing a blank line), or :run <file> to execute a file’s contents.
 
 ## Timing and profiling
 
-- Toggle a simple elapsed time measurement for executions with :time on|off|toggle.
+- Toggle a simple elapsed time measurement for executions with :time on/off/toggle.
 - Use :profile to parse+run and report parse time, run time, total, and instruction count.
 
 ## Command reference
 
 Type :help to print the built-in command summary. Full list with clarifications:
 
-- :help | :h
+- :help | :h<br>
   Show the help.
 
-- :quit | :q | :exit
+- :quit | :q | :exit<br>
   Exit the REPL.
 
-- :reset | :re
+- :reset | :re<br>
   Reset VM state (clears globals).
 
-- :dump | :du | :globals | :gl
+- :dump | :du | :globals | :gl<br>
   Dump current globals (indexes and stringified values).
 
-- :globals [pattern] / :vars | :v [pattern]
+- :globals [pattern] / :vars | :v [pattern]<br>
   Dump globals, filtering by substring match on the value when a pattern is provided.
 
-- :clear | :cl
+- :clear | :cl<br>
   Clear the current input buffer.
 
-- :print | :pr
+- :print | :pr<br>
   Show the current buffer content.
 
-- :run | :ru [file]
+- :run | :ru [file]<br>
   Execute current buffer, or execute the specified file immediately. Parsing errors are reported with caret highlighting.
 
-- :profile | :pf
+- :profile | :pf<br>
   Execute buffer and show timing for parse and run plus instruction count.
 
-- :save | :sa <file>
+- :save | :sa <file><br>
   Save the current buffer to a file.
 
-- :load | :lo <file>
+- :load | :lo <file><br>
   Load a file into the buffer (does not run). Use :run or a blank line to execute afterward.
 
-- :paste | :pa [run]
+- :paste | :pa [run]<br>
   Enter paste mode to insert multiple lines verbatim. Finish with a single dot line: `.`. If the optional argument `run` (or `exec`) is given, the REPL will run the pasted buffer immediately.
 
-- :history | :hi [N]
+- :history | :hi [N]<br>
   Show the last N lines of persistent history (default 50).
 
-- :time | :ti on|off|toggle
+- :time | :ti on|off|toggle<br>
   Toggle/enable/disable timing for subsequent runs.
 
-- :env | :en [NAME[=VALUE]]
+- :env | :en [NAME[=VALUE]]<br>
   Get or set an environment variable. With NAME only, prints NAME=value. With NAME=VALUE, sets the variable for the current process.
 
-- :backtrace | :bt | :ba
+- :backtrace | :bt | :ba<br>
   Show a backtrace of VM frames (most recent first), including function name, source file, IP, and line.
 
-- :frame | :fr N
+- :frame | :fr N<br>
   Select a frame N (0..top) to target with :locals, :list, :disasm and value inspections. By default, the top frame is used.
 
-- :list | :li [±K]
+- :list | :li [±K]<br>
   Show K lines of source around the current frame’s line (default 5). The current line is marked with `>`.
 
-- :disasm | :di [±N]
+- :disasm | :di [±N]<br>
   Disassemble around current frame’s instruction pointer (default 5 on each side). Shows index, opcode name, and operand.
 
-- :mdump | :md WHAT [offset [len]] [raw] [to <file>]
-  Dump a VM memory region. WHAT is one of: code | stack | globals | consts. Offset and length are optional; if omitted, a sensible default (up to 256 bytes) is used. With `raw`, write binary bytes. With `to <file>`, write output to a file; otherwise print to stdout as a formatted hexdump.
+- :mdump | :md WHAT [offset [len]] [raw] [to &lt;file&gt;]<br>
+  Dump a VM memory region. WHAT is one of: code, stack, globals and consts. Offset and length are optional; if omitted, a sensible default (up to 256 bytes) is used. With `raw`, write binary bytes. With `to <file>`, write output to a file; otherwise print to stdout as a formatted hexdump.
 
-- :stack | :st [N]
+- :stack | :st [N]<br>
   Show top N (or all) stack values, stringified.
 
-- :top | :to
+- :top | :to<br>
   Show the value at the top of the VM stack.
 
-- :locals | :lc [FRAME]
+- :locals | :lc [FRAME]<br>
   Show non-nil locals for the selected frame (or the provided frame index).
 
-- :printv | :pv WHAT
+- :printv | :pv WHAT<br>
   Print a specific value: `local[i]`, `stack[i]`, or `global[i]`.
 
-- :break | :br [file:]line
+- :break | :br [file:]line<br>
   Set a breakpoint. If file is omitted, the current frame’s source file is used. Prints a numeric breakpoint ID on success.
 
-- :info | :in breaks
+- :info | :in breaks<br>
   List breakpoints.
 
-- :delete | :de ID
+- :delete | :de ID<br>
   Delete a breakpoint by ID.
 
-- :clear breaks | :cb
+- :clear breaks | :cb<br>
   Remove all breakpoints.
 
-- :cont | :co
+- :cont | :co<br>
   Continue execution. In REPL-on-error/debug stops, this exits the REPL and resumes the program.
 
-- :step | :sp
+- :step | :sp<br>
   Step a single instruction (REPL-on-error/debug mode).
 
-- :next | :ne
+- :next | :ne<br>
   Step over in the current frame (REPL-on-error/debug mode).
 
-- :finish | :fi
+- :finish | :fi<br>
   Run until the current frame returns (REPL-on-error/debug mode).
 
 If an unknown command is entered, the REPL prints a hint to use :help.

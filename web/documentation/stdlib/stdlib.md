@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Standard Library Overview
+title: Standard Library Overview
 subtitle: Overview of the standard library modules under ./lib with one-line summaries.
 description: Overview of the standard library modules under ./lib with one-line summaries.
 permalink: /documentation/stdlib/
@@ -26,17 +26,17 @@ The stdlib is written in Fun and organized by domain. Below is the current layou
 
 ## Top-level modules
 
-- `arrays.fun` — helpers for working with array structures.
-- `cli.fun` — minimal helpers for building CLI tools.
-- `hello.fun` — simple demonstration helper(s).
-- `hex.fun` — hexadecimal encode/decode helpers.
-- `math.fun` — math helpers in Fun.
-- `regex.fun` — simple regex-related helpers (see also `regex/`).
-- `strings.fun` — string manipulation utilities.
+- `arrays.fun` - helpers for working with array structures.
+- `cli.fun` - minimal helpers for building CLI tools.
+- `hello.fun` - simple demonstration helper(s).
+- `hex.fun` - hexadecimal encode/decode helpers.
+- `math.fun` - math helpers in Fun.
+- `regex.fun` - simple regex-related helpers (see also `regex/`).
+- `strings.fun` - string manipulation utilities.
 
 ## Packages
 
-- `crypt/` — cryptographic primitives and hashes. See [https://git.xw3.org/fun/fun/src/branch/main/lib/crypt/](https://git.xw3.org/fun/fun/src/branch/main/lib/crypt/){:class="git"}.
+- `crypt/` - cryptographic primitives and hashes. See [https://git.xw3.org/fun/fun/src/branch/main/lib/crypt/](https://git.xw3.org/fun/fun/src/branch/main/lib/crypt/){:class="git"}.
   - `aes256.fun`
   - `crc32.fun`, `crc32c.fun`
   - `md5.fun`, `md5_legacy.fun`
@@ -47,26 +47,26 @@ The stdlib is written in Fun and organized by domain. Below is the current layou
   - `base64.fun`
 
 - `io/` — input/output utilities and system interfaces. See [https://git.xw3.org/fun/fun/src/branch/main/lib/io/](https://git.xw3.org/fun/fun/src/branch/main/lib/io/){:class="git"}.
-  - `console.fun` — console I/O helpers
-  - `ini.fun` — INI parse helpers
-  - `json.fun` — JSON helpers
-  - `pcsc.fun`, `pcsc2.fun` — smart card access (PC/SC)
-  - `process.fun` — spawn and manage subprocesses
-  - `serial.fun` — serial port helpers
-  - `socket.fun` — socket convenience wrappers
-  - `thread.fun` — simple threading utilities
-  - `xml.fun` — XML helpers
+  - `console.fun` - console I/O helpers
+  - `ini.fun` - INI parse helpers
+  - `json.fun` - JSON helpers
+  - `pcsc.fun`, `pcsc2.fun` - smart card access (PC/SC)
+  - `process.fun` - spawn and manage subprocesses
+  - `serial.fun` - serial port helpers
+  - `socket.fun` - socket convenience wrappers
+  - `thread.fun` - simple threading utilities
+  - `xml.fun` - XML helpers
 
-- `net/` — networking helpers and example HTTP servers. See [https://git.xw3.org/fun/fun/src/branch/main/lib/net/](https://git.xw3.org/fun/fun/src/branch/main/lib/net/){:class="git"}.
-  - `cgi.fun` — basic CGI helpers
-  - `http_server.fun` — blocking HTTP server
-  - `http_cgi_server.fun` — HTTP server that can execute .fun CGI files
-  - `http_cgi_lib_server.fun` — variant of the HTTP CGI server using the stdlib
+- `net/` - networking helpers and example HTTP servers. See [https://git.xw3.org/fun/fun/src/branch/main/lib/net/](https://git.xw3.org/fun/fun/src/branch/main/lib/net/){:class="git"}.
+  - `cgi.fun` - basic CGI helpers
+  - `http_server.fun` - blocking HTTP server
+  - `http_cgi_server.fun` - HTTP server that can execute .fun CGI files
+  - `http_cgi_lib_server.fun` - variant of the HTTP CGI server using the stdlib
 
-- `regex/` — regular expression utilities (PCRE2-based when available). See [https://git.xw3.org/fun/fun/src/branch/main/lib/regex/](https://git.xw3.org/fun/fun/src/branch/main/lib/regex/){:class="git"}.
+- `regex/` - regular expression utilities (PCRE2-based when available). See [https://git.xw3.org/fun/fun/src/branch/main/lib/regex/](https://git.xw3.org/fun/fun/src/branch/main/lib/regex/){:class="git"}.
   - `pcre2.fun`
 
-- `utils/` — small reusable helpers and functional utilities. See [https://git.xw3.org/fun/fun/src/branch/main/lib/utils/](https://git.xw3.org/fun/fun/src/branch/main/lib/utils/){:class="git"}.
+- `utils/` - small reusable helpers and functional utilities. See [https://git.xw3.org/fun/fun/src/branch/main/lib/utils/](https://git.xw3.org/fun/fun/src/branch/main/lib/utils/){:class="git"}.
   - `datetime.fun`
   - `match.fun`
   - `math.fun`
@@ -74,13 +74,13 @@ The stdlib is written in Fun and organized by domain. Below is the current layou
   - `range.fun`
   - `result.fun`
 
-Note: Availability of some modules can depend on optional extensions selected at build time (see [../build/](../build/)). For instance, `regex/pcre2.fun` requires PCRE2 support; `ui/*` depends on chosen UI backends.
+Note: Availability of some modules can depend on optional extensions selected at build time (see [Build](../build/)). For instance, `regex/pcre2.fun` requires PCRE2 support; `ui/*` depends on chosen UI backends.
 
 ## Using modules
 
-<pre>#include &lt;strings.fun
+<pre>#include &lt;strings.fun&gt;
 
 s = trim("  hello  ")
 print(s)</pre>
 
-For search paths and namespacing details, see [../includes/](../includes/) and [../cli/](../cli/) (FUN_LIB_DIR and DEFAULT_LIB_DIR).
+For search paths and namespacing details, see [Includes](../includes/) and [CLI](../cli/) (FUN_LIB_DIR and DEFAULT_LIB_DIR).
