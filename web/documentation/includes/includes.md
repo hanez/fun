@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Includes in Fun, local vs. system and the FUN_LIB_DIR environment variable
+title: Includes, local vs. system and the FUN_LIB_DIR environment variable
 subtitle: Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
 description: Using local vs. system includes, FUN_LIB_DIR, DEFAULT_LIB_DIR, and namespaced includes with `as`.
 permalink: /documentation/includes/
@@ -18,6 +18,7 @@ tags:
 - namespaced
 - system
 - variable
+- stdlib
 ---
 
 This document explains how to use local and system includes in Fun source files and how `FUN_LIB_DIR` controls where system includes are resolved from. It also covers namespaced includes with `as`.
@@ -26,11 +27,11 @@ This document explains how to use local and system includes in Fun source files 
 
 - Local includes: `#include "relative/path/to/file.fun"`
   - Resolved relative to the current working directory (`$PWD`) where you run `fun`.
-- System includes: `#include <path/inside/stdlib.fun>`
+- System includes: `#include <path/inside/stdlib.fun>;`
   - Resolved using:
-    1) `FUN_LIB_DIR` (if set)
-    2) `DEFAULT_LIB_DIR` (compile-time default; typically `/usr/share/fun/lib/` after install)
-    3) Fallback to `lib/` under the current working directory (developer convenience)
+    -`FUN_LIB_DIR` (if set)
+    - `DEFAULT_LIB_DIR` (compile-time default; typically `/usr/share/fun/lib/` after install)
+    - Fallback to `lib/` under the current working directory (developer convenience)
 - Optional namespacing: `#include <...> as ns` or `#include "..." as ns`
 
 ## Local includes (quoted)
@@ -38,6 +39,7 @@ This document explains how to use local and system includes in Fun source files 
 Use double quotes to include files relative to the directory you execute `fun` from.
 
 Example:
+
 <pre>#include "examples/include_local_util.fun"
 
 print("== include local demo ==")
@@ -55,8 +57,9 @@ print("sum(" + to_string(a) + ", " + to_string(b) + ") = " + to_string(sum(a, b)
 Use angle brackets to include modules from the Fun standard library or any library directory you point `FUN_LIB_DIR` to.
 
 Example:
-<pre>#include <hello.fun>
-#include <utils/math.fun>
+
+<pre>#include &lt;hello.fun&gt;
+#include &lt;utils/math.fun&gt;
 
 print("== include lib demo ==")
 hello_lib()
@@ -68,9 +71,9 @@ print("times(" + to_string(x) + ", " + to_string(y) + ") = " + to_string(times(x
 
 Resolution order for `#include <...>`:
 
-1) `FUN_LIB_DIR` (environment variable), with automatic handling of trailing `/` or `\`
-2) `DEFAULT_LIB_DIR` (compile-time define)
-3) `lib/` under the current working directory (developer fallback)
+- `FUN_LIB_DIR` (environment variable), with automatic handling of trailing `/` or `\`
+- `DEFAULT_LIB_DIR` (compile-time define)
+- `lib/` under the current working directory (developer fallback)
 
 If the file cannot be read from any location, an "Include error" is printed with the last attempted path.
 
@@ -79,8 +82,9 @@ If the file cannot be read from any location, an "Include error" is printed with
 You can import a module into a namespace to avoid symbol collisions or to make intent explicit.
 
 Examples:
+
 <pre>// Import stdlib helpers under alias 'm'
-#include <utils/math.fun> as m
+#include &lt;utils/math.fun&gt; as m
 print("m.add(2, 3) = " + to_string(m.add(2, 3)))
 print("m.times(4, 5) = " + to_string(m.times(4, 5)))
 
@@ -139,7 +143,7 @@ Tips:
 - Error: `Include error: cannot read '...'`
   - Check if the path exists in the intended location:
     - For `"..."`: is the path correct relative to your current working directory?
-    - For `<...>`: does the file exist under `FUN_LIB_DIR/<...>` or `DEFAULT_LIB_DIR/<...>` or `./lib/<...>`?
+    - For `<...>`: does the file exist under `FUN_LIB_DIR/<...>;` or `DEFAULT_LIB_DIR/<...>` or `./lib/<...>`?
   - Ensure `FUN_LIB_DIR` is exported in the same shell session where you run `fun`.
   - On Windows, verify you used the correct syntax for setting environment variables in CMD vs. PowerShell.
 
@@ -148,5 +152,4 @@ Tips:
 - Examples in this repository:
   - `examples/include_local.fun`
   - `examples/include_lib.fun`
-  - `examples/include_namespace.fun`
-- REPL notes: `documentation/repl.md` (explains completion that also scans `FUN_LIB_DIR`)
+- [REPL Guide](../repl/) (explains completion that also scans `FUN_LIB_DIR`)
