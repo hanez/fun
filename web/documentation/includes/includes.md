@@ -29,7 +29,7 @@ This document explains how to use local and system includes in Fun source files 
   - Resolved relative to the current working directory (`$PWD`) where you run `fun`.
 - System includes: `#include <path/inside/stdlib.fun>;`
   - Resolved using:
-    -`FUN_LIB_DIR` (if set)
+    - `FUN_LIB_DIR` (if set)
     - `DEFAULT_LIB_DIR` (compile-time default; typically `/usr/share/fun/lib/` after install)
     - Fallback to `lib/` under the current working directory (developer convenience)
 - Optional namespacing: `#include <...> as ns` or `#include "..." as ns`
