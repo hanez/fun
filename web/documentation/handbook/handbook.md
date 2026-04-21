@@ -4,12 +4,13 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Fun Handbook (Second Edition)
+title: Handbook
 subtitle: Comprehensive handbook for the Fun language and VM, install/build, configuration flags, usage, and full feature overview.
 description: Comprehensive handbook for the Fun language and VM, install/build, configuration flags, usage, and full feature overview.
 permalink: /documentation/handbook/
 lang: en
 tags:
+- handbook
 - build
 - configuration
 - edition
@@ -21,7 +22,7 @@ tags:
 - second
 ---
 
-This is a refreshed, de-duplicated, and fully up-to-date handbook for the Fun programming language and its virtual machine (VM). It keeps the same section layout as the original handbook while consolidating repeated content and documenting all currently available features, including the latest SQLite support.
+This is a refreshed, deduplicated, and fully up-to-date handbook for the Fun programming language and its virtual machine (VM). It keeps the same section layout as the original handbook while consolidating repeated content and documenting all currently available features, including the latest SQLite support.
 
 ## Overview
 
@@ -64,8 +65,8 @@ Linux/UNIX and Cygwin are covered here.
 Clone repository:
 
 <pre>git clone https://git.xw3.org/fun/fun.git
-cd fun
-</pre>
+cd fun</pre>
+
 Configure and build (examples shown with several optional features enabled):
 
 <pre>cmake -S . -B build \
@@ -76,48 +77,48 @@ Configure and build (examples shown with several optional features enabled):
   -DFUN_WITH_CURL=ON \
   -DFUN_WITH_PCSC=OFF \
   -DFUN_WITH_SQLITE=OFF
-cmake --build build --target fun
-</pre>
+cmake --build build --target fun</pre>
+
 Run the demo (without installing):
 
-<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun
-</pre>
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./demo.fun</pre>
+
 Tracing execution:
 
-<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun --trace ./demo.fun
-</pre>
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun --trace ./demo.fun</pre>
+
 Drop into the REPL when an error occurs:
 
-<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun
-</pre>
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun --repl-on-error --trace ./demo.fun</pre>
+
 Start the REPL directly (build with -DFUN_WITH_REPL=ON):
 
-<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun
-</pre>
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun</pre>
+
 #### CMake options
 
 Pass all options as -DNAME=VALUE. The most relevant toggles are:
 
-- FUN_DEBUG=ON|OFF — verbose VM debug logging (default OFF)
-- FUN_WITH_CURL=ON|OFF — enable CURL (libcurl) support (default OFF)
-- FUN_WITH_JSON=ON|OFF — enable JSON (json-c) support  (default OFF)
-- FUN_WITH_XML2=ON|OFF — enable XML (libxml2) support (default OFF)
-- FUN_WITH_PCRE2=ON|OFF — enable PCRE2 (Perl-Compatible Regular Expressions) (default OFF)
-- FUN_WITH_PCSC=ON|OFF — enable PC/SC smart card (PCSC lite) support (default OFF)
-- FUN_WITH_REPL=ON|OFF — enable the interactive REPL (default OFF)
-- FUN_WITH_SQLITE=ON|OFF — enable SQLite (sqlite3) support (default OFF)
-- FUN_WITH_INI=ON|OFF — enable INI (iniparser) support (default OFF)
+- FUN_DEBUG=ON/OFF - verbose VM debug logging (default OFF)
+- FUN_WITH_CURL=ON/OFF - enable CURL (libcurl) support (default OFF)
+- FUN_WITH_JSON=ON/OFF - enable JSON (json-c) support  (default OFF)
+- FUN_WITH_XML2=ON/OFF - enable XML (libxml2) support (default OFF)
+- FUN_WITH_PCRE2=ON/OFF - enable PCRE2 (Perl-Compatible Regular Expressions) (default OFF)
+- FUN_WITH_PCSC=ON/OFF - enable PC/SC smart card (PCSC lite) support (default OFF)
+- FUN_WITH_REPL=ON/OFF - enable the interactive REPL (default OFF)
+- FUN_WITH_SQLITE=ON/OFF - enable SQLite (sqlite3) support (default OFF)
+- FUN_WITH_INI=ON/OFF - enable INI (iniparser) support (default OFF)
 
 You can also set the default search path for the bundled stdlib with DEFAULT_LIB_DIR:
 
-<pre>cmake -S . -B build -DDEFAULT_LIB_DIR="/usr/share/fun/lib" -DFUN_WITH_REPL=ON
-</pre>
+<pre>cmake -S . -B build -DDEFAULT_LIB_DIR="/usr/share/fun/lib" -DFUN_WITH_REPL=ON</pre>
+
 If you encounter a CMake error such as:
 
   CMake Error: Parse error in command line argument: FUN_WITH_JSON
   Should be: VAR:type=value
 
-it means you passed a -D option without a value. Always use the form -DNAME=VALUE (e.g., -DFUN_WITH_JSON=ON).
+It means you passed a -D option without a value. Always use the form -DNAME=VALUE (e.g., -DFUN_WITH_JSON=ON).
 
 #### SQLite example (optional feature)
 
@@ -126,12 +127,10 @@ SQLite support is optional and disabled by default. To build with it and run the
 <pre>cmake -S . -B build -DFUN_WITH_SQLITE=ON
 cmake --build build --target fun
 
+`sqlite3 ./database.sqlite < ./examples/data/database.sql`
 
-sqlite3 ./database.sqlite < ./examples/data/database.sql
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlite_example.fun</pre>
 
-
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlite_example.fun
-</pre>
 #### XML example (optional feature)
 
 XML support (via libxml2) is optional and disabled by default. To build with it and run the example:
@@ -139,16 +138,17 @@ XML support (via libxml2) is optional and disabled by default. To build with it 
 <pre>cmake -S . -B build -DFUN_WITH_XML2=ON
 cmake --build build --target fun
 
+FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/xml_class_example.fun</pre>
 
-FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/xml_class_example.fun
-</pre>
 Available VM builtins when built with -DFUN_WITH_XML2=ON:
+
 - xml_parse(text: string) -> doc_handle (int > 0) or 0 on error
 - xml_root(doc_handle: int) -> node_handle (int > 0) or 0 if missing
 - xml_name(node_handle: int) -> string (node tag name)
 - xml_text(node_handle: int) -> string (concatenated text of subtree)
 
 Standard library wrapper (lib/io/xml.fun):
+
 - class XML
   - parse(text: string): int (doc handle)
   - from_file(path: string): int (doc handle)
@@ -157,7 +157,8 @@ Standard library wrapper (lib/io/xml.fun):
   - text(node: int): string
 
 Example Fun code:
-<pre>include <io/xml.fun>
+
+<pre>include &lt;io/xml.fun&gt;<
 
 xml = XML()
 doc = xml.from_file("./examples/data/example.xml")
@@ -166,9 +167,10 @@ if (doc == 0)
 else
   root = xml.root(doc)
   print(xml.name(root))
-  print(xml.text(root))
-</pre>
+  print(xml.text(root))</pre>
+
 Notes:
+
 - Handles are simple integers managed by the VM; nodes are owned by their document.
 - This initial integration focuses on parsing and basic navigation. Attributes, children iteration, and XPath may be added later.
 
@@ -176,16 +178,16 @@ Notes:
 
 Not recommended during early development, but supported:
 
-<pre>sudo cmake --build build --target install
-</pre>
+<pre>sudo cmake --build build --target install</pre>
+
 After installation, FUN_LIB_DIR usually isn’t needed because libs are placed in the system default directory (e.g., /usr/share/fun/lib).
 
 ## Usage
 
 Run a script:
 
-<pre>fun ./demo.fun
-</pre>
+<pre>fun ./demo.fun</pre>
+
 ## Table of contents
 
 - Language overview and VM internals
@@ -209,18 +211,18 @@ Run a script:
   - SQLite (sqlite3)
 - Examples reference
 
----
-
 ## Language overview and VM internals
 
 Fun compiles .fun source files to bytecode and executes them on a stack-based VM. Functions and methods push/pop their arguments and return values on a value stack.
 
 High-level architecture:
+
 - Front-end: parses .fun files, handles includes and constant folding, emits bytecode with debug markers (OP_LINE) used by tracing and REPL-on-error.
 - VM core: runs a loop over opcodes (see src/bytecode.h). Values include numbers (integers), strings, arrays, maps, booleans (1/0), functions, and nil.
 - Built-ins: I/O, strings, arrays, regex, date/time, OS, networking, threading, and optional JSON/PCRE2/CURL/PCSC/SQLite.
 
 Selected VM concepts (non-exhaustive):
+
 - Control flow: OP_JUMP, OP_JUMP_IF_FALSE, OP_RETURN
 - Arithmetic/logic: OP_ADD/SUB/MUL/DIV, OP_MOD, OP_LT/LTE/GT/GTE, OP_EQ/NEQ, OP_AND/OR/NOT
 - Stack helpers: OP_DUP, OP_SWAP, OP_POP
@@ -235,6 +237,7 @@ Selected VM concepts (non-exhaustive):
 - Optional features: JSON (src/vm/json/*), CURL, PCSC, SQLite (src/vm/sqlite/*)
 
 Error handling and debugging:
+
 - Build with FUN_DEBUG=ON for verbose traces
 - Run with --trace to print executed lines/opcodes
 - Run with --repl-on-error to drop into an interactive REPL when a runtime error occurs
@@ -243,36 +246,42 @@ Error handling and debugging:
 
 - Run a script: fun path/to/script.fun
 - Common options: --trace, --repl-on-error (can be combined). REPL requires FUN_WITH_REPL=ON at build time.
-- In trace/REPL-on-error modes, the VM annotates output with file:line and function names for easier debugging (see examples/debug_reporting.fun).
+- In trace/repl-on-error modes, the VM annotates output with file:line and function names for easier debugging (see examples/debug_reporting.fun).
 
 ## Core types and operations
 
 Types:
+
 - number: signed integer (with helpers for unsigned behavior)
 - float: 64-bit IEEE-754 floating point
 - string: immutable bytes; len(s), join, split, substr, find
 - array: ordered list; len, push, apop, insert, remove, slice
 - map: associative dictionary typically keyed by strings
-- boolean: represented as 1 (true) or 0 (false); operators &&, ||, !
+- boolean: represented as 1 (true) or 0 (false); operators &&, &#124;&#124;, !
 - nil: absence of value
 
 Numeric variants:
+
 - byte (uint8)
 - Fixed width ints: int8/16/32/64 and uint8/16/32/64
 
 Control flow:
+
 - if/else, while; break, continue; range helpers in utils.range
 
 Functions and classes:
+
 - Define a function: fun name(args) ...
 - Define a class: class Name(constructor params) with method definitions fun method(this, ...)
 - _construct acts as the constructor if present; methods use explicit this
 
 Exceptions:
+
 - try { ... } catch (e) { ... } finally { ... }
 - Throwing/catching is defined by the spec; some runtimes may implement handling progressively. Examples: try_catch_finally.fun
 
 Modules and includes:
+
 - #include <path/to/module.fun> for libs under FUN_LIB_DIR
 - #include "relative/path.fun" for local includes
 - Namespacing via as: #include <utils/math.fun> as m; then call m.add(...)
@@ -280,53 +289,65 @@ Modules and includes:
 ## Built-ins overview
 
 Console and I/O:
+
 - print(x) — prints value plus newline
 - input(prompt) — read line from stdin
 
 Strings and arrays:
+
 - len(x), join(array, sep), split(text, sep), substr(text, start, len), find(text, needle)
 - push(array, v), apop(array), insert(array, i, v), remove(array, i), slice(array, start, end)
 
 Conversion and type:
+
 - to_number(x), to_string(x), cast(value, typeName), typeof(x)
 - uclamp(number, bits), sclamp(number, bits)
 
 Math and random:
+
 - min(a,b), max(a,b), clamp(x, lo, hi), abs(x), pow(a,b), random_seed(seed), random_int(lo, hiExclusive)
 
 Bitwise (uint32 operations):
+
 - band(a,b), bor(a,b), bxor(a,b), bnot(a)
 - shl(a, s), shr(a, s)
 
 Regex (requires PCRE2 when enabled):
+
 - regex_match(text, pattern) -> 1/0
 - regex_search(text, pattern) -> map { match, start, end, groups }
 - regex_replace(text, pattern, repl) -> string
 
 OS and processes:
+
 - proc_run(cmd) -> { out: string, code: number }
 - system(cmd) -> exit code
 - env_get(name), env_set(name, value)
 
 Networking and sockets:
+
 - tcp_connect(host, port) -> fd (>0) or 0
 - sock_send(fd, data) -> bytes or -1; sock_recv(fd, maxlen) -> string; sock_close(fd)
 - tcp_listen(port, backlog) -> listen fd; tcp_accept(listenFd) -> client fd
 - unix_connect(path) -> fd
 
 Threads:
+
 - thread_spawn(func, args) -> thread id; thread_join(id) -> return value
 
 Date and time:
+
 - time_now_ms(), clock_mono_ms(), date_format(ms, fmt)
 
 JSON (optional):
+
 - json_parse(text) -> value or nil
 - json_stringify(value, prettyFlag) -> string
 - json_from_file(path) -> value or nil
 - json_to_file(path, value, prettyFlag) -> 1/0
 
 PC/SC (optional):
+
 - pcsc_establish() -> context id (>0) or 0
 - pcsc_list_readers(ctx) -> array of reader names or nil
 - pcsc_connect(ctx, readerName) -> handle id (>0) or 0
@@ -334,14 +355,13 @@ PC/SC (optional):
 - pcsc_transmit(handle, bytesArray) -> { data, sw1, sw2, code }
 
 SQLite (optional):
+
 - sqlite_open(path) -> handle (>0) or 0 on error
 - sqlite_exec(handle, sql) -> rc (0 = SQLITE_OK)
 - sqlite_query(handle, sql) -> array of row maps (string keys)
 - sqlite_close(handle) -> nil
 
 Note: Optional features depend on the CMake flags used when building.
-
----
 
 ## Standard library APIs
 
@@ -350,6 +370,7 @@ The stdlib provides small wrappers around VM built-ins, typically organized in c
 ### io.console
 
 Class Console (lib/io/console.fun):
+
 - prompt(text) -> string
 - ask(question) -> string
 - ask_yes_no(question) -> 1/0 (y/yes vs n/no)
@@ -359,6 +380,7 @@ Example: examples/input_example.fun
 ### io.process
 
 Class Process (lib/io/process.fun):
+
 - run(cmd) -> { out, code }
 - run_merge_stderr(cmd) -> { out, code }
 - system(cmd) -> number
@@ -371,16 +393,19 @@ Example: examples/process_example.fun
 Provides TcpClient, TcpServer, UnixClient (lib/io/socket.fun).
 
 TcpClient:
+
 - connect(host, port) -> 1/0; is_connected() -> 1/0
 - send(data) -> bytes or -1; recv(maxlen) -> string; recv_all(chunk_size) -> string
 - close()
 
 TcpServer(port, backlog):
+
 - listen() -> listen fd or 0; accept() -> client fd
 - echo_once(maxlen) -> 1 when handled; serve_forever(maxlen) -> never returns
 - close()
 
 UnixClient:
+
 - connect(path), is_connected(), send(data), recv(maxlen), close()
 
 Examples: tcp_http_get.fun, tcp_http_get_class.fun, unix_socket_echo.fun, extra/tcp_echo_server_class.fun
@@ -388,6 +413,7 @@ Examples: tcp_http_get.fun, tcp_http_get_class.fun, unix_socket_echo.fun, extra/
 ### io.thread
 
 Class Thread (lib/io/thread.fun):
+
 - spawn(func, args) -> thread id; join(id) -> return value
 - Aliases: start(func, args), wait(id)
 
@@ -396,6 +422,7 @@ Examples: threads_demo.fun, thread_class_example.fun
 ### utils.datetime
 
 Class DateTime (lib/utils/datetime.fun):
+
 - now_ms(), mono_ms(), format(ms, fmt), iso_now()
 
 Example: datetime_basic.fun
@@ -403,6 +430,7 @@ Example: datetime_basic.fun
 ### regex
 
 Class Regex (lib/regex.fun):
+
 - match(text, pattern) -> 1/0
 - search(text, pattern) -> { match, start, end, groups }
 - replace(text, pattern, repl) -> string
@@ -426,8 +454,6 @@ Module lib/encoding/base64.fun: base64_encode(string), base64_decode(string)
 - lib/utils/range.fun — numeric ranges
 - lib/utils/math.fun and lib/math.fun — math helpers
 
----
-
 ## Extra libraries
 
 ### JSON (optional)
@@ -435,16 +461,19 @@ Module lib/encoding/base64.fun: base64_encode(string), base64_decode(string)
 Build flag: -DFUN_WITH_JSON=ON; requires json-c.
 
 VM API:
+
 - json_parse(text) -> value or nil
 - json_stringify(value, prettyFlag) -> string
 - json_from_file(path) -> value or nil
 - json_to_file(path, value, prettyFlag) -> 1/0
 
 Stdlib wrapper:
+
 - class JSON (lib/io/json.fun) — convenience methods mirroring the VM API.
 
 Example:
-<pre>include <io/json.fun>
+
+<pre>include &lt;io/json.fun&gt;
 
 j = JSON()
 data = j.parse('{"name":"Fun","year":2026,"ok":true,"tags":["vm","lang"]}')
@@ -452,9 +481,10 @@ print(typeof(data))  // map
 print(data["name"])
 
 ok = j.to_file("./tmp/out.json", data, 1)  // pretty = 1
-print("saved:", ok)
-</pre>
+print("saved:", ok)</pre>
+
 Notes:
+
 - JSON types map to Fun types: object -> map, array -> array, string -> string, number -> number/float, true/false -> 1/0, null -> nil.
 - When writing, prettyFlag=1 enables pretty printing.
 
@@ -463,22 +493,26 @@ Notes:
 Build flag: -DFUN_WITH_CURL=ON; requires libcurl.
 
 VM API:
+
 - curl_get(url) -> string (empty string on error)
 - curl_post(url, body) -> string (empty string on error)
 - curl_download(url, path) -> 1/0
 
 Stdlib wrapper:
+
 - None (call built-ins directly). See examples in examples/extra/.
 
 Example:
+
 <pre>url = "https://httpbin.org/get"
 resp = curl_get(url)
 if (len(resp) == 0)
   print("GET failed")
 else
-  print(substr(resp, 0, 60), "...")
-</pre>
+  print(substr(resp, 0, 60), "...")</pre>
+
 Examples:
+
 - curl_get_json.fun, curl_post.fun, curl_download.fun
 
 ### PCSC (optional)
@@ -486,6 +520,7 @@ Examples:
 Build flag: -DFUN_WITH_PCSC=ON; requires PC/SC (pcsc-lite).
 
 VM API:
+
 - pcsc_establish() -> context id (>0) or 0
 - pcsc_list_readers(ctx) -> array of reader names or nil
 - pcsc_connect(ctx, readerName) -> handle id (>0) or 0
@@ -493,9 +528,11 @@ VM API:
 - pcsc_transmit(handle, bytesArray) -> { data: array<byte>, sw1: number, sw2: number, code: number }
 
 Stdlib wrapper:
+
 - class PCSC (lib/io/pcsc.fun) — higher-level helpers for listing readers, connecting, and APDU I/O.
 
 Example:
+
 <pre>include <io/pcsc.fun>
 
 sc = PCSC()
@@ -512,12 +549,14 @@ else
       // Example APDU: GET RESPONSE (illustrative only)
       res = pcsc_transmit(h, [0x00, 0xC0, 0x00, 0x00, 0x00])
       print("SW:", res["sw1"], res["sw2"], "code:", res["code"]) 
-      pcsc_disconnect(h)
-</pre>
+      pcsc_disconnect(h)</pre>
+
 Examples:
+
 - examples/extra/pcsc_example.fun, examples/extra/pcsc_demo.fun
 
 Notes:
+
 - Smart card operations depend on the reader, card, and drivers installed. Ensure pcscd/service is running.
 
 ### SQLite (optional)
@@ -525,12 +564,14 @@ Notes:
 Build flag: -DFUN_WITH_SQLITE=ON; requires sqlite3 development headers.
 
 VM API:
+
 - sqlite_open(path) -> handle (>0) or 0
 - sqlite_exec(handle, sql) -> rc (0 = SQLITE_OK)
 - sqlite_query(handle, sql) -> array of maps (columns as string keys)
 - sqlite_close(handle) -> nil
 
 Result mapping notes:
+
 - INTEGER -> number
 - FLOAT -> number (floating point)
 - TEXT -> string
@@ -538,17 +579,19 @@ Result mapping notes:
 - BLOB is currently not returned (mapped to nil)
 
 Example flow (examples/sqlite_example.fun):
-1) h = sqlite_open("./todo.sqlite")
-2) rows = sqlite_query(h, "SELECT id, title, done, created_at FROM tasks ORDER BY id;")
-3) rc = sqlite_exec(h, "INSERT INTO tasks (title, done) VALUES ('Try Fun + SQLite', 0);")
-4) rows2 = sqlite_query(h, "SELECT count(*) AS cnt FROM tasks;")
-5) sqlite_close(h)
+
+- h = sqlite_open("./todo.sqlite")
+- rows = sqlite_query(h, "SELECT id, title, done, created_at FROM tasks ORDER BY id;")
+- rc = sqlite_exec(h, "INSERT INTO tasks (title, done) VALUES ('Try Fun + SQLite', 0);")
+- rows2 = sqlite_query(h, "SELECT count(*) AS cnt FROM tasks;")
+- sqlite_close(h)
 
 ### INI (optional)
 
 Build flag: -DFUN_WITH_INI=ON; requires iniparser (>= 4.2.6).
 
 VM API:
+
 - ini_load(path) -> handle (>0) or 0 on error
 - ini_free(handle) -> 1/0
 - ini_get_string(handle, section, key, default) -> string
@@ -560,10 +603,12 @@ VM API:
 - ini_save(handle, path) -> 1/0
 
 Notes:
+
 - Section/key may be looked up flexibly ("section:key" and "section.key").
 - Always free handles with ini_free when done.
 
 Example:
+
 <pre>h = ini_load("./examples/data/example.ini")
 if (h == 0)
   print("Failed to load INI")
@@ -574,19 +619,21 @@ else
   ok = ini_set(h, "server", "host", "127.0.0.1")
   if (ok)
     ini_save(h, "./tmp/updated.ini")
-  ini_free(h)
-</pre>
+  ini_free(h)</pre>
+
 ### XML (optional)
 
 Build flag: -DFUN_WITH_XML2=ON; requires libxml2.
 
 VM API:
+
 - xml_parse(text) -> doc_handle (>0) or 0 on error
 - xml_root(doc_handle) -> node_handle (>0) or 0 if missing
 - xml_name(node_handle) -> string
 - xml_text(node_handle) -> string
 
 Stdlib wrapper:
+
 - class XML (lib/io/xml.fun)
   - parse(text): int
   - from_file(path): int
@@ -595,6 +642,7 @@ Stdlib wrapper:
   - text(node): string
 
 Example:
+
 <pre>include <io/xml.fun>
 
 xml = XML()
@@ -604,9 +652,10 @@ if (doc == 0)
 else
   root = xml.root(doc)
   print(xml.name(root))
-  print(xml.text(root))
-</pre>
+  print(xml.text(root))</pre>
+
 Notes:
+
 - Handles are integers managed by the VM; nodes belong to their document.
 
 ### PCRE2 / Regex (optional)
@@ -614,35 +663,37 @@ Notes:
 Build flag: -DFUN_WITH_PCRE2=ON; requires PCRE2 (8-bit API).
 
 VM API:
+
 - regex_match(text, pattern) -> 1/0
 - regex_search(text, pattern) -> map { match, start, end, groups }
 - regex_replace(text, pattern, repl) -> string
 
 Stdlib wrapper:
+
 - class Regex (lib/regex.fun) providing match/search/replace helpers.
 
 Examples: regex_demo.fun, regex_procedural.fun
 
 Notes:
-- Patterns use PCRE2 syntax.
 
+- Patterns use PCRE2 syntax.
 
 ### REPL (optional)
 
 Build flag: -DFUN_WITH_REPL=ON.
 
 Description:
-- Enables the interactive Read–Eval–Print Loop and the --repl-on-error mode. No additional VM API functions; this feature is part of the executable.
 
----
+- Enables the interactive Read–Eval–Print Loop and the --repl-on-error mode. No additional VM API functions; this feature is part of the executable.
 
 ## Examples reference
 
 You can run examples without installing by pointing FUN_LIB_DIR to the repository lib directory:
 
-  FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/<path>.fun
+`FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/<path>.fun`
 
 Highlights (not exhaustive):
+
 - arrays.fun, arrays_advanced.fun, arrays_iter.fun — array operations
 - booleans.fun, boolean_decl.fun — boolean basics
 - builtins_conversions.fun, builtins_extended.fun — conversions and math helpers
@@ -681,9 +732,8 @@ Highlights (not exhaustive):
 - extra/sqlite_example.fun — SQLite usage
 
 Notes:
-- Some examples rely on optional features (JSON, CURL, PCSC, SQLite) and degrade gracefully when disabled.
 
----
+- Some examples rely on optional features (JSON, CURL, PCSC, SQLite) and degrade gracefully when disabled.
 
 ## Internals notes (selected)
 
@@ -692,8 +742,6 @@ JSON: src/vm/json/* wraps json-c. OP_JSON_PARSE and friends convert json_object 
 PCSC: The VM interfaces with pcsc-lite/WinSCard and returns maps with data and status words. The stdlib wrapper handles absent hardware defensively.
 
 SQLite: src/vm/sqlite/* implements open/exec/query/close using a simple handle registry. Query prepares a statement, steps rows, maps columns by name to values, and returns an array of row maps.
-
----
 
 ## Development
 
