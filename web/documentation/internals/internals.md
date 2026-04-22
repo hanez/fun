@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Internals
+title: Internals
 subtitle: Implementation details, bytecode format, VM architecture, stacks/frames, parser, and dispatch.
 description: Implementation details, bytecode format, VM architecture, stacks/frames, parser, and dispatch.
 permalink: /documentation/internals/
@@ -201,7 +201,6 @@ Fun supports a lightweight include mechanism at the source text level (handled b
   // __include_begin__: <path>:<line>
   …included lines…
   // __include_end__: <path>:<line>
-
 - map_expanded_line_to_include(path, line, out_path, out_line) uses these markers to map a line in the expanded text back to the original file:line that contributed it.
 
 When the VM produces stderr output, fun_vm_vfprintf annotates messages with the mapped file and line if possible.
@@ -227,7 +226,6 @@ Key components:
   - parse_block handles nested blocks, indentation tracking, and emits OP_LINE markers for accurate source positioning.
 
 - Control‑flow codegen:
-
   - Conditional and loop constructs emit OP_JUMP/OP_JUMP_IF_FALSE with forward jump placeholders patched later via bytecode_set_operand.
   - try/catch/finally: emit OP_TRY_PUSH/OP_TRY_POP and arrange handler ips; OP_THROW for explicit throw.
 
@@ -269,10 +267,10 @@ Feature flags (CMake):
 - Use OP_LINE markers (visible via bytecode_dump) to correlate bytecode with source lines.
 - vm_dump_globals helps inspect non‑nil globals at runtime.
 - When adding a new opcode:
-  1) Extend enum OpCode and opcode_names[]
-  2) Implement a handler (small C file) and include it from src/vm.c
-  3) Teach the parser/emitter to generate the opcode
-  4) Update documentation/spec and examples
+  1. Extend enum OpCode and opcode_names[]
+  2. Implement a handler (small C file) and include it from src/vm.c
+  3. Teach the parser/emitter to generate the opcode
+  4. Update documentation/spec and examples
 
 ## Data limits and sizes
 

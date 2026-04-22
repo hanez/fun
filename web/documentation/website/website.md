@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Website Documentation (fun-lang.xyz)
+title: Website Documentation (fun-lang.xyz)
 subtitle: Documentation for the fun-lang.xyz website in the `./web/` directory.
 description: Documentation for the fun-lang.xyz website in the `./web/` directory.
 permalink: /documentation/website/
@@ -24,9 +24,9 @@ This document describes the structure and maintenance of the website for the Fun
 
 The website is built using [Jekyll](https://jekyllrb.com/){:class="ext"}, a static site generator written in Ruby.
 
-- **Markdown Engine:** kramdown (configured for GFM)
-- **Syntax Highlighting:** Rouge
-- **Plugins:** 
+- Markdown Engine: kramdown (configured for GFM)
+- Syntax Highlighting: Rouge
+- Plugins:
   - `jekyll-paginate`
   - `jekyll-sitemap`
   - `jekyll-toc`
@@ -65,13 +65,13 @@ The `./web/` directory contains a `Makefile` to simplify common tasks:
 
 To run the website locally for development:
 
-1.  **Prerequisites:** Ensure you have Ruby, Bundler, and optionally the `minify` tool installed.
-2.  **Install dependencies:**
+1.  Prerequisites: Ensure you have Ruby, Bundler, and optionally the `minify` tool installed.
+2.  Install dependencies:
     ```bash
     cd web/
     bundle install
     ```
-3.  **Run the development server:**
+3.  Run the development server:
     Using the Makefile:
     ```bash
     make run
@@ -84,9 +84,9 @@ To run the website locally for development:
 
 ## Content Management
 
-- **Blog Posts:** Add new `.md` files to `_posts/` following the `YYYY-MM-DD-title.md` naming convention.
-- **Pages:** Create new `.md` or `.html` files in the root of the `./web/` directory or in subdirectories.
-- **Configuration:** Update `_config.yml` for site-wide settings, navigation, or social media links.
+- Blog Posts: Add new `.md` files to `_posts/` following the `YYYY-MM-DD-title.md` naming convention.
+- Pages: Create new `.md` or `.html` files in the root of the `./web/` directory or in subdirectories.
+- Configuration: Update `_config.yml` for site-wide settings, navigation, or social media links.
 
 ## Deployment
 

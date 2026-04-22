@@ -2,7 +2,6 @@ all:
 	make release
 
 build:
-	#wget -O ./handbook/handbook.md https://git.xw3.org/fun/fun/raw/branch/main/docs/handbook.md
 	bundle exec jekyll b --incremental
 
 clean:
