@@ -255,41 +255,40 @@ class CGI()
     resp = resp + "Connection: close\r\n\r\n" + b
     return resp
 
-  // Minimal url-decoder: '+' -> space; %XX for ASCII hex
   fun url_decode(this, s)
-    _src = to_string(s)
-    _res_str = ""
-    number _j = 0
-    number _m = len(_src)
-    while (_j < _m)
-      _c = substr(_src, _j, 1)
-      if (_c == "+")
-        _res_str = _res_str + " "
-        _j = _j + 1
-      else if (_c == "%" && _j + 2 < _m)
-        _h1 = substr(_src, _j + 1, 1)
-        _h2 = substr(_src, _j + 2, 1)
-        _hex = "0123456789ABCDEF"
-        _v1 = find(_hex, str_to_upper(_h1))
-        _v2 = find(_hex, str_to_upper(_h2))
-        if (_v1 >= 0 && _v2 >= 0)
-          number _code = _v1 * 16 + _v2
+    source_str = to_string(s)
+    decoded_result = ""
+    number current_pos = 0
+    number source_len = len(source_str)
+    while (current_pos < source_len)
+      current_char = substr(source_str, current_pos, 1)
+      if (current_char == "+")
+        decoded_result = decoded_result + " "
+        current_pos = current_pos + 1
+      else if (current_char == "%" && current_pos + 2 < source_len)
+        hex_digit1 = substr(source_str, current_pos + 1, 1)
+        hex_digit2 = substr(source_str, current_pos + 2, 1)
+        hex_table = "0123456789ABCDEF"
+        val1 = find(hex_table, str_to_upper(hex_digit1))
+        val2 = find(hex_table, str_to_upper(hex_digit2))
+        if (val1 >= 0 && val2 >= 0)
+          number char_code = val1 * 16 + val2
           // Using a more robust table with explicit characters
-          _ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-          if (_code >= 32 && _code <= 126)
-            _res_str = _res_str + substr(_ascii, _code - 32, 1)
+          ascii_table = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+          if (char_code >= 32 && char_code <= 126)
+            decoded_result = decoded_result + substr(ascii_table, char_code - 32, 1)
           else
-            _res_str = _res_str + "%"
-            _res_str = _res_str + _h1
-            _res_str = _res_str + _h2
-          _j = _j + 3
+            decoded_result = decoded_result + "%"
+            decoded_result = decoded_result + hex_digit1
+            decoded_result = decoded_result + hex_digit2
+          current_pos = current_pos + 3
         else
-          _res_str = _res_str + _c
-          _j = _j + 1
+          decoded_result = decoded_result + current_char
+          current_pos = current_pos + 1
       else
-        _res_str = _res_str + _c
-        _j = _j + 1
-    return _res_str
+        decoded_result = decoded_result + current_char
+        current_pos = current_pos + 1
+    return decoded_result
 
   fun _merge_params(this, pairs)
     // pairs: array of [key, value] entries
