@@ -18,7 +18,6 @@ tags:
 - examples
 - extension
 - extensions
-- extensions
 - integrations
 - optional
 - required

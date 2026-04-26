@@ -54,41 +54,41 @@ jobs:
       - name: Run Examples (crypto)
         run: ./scripts/run_examples.sh crypto
 
-      #- name: Run Examples (external/curl)
-      #  run: ./scripts/run_examples.sh external/curl
+      #- name: Run Examples (extensions/curl)
+      #  run: ./scripts/run_examples.sh extensions/curl
 
-      #- name: Run Examples (external/ini)
-      #  run: ./scripts/run_examples.sh external/ini
+      #- name: Run Examples (extensions/ini)
+      #  run: ./scripts/run_examples.sh extensions/ini
 
-      - name: Run Examples (external/json)
-        run: ./scripts/run_examples.sh external/json
+      - name: Run Examples (extensions/json)
+        run: ./scripts/run_examples.sh extensions/json
 
-      #- name: Run Examples (external/libressl)
-      #  run: ./scripts/run_examples.sh external/libressl
+      #- name: Run Examples (extensions/libressl)
+      #  run: ./scripts/run_examples.sh extensions/libressl
 
-      #- name: Run Examples (external/libsql)
-      #  run: ./scripts/run_examples.sh external/libsql
+      #- name: Run Examples (extensions/libsql)
+      #  run: ./scripts/run_examples.sh extensions/libsql
 
-      #- name: Run Examples (external/notcurses)
-      #  run: ./scripts/run_examples.sh external/notcurses
+      #- name: Run Examples (extensions/notcurses)
+      #  run: ./scripts/run_examples.sh extensions/notcurses
 
-      - name: Run Examples (external/openssl)
-        run: ./scripts/run_examples.sh external/openssl
+      - name: Run Examples (extensions/openssl)
+        run: ./scripts/run_examples.sh extensions/openssl
 
-      #- name: Run Examples (external/pcre2)
-      #  run: ./scripts/run_examples.sh external/pcre2
+      #- name: Run Examples (extensions/pcre2)
+      #  run: ./scripts/run_examples.sh extensions/pcre2
 
-      #- name: Run Examples (external/pcsc)
-      #  run: ./scripts/run_examples.sh external/pcsc
+      #- name: Run Examples (extensions/pcsc)
+      #  run: ./scripts/run_examples.sh extensions/pcsc
 
-      #- name: Run Examples (external/sqlite)
-      #  run: ./scripts/run_examples.sh external/sqlite
+      #- name: Run Examples (extensions/sqlite)
+      #  run: ./scripts/run_examples.sh extensions/sqlite
 
-      #- name: Run Examples (external/tcltk)
-      #  run: ./scripts/run_examples.sh external/tcltk
+      #- name: Run Examples (extensions/tcltk)
+      #  run: ./scripts/run_examples.sh extensions/tcltk
 
-      #- name: Run Examples (external/xml2)
-      #  run: ./scripts/run_examples.sh external/xml2
+      #- name: Run Examples (extensions/xml2)
+      #  run: ./scripts/run_examples.sh extensions/xml2
 
       - name: Run Examples (functions)
         run: ./scripts/run_examples.sh functions

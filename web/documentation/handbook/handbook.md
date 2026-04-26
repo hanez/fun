@@ -408,7 +408,7 @@ UnixClient:
 
 - connect(path), is_connected(), send(data), recv(maxlen), close()
 
-Examples: tcp_http_get.fun, tcp_http_get_class.fun, unix_socket_echo.fun, extra/tcp_echo_server_class.fun
+Examples: tcp_http_get.fun, tcp_http_get_class.fun, unix_socket_echo.fun, blocking/tcp_echo_server_class.fun
 
 ### io.thread
 
@@ -711,13 +711,13 @@ Highlights (not exhaustive):
 - if_else_test.fun — branching
 - include_lib.fun, include_local.fun, include_namespace.fun — includes and namespacing
 - interactive/input_example.fun — console input
-- extra/json_showcase.fun — JSON usage
-- extra/curl_get_json.fun, extra/curl_post.fun, extra/curl_download.fun — HTTP via CURL
+- extensions/json_showcase.fun — JSON usage
+- extensions/curl_get_json.fun, extensions/curl_post.fun, extensions/curl_download.fun — HTTP via CURL
 - loops_break_continue.fun, nested_loops.fun, while_test.fun — loops
 - crypto/md5_demo.fun, crypto/sha1_demo.fun, crypto/sha256_demo.fun, crypto/sha256_str_demo.fun, crypto/sha384_example.fun, crypto/sha512_demo.fun, crypto/sha512_str_demo.fun — hashing
 - objects_basic.fun, objects_more.fun — map/object patterns
 - os_env.fun — environment variables
-- extra/pcsc_example.fun — smart card demo
+- extensions/pcsc_example.fun — smart card demo
 - process_example.fun — running external commands
 - regex_demo.fun, regex_procedural.fun — regex usage
 - stdlib_showcase.fun — tour through stdlib
@@ -729,7 +729,7 @@ Highlights (not exhaustive):
 - type_safety.fun, type_safety_fails.fun — type safety
 - types_integers.fun, signed_ints.fun, uint_types.fun — integers
 - unix_socket_echo.fun — UNIX domain sockets
-- extra/sqlite_example.fun — SQLite usage
+- extensions/sqlite_example.fun — SQLite usage
 
 Notes:
 

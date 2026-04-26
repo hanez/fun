@@ -19,13 +19,13 @@ Create a sample database
 Run the server
 - Set FUN_LIB_DIR to the repo’s lib directory or install Fun libs system-wide
 - Example (Debug profile path may differ):
-  FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlited/server.fun 127.0.0.1 5555
+  FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/extensions/sqlite/sqlited/server.fun 127.0.0.1 5555
 
 Run the client
 - Query:
-  FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlited/client.fun 127.0.0.1 5555 "SELECT id, title FROM tasks;"
+  FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/extensions/sqlite/sqlited/client.fun 127.0.0.1 5555 "SELECT id, title FROM tasks;"
 - Exec/DDL:
-  FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/sqlited/client.fun 127.0.0.1 5555 "UPDATE tasks SET done=1 WHERE id=1;"
+  FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/extensions/sqlite/sqlited/client.fun 127.0.0.1 5555 "UPDATE tasks SET done=1 WHERE id=1;"
 
 Protocol summary
 - Client sends one line with SQL ended by a newline (\n)
