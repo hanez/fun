@@ -257,44 +257,39 @@ class CGI()
 
   // Minimal url-decoder: '+' -> space; %XX for ASCII hex
   fun url_decode(this, s)
-    src = to_string(s)
-    out = []
-    i = 0
-    n = len(src)
-    while (i < n)
-      ch = substr(src, i, 1)
-      if (ch == "+")
-        push(out, " ")
-        i = i + 1
-      else if (ch == "%" && i + 2 < n)
-        h1 = substr(src, i + 1, 1)
-        h2 = substr(src, i + 2, 1)
-        // Convert two hex digits to a single character (uppercase/lowercase allowed)
-        hexdigits = "0123456789ABCDEF"
-        hexdigits_l = "0123456789abcdef"
-        v1 = find(hexdigits, str_to_upper(h1))
-        v2 = find(hexdigits, str_to_upper(h2))
-        if (v1 >= 0 && v2 >= 0)
-          code = v1 * 16 + v2
-          // Build single-byte string from code using substr on a constant table
-          // Table of 256 bytes isn't available; approximate by mapping common ASCII 0x20..0x7E
-          ascii = "\x20!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-          if (code >= 32 && code <= 126)
-            push(out, substr(ascii, code - 32, 1))
+    _src = to_string(s)
+    _res_str = ""
+    number _j = 0
+    number _m = len(_src)
+    while (_j < _m)
+      _c = substr(_src, _j, 1)
+      if (_c == "+")
+        _res_str = _res_str + " "
+        _j = _j + 1
+      else if (_c == "%" && _j + 2 < _m)
+        _h1 = substr(_src, _j + 1, 1)
+        _h2 = substr(_src, _j + 2, 1)
+        _hex = "0123456789ABCDEF"
+        _v1 = find(_hex, str_to_upper(_h1))
+        _v2 = find(_hex, str_to_upper(_h2))
+        if (_v1 >= 0 && _v2 >= 0)
+          number _code = _v1 * 16 + _v2
+          // Using a more robust table with explicit characters
+          _ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+          if (_code >= 32 && _code <= 126)
+            _res_str = _res_str + substr(_ascii, _code - 32, 1)
           else
-            // Non-printable: keep percent sequence as-is
-            push(out, "%")
-            push(out, h1)
-            push(out, h2)
-          i = i + 3
+            _res_str = _res_str + "%"
+            _res_str = _res_str + _h1
+            _res_str = _res_str + _h2
+          _j = _j + 3
         else
-          // Not hex, keep as-is
-          push(out, ch)
-          i = i + 1
+          _res_str = _res_str + _c
+          _j = _j + 1
       else
-        push(out, ch)
-        i = i + 1
-    return join(out, "")
+        _res_str = _res_str + _c
+        _j = _j + 1
+    return _res_str
 
   fun _merge_params(this, pairs)
     // pairs: array of [key, value] entries

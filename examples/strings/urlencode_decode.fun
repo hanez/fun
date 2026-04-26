@@ -20,5 +20,6 @@ print("decod: " + cgi.url_decode(s))
 
 /* Expected output:
 raw:   name=Fun+Lang&msg=Hello%2C+World%21
-decod: name=Fun Lang&msg=Hello%2C World%21
+decod: name=Fun Lang&msg=Hello, World!
+
 */
