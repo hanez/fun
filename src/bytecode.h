@@ -161,8 +161,7 @@ typedef enum {
   OP_SQLITE_CLOSE, // pops handle; pushes Nil
   OP_SQLITE_EXEC,  // pops sql, handle; pushes sqlite rc (0=OK)
   OP_SQLITE_QUERY, // pops sql, handle; pushes array<map>
-
-
+  
   // PCSC (smart card) opcodes
   OP_PCSC_ESTABLISH,    // returns context id (>0) or 0
   OP_PCSC_RELEASE,      // pops ctx id; returns 1/0
@@ -181,8 +180,7 @@ typedef enum {
   OP_OPENSSL_SHA256,    // pops data string; pushes sha256 hex string
   OP_OPENSSL_SHA512,    // pops data string; pushes sha512 hex string
   OP_OPENSSL_RIPEMD160, // pops data string; pushes ripemd160 hex string
-
-
+  
   // INI (iniparser 4.2.6) optional
   OP_INI_LOAD,       // pops path; pushes handle (>0) or 0
   OP_INI_FREE,       // pops handle; pushes 1/0

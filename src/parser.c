@@ -51,6 +51,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 /* from parser_utils.c */
 extern char *preprocess_includes_with_path(const char *src, const char *current_path);
 
