@@ -96,7 +96,7 @@ elif [ "$target" = "freebsd" ]; then
       -DFUN_WITH_REPL=ON \
     && cmake --build build --target fun
 elif [ "$target" = "install" ]; then
-  sudo cmake --build build --target install
+  cmake --build build --target install
 elif [ "$target" = "minimal" ]; then
   rm -rf build \
     && cmake -S . -B build \
