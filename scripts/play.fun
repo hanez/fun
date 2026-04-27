@@ -18,6 +18,46 @@
 #include <cli.fun>
 #include <strings.fun>
 
+// Early argv scan so --help exits before any other side effects
+raw_argv = argv()
+yes_all = 0
+no_all = 0
+want_help = 0
+idx = 0
+argc = len(raw_argv)
+while (idx < argc)
+  tok = raw_argv[idx]
+  if (tok == "--yes")
+    yes_all = 1
+  else if (tok == "--no")
+    no_all = 1
+  else if (tok == "--help")
+    want_help = 1
+  idx = idx + 1
+
+if (want_help == 1)
+  print("Usage: scripts/play.fun [--yes | --no] [examples-subdir]")
+  print("")
+  print("Options:")
+  print("  --yes    Run all listed examples without asking")
+  print("  --no     Do not run any examples (show list only)")
+  print("  --help   Show this help and exit")
+  print("")
+  print("Behavior:")
+  print("  - Without a subdirectory argument: only runs .fun files directly in ./examples/")
+  print("  - With an examples-subdir: searches recursively under ./examples/<subdir>/")
+  print("")
+  print("Environment:")
+  print("  FUN_BIN      Path to the fun interpreter (overrides auto-detection)")
+  print("  FUN_LIB_DIR  Path to stdlib (defaults to ./lib)")
+  print("")
+  print("Examples:")
+  print("  scripts/play.fun")
+  print("  scripts/play.fun --yes")
+  print("  scripts/play.fun crypto")
+  print("  scripts/play.fun --no math")
+  exit(0)
+
 // Set FUN_LIB_DIR to ensure stdlib is found
 // We try to use existing environment or default to ./lib
 lib_dir = env("FUN_LIB_DIR")
@@ -93,10 +133,14 @@ fun get_examples(subdir)
     i = i + 1
   return examples
 
-args = parse_args(argv())
+args = parse_args(raw_argv)
 subdir = ""
 if (len(args["positionals"]) > 0)
   subdir = args["positionals"][0]
+
+if (yes_all == 1 && no_all == 1)
+  print("Error: --yes and --no cannot be used together.")
+  exit(2)
 
 examples = get_examples(subdir)
 if (len(examples) == 0)
@@ -117,9 +161,22 @@ while (i < n)
   print("Example: " + example)
 
   // ask_yes_no returns 1 for yes, 0 for no
-  print("Do you want to run this example? [y/N]")
-  ans = str_to_lower(str_trim(input("")))
-  if (ans == "y" || ans == "yes")
+  run_it = 0
+  if (yes_all == 1)
+    // Auto-approve running
+    run_it = 1
+  else if (no_all == 1)
+    // Auto-decline
+    run_it = 0
+  else
+    print("Do you want to run this example? [y/N]")
+    ans = str_to_lower(str_trim(input("")))
+    if (ans == "y" || ans == "yes")
+      run_it = 1
+    else
+      run_it = 0
+
+  if (run_it == 1)
     print("Running: " + interpreter + " " + example)
 
     // Prepare command with environment variable

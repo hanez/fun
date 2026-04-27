@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Wrapper to run scripts/play.fun without requiring 'fun' on PATH.
+# Honors FUN_BIN if provided, otherwise auto-detects a local build, then PATH.
+
+ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
+PLAY_FUN="$ROOT/scripts/play.fun"
+
+BIN="${FUN_BIN:-}"
+if [[ -z "$BIN" ]]; then
+  # Try common local build locations
+  for cand in \
+    "$ROOT/build/fun" \
+    "$ROOT/build_debug/fun" \
+    "$ROOT/build_release/fun" \
+    "$ROOT/fun"; do
+    if [[ -x "$cand" ]]; then
+      BIN="$cand"
+      break
+    fi
+  done
+fi
+
+if [[ -z "$BIN" ]]; then
+  if command -v fun >/dev/null 2>&1; then
+    BIN="fun"
+  else
+    echo "error: fun interpreter not found. Set FUN_BIN or build it (e.g., CMake)." >&2
+    exit 2
+  fi
+fi
+
+# Ensure stdlib is discoverable unless user overrides
+if [[ -z "${FUN_LIB_DIR:-}" ]]; then
+  export FUN_LIB_DIR="$ROOT/lib"
+fi
+
+exec "$BIN" "$PLAY_FUN" "$@"
