@@ -201,10 +201,16 @@ static struct {
   int count;
 } G = {{0}, {0}, {0}, 0};
 
-static int sym_index(const char *name) {
+static int sym_find(const char *name) {
   for (int i = 0; i < G.count; ++i) {
     if (strcmp(G.names[i], name) == 0) return i;
   }
+  return -1;
+}
+
+static int sym_index(const char *name) {
+  int existing = sym_find(name);
+  if (existing >= 0) return existing;
   if (G.count >= MAX_GLOBALS) {
     parser_fail(0, "Too many globals (max %d)", MAX_GLOBALS);
     return 0;
@@ -5580,7 +5586,17 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
 
     /* assignment or simple call */
     int lidx = local_find(name);
-    int gi = (lidx < 0) ? sym_index(name) : -1;
+    int gi = (lidx < 0) ? sym_find(name) : -1;
+    if (lidx < 0 && gi < 0 && g_locals) {
+      /* Auto-declare as local if we're in a function and it's not known as local or global */
+      lidx = local_add(name);
+    }
+    if (lidx < 0 && gi < 0) {
+      /* Not local, not existing global -> it's a new global (or a new local if we were in a function but lidx still < 0?)
+         Actually if g_locals was non-null we already added it to lidx.
+         If g_locals is NULL, we create it as global. */
+      gi = sym_index(name);
+    }
     skip_spaces(src, len, &local_pos);
 
     /* object field assignment: supports

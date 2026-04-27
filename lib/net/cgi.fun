@@ -256,39 +256,38 @@ class CGI()
     return resp
 
   fun url_decode(this, s)
-    source_str = to_string(s)
-    decoded_result = ""
-    number current_pos = 0
-    number source_len = len(source_str)
-    while (current_pos < source_len)
-      current_char = substr(source_str, current_pos, 1)
-      if (current_char == "+")
-        decoded_result = decoded_result + " "
-        current_pos = current_pos + 1
-      else if (current_char == "%" && current_pos + 2 < source_len)
-        hex_digit1 = substr(source_str, current_pos + 1, 1)
-        hex_digit2 = substr(source_str, current_pos + 2, 1)
-        hex_table = "0123456789ABCDEF"
-        val1 = find(hex_table, str_to_upper(hex_digit1))
-        val2 = find(hex_table, str_to_upper(hex_digit2))
-        if (val1 >= 0 && val2 >= 0)
-          number char_code = val1 * 16 + val2
-          // Using a more robust table with explicit characters
-          ascii_table = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
-          if (char_code >= 32 && char_code <= 126)
-            decoded_result = decoded_result + substr(ascii_table, char_code - 32, 1)
+    src = to_string(s)
+    out = []
+    i = 0
+    n = len(src)
+    while (i < n)
+      ch = substr(src, i, 1)
+      if (ch == "+")
+        push(out, " ")
+        i = i + 1
+      else if (ch == "%" && i + 2 < n)
+        h1 = substr(src, i + 1, 1)
+        h2 = substr(src, i + 2, 1)
+        hexdigits = "0123456789ABCDEF"
+        v1 = find(hexdigits, str_to_upper(h1))
+        v2 = find(hexdigits, str_to_upper(h2))
+        if (v1 >= 0 && v2 >= 0)
+          code = v1 * 16 + v2
+          ascii = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+          if (code >= 32 && code <= 126)
+            push(out, substr(ascii, code - 32, 1))
           else
-            decoded_result = decoded_result + "%"
-            decoded_result = decoded_result + hex_digit1
-            decoded_result = decoded_result + hex_digit2
-          current_pos = current_pos + 3
+            push(out, "%")
+            push(out, h1)
+            push(out, h2)
+          i = i + 3
         else
-          decoded_result = decoded_result + current_char
-          current_pos = current_pos + 1
+          push(out, ch)
+          i = i + 1
       else
-        decoded_result = decoded_result + current_char
-        current_pos = current_pos + 1
-    return decoded_result
+        push(out, ch)
+        i = i + 1
+    return join(out, "")
 
   fun _merge_params(this, pairs)
     // pairs: array of [key, value] entries
