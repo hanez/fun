@@ -79,7 +79,11 @@ extern int map_expanded_line_to_include_path(const char *path, int line, char *o
 #include "vm/os/thread_common.c"
 
 /* Track the currently running VM to annotate error messages */
-static VM *g_active_vm = NULL;
+#ifdef _WIN32
+static __declspec(thread) VM *g_active_vm = NULL;
+#else
+static __thread VM *g_active_vm = NULL;
+#endif
 
 /* fprintf wrapper that appends source line info for stderr messages */
 static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
@@ -166,7 +170,7 @@ static int fun_vm_fprintf(FILE *stream, const char *fmt, ...) {
 /* Intercept exit() in this translation unit so VM errors don't terminate the process outright */
 #include <setjmp.h>
 
-static jmp_buf g_vm_err_jmp;
+static __thread jmp_buf g_vm_err_jmp;
 
 static void fun_vm_exit(int code) {
   if (g_active_vm && g_active_vm->repl_on_error) {

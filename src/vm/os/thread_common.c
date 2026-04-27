@@ -96,7 +96,8 @@ static fun_thread_ret_t fun_thread_main(void *param)
 
   /* Build wrapper: LOAD_CONST <fn>; LOAD_CONST <arg0> ...; CALL argc; HALT */
   Bytecode *wrap = bytecode_new();
-  int cFn = bytecode_add_constant(wrap, copy_value(&(Value){.type = VAL_FUNCTION, .fn = task->fn}));
+  /* Use make_function constructor which correctly handles the pointer */
+  int cFn = bytecode_add_constant(wrap, make_function(task->fn));
   bytecode_add_instruction(wrap, OP_LOAD_CONST, cFn);
   for (int i = 0; i < task->argc; ++i) {
     int cArg = bytecode_add_constant(wrap, deep_copy_value(&task->args[i]));
