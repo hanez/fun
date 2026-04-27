@@ -36,6 +36,9 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: ctest -C ${{env.BUILD_TYPE}}
 
+      - name: Run Opcode include checks.
+        run: ./scripts/check_op_includes.py
+
       - name: Run Examples
         run: ./scripts/run_examples.sh
 
