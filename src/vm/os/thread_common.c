@@ -91,8 +91,20 @@ static fun_thread_ret_t fun_thread_main(void *param)
 #endif
 {
   FunTask *task = (FunTask *)param;
-  VM tvm;
-  vm_init(&tvm);
+  VM *tvm = (VM *)malloc(sizeof(VM));
+  if (!tvm) {
+    fprintf(stderr, "Runtime error: failed to allocate thread VM\n");
+    /* Minimal cleanup of task before exiting thread */
+    for (int i = 0; i < task->argc; ++i) free_value(task->args[i]);
+    free(task->args);
+    free(task);
+#ifdef _WIN32
+    return 0;
+#else
+    return NULL;
+#endif
+  }
+  vm_init(tvm);
 
   /* Build wrapper: LOAD_CONST <fn>; LOAD_CONST <arg0> ...; CALL argc; HALT */
   Bytecode *wrap = bytecode_new();
@@ -106,12 +118,12 @@ static fun_thread_ret_t fun_thread_main(void *param)
   bytecode_add_instruction(wrap, OP_CALL, task->argc);
   bytecode_add_instruction(wrap, OP_HALT, 0);
 
-  vm_run(&tvm, wrap);
+  vm_run(tvm, wrap);
 
   /* Take the top of stack as result if present, else Nil */
   Value res = make_nil();
-  if (tvm.sp >= 0) {
-    res = deep_copy_value(&tvm.stack[tvm.sp]);
+  if (tvm->sp >= 0) {
+    res = deep_copy_value(&tvm->stack[tvm->sp]);
   }
 
   /* cleanup */
@@ -120,6 +132,8 @@ static fun_thread_ret_t fun_thread_main(void *param)
   }
   free(task->args);
   bytecode_free(wrap);
+  vm_reset(tvm);
+  free(tvm);
 
   /* store result */
   fun_lock();
