@@ -56,12 +56,24 @@ print("Searching for examples in ./examples...")
 // Recursive file discovery
 // Since we don't have a robust recursive os_list_dir yet, 
 // and the original used 'find', we'll use 'find' via system to get the list.
-fun get_examples()
+fun get_examples(subdir)
   // We use 'find' to get all .fun files and sort them.
   // We redirect to a temporary file as we don't have a 'proc_capture' that returns an array easily
   // Actually, os_list_dir uses 'ls -1'. We can use a similar approach or just call find.
 
-  cmd = "find examples -name \"*.fun\" | sort > ./tmp/examples_list.txt"
+  base_dir = "examples"
+  cmd = ""
+  if (len(subdir) > 0)
+    target = base_dir + "/" + subdir
+    // Verify directory exists
+    if (system("test -d " + target) != 0)
+      print("Error: examples subdirectory not found: " + subdir)
+      exit(1)
+    cmd = "find " + target + " -name \"*.fun\" | sort > ./tmp/examples_list.txt"
+  else
+    // Only run scripts directly in the ./examples/ directory when no argument is given.
+    cmd = "find " + base_dir + " -maxdepth 1 -name \"*.fun\" | sort > ./tmp/examples_list.txt"
+
   system(cmd)
 
   list_str = read_file("./tmp/examples_list.txt")
@@ -81,9 +93,17 @@ fun get_examples()
     i = i + 1
   return examples
 
-examples = get_examples()
+args = parse_args(argv())
+subdir = ""
+if (len(args["positionals"]) > 0)
+  subdir = args["positionals"][0]
+
+examples = get_examples(subdir)
 if (len(examples) == 0)
-  print("No examples found in ./examples")
+  if (len(subdir) > 0)
+    print("No examples found in ./examples/" + subdir)
+  else
+    print("No examples found in ./examples")
   exit(0)
 
 failed_examples = []
