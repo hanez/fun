@@ -45,6 +45,11 @@ def parse_opcodes_from_bytecode(text: str) -> set[str]:
 def parse_includes_from_vm(text: str) -> set[str]:
     pairs = [(m.group(1) or "", m.group(2)) for m in INCLUDE_RE.finditer(text)]
 
+    # Manually check for opcodes handled directly in switch/case instead of via includes
+    switch_ops = set()
+    if "case OP_CPP_ADD:" in text:
+        switch_ops.add("CPP_ADD")
+
     # Drop support includes that are not opcode handlers
     support_includes = {"thread_common", "stubs", "handles"}
     pairs = [(d, n) for (d, n) in pairs if n not in support_includes]
@@ -56,9 +61,9 @@ def parse_includes_from_vm(text: str) -> set[str]:
         "load_const": "LOAD_CONST", "load_local": "LOAD_LOCAL", "store_local": "STORE_LOCAL",
         "load_global": "LOAD_GLOBAL", "store_global": "STORE_GLOBAL",
         "pop": "POP", "dup": "DUP", "swap": "SWAP",
-        "call": "CALL", "return": "RETURN", "print": "PRINT",
+        "call": "CALL", "return": "RETURN", "print": "PRINT", "echo": "ECHO",
         "jump": "JUMP", "jump_if_false": "JUMP_IF_FALSE",
-        "line": "LINE",
+        "line": "LINE", "exit": "EXIT",
         # arithmetic/logic
         "add": "ADD", "sub": "SUB", "mul": "MUL", "div": "DIV", "mod": "MOD",
         "lt": "LT", "lte": "LTE", "gt": "GT", "gte": "GTE",
@@ -68,32 +73,49 @@ def parse_includes_from_vm(text: str) -> set[str]:
         "index_get": "INDEX_GET", "index_set": "INDEX_SET",
         "push": "PUSH", "apop": "APOP", "set": "SET", "insert": "INSERT", "remove": "REMOVE",
         "slice": "SLICE", "clear": "CLEAR", "contains": "CONTAINS", "index_of": "INDEX_OF",
+        "arr_push": "PUSH", "arr_pop": "APOP", "arr_set": "SET", "arr_insert": "INSERT", "arr_remove": "REMOVE",
         # conversions and type/meta
         "to_number": "TO_NUMBER", "to_string": "TO_STRING",
         "cast": "CAST", "typeof": "TYPEOF", "uclamp": "UCLAMP", "sclamp": "SCLAMP",
         # strings and iteration helpers
         "split": "SPLIT", "join": "JOIN", "substr": "SUBSTR", "find": "FIND",
         "enumerate": "ENUMERATE", "zip": "ZIP",
+        "regex_match": "REGEX_MATCH", "regex_replace": "REGEX_REPLACE", "regex_search": "REGEX_SEARCH",
         # maps and I/O
         "make_map": "MAKE_MAP", "keys": "KEYS", "values": "VALUES", "has_key": "HAS_KEY",
-        "read_file": "READ_FILE", "write_file": "WRITE_FILE",
+        "read_file": "READ_FILE", "write_file": "WRITE_FILE", "input_line": "INPUT_LINE",
         # os/env
-        "env": "ENV", "sleep_ms": "SLEEP_MS",
+        "env": "ENV", "sleep_ms": "SLEEP_MS", "env_all": "ENV_ALL", "fun_version": "FUN_VERSION",
+        "proc_run": "PROC_RUN", "proc_system": "PROC_SYSTEM", "random_number": "RANDOM_NUMBER",
+        "clock_mono_ms": "CLOCK_MONO_MS", "time_now_ms": "TIME_NOW_MS", "date_format": "DATE_FORMAT",
         # math / RNG
         "min": "MIN", "max": "MAX", "clamp": "CLAMP", "abs": "ABS", "pow": "POW",
         "random_seed": "RANDOM_SEED", "random_int": "RANDOM_INT",
+        "floor": "FLOOR", "ceil": "CEIL", "trunc": "TRUNC", "round": "ROUND",
+        "sin": "SIN", "cos": "COS", "tan": "TAN", "exp": "EXP", "log": "LOG", "log10": "LOG10", "sqrt": "SQRT",
+        "gcd": "GCD", "lcm": "LCM", "isqrt": "ISQRT", "sign": "SIGN", "fmin": "FMIN", "fmax": "FMAX",
         # bitwise and shifts/rotates
         "band": "BAND", "bor": "BOR", "bxor": "BXOR", "bnot": "BNOT",
         "shl": "SHL", "shr": "SHR",
         "rol": "ROTL", "ror": "ROTR",
         # threads
         "thread_spawn": "THREAD_SPAWN", "thread_join": "THREAD_JOIN",
+        # exceptions
+        "throw": "THROW", "try_pop": "TRY_POP", "try_push": "TRY_PUSH",
     }
 
     def map_token(d: str, n: str) -> str:
         # Directory-specific namespaces
         if d == "curl":
             return f"CURL_{n.upper()}"
+        if d == "openssl":
+            return f"OPENSSL_{n.upper()}"
+        if d == "rust":
+            return f"RUST_{n.upper()}"
+        if d == "cpp":
+            if n == "add":
+                return "CPP_ADD"
+            return f"CPP_{n.upper()}"
         if d == "ini":
             if n in {"load", "free", "get_string", "get_int", "get_double", "get_bool", "set", "unset", "save"}:
                 return f"INI_{n.upper()}"
@@ -106,20 +128,12 @@ def parse_includes_from_vm(text: str) -> set[str]:
         if d == "sqlite":
             if n in {"open", "close", "exec", "query"}:
                 return f"SQLITE_{n.upper()}"
-        if d == "libsql":
-            if n in {"open", "close", "exec", "query"}:
-                return f"LIBSQL_{n.upper()}"
         if d == "pcsc":
             if n in {"establish", "release", "list_readers", "connect", "disconnect", "transmit"}:
                 return f"PCSC_{n.upper()}"
         if d == "pcre2":
             if n in {"test", "match", "findall"}:
                 return f"PCRE2_{n.upper()}"
-        if d == "tk":
-            # wm_title already uses underscore
-            return f"TK_{n.upper()}"
-        if d == "notcurses":
-            return f"NC_{n.upper()}"
         if d == "os":
             # special cases in OS
             if n == "list_dir":
@@ -134,6 +148,7 @@ def parse_includes_from_vm(text: str) -> set[str]:
         return base_overrides.get(n, n.upper())
 
     tokens = set(map(lambda p: map_token(p[0], p[1]), pairs))
+    tokens.update(switch_ops)
     return tokens
 
 def main() -> int:

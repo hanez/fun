@@ -221,24 +221,12 @@ typedef enum {
   // OS additions
   OP_OS_LIST_DIR, // pops path string; pushes array of strings
 
-  // Tk additions
-  OP_TK_BIND, // pops command, event, id; binds event to command
-
   // Serial communication (termios)
   OP_SERIAL_OPEN,   // pops baud_rate (int), path (string); returns fd (int) or 0
   OP_SERIAL_CONFIG, // pops flow_control, stop_bits, parity, data_bits, fd; returns 1/0
   OP_SERIAL_SEND,   // pops data (string), fd; returns bytes sent (int)
   OP_SERIAL_RECV,   // pops maxlen (int), fd; returns data (string)
   OP_SERIAL_CLOSE,  // pops fd; returns 1/0
-
-  // Tk (Tcl/Tk) optional minimal API
-  OP_TK_EVAL,     // pops script string; pushes int rc (0 = OK)
-  OP_TK_RESULT,   // pushes string: last Tcl result
-  OP_TK_LOOP,     // enters Tk event loop; pushes Nil when done
-  OP_TK_WM_TITLE, // pops title string; sets window title; pushes rc
-  OP_TK_LABEL,    // pops text, id; creates/updates label .id; pushes rc
-  OP_TK_BUTTON,   // pops text, id; creates/updates button .id; pushes rc
-  OP_TK_PACK,     // pops id; packs .id; pushes rc
 
   // exceptions (minimal)
   OP_TRY_PUSH, // operand = handler ip; push handler onto try-stack
@@ -279,21 +267,6 @@ typedef enum {
 
   // C++ demo opcode(s)
   OP_CPP_ADD, // pops b, a; pushes (a + b)
-
-  /* Notcurses TUI (optional) */
-  OP_NC_INIT,      // initializes Notcurses; returns 1 on success, 0 on failure
-  OP_NC_SHUTDOWN,  // shuts down Notcurses; returns 0
-  OP_NC_CLEAR,     // clears screen/plane; returns 0
-  OP_NC_DRAW_TEXT, // pops text, x, y; draws; returns 0
-  OP_NC_GETCH,     // pops timeout_ms; returns codepoint or -1 on timeout/error
-  OP_NC_GET_SIZE,  // pushes [rows:int, cols:int] or -1 when unavailable
-  OP_NC_SET_STYLE, // pops style:int, bg_rgb:int, fg_rgb:int; returns 0/-1
-  OP_NC_DRAW_CHAR, // pops ch:int, x:int, y:int; returns 0/-1
-  OP_NC_DRAW_HLINE,// pops len:int, x:int, y:int, ch:int; returns 0/-1
-  OP_NC_DRAW_VLINE,// pops len:int, x:int, y:int, ch:int; returns 0/-1
-  OP_NC_BOX,       // pops x:int, y:int, w:int, h:int, style:int; returns 0/-1
-  OP_NC_FILL,      // pops x:int, y:int, w:int, h:int, ch:int; returns 0/-1
-  OP_NC_RENDER     // forces a render; returns 0/-1
 } OpCode;
 
 typedef struct {

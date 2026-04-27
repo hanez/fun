@@ -66,19 +66,13 @@ static const char *opcode_names[] = {
   "FD_SET_NONBLOCK", "FD_POLL_READ", "FD_POLL_WRITE",
   "EXIT",
   "OS_LIST_DIR",
-  "TK_BIND",
   "SERIAL_OPEN", "SERIAL_CONFIG", "SERIAL_SEND", "SERIAL_RECV", "SERIAL_CLOSE",
-  "TK_EVAL", "TK_RESULT", "TK_LOOP", "TK_WM_TITLE", "TK_LABEL", "TK_BUTTON", "TK_PACK",
   "TRY_PUSH", "TRY_POP", "THROW",
   "FMIN", "FMAX",
   /* Rust FFI demo */
   "RUST_HELLO", "RUST_HELLO_ARGS", "RUST_HELLO_ARGS_RETURN", "RUST_GET_SP", "RUST_SET_EXIT",
   /* C++ demo */
-  "CPP_ADD",
-  /* Notcurses TUI (optional) */
-  "NC_INIT", "NC_SHUTDOWN", "NC_CLEAR", "NC_DRAW_TEXT", "NC_GETCH",
-  "NC_GET_SIZE", "NC_SET_STYLE", "NC_DRAW_CHAR", "NC_DRAW_HLINE", "NC_DRAW_VLINE",
-  "NC_BOX", "NC_FILL", "NC_RENDER"};
+  "CPP_ADD"};
 
 typedef struct {
   Bytecode *fn;
@@ -162,7 +156,7 @@ void vm_debug_request_finish(VM *vm);
 void vm_debug_request_continue(VM *vm);
 
 static inline int opcode_is_valid(int op) {
-  return op >= OP_NOP && op <= OP_NC_RENDER; // all current opcodes (including optional NC_*)
+  return op >= OP_NOP && op <= OP_CPP_ADD; // all current opcodes
 }
 
 /* --- Minimal C ABI helpers for FFI (Rust opcode experiments) --- */
