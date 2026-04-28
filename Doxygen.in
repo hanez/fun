@@ -1,0 +1,53 @@
+## Doxygen configuration for the "fun" project (processed by CMake)
+# This file is configured by CMake's configure_file(@ONLY).
+
+# --- Project ---
+PROJECT_NAME           = "Fun"
+PROJECT_NUMBER         = "@FUN_DOCS_VERSION@"
+
+# Optional project logo (relative or absolute path). Leave empty if not found.
+PROJECT_LOGO           = "@FUN_DOCS_LOGO@"
+
+# --- Output ---
+OUTPUT_DIRECTORY       = "@CMAKE_CURRENT_BINARY_DIR@/docs"
+CREATE_SUBDIRS         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+
+# --- Input ---
+INPUT                  = "@CMAKE_SOURCE_DIR@/src"
+RECURSIVE              = YES
+FILE_PATTERNS          = *.h *.hpp *.c *.cc *.cpp
+
+# --- Extraction policy ---
+# Default to public/protected only to reduce noise; flip to YES if you want internals.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXTRACT_LOCAL_METHODS  = YES
+OPTIMIZE_OUTPUT_FOR_C  = YES
+
+# --- Paths shown in docs ---
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = "@CMAKE_SOURCE_DIR@"
+
+# --- Source browsing ---
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+GENERATE_TREEVIEW      = YES
+
+# --- Diagrams (Graphviz) ---
+HAVE_DOT               = @HAVE_DOT@
+CLASS_DIAGRAMS         = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+DOT_IMAGE_FORMAT       = svg
+
+# --- Warnings / noise ---
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO

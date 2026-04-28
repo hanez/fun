@@ -425,6 +425,50 @@ if(BUILD_TESTING)
   endif()
 endif()
 
+# --- Doxygen docs target ---
+# Generate API documentation for everything under src/ into <build>/docs/html
+find_package(Doxygen REQUIRED dot)
+
+# Provide a boolean for HAVE_DOT in the Doxyfile
+set(HAVE_DOT NO)
+if (DOXYGEN_DOT_FOUND)
+  set(HAVE_DOT YES)
+endif()
+
+# Determine documentation version: prefer `git describe`, fallback to project version
+set(FUN_DOCS_VERSION "${PROJECT_VERSION}")
+find_package(Git QUIET)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --always
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE _git_desc
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  if(_git_desc)
+    set(FUN_DOCS_VERSION "${_git_desc}")
+  endif()
+endif()
+
+# Optional logo (if present in the website assets)
+set(FUN_DOCS_LOGO "")
+set(_fun_logo_path "${CMAKE_SOURCE_DIR}/web/images/fun-square.png")
+if(EXISTS "${_fun_logo_path}")
+  set(FUN_DOCS_LOGO "${_fun_logo_path}")
+endif()
+
+set(DOXYGEN_IN  ${CMAKE_SOURCE_DIR}/Doxygen.in)
+set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+# Create a target to run Doxygen with the configured file
+add_custom_target(fun_docs
+  COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Generating API documentation with Doxygen"
+  VERBATIM)
+
 # Install rules
 # Binary
 install(TARGETS fun

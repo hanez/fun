@@ -8,6 +8,7 @@ noToc: false
 title: Call for Participants and Sponsors
 description: Join us in shaping the future of the Fun programming language
 date: 2026-04-23
+date_updated: 2026-04-27
 categories:
 - news
 - project
@@ -46,7 +47,7 @@ If you or your organization are interested in supporting Fun, please reach out t
 If you're interested in participating or sponsoring, please:
 
 - Visit our [Git Repository](https://git.xw3.org/fun/fun){:class="git"} and check out the open issues.
-- Join our community discussions.
+- Join our [community discussions](https://fun-lang.xyz/community/).
 - Contact Johannes Findeisen (hanez) directly via [email](mailto:hanez@fun-lang.xyz){:class="mail"}.
 
 Every contribution, no matter how small, helps us move closer to our goal of making Fun a powerful and minimal tool for developers everywhere.
