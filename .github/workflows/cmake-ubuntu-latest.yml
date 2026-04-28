@@ -24,7 +24,7 @@ jobs:
       #  run: sudo apt upgrade -y
 
       - name: Install dependencies
-        run: sudo apt install cmake libjson-c-dev libssl-dev -y
+        run: sudo apt install cmake doxygen libjson-c-dev libssl-dev -y
 
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFUN_DEBUG=OFF -DFUN_WITH_REPL=ON -DFUN_WITH_PCSC=OFF -DFUN_WITH_LIBSQL=OFF -DFUN_WITH_SQLITE=OFF -DFUN_WITH_CURL=OFF -DFUN_WITH_PCRE2=OFF -DFUN_WITH_XML2=OFF -DFUN_WITH_JSON=ON -DFUN_WITH_TCLTK=OFF -DFUN_WITH_INI=OFF -DFUN_WITH_NOTCURSES=OFF -DFUN_WITH_CPP=ON -DFUN_WITH_OPENSSL=ON -DFUN_WITH_LIBRESSL=OFF -DFUN_WITH_YAML=OFF -DFUN_USE_MUSL=OFF -DFUN_WITH_RUST=OFF
