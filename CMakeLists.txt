@@ -14,9 +14,9 @@ include(${CMAKE_SOURCE_DIR}/cmake/Targets.cmake)
 # --- Always show key build toggles ---
 # Normalize to ENABLED/DISABLED like the "Fun extension summary"
 if(FUN_DEBUG)
-  set(_FUN_DEBUG_STATE "ENABLED")
+    set(_FUN_DEBUG_STATE "ENABLED")
 else()
-  set(_FUN_DEBUG_STATE "DISABLED")
+    set(_FUN_DEBUG_STATE "DISABLED")
 endif()
 
 if(FUN_USE_MUSL)
@@ -37,11 +37,18 @@ else()
   set(_FUN_WITH_RUST_STATE "DISABLED")
 endif()
 
+if(FUN_BUILD_DOCS)
+    set(_FUN_BUILD_DOCS "ENABLED")
+else()
+    set(_FUN_BUILD_DOCS "DISABLED")
+endif()
+
 message(STATUS "==== Fun build options ====")
 message(STATUS "  FUN_DEBUG: ${_FUN_DEBUG_STATE}")
 message(STATUS "  FUN_USE_MUSL: ${_FUN_USE_MUSL_STATE}")
 message(STATUS "  FUN_WITH_CPP: ${_FUN_WITH_CPP_STATE}")
 message(STATUS "  FUN_WITH_RUST: ${_FUN_WITH_RUST_STATE}")
+message(STATUS "  FUN_BUILD_DOCS: ${_FUN_BUILD_DOCS}")
 message(STATUS "===========================")
 
 # Convenience aggregate target (like 'build' in Makefile)
@@ -425,49 +432,54 @@ if(BUILD_TESTING)
   endif()
 endif()
 
-# --- Doxygen docs target ---
-# Generate API documentation for everything under src/ into <build>/docs/html
-find_package(Doxygen REQUIRED dot)
+# --- Doxygen docs target (optional) ---
+# Generate API documentation for everything under src/ into <build>/docs/html.
+# Disabled by default; enable with -DFUN_BUILD_DOCS=ON
+option(FUN_BUILD_DOCS "Enable Doxygen documentation target 'fun_docs'" OFF)
 
-# Provide a boolean for HAVE_DOT in the Doxyfile
-set(HAVE_DOT NO)
-if (DOXYGEN_DOT_FOUND)
-  set(HAVE_DOT YES)
-endif()
+if(FUN_BUILD_DOCS)
+  find_package(Doxygen REQUIRED dot)
 
-# Determine documentation version: prefer `git describe`, fallback to project version
-set(FUN_DOCS_VERSION "${PROJECT_VERSION}")
-find_package(Git QUIET)
-if(GIT_FOUND)
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --always
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE _git_desc
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-  )
-  if(_git_desc)
-    set(FUN_DOCS_VERSION "${_git_desc}")
+  # Provide a boolean for HAVE_DOT in the Doxyfile
+  set(HAVE_DOT NO)
+  if (DOXYGEN_DOT_FOUND)
+    set(HAVE_DOT YES)
   endif()
+
+  # Determine documentation version: prefer `git describe`, fallback to project version
+  set(FUN_DOCS_VERSION "${PROJECT_VERSION}")
+  find_package(Git QUIET)
+  if(GIT_FOUND)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --always
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      OUTPUT_VARIABLE _git_desc
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET
+    )
+    if(_git_desc)
+      set(FUN_DOCS_VERSION "${_git_desc}")
+    endif()
+  endif()
+
+  # Optional logo (if present in the website assets)
+  set(FUN_DOCS_LOGO "")
+  set(_fun_logo_path "${CMAKE_SOURCE_DIR}/web/images/fun-square.png")
+  if(EXISTS "${_fun_logo_path}")
+    set(FUN_DOCS_LOGO "${_fun_logo_path}")
+  endif()
+
+  set(DOXYGEN_IN  ${CMAKE_SOURCE_DIR}/Doxygen.in)
+  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+  # Create a target to run Doxygen with the configured file
+  add_custom_target(fun_docs
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM)
 endif()
-
-# Optional logo (if present in the website assets)
-set(FUN_DOCS_LOGO "")
-set(_fun_logo_path "${CMAKE_SOURCE_DIR}/web/images/fun-square.png")
-if(EXISTS "${_fun_logo_path}")
-  set(FUN_DOCS_LOGO "${_fun_logo_path}")
-endif()
-
-set(DOXYGEN_IN  ${CMAKE_SOURCE_DIR}/Doxygen.in)
-set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-
-# Create a target to run Doxygen with the configured file
-add_custom_target(fun_docs
-  COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Generating API documentation with Doxygen"
-  VERBATIM)
 
 # Install rules
 # Binary
