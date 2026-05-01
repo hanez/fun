@@ -24,9 +24,9 @@
  * - Exits with a runtime error if the operand is not an array.
 
  * Example:
- * // Bytecode: OP_CLEAR
- * // Stack before: [[10, 20, 30]]
- * // Stack after: [0]
+ * - Bytecode: OP_CLEAR
+ * - Stack before: [[10, 20, 30]]
+ * - Stack after: [0]
  */
 
 case OP_CLEAR: {

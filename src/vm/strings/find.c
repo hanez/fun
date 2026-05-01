@@ -24,12 +24,9 @@
  * - Exits with an error if the operands are not strings.
  *
  * Example:
- * // Bytecode: OP_FIND
- * // Stack before: ["world", "hello world"]
- * // Stack after: [6]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
+ * - Bytecode: OP_FIND
+ * - Stack before: ["world", "hello world"]
+ * - Stack after: [6]
  */
 
 case OP_FIND: {

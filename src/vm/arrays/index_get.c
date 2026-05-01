@@ -25,9 +25,9 @@
  *   is of the wrong type, or if the index is out of bounds.
  *
  * Example:
- * // Bytecode: OP_INDEX_GET
- * // Stack before: [1, [10, 20, 30]]
- * // Stack after: [20]
+ * - Bytecode: OP_INDEX_GET
+ * - Stack before: [1, [10, 20, 30]]
+ * - Stack after: [20]
  */
 
 case OP_INDEX_GET: {

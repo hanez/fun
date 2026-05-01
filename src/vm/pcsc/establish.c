@@ -15,9 +15,7 @@
  * and registers it in the internal PCSC context registry when FUN_WITH_PCSC
  * is enabled. Returns the allocated context id on success, or 0 on failure.
  * When PCSC support is disabled at build time, this opcode returns 0.
- */
-
-/**
+ * 
  * OP_PCSC_ESTABLISH: () -> int
  *
  * - Returns: context id (>0) on success; 0 on error or when disabled.

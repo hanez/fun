@@ -82,7 +82,7 @@ static void skip_line(const char *src, size_t len, size_t *pos) {
 }
 
 /**
- * @brief Skip whitespace, then line (//) and block (/* ... *&#47;) comments.
+ * @brief Skip whitespace, then line and block comments.
  * Continues until the next non-comment, non-whitespace character.
  */
 static void skip_comments(const char *src, size_t len, size_t *pos) {

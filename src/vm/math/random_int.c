@@ -25,9 +25,9 @@
  * - Exits with an error if the lower bound is greater than the upper bound.
  *
  * Example:
- * // Bytecode: OP_RANDOM_INT
- * // Stack before: [10, 1]
- * // Stack after: [7]
+ * - Bytecode: OP_RANDOM_INT
+ * - Stack before: [10, 1]
+ * - Stack after: [7]
  */
 
 case OP_RANDOM_INT: {

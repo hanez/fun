@@ -13,11 +13,10 @@
  *
  * Prepares and steps through a SQLite statement to produce an array of row
  * maps when FUN_WITH_SQLITE is enabled. Returns an empty array otherwise.
- */
-
-/**
+ * 
  * OP_SQLITE_QUERY: (handle:int, sql:string) -> array<map<string,any>>
  */
+
 case OP_SQLITE_QUERY: {
 #ifdef FUN_WITH_SQLITE
   Value vsql = pop_value(vm);

@@ -14,9 +14,7 @@
  * Releases a previously established PC/SC context and frees its registry slot.
  * When PCSC support is disabled at build time, this opcode returns 0 after
  * consuming its argument.
- */
-
-/**
+ * 
  * OP_PCSC_RELEASE: (ctx_id:int) -> int
  *
  * - Pops: ctx_id.

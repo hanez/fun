@@ -25,9 +25,9 @@
  * - Exits with a runtime error if memory allocation fails.
  *
  * Example:
- * // Bytecode: OP_PUSH
- * // Stack before: [42, [10, 20, 30]]
- * // Stack after: [4]
+ * - Bytecode: OP_PUSH
+ * - Stack before: [42, [10, 20, 30]]
+ * - Stack after: [4]
  */
 
 case OP_PUSH: {

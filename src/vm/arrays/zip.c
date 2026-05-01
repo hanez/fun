@@ -24,9 +24,9 @@
  * - Exits with error if arguments aren't arrays
  *
  * Example:
- * // Bytecode: OP_ZIP
- * // Stack before: [[1,2], ['a','b']]
- * // Stack after: [[[1,'a'], [2,'b']]]
+ * - Bytecode: OP_ZIP
+ * - Stack before: [[1,2], ['a','b']]
+ * - Stack after: [[[1,'a'], [2,'b']]]
  */
 
 case OP_ZIP: {

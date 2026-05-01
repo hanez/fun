@@ -43,10 +43,10 @@
  * - EOF before any character yields an empty string.
  *
  * Example:
- *   // Bytecode: [optional PUSH prompt], OP_INPUT_LINE(operand)
- *   // operand bit0=1 (has prompt), bit1=2 (hidden) can be combined
- *   // Stack before (bit0=1): ["Enter password: "]
- *   // Stack after: ["user-typed-line"]
+ *   - Bytecode: [optional PUSH prompt], OP_INPUT_LINE(operand)
+ *   - operand bit0=1 (has prompt), bit1=2 (hidden) can be combined
+ *   - Stack before (bit0=1): ["Enter password: "]
+ *   - Stack after: ["user-typed-line"]
  */
 
 case OP_INPUT_LINE: {

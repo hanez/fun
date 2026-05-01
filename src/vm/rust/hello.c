@@ -16,9 +16,7 @@
  * Rust and pushes it as a VAL_STRING onto the VM stack. When Rust support is
  * disabled, a runtime error is raised and Nil is pushed to keep stack
  * consistency.
- */
-
-/**
+ * 
  * OP_RUST_HELLO: () -> string | Nil
  *
  * Behavior (FUN_WITH_RUST=ON):

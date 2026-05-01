@@ -25,9 +25,9 @@
  * - Exits with an error if memory allocation fails during the insertion.
  *
  * Example:
- * // Bytecode: OP_INSERT
- * // Stack before: [42, 1, [10, 20, 30]]
- * // Stack after: [4]
+ * - Bytecode: OP_INSERT
+ * - Stack before: [42, 1, [10, 20, 30]]
+ * - Stack after: [4]
  */
 
 case OP_INSERT: {

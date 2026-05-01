@@ -23,9 +23,9 @@
  * - Exits with an error if the frame stack is empty.
  *
  * Example:
- * // Bytecode: OP_RETURN
- * // Stack before: [42]
- * // Stack after: [42]
+ * - Bytecode: OP_RETURN
+ * - Stack before: [42]
+ * - Stack after: [42]
  */
 
 case OP_RETURN: {

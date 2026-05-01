@@ -15,9 +15,7 @@
  * vm.exit_code. Pushes Nil afterwards. When Rust support is disabled, the
  * argument is still popped/freed, a runtime error is raised, and Nil is
  * pushed to maintain stack discipline.
- */
-
-/**
+ * 
  * OP_RUST_SET_EXIT: (code:int) -> Nil
  *
  * Behavior (FUN_WITH_RUST=ON):
@@ -30,6 +28,7 @@
  * - Raises a runtime error indicating missing Rust support.
  * - Pushes Nil.
  */
+
 case OP_RUST_SET_EXIT: {
 #ifdef FUN_WITH_RUST
   extern int fun_op_rset_exit(VM * vm);

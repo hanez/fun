@@ -21,9 +21,6 @@
  * Error Handling:
  * - Exits if arguments wrong types
  * - Handles hi < lo case
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_CLAMP: {

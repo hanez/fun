@@ -13,11 +13,10 @@
  *
  * Opens a SQLite database and registers a handle when FUN_WITH_SQLITE is
  * enabled. On failure or when SQLite support is disabled, pushes 0.
- */
-
-/**
+ * 
  * OP_SQLITE_OPEN: (path:string) -> handle:int (>0) or 0 on error
  */
+
 case OP_SQLITE_OPEN: {
 #ifdef FUN_WITH_SQLITE
   Value vpath = pop_value(vm);

@@ -23,9 +23,9 @@
  * - Exits with an error if the file path is invalid or the file cannot be written.
  *
  * Example:
- * // Bytecode: OP_WRITE_FILE
- * // Stack before: ["file.txt", "data"]
- * // Stack after: [1]
+ * - Bytecode: OP_WRITE_FILE
+ * - Stack before: ["file.txt", "data"]
+ * - Stack after: [1]
  */
 
 case OP_WRITE_FILE: {

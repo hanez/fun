@@ -23,9 +23,9 @@
  * - Exits with an error if the file path is invalid or the file cannot be read.
  *
  * Example:
- * // Bytecode: OP_READ_FILE
- * // Stack before: ["file.txt"]
- * // Stack after: ["file contents"]
+ * - Bytecode: OP_READ_FILE
+ * - Stack before: ["file.txt"]
+ * - Stack after: ["file contents"]
  */
 
 case OP_READ_FILE: {

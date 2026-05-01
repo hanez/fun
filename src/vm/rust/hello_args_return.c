@@ -15,9 +15,7 @@
  * converts it to a C string, passes it to Rust, and pushes back the string
  * returned by Rust. If Rust returns NULL or Rust support is disabled, Nil is
  * pushed.
- */
-
-/**
+ * 
  * OP_RUST_HELLO_ARGS_RETURN: (msg:any) -> string | Nil
  *
  * Behavior (FUN_WITH_RUST=ON):
@@ -33,6 +31,7 @@
  * - Raises a runtime error indicating missing Rust support.
  * - Pushes Nil.
  */
+
 case OP_RUST_HELLO_ARGS_RETURN: {
 #ifdef FUN_WITH_RUST
   Value vmsg = pop_value(vm);

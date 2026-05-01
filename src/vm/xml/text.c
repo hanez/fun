@@ -27,9 +27,10 @@
  *   freed immediately after use.
  *
  * Example
- *  // stack: [ node_handle ]
- *  OP_XML_TEXT   // → [ "Hello world" ]
+ *  - stack: [ node_handle ]
+ *  - OP_XML_TEXT → [ "Hello world" ]
  */
+
 /* OP_XML_TEXT: pops node handle; pushes string (concatenate text node children) */
 case OP_XML_TEXT: {
 #ifdef FUN_WITH_XML2

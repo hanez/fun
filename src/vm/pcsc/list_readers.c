@@ -14,9 +14,7 @@
  * Lists available PC/SC reader names for a given context. On success returns
  * an array of strings. When PCSC support is disabled at build time, returns an
  * empty array after consuming its argument to keep the stack balanced.
- */
-
-/**
+ * 
  * OP_PCSC_LIST_READERS: (ctx_id:int) -> array<string>
  *
  * - Pops: ctx_id.

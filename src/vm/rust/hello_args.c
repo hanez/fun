@@ -15,9 +15,6 @@
  * string, calls into Rust to print/log it, and pushes Nil. When Rust support is
  * disabled, the argument is still popped and freed to keep the stack sane,
  * then Nil is pushed after raising an error message.
- */
-
-/**
  * OP_RUST_HELLO_ARGS: (msg:any) -> Nil
  *
  * Behavior (FUN_WITH_RUST=ON):
@@ -31,6 +28,7 @@
  * - Raises a runtime error indicating missing Rust support.
  * - Pushes Nil.
  */
+
 case OP_RUST_HELLO_ARGS: {
 #ifdef FUN_WITH_RUST
   Value vmsg = pop_value(vm);

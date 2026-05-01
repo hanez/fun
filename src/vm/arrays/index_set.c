@@ -24,9 +24,9 @@
  *   is of the wrong type, or if the index is out of bounds.
  *
  * Example:
- * // Bytecode: OP_INDEX_SET
- * // Stack before: [42, 1, [10, 20, 30]]
- * // Stack after: [[10, 42, 30]]
+ * - Bytecode: OP_INDEX_SET
+ * - Stack before: [42, 1, [10, 20, 30]]
+ * - Stack after: [[10, 42, 30]]
  */
 
 case OP_INDEX_SET: {

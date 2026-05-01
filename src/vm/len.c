@@ -23,12 +23,9 @@
  * - Exits with an error if the operand is not an array or string.
  *
  * Example:
- * // Bytecode: OP_LEN
- * // Stack before: ["hello"]
- * // Stack after: [5]
- *
- * @author Johannes Findeisen
- * @date 2025-09-16
+ * - Bytecode: OP_LEN
+ * - Stack before: ["hello"]
+ * - Stack after: [5]
  */
 
 case OP_LEN: {

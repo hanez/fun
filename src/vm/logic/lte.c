@@ -23,9 +23,9 @@
  * - Exits with an error if the operands are of incompatible types.
  *
  * Example:
- * // Bytecode: OP_LTE
- * // Stack before: [42, 42]
- * // Stack after: [1]
+ * - Bytecode: OP_LTE
+ * - Stack before: [42, 42]
+ * - Stack after: [1]
  */
 
 case OP_LTE: {

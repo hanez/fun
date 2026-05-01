@@ -11,8 +11,10 @@
  * @file clock_mono_ms.c
  * @brief Implements OP_CLOCK_MONO_MS to push monotonic clock in ms.
  *
- * Stack before: []
- * Stack after: [int ms]
+ * Example:
+ * - OP_CLOCK_MONO_MS
+ * - Stack before: []
+ * - Stack after: [int ms]
  */
 
 #include <stdint.h>

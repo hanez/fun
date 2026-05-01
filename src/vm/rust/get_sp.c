@@ -14,9 +14,7 @@
  * Delegates to a Rust helper to read the VM's current stack pointer (sp).
  * When Rust support is disabled, this raises a runtime error and pushes -1 to
  * signal unavailability.
- */
-
-/**
+ * 
  * OP_RUST_GET_SP: () -> int | Nil
  *
  * Behavior (FUN_WITH_RUST=ON):
@@ -28,6 +26,7 @@
  * - Raises a runtime error indicating missing Rust support.
  * - Pushes integer -1 as a sentinel value.
  */
+
 case OP_RUST_GET_SP: {
 #ifdef FUN_WITH_RUST
   extern int fun_op_rget_sp(VM * vm);

@@ -18,9 +18,9 @@
  * - Does nothing.
  *
  * Example:
- * // Bytecode: OP_NOP
- * // Stack before: [42]
- * // Stack after: [42]
+ * - Bytecode: OP_NOP
+ * - Stack before: [42]
+ * - Stack after: [42]
  */
 
 case OP_NOP:

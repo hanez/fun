@@ -18,9 +18,9 @@
  * - Stops the VM execution immediately.
  *
  * Example:
- * // Bytecode: OP_HALT
- * // Stack before: [42]
- * // Stack after: [42]
+ * - Bytecode: OP_HALT
+ * - Stack before: [42]
+ * - Stack after: [42]
  */
 
 case OP_HALT:

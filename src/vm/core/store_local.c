@@ -22,9 +22,9 @@
  * - Exits with an error if the index is out of bounds.
  *
  * Example:
- * // Bytecode: OP_STORE_LOCAL 0
- * // Stack before: [42]
- * // Stack after: []
+ * - Bytecode: OP_STORE_LOCAL 0
+ * - Stack before: [42]
+ * - Stack after: []
  */
 
 case OP_STORE_LOCAL: {

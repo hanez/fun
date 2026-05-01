@@ -31,6 +31,7 @@
  * Example:
  * - pattern = "[0-9]+", repl = "#", input = "a1b22c" -> "a#b#c"
  */
+
 /* Regex global replace opcode using POSIX regex */
 #ifdef __unix__
 #include <regex.h>

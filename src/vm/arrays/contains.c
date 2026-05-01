@@ -23,9 +23,9 @@
  * - Exits with an error if the array is of the wrong type.
  *
  * Example:
- * // Bytecode: OP_CONTAINS
- * // Stack before: [20, [10, 20, 30]]
- * // Stack after: [1]
+ * - Bytecode: OP_CONTAINS
+ * - Stack before: [20, [10, 20, 30]]
+ * - Stack after: [1]
  */
 
 case OP_CONTAINS: {

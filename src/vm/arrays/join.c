@@ -24,9 +24,9 @@
  * - Exits with an error if the array or separator is of the wrong type.
  *
  * Example:
- * // Bytecode: OP_JOIN
- * // Stack before: [", ", ["a", "b", "c"]]
- * // Stack after: ["a, b, c"]
+ * - Bytecode: OP_JOIN
+ * - Stack before: [", ", ["a", "b", "c"]]
+ * - Stack after: ["a, b, c"]
  */
 
 case OP_JOIN: {

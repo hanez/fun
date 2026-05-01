@@ -22,9 +22,9 @@
  * - Exits with an error if the seed is not an integer.
  *
  * Example:
- * // Bytecode: OP_RANDOM_SEED
- * // Stack before: [42]
- * // Stack after: []
+ * - Bytecode: OP_RANDOM_SEED
+ * - Stack before: [42]
+ * - Stack after: []
  */
 
 case OP_RANDOM_SEED: {

@@ -23,9 +23,9 @@
  * - Exits with an error if the map is of the wrong type.
  *
  * Example:
- * // Bytecode: OP_KEYS
- * // Stack before: [{"a": 1, "b": 2}]
- * // Stack after: [["a", "b"]]
+ * - Bytecode: OP_KEYS
+ * - Stack before: [{"a": 1, "b": 2}]
+ * - Stack after: [["a", "b"]]
  */
 
 case OP_KEYS: {

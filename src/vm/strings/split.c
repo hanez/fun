@@ -24,12 +24,9 @@
  * - Exits with an error if the operands are not strings.
  *
  * Example:
- * // Bytecode: OP_SPLIT
- * // Stack before: [", ", "a, b, c"]
- * // Stack after: [["a", "b", "c"]]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
+ * - Bytecode: OP_SPLIT
+ * - Stack before: [", ", "a, b, c"]
+ * - Stack after: [["a", "b", "c"]]
  */
 
 case OP_SPLIT: {

@@ -26,9 +26,10 @@
  *   released by corresponding XML VM opcodes to avoid leaks.
  *
  * Example
- *  // stack: [ doc_handle ]
- *  OP_XML_ROOT   // → [ node_handle ] or [ 0 ]
+ *  - stack: [ doc_handle ]
+ *  - OP_XML_ROOT → [ node_handle ] or [ 0 ]
  */
+
 /* OP_XML_ROOT: pops doc handle; pushes node handle (>0) or 0 */
 case OP_XML_ROOT: {
 #ifdef FUN_WITH_XML2

@@ -24,9 +24,9 @@
  * - Exits with an error if `n` is invalid or if memory allocation fails.
  *
  * Example:
- * // Bytecode: OP_MAKE_ARRAY 3
- * // Stack before: [1, 2, 3]
- * // Stack after: [[1, 2, 3]]
+ * - Bytecode: OP_MAKE_ARRAY 3
+ * - Stack before: [1, 2, 3]
+ * - Stack after: [[1, 2, 3]]
  */
 
 case OP_MAKE_ARRAY: {

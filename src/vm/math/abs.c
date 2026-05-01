@@ -20,9 +20,6 @@
  *
  * Error Handling:
  * - Exits if not integer
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_ABS: {

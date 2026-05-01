@@ -25,9 +25,9 @@
  *   or if map construction fails.
  *
  * Example:
- * // Bytecode: OP_MAKE_MAP 2
- * // Stack before: ["key1", 1, "key2", 2]
- * // Stack after: [{"key1": 1, "key2": 2}]
+ * - Bytecode: OP_MAKE_MAP 2
+ * - Stack before: ["key1", 1, "key2", 2]
+ * - Stack after: [{"key1": 1, "key2": 2}]
  */
 
 case OP_MAKE_MAP: {

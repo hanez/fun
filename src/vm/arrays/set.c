@@ -25,9 +25,9 @@
  * - Exits with a runtime error if the index is out of bounds.
  *
  * Example:
- * // Bytecode: OP_SET
- * // Stack before: [42, 1, [10, 20, 30]]
- * // Stack after: [42]
+ * - Bytecode: OP_SET
+ * - Stack before: [42, 1, [10, 20, 30]]
+ * - Stack after: [42]
  */
 
 case OP_SET: {

@@ -34,6 +34,7 @@
  * - pattern = "h(ell)o", input = "oh hello!" ->
  *   { match: "hello", start: 3, end: 8, groups: ["ell"] }
  */
+
 /* Regex search (first match) opcode using POSIX regex */
 #ifdef __unix__
 #include <regex.h>

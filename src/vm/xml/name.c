@@ -30,9 +30,10 @@
  *   stack as usual.
  *
  * Example
- *  // ... stack: [ node_handle ]
- *  OP_XML_NAME  // → [ "book" ]
+ *  - stack: [ node_handle ]
+ *  - OP_XML_NAME → [ "book" ]
  */
+
 /* OP_XML_NAME: pops node handle; pushes string */
 case OP_XML_NAME: {
 #ifdef FUN_WITH_XML2

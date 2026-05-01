@@ -14,9 +14,7 @@
  * Connects to a smart card in the specified reader using an existing PC/SC
  * context. On success, allocates/returns a card handle id from the internal
  * registry. When PCSC support is disabled at build time, this opcode returns 0.
- */
-
-/**
+ * 
  * OP_PCSC_CONNECT: (ctx_id:int, reader_name:any) -> int
  *
  * - Pops: reader_name (converted to string), then ctx_id.

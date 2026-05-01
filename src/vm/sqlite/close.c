@@ -13,11 +13,10 @@
  *
  * Closes a registered SQLite database handle and unregisters it when
  * FUN_WITH_SQLITE is enabled. No-op when SQLite support is disabled.
- */
-
-/**
+ * 
  * OP_SQLITE_CLOSE: (handle:int) -> Nil
  */
+
 case OP_SQLITE_CLOSE: {
 #ifdef FUN_WITH_SQLITE
   Value vh = pop_value(vm);

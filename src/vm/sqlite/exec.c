@@ -13,11 +13,10 @@
  *
  * Executes a SQL statement against an open SQLite handle when
  * FUN_WITH_SQLITE is enabled. Returns the SQLite result code.
- */
-
-/**
+ * 
  * OP_SQLITE_EXEC: (handle:int, sql:string) -> int rc (0=OK)
  */
+
 case OP_SQLITE_EXEC: {
 #ifdef FUN_WITH_SQLITE
   Value vsql = pop_value(vm);

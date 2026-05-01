@@ -23,9 +23,9 @@
  * - Exits with an error if the operands are not boolean values.
  *
  * Example:
- * // Bytecode: OP_AND
- * // Stack before: [1, 0]
- * // Stack after: [0]
+ * - Bytecode: OP_AND
+ * - Stack before: [1, 0]
+ * - Stack after: [0]
  */
 
 case OP_AND: {

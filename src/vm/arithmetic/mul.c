@@ -25,11 +25,11 @@
  * - Raises a runtime error and aborts execution if operands are not numeric.
  *
  * Example:
- * // Bytecode: OP_MUL
- * // Stack before: [3, 4]
- * // Stack after: [12]
- * // Stack before: [2.5, 4]
- * // Stack after: [10.0]
+ * - Bytecode: OP_MUL
+ * - Stack before: [3, 4]
+ * - Stack after: [12]
+ * - Stack before: [2.5, 4]
+ * - Stack after: [10.0]
  */
 
 case OP_MUL: {

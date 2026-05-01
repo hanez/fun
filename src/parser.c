@@ -38,9 +38,6 @@
  *     vm_run(&vm, bc);
  *     bytecode_free(bc);
  * }
- *
- * @author Johannes Findeisen
- * @date 2025-09-16
  */
 
 #include "parser.h"

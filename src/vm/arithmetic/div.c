@@ -26,11 +26,11 @@
  * - Raises a runtime error on division by zero (both integer and floating cases).
  *
  * Example:
- * // Bytecode: OP_DIV
- * // Stack before: [10, 2]
- * // Stack after: [5]
- * // Stack before: [5.0, 2]
- * // Stack after: [2.5]
+ * - Bytecode: OP_DIV
+ * - Stack before: [10, 2]
+ * - Stack after: [5]
+ * - Stack before: [5.0, 2]
+ * - Stack after: [2.5]
  */
 
 case OP_DIV: {

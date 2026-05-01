@@ -24,9 +24,9 @@
  * - Exits with an error if the second operand is zero.
  *
  * Example:
- * // Bytecode: OP_MOD
- * // Stack before: [10, 3]
- * // Stack after: [1]
+ * - Bytecode: OP_MOD
+ * - Stack before: [10, 3]
+ * - Stack after: [1]
  */
 
 case OP_MOD: {

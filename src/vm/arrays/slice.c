@@ -24,9 +24,9 @@
  * - Handles negative indices and out-of-bounds cases gracefully
  *
  * Example:
- * // Bytecode: OP_SLICE
- * // Stack before: [3, 1, [10,20,30,40]]
- * // Stack after: [[20,30]]
+ * - Bytecode: OP_SLICE
+ * - Stack before: [3, 1, [10,20,30,40]]
+ * - Stack after: [[20,30]]
  */
 
 case OP_SLICE: {

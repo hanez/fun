@@ -27,9 +27,9 @@
  * - Exits with an error if memory allocation fails during string concatenation.
  *
  * Example:
- * // Bytecode: OP_ADD
- * // Stack before: [2, 3]
- * // Stack after: [5]
+ * - Bytecode: OP_ADD
+ * - Stack before: [2, 3]
+ * - Stack after: [5]
  */
 
 case OP_ADD: {

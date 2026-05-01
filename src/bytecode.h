@@ -15,7 +15,7 @@
  * instruction representation (@ref Instruction), and the owning bytecode
  * container (@ref Bytecode) together with minimal constructor/manipulation
  * helpers. The concrete execution semantics for each opcode are implemented
- * in the VM (see vm.c and vm/* handlers).
+ * in the VM (see vm.c and vm/some_file.c handlers).
  */
 #ifndef FUN_BYTECODE_H
 #define FUN_BYTECODE_H

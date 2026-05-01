@@ -24,9 +24,9 @@
  * - Exits with an error if the array is empty.
  *
  * Example:
- * // Bytecode: OP_APOP
- * // Stack before: [[10, 20, 30]]
- * // Stack after: [30]
+ * - Bytecode: OP_APOP
+ * - Stack before: [[10, 20, 30]]
+ * - Stack after: [30]
  */
 
 case OP_APOP: {

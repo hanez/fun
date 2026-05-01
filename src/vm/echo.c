@@ -21,8 +21,6 @@
  * - Pushes: (none)
  */
 
-/* Implements OP_ECHO: print top-of-stack value without trailing newline. */
-
 case OP_ECHO: {
   Value v = pop_value(vm);
   Value snap = deep_copy_value(&v);

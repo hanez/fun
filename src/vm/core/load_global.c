@@ -22,9 +22,9 @@
  * - Exits with an error if the index is out of bounds.
  *
  * Example:
- * // Bytecode: OP_LOAD_GLOBAL 0
- * // Stack before: []
- * // Stack after: [global_value]
+ * - Bytecode: OP_LOAD_GLOBAL 0
+ * - Stack before: []
+ * - Stack after: [global_value]
  */
 
 case OP_LOAD_GLOBAL: {

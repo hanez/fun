@@ -23,9 +23,9 @@
  * - Exits with an error if the operands are not integers.
  *
  * Example:
- * // Bytecode: OP_MIN
- * // Stack before: [10, 42]
- * // Stack after: [10]
+ * - Bytecode: OP_MIN
+ * - Stack before: [10, 42]
+ * - Stack after: [10]
  */
 
 case OP_MIN: {

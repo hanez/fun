@@ -28,9 +28,10 @@
  * - The parser is invoked with XML_PARSE_NONET to disallow network access.
  *
  * Example
- *  // stack: [ "<root/>" ]
- *  OP_XML_PARSE   // → [ 1 ]   (example handle)
+ *  - stack: [ "<root/>" ]
+ *  - OP_XML_PARSE  → [ 1 ]   (example handle)
  */
+
 /* OP_XML_PARSE: pops text string; pushes doc handle (>0) or 0 */
 case OP_XML_PARSE: {
 #ifdef FUN_WITH_XML2

@@ -22,9 +22,9 @@
  * - Exits with an error if the stack is empty.
  *
  * Example:
- * // Bytecode: OP_DUP
- * // Stack before: [42]
- * // Stack after: [42, 42]
+ * - Bytecode: OP_DUP
+ * - Stack before: [42]
+ * - Stack after: [42, 42]
  */
 
 case OP_DUP: {

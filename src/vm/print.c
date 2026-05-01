@@ -19,12 +19,9 @@
  * - Prints the value to the output buffer.
  *
  * Example:
- * // Bytecode: OP_PRINT
- * // Stack before: [42]
- * // Stack after: []
- *
- * @author Johannes Findeisen
- * @date 2025-09-16
+ * - Bytecode: OP_PRINT
+ * - Stack before: [42]
+ * - Stack after: []
  */
 
 case OP_PRINT: {

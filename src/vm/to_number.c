@@ -23,12 +23,9 @@
  * - Exits with an error if the conversion fails.
  *
  * Example:
- * // Bytecode: OP_TO_NUMBER
- * // Stack before: ["42"]
- * // Stack after: [42]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
+ * - Bytecode: OP_TO_NUMBER
+ * - Stack before: ["42"]
+ * - Stack after: [42]
  */
 
 case OP_TO_NUMBER: {

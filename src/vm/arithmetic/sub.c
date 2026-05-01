@@ -25,11 +25,11 @@
  * - Raises a runtime error and aborts execution if operands are not numeric.
  *
  * Example:
- * // Bytecode: OP_SUB
- * // Stack before: [10, 4]
- * // Stack after: [6]
- * // Stack before: [10.0, 3]
- * // Stack after: [7.0]
+ * - Bytecode: OP_SUB
+ * - Stack before: [10, 4]
+ * - Stack after: [6]
+ * - Stack before: [10.0, 3]
+ * - Stack after: [7.0]
  */
 
 case OP_SUB: {

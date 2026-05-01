@@ -31,6 +31,7 @@
  * - pattern = "[a-z]+", input = "hello"  -> 1
  * - pattern = "[a-z]+", input = "hello!" -> 0 (not a full match)
  */
+
 /* Regex full-match opcode using POSIX regex */
 #ifdef __unix__
 #include <regex.h>

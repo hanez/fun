@@ -23,9 +23,9 @@
  * - Exits with an error if the array is of the wrong type.
  *
  * Example:
- * // Bytecode: OP_ENUMERATE
- * // Stack before: [[10, 20, 30]]
- * // Stack after: [[[0, 10], [1, 20], [2, 30]]]
+ * - Bytecode: OP_ENUMERATE
+ * - Stack before: [[10, 20, 30]]
+ * - Stack after: [[[0, 10], [1, 20], [2, 30]]]
  */
 
 case OP_ENUMERATE: {

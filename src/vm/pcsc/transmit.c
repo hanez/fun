@@ -15,9 +15,7 @@
  * handle. Returns a map with the response bytes and status words. When PCSC
  * support is disabled at build time, consumes its arguments and returns a map
  * with code = -2.
- */
-
-/**
+ * 
  * OP_PCSC_TRANSMIT: (handle_id:int, apdu:array<int>) -> map
  *
  * - Pops: apdu array, then handle_id.

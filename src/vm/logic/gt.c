@@ -23,10 +23,9 @@
  * - Exits with an error if the operands are of incompatible types.
  *
  * Example:
- * ```c
- * // Bytecode: OP_GT
- * // Stack before: [42, 10]
- * // Stack after: [1]
+ * - Bytecode: OP_GT
+ * - Stack before: [42, 10]
+ * - Stack after: [1]
  */
 
 case OP_GT: {

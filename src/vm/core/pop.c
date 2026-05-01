@@ -20,9 +20,9 @@
  * - Exits with an error if the stack is empty.
  *
  * Example:
- * // Bytecode: OP_POP
- * // Stack before: [42]
- * // Stack after: []
+ * - Bytecode: OP_POP
+ * - Stack before: [42]
+ * - Stack after: []
  */
 
 case OP_POP: {

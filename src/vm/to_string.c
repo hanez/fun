@@ -29,12 +29,9 @@
  * - Exits with an error if memory allocation fails during string creation.
  *
  * Example:
- * // Bytecode: OP_TO_STRING
- * // Stack before: [42]
- * // Stack after: ["42"]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
+ * - Bytecode: OP_TO_STRING
+ * - Stack before: [42]
+ * - Stack after: ["42"]
  */
 
 case OP_TO_STRING: {

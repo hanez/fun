@@ -25,12 +25,9 @@
  * - Exits with an error if the start index or length is out of bounds.
  *
  * Example:
- * // Bytecode: OP_SUBSTR
- * // Stack before: [5, 6, "hello world"]
- * // Stack after: ["world"]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
+ * - Bytecode: OP_SUBSTR
+ * - Stack before: [5, 6, "hello world"]
+ * - Stack after: ["world"]
  */
 
 case OP_SUBSTR: {
