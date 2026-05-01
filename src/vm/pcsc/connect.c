@@ -5,8 +5,24 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file connect.c
+ * @brief Implements the OP_PCSC_CONNECT opcode (conditional build).
  *
- * Added: 2025-10-02
+ * Connects to a smart card in the specified reader using an existing PC/SC
+ * context. On success, allocates/returns a card handle id from the internal
+ * registry. When PCSC support is disabled at build time, this opcode returns 0.
+ */
+
+/**
+ * OP_PCSC_CONNECT: (ctx_id:int, reader_name:any) -> int
+ *
+ * - Pops: reader_name (converted to string), then ctx_id.
+ * - Pushes: card handle id (>0) on success; 0 on error/invalid inputs or when
+ *   FUN_WITH_PCSC is disabled.
+ * - Notes: Uses SCARD_SHARE_SHARED and negotiates T0/T1 protocols.
  */
 
 /* PCSC connect */

@@ -5,11 +5,16 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-12-28
  */
 
-// Get all environment variables of the operation system and push them as a map.
+/**
+ * @file env_all.c
+ * @brief Implements OP_ENV_ALL to read the full environment into a map.
+ *
+ * Behavior:
+ * - Pushes a new map where each key is an environment variable and each value is its string value.
+ * - Keys and values are copied; the caller owns the returned map Value.
+ */
 
 case OP_ENV_ALL: {
   extern char **environ;

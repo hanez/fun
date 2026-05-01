@@ -5,8 +5,23 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file disconnect.c
+ * @brief Implements the OP_PCSC_DISCONNECT opcode (conditional build).
  *
- * Added: 2025-10-02
+ * Disconnects a previously connected smart-card handle and frees the
+ * corresponding registry slot. When PCSC support is disabled at build time,
+ * this opcode returns 0 after consuming its argument.
+ */
+
+/**
+ * OP_PCSC_DISCONNECT: (handle_id:int) -> int
+ *
+ * - Pops: handle_id.
+ * - Pushes: 1 on success; 0 on error (invalid id/not found) or when disabled.
+ * - Notes: Uses SCardDisconnect(..., SCARD_LEAVE_CARD).
  */
 
 /* PCSC disconnect */

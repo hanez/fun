@@ -7,10 +7,26 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file iter.c
+ * @brief Iterator-style helpers exposed as built-ins (enumerate, zip).
+ */
+
 #include "value.h"
 #include <stdlib.h>
 
-/* enumerate(arr) -> [[0, v0], [1, v1], ...] */
+/**
+ * @brief Build an array of [index, value] pairs from an input array.
+ *
+ * For an input array [v0, v1, ...], returns [[0, v0], [1, v1], ...].
+ * Non-array inputs are treated as empty arrays by array_length/array_get_copy.
+ *
+ * Ownership: The returned Value owns its internal array; caller must free it
+ * with free_value().
+ *
+ * @param arr Input array Value.
+ * @return An array Value of length equal to the input's length.
+ */
 Value bi_enumerate(const Value *arr) {
   int n = array_length(arr);
   if (n <= 0) return make_array_from_values(NULL, 0);
@@ -34,7 +50,19 @@ Value bi_enumerate(const Value *arr) {
   return out;
 }
 
-/* zip(a, b) -> [[a0,b0], [a1,b1], ...] up to min(len(a),len(b)) */
+/**
+ * @brief Zip two arrays into an array of pairs up to the shorter length.
+ *
+ * For inputs a=[a0,a1,...], b=[b0,b1,...], returns [[a0,b0],[a1,b1], ...]
+ * with length min(len(a), len(b)).
+ *
+ * Ownership: The returned Value owns its internal array; caller must free it
+ * with free_value().
+ *
+ * @param a First input array Value.
+ * @param b Second input array Value.
+ * @return Array of pairs as a Value.
+ */
 Value bi_zip(const Value *a, const Value *b) {
   int na = array_length(a);
   int nb = array_length(b);

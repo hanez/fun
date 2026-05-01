@@ -1,5 +1,42 @@
 /**
- * libcurl POST builtin
+ * This file is part of the Fun programming language.
+ * https://fun-lang.xyz/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
+ */
+ 
+/**
+ * @file post.c
+ * @brief Fun VM opcode snippet: HTTP POST via libcurl (OP_CURL_POST).
+ *
+ * This snippet is included by vm.c and implements the OP_CURL_POST
+ * instruction. When FUN_WITH_CURL is enabled, it performs an HTTP POST
+ * to the given URL with the provided request body and pushes the response
+ * body as a string. If libcurl support is not built in, or an error occurs,
+ * an empty string is pushed instead.
+ *
+ * Stack behavior:
+ * - Pops: body:string, url:string (values are converted via value_to_string_alloc)
+ * - Pushes: body:string (server response; "" on error or when CURL is disabled)
+ *
+ * Error handling:
+ * - If URL conversion fails, the opcode pushes an empty string and discards
+ *   any converted body.
+ * - Follows redirects (CURLOPT_FOLLOWLOCATION = 1L).
+ * - Sets CURLOPT_POST=1L and CURLOPT_POSTFIELDS to submit the body.
+ *
+ * Notes:
+ * - Uses FunCurlBuf and fun_curl_write_cb from the curl extension helpers.
+ * - All temporary allocations (URL, body, response buffer) are freed.
+ */
+/**
+ * @brief Opcode handler for OP_CURL_POST.
+ *
+ * Pops the POST body and URL, performs an HTTP POST, and pushes the
+ * response as a string. Without FUN_WITH_CURL, consumes two values and
+ * pushes an empty string.
  */
 case OP_CURL_POST: {
 #ifdef FUN_WITH_CURL

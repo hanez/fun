@@ -1,6 +1,11 @@
-/*
- * This file provides stub handlers for INI opcodes when FUN_WITH_INI is disabled.
- * Each opcode reports a clear runtime error and returns a safe default.
+/**
+ * @file stubs.c
+ * @brief Stub opcode implementations for INI support when FUN_WITH_INI is disabled.
+ *
+ * These cases are compiled into the VM dispatch when the INI feature is not
+ * enabled. Each opcode prints a descriptive runtime error and pushes a safe
+ * default (0, 0.0, or empty string) to keep execution proceeding without
+ * crashing.
  */
 
 /* OP_INI_LOAD: pops path string; pushes 0 (invalid handle) */

@@ -7,12 +7,23 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file fun_test.c
+ * @brief Minimal bytecode-level test harness for core VM operations.
+ */
+
 #include "bytecode.h"
 #include "value.h"
 #include "vm.h"
 #include <math.h>
 #include <stdio.h>
 
+/**
+ * @brief Assert that a Value is an integer equal to the expected number.
+ *
+ * Prints a diagnostic and returns 1 from main on failure; used in quick
+ * sanity checks when extending this test harness.
+ */
 #define ASSERT_EQ(val, expected)                                                     \
   if ((val).type != VAL_INT || (val).i != (expected)) {                              \
     fprintf(stderr, "Assertion failed: expected %lld, got ", (long long)(expected)); \
@@ -21,6 +32,15 @@
     return 1;                                                                        \
   }
 
+/**
+ * @brief Build and execute a demo bytecode program and print results.
+ *
+ * Exercises arithmetic, comparisons, logic, stack ops, rounding and
+ * transcendental functions, integer math helpers, and fmin/fmax semantics.
+ * Intended for manual inspection rather than strict unit testing.
+ *
+ * @return 0 on successful execution.
+ */
 int main(void) {
   VM vm;
   vm_init(&vm);

@@ -1,12 +1,18 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file open.c
+ * @brief Implements the OP_SQLITE_OPEN opcode (conditional build).
  *
- * Added: 2025-11-26
+ * Opens a SQLite database and registers a handle when FUN_WITH_SQLITE is
+ * enabled. On failure or when SQLite support is disabled, pushes 0.
  */
 
 /**

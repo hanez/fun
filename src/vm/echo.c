@@ -1,4 +1,4 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -8,10 +8,20 @@
  */
 
 /**
- * Implements OP_ECHO: print top-of-stack value without trailing newline.
- * Now stores the value into the VM's output buffer and marks it as partial,
- * so the CLI can render echo output together with following print output.
+ * @file echo.c
+ * @brief Implements the OP_ECHO opcode for printing without a trailing newline.
+ *
+ * This snippet is included into the VM dispatch loop and handles OP_ECHO.
+ * It pops the top value from the stack and appends it to the VM's output buffer
+ * but marks the entry as partial so that subsequent OP_PRINT may continue the
+ * same line.
+ *
+ * Stack contract:
+ * - Pops: value (any)
+ * - Pushes: (none)
  */
+
+/* Implements OP_ECHO: print top-of-stack value without trailing newline. */
 
 case OP_ECHO: {
   Value v = pop_value(vm);

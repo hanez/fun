@@ -8,11 +8,11 @@
  */
 
 /**
- * @file arr_remove.c
- * @brief Implements the OP_ARR_REMOVE opcode for removing elements from arrays in the VM.
+ * @file remove.c
+ * @brief Implements the OP_REMOVE opcode for removing elements from arrays in the VM.
  *
- * This file handles the OP_ARR_REMOVE instruction, which removes an element from an array
- * at a specified index. The array and index are popped from the stack, and the removed
+ * Handles the OP_REMOVE instruction, which removes an element from an array at the
+ * specified index. The array and index are popped from the stack; the removed
  * element is pushed back onto the stack.
  *
  * Behavior:
@@ -21,11 +21,11 @@
  * - Pushes the removed element onto the stack.
  *
  * Error Handling:
- * - Exits with an error if the array or index is of the wrong type.
- * - Exits with an error if the index is out of bounds.
+ * - Exits with a runtime error if the container is not an array or index is not an int.
+ * - Exits with a runtime error if the index is out of bounds.
  *
  * Example:
- * // Bytecode: OP_ARR_REMOVE
+ * // Bytecode: OP_REMOVE
  * // Stack before: [1, [10, 20, 30]]
  * // Stack after: [20]
  *

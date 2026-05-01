@@ -5,13 +5,25 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-03
  */
 
 /**
  * @file tan.c
  * @brief Implements the OP_TAN opcode using C99 math.h tan().
+ *
+ * VM opcode snippet included by vm.c. Provides tangent function.
+ *
+ * Behavior:
+ * - Pops one numeric operand (int or float) from the stack.
+ * - Computes tan(x) in double precision.
+ * - Always pushes a VAL_FLOAT result.
+ *
+ * Stack effect:
+ * - Pop: x
+ * - Push: tan(x)
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT; others cause a runtime error.
  */
 
 #include <math.h>

@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file socket_close.c
+ * @brief Implements OP_SOCK_CLOSE to close a socket file descriptor.
  *
- * Added: 2025-10-04
+ * Behavior:
+ * - Pops fd (int) and closes it; pushes 1 on success, 0 on failure.
+ * - On non-UNIX platforms, always pushes 0 (unsupported).
+ *
+ * Errors:
+ * - If argument type is wrong, prints an error and pushes 0.
  */
 
 case OP_SOCK_CLOSE: {

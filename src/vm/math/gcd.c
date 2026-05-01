@@ -5,13 +5,23 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- *  Added: 2026-01-03
  */
 
 /**
  * @file gcd.c
  * @brief Implements the OP_GCD opcode for greatest common divisor.
+ *
+ * Behavior:
+ * - Pops two numeric operands (a, b). Floats are truncated to int64.
+ * - Computes gcd(|a|, |b|) using Euclid's algorithm.
+ * - Pushes VAL_INT result.
+ *
+ * Stack effect:
+ * - Pop: b, a
+ * - Push: gcd(a, b)
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT; others cause a runtime error.
  */
 
 case OP_GCD: {

@@ -5,8 +5,22 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file list_readers.c
+ * @brief Implements the OP_PCSC_LIST_READERS opcode (conditional build).
  *
- * Added: 2025-10-02
+ * Lists available PC/SC reader names for a given context. On success returns
+ * an array of strings. When PCSC support is disabled at build time, returns an
+ * empty array after consuming its argument to keep the stack balanced.
+ */
+
+/**
+ * OP_PCSC_LIST_READERS: (ctx_id:int) -> array<string>
+ *
+ * - Pops: ctx_id.
+ * - Pushes: array of reader names on success; empty array on error/disabled.
  */
 
 /* PCSC list_readers */

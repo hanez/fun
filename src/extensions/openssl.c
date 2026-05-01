@@ -1,12 +1,20 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file openssl.c
+ * @brief OpenSSL-based hashing helpers used by crypto-related opcodes.
  *
- * Added: 2026-02-19
+ * Provides thin wrappers around OpenSSL EVP routines to compute common
+ * digests (MD5, RIPEMD-160, SHA-256, SHA-512). When FUN_WITH_OPENSSL is
+ * disabled, these helpers fall back to returning empty strings to keep the
+ * VM behavior consistent.
  */
 
 /*
@@ -23,10 +31,16 @@ int EVP_MD_get_size(const EVP_MD *md);
 #endif
 #include <stdlib.h>
 
-/* Compute MD5 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Caller must free(). Returns NULL on failure. When OpenSSL is disabled,
- * returns an allocated empty string ("") to keep behavior consistent with
- * other optional extensions. */
+/**
+ * @brief Compute MD5 digest and return it as a lowercase hex string.
+ *
+ * @param data Pointer to input bytes (may be NULL if len==0).
+ * @param len Number of input bytes.
+ * @return Newly-allocated NUL-terminated hex string on success; NULL on
+ *         failure. When FUN_WITH_OPENSSL is disabled, returns an allocated
+ *         empty string to keep behavior consistent.
+ * @note The caller owns the returned buffer and must free() it.
+ */
 static char *fun_openssl_md5_hex(const unsigned char *data, size_t len) {
   static const char hexdig[] = "0123456789abcdef";
   if (!data && len != 0) return NULL;
@@ -68,8 +82,15 @@ static char *fun_openssl_md5_hex(const unsigned char *data, size_t len) {
 #endif
 }
 
-/* Compute SHA-256 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Fallback when OpenSSL disabled: empty string. */
+/**
+ * @brief Compute SHA-256 digest and return it as a lowercase hex string.
+ *
+ * @param data Pointer to input bytes (may be NULL if len==0).
+ * @param len Number of input bytes.
+ * @return Newly-allocated hex string on success; NULL on failure. When
+ *         FUN_WITH_OPENSSL is disabled, returns an allocated empty string.
+ * @note The caller must free() the returned buffer.
+ */
 static char *fun_openssl_sha256_hex(const unsigned char *data, size_t len) {
   static const char hexdig[] = "0123456789abcdef";
   if (!data && len != 0) return NULL;
@@ -110,8 +131,15 @@ static char *fun_openssl_sha256_hex(const unsigned char *data, size_t len) {
 #endif
 }
 
-/* Compute SHA-512 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Fallback when OpenSSL disabled: empty string. */
+/**
+ * @brief Compute SHA-512 digest and return it as a lowercase hex string.
+ *
+ * @param data Pointer to input bytes (may be NULL if len==0).
+ * @param len Number of input bytes.
+ * @return Newly-allocated hex string on success; NULL on failure. When
+ *         FUN_WITH_OPENSSL is disabled, returns an allocated empty string.
+ * @note The caller must free() the returned buffer.
+ */
 static char *fun_openssl_sha512_hex(const unsigned char *data, size_t len) {
   static const char hexdig[] = "0123456789abcdef";
   if (!data && len != 0) return NULL;
@@ -152,10 +180,19 @@ static char *fun_openssl_sha512_hex(const unsigned char *data, size_t len) {
 #endif
 }
 
-/* Compute RIPEMD-160 hex of input buffer; returns malloc'ed C string (lowercase hex).
- * Note: On OpenSSL 3.x, RIPEMD160 may require the legacy provider; if unavailable,
- * EVP_ripemd160() can return NULL. In that case we return NULL and the VM opcode
- * will fall back to empty string behavior. When OpenSSL is disabled, return empty string. */
+/**
+ * @brief Compute RIPEMD-160 digest and return it as a lowercase hex string.
+ *
+ * On some OpenSSL builds (e.g., 3.x without legacy provider), RIPEMD-160 may
+ * be unavailable and EVP_ripemd160() can return NULL.
+ *
+ * @param data Pointer to input bytes (may be NULL if len==0).
+ * @param len Number of input bytes.
+ * @return Newly-allocated hex string on success; NULL if the digest is
+ *         unavailable or another error occurs. When FUN_WITH_OPENSSL is
+ *         disabled, returns an allocated empty string.
+ * @note The caller must free() the returned buffer.
+ */
 static char *fun_openssl_ripemd160_hex(const unsigned char *data, size_t len) {
   static const char hexdig[] = "0123456789abcdef";
   if (!data && len != 0) return NULL;

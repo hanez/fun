@@ -5,13 +5,25 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-03
  */
 
 /**
  * @file exp.c
  * @brief Implements the OP_EXP opcode using C99 math.h exp().
+ *
+ * VM opcode snippet included by vm.c. Provides the natural exponential function.
+ *
+ * Behavior:
+ * - Pops one numeric operand (int or float).
+ * - Computes e^x in double precision.
+ * - Pushes a VAL_FLOAT result.
+ *
+ * Stack effect:
+ * - Pop: x
+ * - Push: exp(x)
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT; others raise a runtime error.
  */
 
 #include <math.h>

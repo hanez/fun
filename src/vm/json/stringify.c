@@ -5,8 +5,27 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file stringify.c
+ * @brief VM opcode snippet for converting a Fun Value to a JSON string.
  *
- * Added: 2025-11-24
+ * Implements the OP_JSON_STRINGIFY instruction. Expects a boolean/integer flag
+ * indicating pretty-printing and a Value to serialize. Uses json-c to build a
+ * json_object from the Value and then renders it to a string, which is pushed
+ * back to the stack.
+ *
+ * Build gating: compiled only when FUN_WITH_JSON is enabled. Otherwise the
+ * opcode consumes its two arguments and pushes the string "null".
+ *
+ * Stack effect (with FUN_WITH_JSON):
+ * - Pops: pretty (bool/int), value (any)
+ * - Pushes: string (JSON representation)
+ *
+ * Errors and edge cases:
+ * - If conversion to json_object fails, an empty string is pushed.
+ * - Pretty printing selects JSON_C_TO_STRING_PRETTY; otherwise plain output.
  */
 
 /* JSON_STRINGIFY */

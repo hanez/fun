@@ -7,12 +7,31 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file str_utils.c
+ * @brief Helpers for manipulating C strings and bridging with Value arrays.
+ *
+ * Functions here return newly allocated C strings or construct Value arrays
+ * from strings. Callers own returned allocations and must free them using
+ * free()/free_value() as appropriate.
+ */
 #include "value.h"
 #include <stdlib.h>
 #include <string.h>
 
 /* string helpers returning newly allocated C strings or arrays */
 
+/**
+ * @brief Create a newly allocated substring of s.
+ *
+ * Indices are clamped into valid range. If s is NULL, an empty string is
+ * returned. The caller owns the returned buffer and must free() it.
+ *
+ * @param s     Source C string (may be NULL).
+ * @param start Zero-based start index; clamped to [0, strlen(s)].
+ * @param len   Maximum number of characters to copy; negative treated as 0.
+ * @return Newly allocated NUL-terminated substring; never NULL.
+ */
 char *string_substr(const char *s, int start, int len) {
   if (!s) return strdup("");
   int n = (int)strlen(s);
@@ -27,6 +46,13 @@ char *string_substr(const char *s, int start, int len) {
   return out;
 }
 
+/**
+ * @brief Find first occurrence of needle in hay.
+ *
+ * @param hay    Haystack C string (may be NULL).
+ * @param needle Needle C string (may be NULL).
+ * @return Zero-based index or -1 if not found/invalid input.
+ */
 int string_find(const char *hay, const char *needle) {
   if (!hay || !needle) return -1;
   const char *p = strstr(hay, needle);
@@ -34,6 +60,17 @@ int string_find(const char *hay, const char *needle) {
   return (int)(p - hay);
 }
 
+/**
+ * @brief Split a C string by separator into a Value array of strings.
+ *
+ * When sep is empty, splits into individual UTF-8 bytes (characters). Uses
+ * make_string/make_array_from_values; the returned Value owns internal memory
+ * per Value semantics. NULL inputs are treated as empty strings.
+ *
+ * @param s   Source C string (may be NULL).
+ * @param sep Separator C string (may be NULL). Empty means split into chars.
+ * @return Value of type VAL_ARRAY with string elements.
+ */
 Value string_split_to_array(const char *s, const char *sep) {
   if (!s) s = "";
   if (!sep) sep = "";
@@ -90,6 +127,17 @@ Value string_split_to_array(const char *s, const char *sep) {
   return arr;
 }
 
+/**
+ * @brief Join the elements of a Value array into a single newly allocated C string.
+ *
+ * Each array element is converted to a string via value_to_string_alloc.
+ * NULL/invalid inputs yield an empty string. The caller owns the returned
+ * buffer and must free() it.
+ *
+ * @param v   Pointer to Value (expected VAL_ARRAY).
+ * @param sep Separator C string inserted between items (may be NULL).
+ * @return Newly allocated joined string; never NULL.
+ */
 char *array_join_with_sep(const Value *v, const char *sep) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return strdup("");
   if (!sep) sep = "";

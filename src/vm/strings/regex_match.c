@@ -5,10 +5,32 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-10-04
  */
 
+/**
+ * @file regex_match.c
+ * @brief VM opcode snippet for OP_REGEX_MATCH (POSIX full-match).
+ *
+ * This opcode checks whether a regular expression pattern matches the entire
+ * input string. It uses POSIX regex APIs on UNIX platforms and provides a
+ * graceful fallback elsewhere.
+ *
+ * Behavior (stack effects):
+ * - Pops: pattern (string), input (string)
+ * - Pushes: result (int) — 1 if the pattern matches the whole input string,
+ *   0 otherwise. On invalid regex, returns 0.
+ *
+ * Platform notes:
+ * - On non-UNIX platforms (no POSIX regex available), this opcode returns 0
+ *   without error.
+ *
+ * Errors:
+ * - If operands are not strings, the VM prints a runtime type error and exits.
+ *
+ * Example:
+ * - pattern = "[a-z]+", input = "hello"  -> 1
+ * - pattern = "[a-z]+", input = "hello!" -> 0 (not a full match)
+ */
 /* Regex full-match opcode using POSIX regex */
 #ifdef __unix__
 #include <regex.h>

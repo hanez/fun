@@ -1,4 +1,4 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -7,7 +7,10 @@
  * https://opensource.org/license/apache-2-0
  */
 
-/*
+/**
+ * @file fun.c
+ * @brief Command-line interface and entry point for the Fun interpreter.
+ * 
  * Main entry point for the Fun language interpreter.
  * Builds a CLI that runs a script file if provided; otherwise starts the REPL
  * when compiled with FUN_WITH_REPL enabled.
@@ -29,6 +32,14 @@
 #define FUN_VERSION "0.0.0-dev"
 #endif
 
+/**
+ * @brief Print command-line usage instructions to stdout.
+ *
+ * The usage varies depending on whether the binary was built with
+ * FUN_WITH_REPL enabled.
+ *
+ * @param prog Program name/path used in usage lines. May be NULL.
+ */
 static void print_usage(const char *prog) {
   printf("Fun %s\n", FUN_VERSION);
   printf("Usage:\n");
@@ -51,6 +62,17 @@ static void print_usage(const char *prog) {
 #endif
 }
 
+/**
+ * @brief Program entry point for the Fun interpreter.
+ *
+ * Parses CLI options, compiles and runs a script file if provided, or launches
+ * the REPL when enabled and no script is given. Exposes script arguments to
+ * the program via FUN_ARGC/FUN_ARGV_i/FUN_ARGS environment variables.
+ *
+ * @param argc Argument count.
+ * @param argv Argument vector; argv[0] is used to expose FUN_EXECUTABLE.
+ * @return Process exit code, typically taken from the VM after execution.
+ */
 int main(int argc, char **argv) {
   /* Set FUN_EXECUTABLE environment variable to the path of this binary */
   setenv("FUN_EXECUTABLE", argv[0], 1);

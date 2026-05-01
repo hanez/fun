@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file serial_config.c
+ * @brief Implements OP_SERIAL_CONFIG to change serial port parameters.
  *
- * Added: 2025-12-28
+ * Behavior:
+ * - Pops config map and fd (int); applies selected settings (baud, parity, bits, stop) and pushes 1 on success, 0 on failure.
+ * - Only supported on UNIX-like systems.
+ *
+ * Errors:
+ * - On wrong types or OS errors, prints an error and returns 0.
  */
 
 #ifdef __unix__

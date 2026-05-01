@@ -9,23 +9,27 @@
 
 /**
  * @file sub.c
- * @brief Implements the OP_SUB opcode for integer subtraction in the VM.
+ * @brief Implements the OP_SUB opcode (numeric subtraction) in the VM.
  *
- * This file handles the OP_SUB instruction, which performs integer subtraction
- * on two integer values popped from the stack and pushes the result back onto the stack.
+ * Handles the OP_SUB instruction, subtracting two numeric operands and
+ * pushing the result. If either operand is a float, subtraction is
+ * performed in double precision; otherwise it is 64-bit integer
+ * subtraction.
  *
  * Behavior:
- * - Pops two integer values from the stack.
- * - Performs integer subtraction (`a - b`).
- * - Pushes the result back onto the stack.
+ * - Pops two values from the stack.
+ * - If any operand is VAL_FLOAT, computes (double)a - (double)b and pushes a VAL_FLOAT.
+ * - Else computes a.i - b.i and pushes a VAL_INT.
  *
  * Error Handling:
- * - Exits with an error if the operands are not integers.
+ * - Raises a runtime error and aborts execution if operands are not numeric.
  *
  * Example:
  * // Bytecode: OP_SUB
  * // Stack before: [10, 4]
  * // Stack after: [6]
+ * // Stack before: [10.0, 3]
+ * // Stack after: [7.0]
  *
  * @author Johannes Findeisen
  * @date 2025-10-16

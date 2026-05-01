@@ -1,14 +1,33 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-12-10 (split from getters.c)
  */
 
+/**
+ * @file get_bool.c
+ * @brief VM opcode snippet for reading a boolean from an INI dictionary (OP_INI_GET_BOOL).
+ *
+ * Included by vm.c when FUN_WITH_INI is enabled.
+ *
+ * Opcode: OP_INI_GET_BOOL
+ * Stack: [default:int|bool] [key:string] [section:string] [handle:int] -> [out:int]
+ *
+ * Behavior
+ * - Pops default value (0/1), key, section, and handle.
+ * - Looks up the entry "section:key" in the referenced dictionary. If not found,
+ *   also tries a dotted variant "section.key" for compatibility.
+ * - Accepts textual booleans (true/false, yes/no, on/off; case-insensitive) and
+ *   numeric values (non-zero => true). Falls back to the provided default when
+ *   parsing fails or entry is missing.
+ * - Pushes 1 for true or 0 for false.
+ *
+ * Errors
+ * - Invalid handle or arguments simply yield the default value; no exception.
+ */
 /* OP_INI_GET_BOOL */
 #ifdef FUN_WITH_INI
 case OP_INI_GET_BOOL: {

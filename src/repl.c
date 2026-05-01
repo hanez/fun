@@ -5,13 +5,15 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-10-05
  */
 
 /**
- * REPL implementation for the Fun programming language.
- * Built only when FUN_WITH_REPL is defined.
+ * @file repl.c
+ * @brief Interactive Read–Eval–Print Loop (REPL) for the Fun language.
+ *
+ * Provides line editing, history, simple completion for :load paths and
+ * stdlib identifiers, multi-line input heuristics, and a command interface
+ * (e.g. :help, :env, :load). Built only when FUN_WITH_REPL is defined.
  */
 
 #include "repl.h"
@@ -49,12 +51,19 @@ static char *rl_hist[RL_HIST_MAX];
 static int rl_count = 0;
 
 /* last history entry (or NULL) */
+/**
+ * @brief Return the last history line or NULL if history is empty.
+ */
 static const char *rl_hist_last(void) {
   if (rl_count <= 0) return NULL;
   return rl_hist[rl_count - 1];
 }
 
 /* add one line to in-memory history (without trailing newline), dedup consecutive */
+/**
+ * @brief Append a non-empty line to in-memory history, de-duplicating
+ * consecutive duplicates. Trailing newlines are stripped.
+ */
 static void rl_hist_add(const char *s) {
   if (!s) return;
   size_t n = strlen(s);
@@ -81,6 +90,9 @@ static void rl_hist_add(const char *s) {
 }
 
 /* preload history from file (one line per entry) */
+/**
+ * @brief Load history entries from a file (one line per entry).
+ */
 static void rl_hist_load_file(const char *path) {
   if (!path) return;
   FILE *f = fopen(path, "r");
@@ -96,12 +108,19 @@ static void rl_hist_load_file(const char *path) {
 static struct termios g_orig_tios;
 static int g_raw_enabled = 0;
 
+/**
+ * @brief Disable terminal raw mode if previously enabled.
+ */
 static void repl_disable_raw(void) {
   if (g_raw_enabled) {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &g_orig_tios);
     g_raw_enabled = 0;
   }
 }
+/**
+ * @brief Enable minimal terminal raw mode for interactive input.
+ * @return 1 on success, 0 otherwise.
+ */
 static int repl_enable_raw(void) {
   if (!isatty(STDIN_FILENO)) return 0;
   if (g_raw_enabled) return 1;
@@ -116,6 +135,9 @@ static int repl_enable_raw(void) {
 }
 
 /* return 1 if path is a directory, else 0 */
+/**
+ * @brief Return 1 if path refers to a directory, 0 otherwise.
+ */
 static int is_dir_path(const char *path) {
   struct stat st;
   if (stat(path, &st) != 0) return 0;
@@ -123,6 +145,9 @@ static int is_dir_path(const char *path) {
 }
 
 /* Compute longest common prefix of a set of strings (starting from offset base_len) */
+/**
+ * @brief Longest common suffix length among names[i] starting at base_len.
+ */
 static size_t lcp_suffix(const char **names, int count, size_t base_len) {
   if (count <= 0) return base_len;
   size_t lcp = (size_t)-1;
@@ -151,6 +176,9 @@ static size_t lcp_suffix(const char **names, int count, size_t base_len) {
 /* Word-jump helpers (used by Ctrl+Left/Right in the REPL editor).
  * Words are runs of non-space characters; separators are spaces.
  */
+/**
+ * @brief Move cursor left by one word.
+ */
 static void rl_word_left(const char *out, size_t len, size_t *pos) {
   (void)len;
   if (!out || !pos) return;
@@ -160,6 +188,9 @@ static void rl_word_left(const char *out, size_t len, size_t *pos) {
   while (*pos > 0 && out[*pos - 1] != ' ')
     (*pos)--;
 }
+/**
+ * @brief Move cursor right by one word.
+ */
 static void rl_word_right(const char *out, size_t len, size_t *pos) {
   if (!out || !pos) return;
   if (*pos >= len) return;
@@ -170,6 +201,10 @@ static void rl_word_right(const char *out, size_t len, size_t *pos) {
 }
 
 /* Expand file path for path-taking REPL commands (e.g., :load, :run) in-place; returns 1 if buffer changed (redraw) */
+/**
+ * @brief Complete a :load file path in-place within the buffer.
+ * @return 1 if buffer changed, 2 if a menu was printed, 0 otherwise.
+ */
 static int complete_load_path(char *buf, size_t *len_io) {
   size_t len = *len_io;
   if (len < 3) return 0; /* minimally ":x" */
@@ -322,13 +357,22 @@ static char **g_std_syms = NULL;
 static int g_std_syms_count = 0;
 static int g_std_syms_cap = 0;
 
+/**
+ * @brief Return 1 if c can start an identifier.
+ */
 static int is_ident_start(int c) {
   return (c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
 }
+/**
+ * @brief Return 1 if c is a valid identifier continuation character.
+ */
 static int is_ident_char(int c) {
   return is_ident_start(c) || (c >= '0' && c <= '9');
 }
 
+/**
+ * @brief Add a stdlib symbol name to the completion table.
+ */
 static void std_syms_add(const char *name) {
   if (!name || !*name) return;
   /* dedupe */
@@ -349,6 +393,9 @@ static void std_syms_add(const char *name) {
   g_std_syms[g_std_syms_count++] = cpy;
 }
 
+/**
+ * @brief Scan a .fun file and collect top-level definitions for completion.
+ */
 static void scan_symbols_from_file(const char *path) {
   FILE *f = fopen(path, "r");
   if (!f) return;
@@ -387,6 +434,9 @@ static void scan_symbols_from_file(const char *path) {
   fclose(f);
 }
 
+/**
+ * @brief Recursively scan a directory tree for .fun files.
+ */
 static void scan_dir_recursive(const char *dir) {
   DIR *dp = opendir(dir);
   if (!dp) return;
@@ -410,11 +460,17 @@ static void scan_dir_recursive(const char *dir) {
   closedir(dp);
 }
 
+/**
+ * @brief Populate stdlib completion symbols from a base directory.
+ */
 static void load_stdlib_symbols(const char *libdir) {
   if (!libdir || !*libdir) return;
   scan_dir_recursive(libdir);
 }
 
+/**
+ * @brief Free all memory held by stdlib completion symbols.
+ */
 static void free_stdlib_symbols(void) {
   for (int i = 0; i < g_std_syms_count; ++i)
     free(g_std_syms[i]);
@@ -425,6 +481,10 @@ static void free_stdlib_symbols(void) {
 
 /* Complete the trailing identifier in 'buf' using stdlib symbols.
    Returns 1 if buffer changed, 2 if a menu was printed, 0 otherwise. */
+/**
+ * @brief Complete the trailing identifier in buf from stdlib symbols.
+ * @return 1 if buffer changed, 2 if menu printed, 0 otherwise.
+ */
 static int complete_stdlib_ident(char *buf, size_t *len_io, size_t *pos_io, size_t cap) {
   size_t len = *len_io;
   size_t pos = *pos_io;
@@ -509,6 +569,13 @@ static int complete_stdlib_ident(char *buf, size_t *len_io, size_t *pos_io, size
 }
 
 /* Read one line with prompt, handling backspace, Up/Down history and :load path completion (now with multi-line editing via Ctrl+O) */
+/**
+ * @brief Read a line with basic line-editing and history support.
+ * @param out Output buffer to receive the line (NUL-terminated).
+ * @param out_cap Capacity of the output buffer.
+ * @param prompt Prompt string to display (may be NULL).
+ * @return 1 on success, 0 on EOF/error.
+ */
 static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
 #ifdef _WIN32
   if (prompt) fputs(prompt, stdout), fflush(stdout);
@@ -791,18 +858,27 @@ static int read_line_edit(char *out, size_t out_cap, const char *prompt) {
 /* ---------- Small utilities ---------- */
 
 static int is_blank_line(const char *s) {
+  /**
+   * @brief Return 1 if the line consists only of whitespace.
+   */
   for (const char *p = s; *p; ++p) {
     if (*p != ' ' && *p != '\t' && *p != '\r' && *p != '\n') return 0;
   }
   return 1;
 }
 
+/**
+ * @brief Advance pointer past leading spaces and tabs.
+ */
 static const char *lstrip(const char *s) {
   while (*s == ' ' || *s == '\t')
     s++;
   return s;
 }
 
+/**
+ * @brief Heuristic: check if a line ends with an operator that suggests continuation.
+ */
 static int ends_with_opener(const char *line) {
   size_t n = strlen(line);
   while (n > 0 && (line[n - 1] == ' ' || line[n - 1] == '\t' || line[n - 1] == '\r' || line[n - 1] == '\n'))
@@ -817,6 +893,9 @@ static int ends_with_opener(const char *line) {
 }
 
 /* Compute how many indentation levels (2 spaces per level) are still open. */
+/**
+ * @brief Compute number of open indentation blocks (2 spaces per level).
+ */
 static int compute_open_indent_blocks(const char *buf) {
   int in_block_comment = 0;
   int open = 0;
@@ -887,6 +966,10 @@ static int compute_open_indent_blocks(const char *buf) {
 }
 
 /* Detect if current buffer looks incomplete. */
+/**
+ * @brief Heuristic to determine if the current buffer likely needs another line.
+ * Looks for open quotes/escapes or unmatched indentation.
+ */
 static int buffer_looks_incomplete(const char *buf) {
   int in_single = 0, in_double = 0, escape = 0;
   int in_block_comment = 0, in_line_comment = 0;
@@ -1018,6 +1101,9 @@ static int buffer_looks_incomplete(const char *buf) {
   return 0;
 }
 
+/**
+ * @brief Print REPL help with available commands.
+ */
 static void show_repl_help(void) {
   printf("Commands:\n");
   printf("  :help | :h                                   Show this help\n");
@@ -1057,6 +1143,10 @@ static void show_repl_help(void) {
   printf("  :finish | :fi                                Run until the current frame returns\n");
 }
 
+/**
+ * @brief Read a file fully into a newly allocated buffer.
+ * @return Buffer on success (caller frees), or NULL on error.
+ */
 static char *read_entire_file(const char *path, size_t *out_len) {
   FILE *f = fopen(path, "rb");
   if (!f) return NULL;
@@ -1082,6 +1172,10 @@ static char *read_entire_file(const char *path, size_t *out_len) {
   return buf;
 }
 
+/**
+ * @brief Write a buffer to a file path, replacing existing contents.
+ * @return 1 on success, 0 on error.
+ */
 static int write_entire_file(const char *path, const char *data, size_t len) {
   FILE *f = fopen(path, "wb");
   if (!f) return 0;
@@ -1091,6 +1185,9 @@ static int write_entire_file(const char *path, const char *data, size_t len) {
 }
 
 /* ---------- REPL command matching helper ---------- */
+/**
+ * @brief Return 1 if cmd equals any non-NULL entry in names[] (terminated by NULL).
+ */
 static int cmd_is_one_of(const char *cmd, const char *const names[]) {
   if (!cmd || !*cmd) return 0;
   for (int i = 0; names[i] != NULL; ++i) {
@@ -1100,6 +1197,9 @@ static int cmd_is_one_of(const char *cmd, const char *const names[]) {
 }
 
 /* ---------- Hexdump helper ---------- */
+/**
+ * @brief Dump a byte buffer in hex to a FILE*, with offsets.
+ */
 static void hexdump_to(FILE *out, const unsigned char *data, size_t len, size_t base_off) {
   if (!out || !data || len == 0) return;
   const size_t width = 16;
@@ -1126,6 +1226,9 @@ static void hexdump_to(FILE *out, const unsigned char *data, size_t len, size_t 
   }
 }
 
+/**
+ * @brief Print the last n lines of a file to stdout (tail-like).
+ */
 static void print_last_n_lines(const char *path, int n) {
   if (n <= 0) n = 50;
   size_t flen = 0;
@@ -1150,6 +1253,9 @@ static void print_last_n_lines(const char *path, int n) {
   free(content);
 }
 
+/**
+ * @brief Append multi-line buffer to history file, one line per entry.
+ */
 static void append_history(FILE *hist, const char *buffer) {
   if (!hist || !buffer) return;
   fputs(buffer, hist);
@@ -1158,6 +1264,9 @@ static void append_history(FILE *hist, const char *buffer) {
 }
 
 /* ---------- Env helpers ---------- */
+/**
+ * @brief Print usage for :env commands.
+ */
 static void env_show_usage(void) {
   printf("Usage:\n");
   printf("  :env NAME          Show environment variable NAME\n");
@@ -1165,6 +1274,9 @@ static void env_show_usage(void) {
   printf("  :env               Show this usage\n");
 }
 
+/**
+ * @brief Show the value of an environment variable.
+ */
 static void env_get(const char *name) {
   const char *v = getenv(name);
   if (v)
@@ -1173,6 +1285,9 @@ static void env_get(const char *name) {
     printf("%s is not set\n", name);
 }
 
+/**
+ * @brief Set or unset (when value is NULL) an environment variable.
+ */
 static void env_set(const char *name, const char *value) {
 #ifdef _WIN32
   if (_putenv_s(name, value ? value : "") != 0) {
@@ -1187,6 +1302,11 @@ static void env_set(const char *name, const char *value) {
 
 /* ---------- REPL Entry ---------- */
 
+/**
+ * @brief Run the interactive Fun REPL session.
+ * @param vm Initialized VM to execute user input within.
+ * @return Exit status code for the REPL.
+ */
 int fun_run_repl(VM *vm) {
   int repl_timing = 0;
   int selected_frame = -1; /* -1 means use current top frame */

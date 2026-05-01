@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file serial_close.c
+ * @brief Implements OP_SERIAL_CLOSE to close an open serial port.
  *
- * Added: 2025-12-28
+ * Behavior:
+ * - Pops fd (int); attempts to close it; pushes 1 on success, 0 on failure.
+ * - Only supported on UNIX-like systems.
+ *
+ * Errors:
+ * - If argument type is wrong, prints an error and returns 0.
  */
 
 #ifdef __unix__

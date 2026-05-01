@@ -1,14 +1,28 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-12-10 (split from set_unset_save.c)
  */
 
+/**
+ * @file set.c
+ * @brief VM opcode snippet for setting an INI value (OP_INI_SET).
+ *
+ * Opcode: OP_INI_SET
+ * Stack: [value:any] [key:string] [section:string] [handle:int] -> [ok:int]
+ *
+ * Behavior
+ * - Pops value, key, section, and handle. Converts the value to a string using
+ *   value_to_string_alloc() and stores it under "section:key" (and a dotted
+ *   fallback) via dictionary_set().
+ * - Pushes 1 on success, 0 on failure (invalid args/handle or allocation fail).
+ *
+ * Errors
+ * - No VM exception is thrown; failures return 0.
+ */
 /* OP_INI_SET */
 #ifdef FUN_WITH_INI
 case OP_INI_SET: {

@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file serial_send.c
+ * @brief Implements OP_SERIAL_SEND to write bytes to a serial port.
  *
- * Added: 2025-12-28
+ * Behavior:
+ * - Pops data (string) and fd (int); writes data to the serial port; pushes number of bytes written (>=0) or -1 on error.
+ * - Only supported on UNIX-like systems; other platforms push -1.
+ *
+ * Errors:
+ * - On wrong types, prints an error and pushes -1.
  */
 
 #ifdef __unix__

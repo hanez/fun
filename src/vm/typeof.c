@@ -7,6 +7,20 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file typeof.c
+ * @brief Implements the OP_TYPEOF opcode for obtaining a human-readable type name.
+ *
+ * This snippet is included by the VM's opcode dispatch. It pops a single value
+ * from the stack, determines its runtime type, pushes a new string with a
+ * human-readable type name (e.g., "Number", "String", "Array"), and frees the
+ * original value.
+ *
+ * Stack contract:
+ * - Pops: value (any)
+ * - Pushes: string (type name)
+ */
+
 case OP_TYPEOF: {
   Value v = pop_value(vm);
   const char *tname = "Unknown";

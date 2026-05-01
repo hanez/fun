@@ -1,17 +1,34 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-29
  */
 
-/*
- * Rust FFI demo opcode: OP_RUST_SET_EXIT
- * Pops an int code and asks Rust to write it into vm.exit_code.
+/**
+ * @file set_exit.c
+ * @brief Implements the OP_RUST_SET_EXIT opcode (conditional build).
+ *
+ * Pops an integer exit code and delegates to a Rust helper to store it into
+ * vm.exit_code. Pushes Nil afterwards. When Rust support is disabled, the
+ * argument is still popped/freed, a runtime error is raised, and Nil is
+ * pushed to maintain stack discipline.
+ */
+
+/**
+ * OP_RUST_SET_EXIT: (code:int) -> Nil
+ *
+ * Behavior (FUN_WITH_RUST=ON):
+ * - Expects an integer on the stack (provided by previous opcodes).
+ * - Calls fun_op_rset_exit(vm) which pops the int and writes vm->exit_code.
+ * - Pushes Nil.
+ *
+ * Behavior (FUN_WITH_RUST=OFF):
+ * - Pops and frees one value to preserve stack discipline.
+ * - Raises a runtime error indicating missing Rust support.
+ * - Pushes Nil.
  */
 case OP_RUST_SET_EXIT: {
 #ifdef FUN_WITH_RUST

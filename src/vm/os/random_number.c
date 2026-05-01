@@ -5,13 +5,20 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-12-12
  */
 
-/* Generate OS-based random bytes and return them hex-encoded.
- * Opcode: OP_RANDOM_NUMBER
- * Stack:  pops len (number of raw bytes), pushes hex string of length 2*len
+/**
+ * @file random_number.c
+ * @brief Implements OP_RANDOM_NUMBER to generate cryptographically secure random bytes.
+ *
+ * Behavior:
+ * - Pops len (int, number of raw bytes to generate) and pushes a lowercase hex string of length 2*len.
+ * - Uses the platform-preferred CSPRNG (e.g., getrandom/arc4random/BCryptGenRandom); falls back to /dev/urandom on UNIX.
+ * - Caps requested length to prevent excessive allocations.
+ *
+ * Errors:
+ * - If len is not an int, or negative, prints an error and pushes an empty string.
+ * - If OS RNG is unavailable or allocation fails, prints an error and terminates the VM (exit(1)).
  */
 
 #include <inttypes.h>

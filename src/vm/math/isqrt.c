@@ -5,13 +5,23 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- *  Added: 2026-01-03
  */
 
 /**
  * @file isqrt.c
  * @brief Implements the OP_ISQRT opcode for integer square root (floor).
+ *
+ * Behavior:
+ * - Pops one numeric operand (int or float), converts to int64.
+ * - Computes floor(sqrt(max(0, x))) as an integer without floating point.
+ * - Pushes VAL_INT result.
+ *
+ * Stack effect:
+ * - Pop: x
+ * - Push: isqrt(x)
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT; others cause a runtime error.
  */
 
 case OP_ISQRT: {

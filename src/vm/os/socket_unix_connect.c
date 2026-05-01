@@ -5,8 +5,17 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file socket_unix_connect.c
+ * @brief Implements OP_SOCK_UNIX_CONNECT to connect to a UNIX domain socket path.
  *
- * Added: 2025-10-04
+ * Behavior:
+ * - Pops path (string); creates an AF_UNIX SOCK_STREAM and connects to it; pushes fd (>0) or 0.
+ *
+ * Errors:
+ * - On wrong type or OS errors, prints an error and pushes 0. Non-UNIX platforms return 0.
  */
 
 #include <string.h>

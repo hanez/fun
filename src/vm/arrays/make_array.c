@@ -28,7 +28,7 @@
  * // Stack before: [1, 2, 3]
  * // Stack after: [[1, 2, 3]]
  *
- * @author Johanes Findeisen
+ * @author Johannes Findeisen
  * @date 2025-10-16
  */
 

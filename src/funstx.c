@@ -1,10 +1,15 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file funstx.c
+ * @brief Syntax checker and auto-fixer tool for Fun source files.
  */
 
 #include <ctype.h>
@@ -15,11 +20,24 @@
 #include "bytecode.h"
 #include "parser.h"
 
+/**
+ * @brief Print command-line usage for the funstx tool to stderr.
+ * @param prog Program name (argv[0]). May be NULL.
+ */
 static void usage(const char *prog) {
   fprintf(stderr, "Usage: %s [--fix] [--quiet] <file1.fun> [file2.fun ...]\n", prog);
 }
 
-/* Read entire file into a malloc'd buffer terminated with '\0'. Returns 1 on success. */
+/**
+ * @brief Read entire file into a newly allocated buffer.
+ *
+ * The returned buffer is NUL-terminated for convenience. Caller must free it.
+ *
+ * @param path    Path to file to read.
+ * @param out_buf Output pointer to receive malloc'd buffer.
+ * @param out_len Output length of the file (without the terminating NUL).
+ * @return 1 on success, 0 on failure.
+ */
 static int read_all(const char *path, char **out_buf, size_t *out_len) {
   *out_buf = NULL;
   *out_len = 0;
@@ -51,7 +69,14 @@ static int read_all(const char *path, char **out_buf, size_t *out_len) {
   return 1;
 }
 
-/* Write buffer to file atomically-ish (overwrite). */
+/**
+ * @brief Overwrite a file with the provided buffer.
+ *
+ * @param path Target file path.
+ * @param buf  Buffer to write.
+ * @param len  Number of bytes to write.
+ * @return 1 on success, 0 otherwise.
+ */
 static int write_all(const char *path, const char *buf, size_t len) {
   FILE *f = fopen(path, "wb");
   if (!f) return 0;
@@ -61,14 +86,32 @@ static int write_all(const char *path, const char *buf, size_t len) {
   return ok;
 }
 
-/* Check if c is a word constituent (identifier char) */
+/**
+ * @brief Determine whether a character is an identifier constituent.
+ * @param c Character code (unsigned char promoted to int).
+ * @return Non-zero if c is '_' or an alphanumeric character.
+ */
 static int is_word(int c) {
   return (c == '_' || isalnum(c));
 }
 
-/* Apply auto-fixes to the given source text. Returns newly malloc'd buffer and new length.
- * Idempotent, focuses on parser-related constraints: 2-space indents, no tab indents,
- * CRLF->LF, trim trailing spaces, ensure final newline, normalize 'sint*' to 'int*'.
+/**
+ * @brief Apply conservative style/syntax auto-fixes to a Fun source buffer.
+ *
+ * Fixes include:
+ * - Normalize indentation to 2 spaces (tabs become 2 spaces per tab)
+ * - Convert CRLF/CR line endings to LF
+ * - Trim trailing spaces on each line
+ * - Ensure the file ends with a single LF
+ * - Normalize identifiers 'sint8/16/32/64' to 'int8/16/32/64' at word boundaries
+ *
+ * Returns a newly allocated buffer containing the fixed content and writes the
+ * resulting length to out_len. Caller must free the returned buffer.
+ *
+ * @param src     Input buffer.
+ * @param len     Input length.
+ * @param out_len Output length of fixed buffer.
+ * @return Newly malloc'd fixed buffer on success, or NULL on OOM.
  */
 static char *apply_fixes(const char *src, size_t len, size_t *out_len) {
   /* First pass: normalize line endings to LF and compute an upper bound size */
@@ -242,6 +285,17 @@ static char *apply_fixes(const char *src, size_t len, size_t *out_len) {
   return out;
 }
 
+/**
+ * @brief Entry point for funstx.
+ *
+ * Parses flags, optionally applies in-place fixes (--fix), and validates each
+ * provided Fun source file by attempting to parse it. With --quiet, only
+ * errors are printed; otherwise, prints "OK" for valid files.
+ *
+ * @param argc Argument count.
+ * @param argv Argument vector.
+ * @return 0 if all files are valid (and fixes succeeded if requested), non-zero otherwise.
+ */
 int main(int argc, char **argv) {
   int do_fix = 0;
   int quiet = 0;

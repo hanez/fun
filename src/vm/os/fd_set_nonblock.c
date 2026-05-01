@@ -5,8 +5,18 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file fd_set_nonblock.c
+ * @brief Implements OP_FD_SET_NONBLOCK to toggle O_NONBLOCK on a file descriptor.
  *
- * Added: 2026-03-26
+ * Behavior:
+ * - Pops on (int, 0/1) and fd (int); sets or clears O_NONBLOCK via fcntl; pushes 1 on success, 0 otherwise.
+ * - On non-UNIX platforms, returns 0 (unsupported).
+ *
+ * Errors:
+ * - If types are wrong, prints an error and returns 0.
  */
 
 case OP_FD_SET_NONBLOCK: {

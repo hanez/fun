@@ -9,23 +9,27 @@
 
 /**
  * @file mul.c
- * @brief Implements the OP_MUL opcode for integer multiplication in the VM.
+ * @brief Implements the OP_MUL opcode (numeric multiplication) in the VM.
  *
- * This file handles the OP_MUL instruction, which performs integer multiplication
- * on two integer values popped from the stack and pushes the result back onto the stack.
+ * Handles the OP_MUL instruction, multiplying two numeric operands and
+ * pushing the result. If either operand is a float, multiplication is
+ * performed in double precision; otherwise it is 64-bit integer
+ * multiplication.
  *
  * Behavior:
- * - Pops two integer values from the stack.
- * - Performs integer multiplication (`a * b`).
- * - Pushes the result back onto the stack.
+ * - Pops two values from the stack.
+ * - If any operand is VAL_FLOAT, computes (double)a * (double)b and pushes a VAL_FLOAT.
+ * - Else computes a.i * b.i and pushes a VAL_INT.
  *
  * Error Handling:
- * - Exits with an error if the operands are not integers.
+ * - Raises a runtime error and aborts execution if operands are not numeric.
  *
  * Example:
  * // Bytecode: OP_MUL
  * // Stack before: [3, 4]
  * // Stack after: [12]
+ * // Stack before: [2.5, 4]
+ * // Stack after: [10.0]
  *
  * @author Johannes Findeisen
  * @date 2025-10-16

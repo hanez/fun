@@ -1,18 +1,20 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-12-11 (2025-12-11 migrated from src/vm.c)
  */
 
-/*
-PCSC helpers: registries and helper functions.
-Included the file scope from vm.c.
-*/
+/**
+ * @file pcsc.c
+ * @brief PC/SC smartcard helper registries and lookup utilities.
+ *
+ * Provides small fixed-size registries for PC/SC contexts and card handles,
+ * plus allocation and lookup helpers used by VM opcodes when FUN_WITH_PCSC
+ * is enabled.
+ */
 
 #ifdef FUN_WITH_PCSC
 #if defined(__has_include)
@@ -44,6 +46,11 @@ typedef struct {
 static pcsc_ctx_entry g_pcsc_ctx[8];
 static pcsc_card_entry g_pcsc_card[32];
 
+/**
+ * @brief Allocate a free context slot in the PC/SC registry.
+ *
+ * @return A 1-based slot id on success, or 0 if no free slot is available.
+ */
 static int pcsc_alloc_ctx_slot(void) {
   for (int i = 0; i < (int)(sizeof(g_pcsc_ctx) / sizeof(g_pcsc_ctx[0])); ++i) {
     if (!g_pcsc_ctx[i].in_use) {
@@ -55,6 +62,11 @@ static int pcsc_alloc_ctx_slot(void) {
   return 0;
 }
 
+/**
+ * @brief Allocate a free card slot in the PC/SC registry.
+ *
+ * @return A 1-based slot id on success, or 0 if no free slot is available.
+ */
 static int pcsc_alloc_card_slot(void) {
   for (int i = 0; i < (int)(sizeof(g_pcsc_card) / sizeof(g_pcsc_card[0])); ++i) {
     if (!g_pcsc_card[i].in_use) {
@@ -67,6 +79,12 @@ static int pcsc_alloc_card_slot(void) {
   return 0;
 }
 
+/**
+ * @brief Lookup a context slot by id.
+ *
+ * @param id 1-based context id previously returned by pcsc_alloc_ctx_slot().
+ * @return Pointer to the registry entry if valid and in use; NULL otherwise.
+ */
 static pcsc_ctx_entry *pcsc_get_ctx(int id) {
   if (id <= 0) return NULL;
   int idx = id - 1;
@@ -75,6 +93,12 @@ static pcsc_ctx_entry *pcsc_get_ctx(int id) {
   return &g_pcsc_ctx[idx];
 }
 
+/**
+ * @brief Lookup a card slot by id.
+ *
+ * @param id 1-based card id previously returned by pcsc_alloc_card_slot().
+ * @return Pointer to the registry entry if valid and in use; NULL otherwise.
+ */
 static pcsc_card_entry *pcsc_get_card(int id) {
   if (id <= 0) return NULL;
   int idx = id - 1;

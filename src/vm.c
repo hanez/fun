@@ -7,6 +7,16 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file vm.c
+ * @brief Core virtual machine implementation and opcode dispatch for Fun.
+ *
+ * Defines the VM state, stack helpers, debugger/stepping support, built-in
+ * opcode handlers (included as amalgamated C files), platform I/O helpers,
+ * and the main interpreter loop that executes bytecode produced by the Fun
+ * compiler. This file is the central runtime of the language.
+ */
+
 /* Ensure POSIX/XSI prototypes (nanosleep, wcwidth, etc.) are available
  * before any system headers are included by amalgamated .c files. */
 #ifndef _WIN32
@@ -85,7 +95,19 @@ static __declspec(thread) VM *g_active_vm = NULL;
 static __thread VM *g_active_vm = NULL;
 #endif
 
-/* fprintf wrapper that appends source line info for stderr messages */
+/**
+ * @brief fprintf-like wrapper that annotates stderr messages with VM source context.
+ *
+ * When writing to stderr and a VM is active, this function appends file name,
+ * line number, function name, opcode and instruction pointer information to the
+ * message. It attempts to map expanded preprocessed line numbers back to the
+ * original included file for clearer diagnostics.
+ *
+ * @param stream Output stream (typically stderr or stdout).
+ * @param fmt printf-style format string.
+ * @param ap Variable argument list corresponding to fmt.
+ * @return Number of characters written, as returned by vfprintf.
+ */
 static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
   int written = vfprintf(stream, fmt, ap);
   if (stream == stderr && g_active_vm) {
@@ -155,6 +177,16 @@ static int fun_vm_vfprintf(FILE *stream, const char *fmt, va_list ap) {
   return written;
 }
 
+/**
+ * @brief fprintf wrapper forwarding to fun_vm_vfprintf.
+ *
+ * Convenience wrapper that collects varargs and calls fun_vm_vfprintf so that
+ * VM-aware diagnostics are consistently applied in this translation unit.
+ *
+ * @param stream Output stream.
+ * @param fmt printf-style format string.
+ * @return Number of characters written.
+ */
 static int fun_vm_fprintf(FILE *stream, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
@@ -172,6 +204,15 @@ static int fun_vm_fprintf(FILE *stream, const char *fmt, ...) {
 
 static __thread jmp_buf g_vm_err_jmp;
 
+/**
+ * @brief Replacement for exit() used within this translation unit.
+ *
+ * If REPL-on-error is enabled for the active VM, this performs a longjmp back
+ * to vm_run so the REPL can be entered with the current VM state intact.
+ * Otherwise, terminates the process immediately using _Exit/_exit.
+ *
+ * @param code Exit status code (non-zero values indicate error conditions).
+ */
 static void fun_vm_exit(int code) {
   if (g_active_vm && g_active_vm->repl_on_error) {
     /* Jump back to vm_run to allow dropping into the REPL with intact VM state */
@@ -194,6 +235,16 @@ static void push_value(VM *vm, Value v);
 /* Raise a runtime error that respects try/catch/finally semantics.
  * If a handler is installed for the current frame, jump to it and push
  * an error string for the catch clause. Otherwise, print and stop VM. */
+/**
+ * @brief Raise a runtime error inside the VM, honoring try/catch/finally.
+ *
+ * If the current frame has a pending try handler, control is transferred to
+ * that handler and the error message is pushed onto the stack for the catch
+ * clause. If no handler exists, the error is printed and the VM is stopped.
+ *
+ * @param vm Pointer to the VM instance.
+ * @param msg Human-readable error message (may be NULL).
+ */
 void vm_raise_error(VM *vm, const char *msg) {
   if (!vm || vm->fp < 0) {
     fprintf(stderr, "Runtime error: %s\n", msg ? msg : "<error>");
@@ -258,6 +309,12 @@ Dev tips:
 - You can run scripts/run_examples.sh to sanity-check examples quickly.
 */
 
+/**
+ * @brief Get a human-readable name for a ValueType.
+ *
+ * @param t The value type enum.
+ * @return Constant string naming the type (e.g., "int", "string").
+ */
 static const char *value_type_name(ValueType t) {
   switch (t) {
   case VAL_FUNCTION:
@@ -281,6 +338,14 @@ static const char *value_type_name(ValueType t) {
   }
 }
 
+/**
+ * @brief Clear the VM's buffered output values and partial flags.
+ *
+ * Frees any dynamic storage held by buffered output Values and resets the
+ * output counters and partial line indicators.
+ *
+ * @param vm VM instance whose output buffer should be cleared.
+ */
 void vm_clear_output(VM *vm) {
   for (int i = 0; i < vm->output_count; ++i) {
     free_value(vm->output[i]);
@@ -291,6 +356,14 @@ void vm_clear_output(VM *vm) {
     vm->output_is_partial[i] = 0;
 }
 
+/**
+ * @brief Free resources owned directly by the VM structure.
+ *
+ * Currently a no-op because the VM does not allocate persistent internal
+ * resources outside frames, globals and outputs, which are managed elsewhere.
+ *
+ * @param vm VM instance to free resources for.
+ */
 void vm_free(VM *vm) {
   // currently nothing persistent allocated inside VM itself
 }
@@ -298,6 +371,14 @@ void vm_free(VM *vm) {
 /* forward declaration for helper used in vm_reset */
 static void vm_pop_frame(VM *vm);
 
+/**
+ * @brief Reset the VM to a clean state.
+ *
+ * Pops all frames (releasing local variables), clears the operand stack and
+ * globals, resets the output buffer and debugger state, and zeros the exit code.
+ *
+ * @param vm VM instance to reset.
+ */
 void vm_reset(VM *vm) {
   // Pop all frames (free locals)
   while (vm->fp >= 0) {
@@ -319,6 +400,11 @@ void vm_reset(VM *vm) {
   vm_debug_reset(vm);
 }
 
+/**
+ * @brief Print all non-nil global variables to stdout for debugging.
+ *
+ * @param vm VM whose globals should be dumped.
+ */
 void vm_dump_globals(VM *vm) {
   printf("=== globals ===\n");
   for (int i = 0; i < MAX_GLOBALS; ++i) {
@@ -333,6 +419,13 @@ void vm_dump_globals(VM *vm) {
 
 /* --- Debugger API impl --- */
 
+/**
+ * @brief Reset debugger state: breakpoints and stepping controls.
+ *
+ * Clears all breakpoints, disables stepping modes, and resets counters.
+ *
+ * @param vm VM instance with debugger state to reset.
+ */
 void vm_debug_reset(VM *vm) {
   for (int i = 0; i < vm->break_count; ++i) {
     if (vm->breakpoints[i].file) {
@@ -349,6 +442,14 @@ void vm_debug_reset(VM *vm) {
   vm->debug_stop_requested = 0;
 }
 
+/**
+ * @brief Add a source breakpoint.
+ *
+ * @param vm VM instance.
+ * @param file Source file path (must not be NULL).
+ * @param line One-based source line number (> 0).
+ * @return Breakpoint id (>=0) on success, -1 on failure (invalid args or full).
+ */
 int vm_debug_add_breakpoint(VM *vm, const char *file, int line) {
   if (!file || line <= 0) return -1;
   if (vm->break_count >= (int)(sizeof(vm->breakpoints) / sizeof(vm->breakpoints[0]))) return -1;
@@ -359,6 +460,15 @@ int vm_debug_add_breakpoint(VM *vm, const char *file, int line) {
   return id;
 }
 
+/**
+ * @brief Delete a breakpoint by id.
+ *
+ * Compacts the internal breakpoint list to keep ids dense.
+ *
+ * @param vm VM instance.
+ * @param id Breakpoint identifier previously returned by add.
+ * @return 1 if deleted, 0 if id was invalid.
+ */
 int vm_debug_delete_breakpoint(VM *vm, int id) {
   if (id < 0 || id >= vm->break_count) return 0;
   if (vm->breakpoints[id].file) free(vm->breakpoints[id].file);
@@ -374,10 +484,20 @@ int vm_debug_delete_breakpoint(VM *vm, int id) {
   return 1;
 }
 
+/**
+ * @brief Remove all breakpoints from the VM.
+ *
+ * @param vm VM instance.
+ */
 void vm_debug_clear_breakpoints(VM *vm) {
   vm_debug_reset(vm);
 }
 
+/**
+ * @brief Print active breakpoints to stdout.
+ *
+ * @param vm VM instance.
+ */
 void vm_debug_list_breakpoints(VM *vm) {
   if (vm->break_count <= 0) {
     printf("(no breakpoints)\n");
@@ -389,12 +509,22 @@ void vm_debug_list_breakpoints(VM *vm) {
   }
 }
 
+/**
+ * @brief Request single-step execution (stop after next instruction).
+ *
+ * @param vm VM instance.
+ */
 void vm_debug_request_step(VM *vm) {
   vm->debug_step_mode = 1; // step
   vm->debug_step_start_ic = vm->instr_count;
   vm->debug_stop_requested = 0;
 }
 
+/**
+ * @brief Request step-over (stop after next instruction in current frame).
+ *
+ * @param vm VM instance.
+ */
 void vm_debug_request_next(VM *vm) {
   vm->debug_step_mode = 2; // next (step over)
   vm->debug_step_target_fp = vm->fp;
@@ -402,17 +532,35 @@ void vm_debug_request_next(VM *vm) {
   vm->debug_stop_requested = 0;
 }
 
+/**
+ * @brief Request finish (run until the current frame returns).
+ *
+ * @param vm VM instance.
+ */
 void vm_debug_request_finish(VM *vm) {
   vm->debug_step_mode = 3; // finish (until return)
   vm->debug_step_target_fp = vm->fp;
   vm->debug_stop_requested = 0;
 }
 
+/**
+ * @brief Resume normal execution (clear stepping state and stop flag).
+ *
+ * @param vm VM instance.
+ */
 void vm_debug_request_continue(VM *vm) {
   vm->debug_step_mode = 0;
   vm->debug_stop_requested = 0;
 }
 
+/**
+ * @brief Push a Value onto the VM operand stack.
+ *
+ * Takes ownership of the provided Value. Aborts execution on overflow.
+ *
+ * @param vm VM instance.
+ * @param v Value to push (ownership transferred).
+ */
 static void push_value(VM *vm, Value v) {
   if (vm->sp >= STACK_SIZE - 1) {
     fprintf(stderr, "Runtime error: stack overflow\n");
@@ -421,6 +569,14 @@ static void push_value(VM *vm, Value v) {
   vm->stack[++vm->sp] = v; /* take ownership of v */
 }
 
+/**
+ * @brief Pop a Value from the VM operand stack.
+ *
+ * Caller takes ownership of the returned Value. Aborts execution on underflow.
+ *
+ * @param vm VM instance.
+ * @return The top Value from the stack.
+ */
 static Value pop_value(VM *vm) {
   if (vm->sp < 0) {
     fprintf(stderr, "Runtime error: stack underflow\n");
@@ -430,6 +586,15 @@ static Value pop_value(VM *vm) {
 }
 
 /* --- C ABI helpers for Rust FFI --- */
+/**
+ * @brief Pop a numeric Value and convert it to a 64-bit integer (C ABI helper).
+ *
+ * Accepts int or float Values on the stack. Other types raise a runtime type
+ * error. The popped Value is freed.
+ *
+ * @param vm VM instance.
+ * @return The numeric value converted to int64_t.
+ */
 int64_t vm_pop_i64(VM *vm) {
   Value v = pop_value(vm);
   int64_t out = 0;
@@ -447,39 +612,89 @@ int64_t vm_pop_i64(VM *vm) {
   return out;
 }
 
+/**
+ * @brief Push a 64-bit integer as a VM int Value (C ABI helper).
+ *
+ * @param vm VM instance.
+ * @param v Integer value to push.
+ */
 void vm_push_i64(VM *vm, int64_t v) {
   push_value(vm, make_int(v));
 }
 
 /* --- Extended C ABI for Rust to access VM internals (unsafe) --- */
+/**
+ * @brief Return sizeof(VM) for external FFI consumers.
+ *
+ * @return Size of the VM struct in bytes.
+ */
 size_t vm_sizeof(void) {
   return sizeof(VM);
 }
 
+/**
+ * @brief Return sizeof(Value) for external FFI consumers.
+ *
+ * @return Size of the Value struct in bytes.
+ */
 size_t vm_value_sizeof(void) {
   return sizeof(Value);
 }
 
+/**
+ * @brief Cast the VM pointer to an opaque mutable void* (unsafe FFI helper).
+ *
+ * @param vm VM instance pointer.
+ * @return The same pointer reinterpreted as void*.
+ */
 void *vm_as_mut_ptr(VM *vm) {
   return (void *)vm;
 }
 
+/**
+ * @brief Obtain offsetof(VM, exit_code) for FFI struct field access.
+ *
+ * @return Byte offset of the exit_code field within VM.
+ */
 size_t vm_offset_of_exit_code(void) {
   return offsetof(VM, exit_code);
 }
 
+/**
+ * @brief Obtain offsetof(VM, sp) for FFI struct field access.
+ *
+ * @return Byte offset of the sp field within VM.
+ */
 size_t vm_offset_of_sp(void) {
   return offsetof(VM, sp);
 }
 
+/**
+ * @brief Obtain offsetof(VM, stack) for FFI struct field access.
+ *
+ * @return Byte offset of the stack field within VM.
+ */
 size_t vm_offset_of_stack(void) {
   return offsetof(VM, stack);
 }
 
+/**
+ * @brief Obtain offsetof(VM, globals) for FFI struct field access.
+ *
+ * @return Byte offset of the globals field within VM.
+ */
 size_t vm_offset_of_globals(void) {
   return offsetof(VM, globals);
 }
 
+/**
+ * @brief Initialize a call frame to a clean state.
+ *
+ * Sets function pointer and instruction pointer, zeroes locals to nil and
+ * resets the try-stack pointer.
+ *
+ * @param f Frame to initialize.
+ */
 static void frame_init(Frame *f) {
   f->fn = NULL;
   f->ip = 0;
@@ -488,6 +703,14 @@ static void frame_init(Frame *f) {
   f->try_sp = -1;
 }
 
+/**
+ * @brief Initialize a VM instance to its default state.
+ *
+ * Resets stack/frame pointers, output buffers, instruction counters, debugger
+ * state and globals. Does not allocate memory.
+ *
+ * @param vm VM instance to initialize.
+ */
 void vm_init(VM *vm) {
   vm->sp = -1;
   vm->fp = -1;
@@ -517,6 +740,17 @@ void vm_init(VM *vm) {
 }
 
 /* push a new frame, transferring ownership of args[] into frame->locals[0..argc-1] */
+/**
+ * @brief Push a new call frame for a function and transfer arguments.
+ *
+ * The first argc Values from args are moved (ownership transfer) into the new
+ * frame's local slots starting at index 0. Aborts on frame stack overflow.
+ *
+ * @param vm VM instance.
+ * @param fn Function bytecode to execute in the new frame.
+ * @param argc Number of arguments provided.
+ * @param args Array of argument Values (may be NULL if argc == 0).
+ */
 static void vm_push_frame(VM *vm, Bytecode *fn, int argc, Value *args) {
   if (vm->fp >= MAX_FRAMES - 1) {
     fprintf(stderr, "Runtime error: too many frames\n");
@@ -533,6 +767,13 @@ static void vm_push_frame(VM *vm, Bytecode *fn, int argc, Value *args) {
 }
 
 /* pop current frame and free its locals */
+/**
+ * @brief Pop the current call frame and free its local variables.
+ *
+ * Aborts if there is no active frame.
+ *
+ * @param vm VM instance.
+ */
 static void vm_pop_frame(VM *vm) {
   if (vm->fp < 0) {
     fprintf(stderr, "Runtime error: pop frame with empty frame stack\n");
@@ -546,6 +787,13 @@ static void vm_pop_frame(VM *vm) {
   vm->fp--;
 }
 
+/**
+ * @brief Print the VM's buffered output values to stdout.
+ *
+ * Emits a newline after each value unless the corresponding partial flag is set.
+ *
+ * @param vm VM instance whose output should be printed.
+ */
 void vm_print_output(VM *vm) {
   for (int i = 0; i < vm->output_count; ++i) {
     print_value(&vm->output[i]);
@@ -555,6 +803,16 @@ void vm_print_output(VM *vm) {
   }
 }
 
+/**
+ * @brief Execute a bytecode program starting from the given entry point.
+ *
+ * Sets up the initial frame and runs the main interpreter loop until there are
+ * no more frames. Honors debugger stepping/finish/continue requests and, when
+ * enabled, traps exit paths to enter a REPL via on_error_repl.
+ *
+ * @param vm VM instance to run.
+ * @param entry Entry function bytecode (must not be NULL).
+ */
 void vm_run(VM *vm, Bytecode *entry) {
   /* reset instruction count for this run */
   vm->instr_count = 0;

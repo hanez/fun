@@ -1,12 +1,18 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file pcre2.c
+ * @brief PCRE2 configuration header and includes for regex-related opcodes.
  *
- * Added: 2025-12-11 (2025-12-11 migrated from src/vm/libsql/common.c)
+ * Ensures PCRE2 code unit width is defined consistently prior to including
+ * <pcre2.h> when FUN_WITH_PCRE2 is enabled.
  */
 
 /* Ensure PCRE2 is configured consistently across the whole translation unit.

@@ -5,13 +5,20 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-03
  */
 
 /**
  * @file sqrt.c
  * @brief Implements the OP_SQRT opcode using C99 math.h sqrt().
+ *
+ * Behavior:
+ * - Pops one numeric operand (int or float).
+ * - If x < 0, pushes NaN; else pushes sqrt(x).
+ * - Returns VAL_INT when the result fits exactly in int64, otherwise VAL_FLOAT.
+ *
+ * Stack effect:
+ * - Pop: x
+ * - Push: sqrt(x) | NaN
  */
 
 #include <math.h>

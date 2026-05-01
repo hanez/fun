@@ -5,8 +5,18 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file fd_poll_read.c
+ * @brief Implements OP_FD_POLL_READ to check if a file descriptor is readable.
  *
- * Added: 2026-03-26
+ * Behavior:
+ * - Pops timeout_ms (int) and fd (int); waits up to timeout for readability; pushes 1 if readable, 0 otherwise.
+ * - On non-UNIX platforms, returns 0 (unsupported).
+ *
+ * Errors:
+ * - If types are wrong, prints an error and returns 0.
  */
 
 case OP_FD_POLL_READ: {

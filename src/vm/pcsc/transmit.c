@@ -5,8 +5,28 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file transmit.c
+ * @brief Implements the OP_PCSC_TRANSMIT opcode (conditional build).
  *
- * Added: 2025-10-02
+ * Transmits an APDU to the connected smart card associated with a given
+ * handle. Returns a map with the response bytes and status words. When PCSC
+ * support is disabled at build time, consumes its arguments and returns a map
+ * with code = -2.
+ */
+
+/**
+ * OP_PCSC_TRANSMIT: (handle_id:int, apdu:array<int>) -> map
+ *
+ * - Pops: apdu array, then handle_id.
+ * - Pushes: map { data: array<int>, sw1:int, sw2:int, code:int }.
+ *   - On success (code == SCARD_S_SUCCESS), data contains response bytes (no
+ *     status words) and sw1/sw2 are the trailing status bytes.
+ *   - On error, data is [], sw1/sw2 remain -1, and code is the PCSC error.
+ * - Notes: Negotiates protocol from the connected handle (T0/T1) and uses
+ *   SCardTransmit. APDU bytes are taken modulo 256 from array ints.
  */
 
 /* PCSC transmit */

@@ -1,12 +1,19 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file json.c
+ * @brief JSON extension helpers and VM opcode cases (conditional build).
  *
- * Added: 2025-12-11 (2025-12-11 migrated from src/vm.c)
+ * Provides conversions between json-c objects and the Fun Value type and
+ * supplies VM opcode case implementations when FUN_WITH_JSON is enabled.
+ * This unit may be included or compiled conditionally based on build flags.
  */
 
 /* json-c helpers and VM opcode cases (included from vm.c) */
@@ -19,6 +26,23 @@
 #include <string.h>
 
 /* --- Conversion helpers between json-c and Fun Value --- */
+/**
+ * @brief Convert a json-c object into a Fun Value.
+ *
+ * Maps json-c primitive and compound types to the closest Fun Value
+ * representation.
+ * - null -> Nil
+ * - boolean -> Bool
+ * - number (int/double) -> Int/Float
+ * - string -> String
+ * - array -> Array (recursively converted)
+ * - object -> Map<string,any> (values recursively converted)
+ *
+ * @param j Pointer to a json_object; may be NULL.
+ * @return A Value representing the converted JSON data. Ownership of the
+ *         returned Value belongs to the caller and must be freed with
+ *         free_value() when no longer needed.
+ */
 static Value json_to_fun(json_object *j) {
   if (!j) return make_nil();
   enum json_type t = json_object_get_type(j);
@@ -62,6 +86,16 @@ static Value json_to_fun(json_object *j) {
   }
 }
 
+/**
+ * @brief Convert a Fun Value into a json-c object.
+ *
+ * Produces a newly-allocated json_object tree representing the supplied
+ * Value. Unsupported Fun types are stringified using a placeholder.
+ *
+ * @param v Pointer to the source Value. Must not be NULL.
+ * @return Newly created json_object* on success. The caller owns the
+ *         returned object and must release it with json_object_put().
+ */
 static json_object *fun_to_json(const Value *v) {
   switch (v->type) {
   case VAL_NIL:

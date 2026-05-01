@@ -5,8 +5,19 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file sleep_ms.c
+ * @brief Implements OP_SLEEP_MS to suspend execution for a number of milliseconds.
  *
- * Added: 2025-09-30
+ * Behavior:
+ * - Pops an integer value ms from the stack and sleeps for that many milliseconds.
+ * - Always pushes Nil after completion to keep stack discipline for statement POPs.
+ *
+ * Errors:
+ * - If the popped value is not an integer, prints an error, frees it, and pushes Nil.
+ * - Negative durations are treated as no-op; Nil is still pushed.
  */
 
 case OP_SLEEP_MS: {

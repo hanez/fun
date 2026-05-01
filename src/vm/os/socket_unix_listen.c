@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file socket_unix_listen.c
+ * @brief Implements OP_SOCK_UNIX_LISTEN to create a UNIX domain listening socket.
  *
- * Added: 2025-10-04
+ * Behavior:
+ * - Pops path (string); creates/binds/listens on AF_UNIX socket; pushes fd (>0) or 0 on failure.
+ * - The path may be unlinked before bind to avoid EADDRINUSE.
+ *
+ * Errors:
+ * - On wrong type or OS errors, prints an error and pushes 0. Non-UNIX platforms return 0.
  */
 
 case OP_SOCK_UNIX_LISTEN: {

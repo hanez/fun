@@ -9,6 +9,33 @@
  * Added: 2025-11-25
  */
 
+/**
+ * @file test.c
+ * @brief Implements the OP_PCRE2_TEST opcode (conditional build).
+ *
+ * Tests whether a PCRE2 pattern matches a subject string and returns 1 on
+ * success or 0 otherwise when FUN_WITH_PCRE2 is enabled. When PCRE2 support
+ * is disabled at build time, the opcode always returns 0.
+ */
+
+/**
+ * OP_PCRE2_TEST: (pattern:any, text:any, flags:int|bool=0) -> int
+ *
+ * Behavior when FUN_WITH_PCRE2 is enabled:
+ * - Pops: pattern, text, flags. Converts pattern/text to strings.
+ * - Flags bits:
+ *   - 1 = PCRE2_CASELESS (I)
+ *   - 2 = PCRE2_MULTILINE (M)
+ *   - 4 = PCRE2_DOTALL (S)
+ *   - 8 = PCRE2_UTF (U)
+ *   - 16 = PCRE2_EXTENDED (X)
+ * - Returns 1 if pcre2_match() returns a non-negative result, else 0.
+ * - On compile error or allocation failure, returns 0.
+ *
+ * Behavior when FUN_WITH_PCRE2 is disabled:
+ * - Pops three values and returns 0.
+ */
+
 /* PCRE2_TEST */
 case OP_PCRE2_TEST: {
 #ifdef FUN_WITH_PCRE2

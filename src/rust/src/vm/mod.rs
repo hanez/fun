@@ -1,32 +1,45 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-27
  */
 
-//! Rust VM helpers and opcode handlers exposed via C ABI.
-//!
-//! Functions in this module are compiled into the Rust static library and can
-//! be called from the C VM. They operate on the VM stack using the minimal C
-//! ABI helpers declared on the C side (`vm_pop_i64`, `vm_push_i64`).
+/**
+ * Rust VM helpers and opcode handlers exposed via C ABI.
+ *
+ * Functions in this module are compiled into the Rust static library and can
+ * be called from the C VM. They operate on the VM stack using the minimal C
+ * ABI helpers declared on the C side (e.g. `vm_pop_i64`, `vm_push_i64`).
+ *
+ * Safety
+ * - All extern "C" functions are unsafe; `vm` must be a valid pointer.
+ * - Raw field access helpers (offset reads/writes) assume the C `struct Vm`
+ *   layout matches the offsets reported by the C side.
+ */
 
 use super::Vm;
 //use core::mem::size_of;
 use core::ptr;
 
 extern "C" {
+    /// Pop a 64‑bit integer from the VM stack.
     fn vm_pop_i64(vm: *mut Vm) -> i64;
+    /// Push a 64‑bit integer onto the VM stack.
     fn vm_push_i64(vm: *mut Vm, v: i64);
+    /// Get a mutable pointer to the underlying C Vm as an opaque byte ptr.
     fn vm_as_mut_ptr(vm: *mut Vm) -> *mut core::ffi::c_void;
+    /// Size of the C Vm struct (bytes).
     fn vm_sizeof() -> usize;
+    /// Size of the C Value struct (bytes).
     fn vm_value_sizeof() -> usize;
+    /// Byte offset of the `exit_code` field inside C Vm.
     fn vm_offset_of_exit_code() -> usize;
+    /// Byte offset of the `sp` field inside C Vm.
     fn vm_offset_of_sp() -> usize;
+    /// Byte offset of the `stack` field inside C Vm.
     fn vm_offset_of_stack() -> usize;
 }
 

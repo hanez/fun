@@ -5,13 +5,28 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-03
  */
 
 /**
  * @file sin.c
  * @brief Implements the OP_SIN opcode using C99 math.h sin().
+ *
+ * VM opcode snippet included by vm.c. Provides sine function.
+ *
+ * Behavior:
+ * - Pops one numeric operand (int or float) from the stack.
+ * - Computes sin(x) in double precision.
+ * - Always pushes a VAL_FLOAT result.
+ *
+ * Stack effect:
+ * - Pop: x
+ * - Push: sin(x)
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT; others cause a runtime error.
+ *
+ * Example:
+ * - Input [0] → Output [0.0]
  */
 
 #include <math.h>

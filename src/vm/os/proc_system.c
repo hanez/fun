@@ -5,8 +5,17 @@
  * Copyright 2025 Johannes Findeisen
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file proc_system.c
+ * @brief Implements OP_PROC_SYSTEM to execute a shell command and return exit code.
  *
- * Added: 2025-10-02
+ * Behavior:
+ * - Pops command (string); executes it using system(3); pushes the process exit code (int) or -1 on failure.
+ *
+ * Errors:
+ * - If command is not a string or cannot be executed, returns -1.
  */
 
 case OP_PROC_SYSTEM: {

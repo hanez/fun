@@ -7,11 +7,29 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file test_opcodes.c
+ * @brief Minimal executable exercising a subset of Fun VM opcodes.
+ *
+ * Builds a tiny bytecode program that loads constants, performs arithmetic,
+ * prints results, and demonstrates optional Rust FFI calls. Used for quick
+ * manual verification of the VM dispatch and I/O helpers.
+ */
+
 #include "bytecode.h"
 #include "value.h"
 #include "vm.h"
 #include <stdio.h>
 
+/**
+ * @brief Minimal executable to exercise a subset of VM opcodes.
+ *
+ * Builds a tiny bytecode chunk that loads two constants, adds them, and prints
+ * the result. Also demonstrates dumping bytecode and, optionally, calling Rust
+ * FFI examples when FUN_WITH_RUST is enabled.
+ *
+ * @return Zero on success; non-zero on fatal VM or allocation errors.
+ */
 int main() {
 
   VM vm;

@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file thread_spawn.c
+ * @brief Implements OP_THREAD_SPAWN to run a function in a background thread.
  *
- * Added: 2025-09-30
+ * Behavior:
+ * - Pops function and optionally one argument or an array of arguments (controlled by operand).
+ * - Spawns a new thread that invokes the function; pushes a thread id (int) or 0 on failure.
+ *
+ * Errors:
+ * - If types are wrong or spawning fails, returns 0.
  */
 
 case OP_THREAD_SPAWN: {

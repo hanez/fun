@@ -5,8 +5,27 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file to_file.c
+ * @brief VM opcode snippet for writing a Fun Value as JSON to a file.
  *
- * Added: 2025-11-24
+ * Implements the OP_JSON_TO_FILE instruction. Expects a pretty-print flag,
+ * a Value to serialize, and a path. Serializes the Value via json-c and
+ * writes it to the specified file path.
+ *
+ * Build gating: compiled only when FUN_WITH_JSON is enabled. Otherwise the
+ * opcode consumes three arguments and pushes 0 (failure).
+ *
+ * Stack effect (with FUN_WITH_JSON):
+ * - Pops: pretty (bool/int), value (any), path (any; converted to string)
+ * - Pushes: int (1 on success, 0 on failure)
+ *
+ * Errors and edge cases:
+ * - If the path cannot be converted to a C string or file writing fails,
+ *   the opcode pushes 0.
+ * - Pretty printing selects JSON_C_TO_STRING_PRETTY; otherwise plain output.
  */
 
 /* JSON_TO_FILE */

@@ -5,10 +5,32 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-10-04
  */
 
+/**
+ * @file regex_replace.c
+ * @brief VM opcode snippet for OP_REGEX_REPLACE (POSIX global replace).
+ *
+ * Performs a global search-and-replace on the input string using a POSIX
+ * regular expression pattern and a replacement string. Backreferences in the
+ * replacement are not expanded (simple literal replacement).
+ *
+ * Behavior (stack effects):
+ * - Pops: replacement (string), pattern (string), input (string)
+ * - Pushes: output (string) — the transformed string after replacing all
+ *   matches; on invalid regex, the original input is returned unchanged.
+ *
+ * Platform notes:
+ * - On non-UNIX platforms (no POSIX regex), the original input string is
+ *   returned unchanged.
+ *
+ * Errors:
+ * - If operands have invalid types, the VM prints a runtime type error and
+ *   exits.
+ *
+ * Example:
+ * - pattern = "[0-9]+", repl = "#", input = "a1b22c" -> "a#b#c"
+ */
 /* Regex global replace opcode using POSIX regex */
 #ifdef __unix__
 #include <regex.h>

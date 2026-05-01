@@ -7,6 +7,20 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file sclamp.c
+ * @brief Implements the OP_SCLAMP opcode for signed N-bit two's-complement wrapping.
+ *
+ * This VM opcode wraps an integer into the signed N-bit range using two's
+ * complement semantics. It first masks to N bits and then sign-extends if the
+ * sign bit is set, yielding a value in the range [-2^(N-1) .. 2^(N-1)-1].
+ * N is provided by the instruction operand.
+ *
+ * Stack contract:
+ * - Pops: value (int)
+ * - Pushes: value (int)
+ */
+
 case OP_SCLAMP: {
   /* Two's complement wrap to signed N-bit range:
      - Mask to N bits

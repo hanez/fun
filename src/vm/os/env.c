@@ -7,7 +7,17 @@
  * https://opensource.org/license/apache-2-0
  */
 
-// Get environment variables of the operation system.
+/**
+ * @file env.c
+ * @brief Implements OP_ENV to read an environment variable by name.
+ *
+ * Behavior:
+ * - Pops a string key from the stack and pushes the associated environment value as string.
+ * - If the variable is not set, pushes an empty string ("") rather than Nil.
+ *
+ * Errors:
+ * - If the key is not a string, prints an error and terminates the VM with exit(1).
+ */
 
 case OP_ENV: {
   Value key = pop_value(vm);

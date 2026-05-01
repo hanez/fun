@@ -1,12 +1,18 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file query.c
+ * @brief Implements the OP_SQLITE_QUERY opcode (conditional build).
  *
- * Added: 2025-11-26
+ * Prepares and steps through a SQLite statement to produce an array of row
+ * maps when FUN_WITH_SQLITE is enabled. Returns an empty array otherwise.
  */
 
 /**

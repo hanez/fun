@@ -5,13 +5,33 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- *  Added: 2026-01-03
  */
 
 /**
  * @file ceil.c
  * @brief Implements the OP_CEIL opcode using C99 math.h ceil().
+ *
+ * VM opcode snippet included by vm.c. Provides numeric ceiling operation.
+ *
+ * Behavior:
+ * - Pops one numeric operand (int or float) from the stack.
+ * - Applies ceil(x) in double precision.
+ * - If the result is an exact 64-bit integer, pushes VAL_INT; otherwise VAL_FLOAT.
+ *
+ * Stack effect:
+ * - Pop: x
+ * - Push: ceil(x)
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT.
+ * - Other types cause a runtime error.
+ *
+ * Errors:
+ * - Exits with an error message if the operand is not a number.
+ *
+ * Example:
+ * - Input stack: [2.1] → Output stack: [3]
+ * - Input stack: [-2.1] → Output stack: [-2]
  */
 
 #include <math.h>

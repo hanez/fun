@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file socket_recv.c
+ * @brief Implements OP_SOCK_RECV to receive data from a socket into a string.
  *
- * Added: 2025-10-04
+ * Behavior:
+ * - Pops max_len (int) and fd (int); attempts to read up to max_len bytes; pushes a string with the bytes read.
+ * - On EOF or error, pushes empty string. Non-UNIX platforms return empty string (unsupported).
+ *
+ * Errors:
+ * - If argument types are wrong, prints an error and pushes empty string.
  */
 
 case OP_SOCK_RECV: {

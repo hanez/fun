@@ -1,14 +1,27 @@
-/*
+/**
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-12-10 (split from set_unset_save.c)
  */
 
+/**
+ * @file save.c
+ * @brief VM opcode snippet for saving an INI dictionary to a file (OP_INI_SAVE).
+ *
+ * Opcode: OP_INI_SAVE
+ * Stack: [path:string] [handle:int] -> [ok:int]
+ *
+ * Behavior
+ * - Pops a path and a handle. If the handle is valid, opens the path for
+ *   writing and dumps the dictionary in INI format. Pushes 1 on success,
+ *   otherwise 0.
+ *
+ * Errors
+ * - Failing fopen() or invalid handle simply return 0; no exception is thrown.
+ */
 /* OP_INI_SAVE */
 #ifdef FUN_WITH_INI
 case OP_INI_SAVE: {

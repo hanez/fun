@@ -5,8 +5,19 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file socket_tcp_connect.c
+ * @brief Implements OP_SOCK_TCP_CONNECT to open a TCP connection.
  *
- * Added: 2025-10-04
+ * Behavior:
+ * - Pops port (int) and host (string); attempts to connect and pushes fd (>0) on success or 0 on failure.
+ * - Name resolution is performed via getaddrinfo; first successful connect wins.
+ *
+ * Errors:
+ * - If argument types are wrong, prints an error and pushes 0.
+ * - On non-UNIX platforms, returns 0 (unsupported).
  */
 
 case OP_SOCK_TCP_CONNECT: {

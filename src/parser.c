@@ -72,6 +72,15 @@ static int g_err_col = 0;
 static int g_temp_counter = 0;
 
 /* ---- runtime debug control (for suppressing noisy stdout in production/CGI) ---- */
+/**
+ * @brief Interpret an environment variable as a boolean flag.
+ *
+ * Recognizes common truthy forms: 1, true/TRUE, yes/YES, on/ON.
+ * Any other value (including unset) is considered false.
+ *
+ * @param name Environment variable name (must not be NULL).
+ * @return 1 if the variable is set to a recognized truthy value, 0 otherwise.
+ */
 static int env_truthy(const char *name) {
   const char *v = getenv(name);
   if (!v) return 0;
@@ -85,6 +94,14 @@ static int env_truthy(const char *name) {
   return 0;
 }
 
+/**
+ * @brief Determine whether parser/compiler debug tracing is enabled.
+ *
+ * Debugging can be enabled by setting either FUN_TRACE or FUN_DEBUG to a
+ * truthy environment value (see env_truthy).
+ *
+ * @return 1 if debug is enabled, 0 otherwise.
+ */
 static int fun_debug_enabled(void) {
   /* Allow enabling debug dumps at runtime via environment.
    * Default is OFF to avoid contaminating stdout (e.g., CGI responses).
@@ -99,13 +116,29 @@ static int fun_debug_enabled(void) {
    positive/negative 8/16/32/64 = integers (negative means signed);
    TYPE_META_STRING/BOOLEAN/NIL mark non-integer enforced types;
    TYPE_META_CLASS marks class instances (Map with "__class"). */
+/** @brief Type metadata tag used for string enforcement in declared types. */
 #define TYPE_META_STRING 10001
+/** @brief Type metadata tag used for boolean enforcement in declared types. */
 #define TYPE_META_BOOLEAN 10002
+/** @brief Type metadata tag indicating explicit nil type. */
 #define TYPE_META_NIL 10003
+/** @brief Type metadata tag marking class/instance values. */
 #define TYPE_META_CLASS 10004
+/** @brief Type metadata tag marking floating point numbers. */
 #define TYPE_META_FLOAT 10005
+/** @brief Type metadata tag marking array values. */
 #define TYPE_META_ARRAY 10006
 
+/**
+ * @brief Record a parser/compiler error at a given source position.
+ *
+ * Formats an error message into the parser's global error buffer and stores
+ * the offending byte position. Line and column are derived later on demand.
+ *
+ * @param pos Byte offset in the current (preprocessed) source.
+ * @param fmt printf-style format string for the message.
+ * @param ... Arguments matching fmt.
+ */
 static void parser_fail(size_t pos, const char *fmt, ...) {
   g_has_error = 1;
   g_err_pos = pos;
@@ -115,6 +148,18 @@ static void parser_fail(size_t pos, const char *fmt, ...) {
   va_end(ap);
 }
 
+/**
+ * @brief Compute one-based line and column from a byte position.
+ *
+ * Counts newlines up to the smaller of pos and len to derive a human-friendly
+ * (line, column) pair. Columns are one-based and reset after each newline.
+ *
+ * @param src Source buffer.
+ * @param len Source length in bytes.
+ * @param pos Target byte position within the source.
+ * @param out_line Optional out parameter for the computed line.
+ * @param out_col Optional out parameter for the computed column.
+ */
 static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line, int *out_col) {
   int line = 1, col = 1;
   size_t limit = pos < len ? pos : len;
@@ -138,6 +183,9 @@ static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line
 static char *g_ns_aliases[64];
 static int g_ns_alias_count = 0;
 
+/**
+ * @brief Reset and free all tracked namespace aliases.
+ */
 static void ns_aliases_reset(void) {
   for (int i = 0; i < g_ns_alias_count; ++i) {
     free(g_ns_aliases[i]);
@@ -146,6 +194,16 @@ static void ns_aliases_reset(void) {
   g_ns_alias_count = 0;
 }
 
+/**
+ * @brief Scan preprocessed source for namespace alias markers.
+ *
+ * Looks for lines starting with "// __ns_alias__: <name>" and stores <name>
+ * so that member-style calls on that identifier are parsed as plain calls
+ * (no implicit receiver).
+ *
+ * @param src Preprocessed source buffer.
+ * @param len Length of src in bytes.
+ */
 static void ns_aliases_scan(const char *src, size_t len) {
   const char *marker = "// __ns_alias__: ";
   size_t mlen = strlen(marker);
@@ -184,6 +242,12 @@ static void ns_aliases_scan(const char *src, size_t len) {
   }
 }
 
+/**
+ * @brief Check whether an identifier is a registered namespace alias.
+ *
+ * @param name Identifier to test.
+ * @return 1 if name is a known alias, 0 otherwise.
+ */
 static int is_ns_alias(const char *name) {
   if (!name) return 0;
   for (int i = 0; i < g_ns_alias_count; ++i) {
@@ -202,6 +266,12 @@ static struct {
   int count;
 } G = {{0}, {0}, {0}, 0};
 
+/**
+ * @brief Find a global symbol index by name.
+ *
+ * @param name Symbol name.
+ * @return Index in the global table, or -1 if not found.
+ */
 static int sym_find(const char *name) {
   for (int i = 0; i < G.count; ++i) {
     if (strcmp(G.names[i], name) == 0) return i;
@@ -209,6 +279,16 @@ static int sym_find(const char *name) {
   return -1;
 }
 
+/**
+ * @brief Get or create a global symbol index for a name.
+ *
+ * Ensures the symbol exists in the global table, creating a new entry with
+ * default metadata when absent.
+ *
+ * @param name Symbol name.
+ * @return Index of the symbol (>=0). Returns 0 after reporting an error if
+ *         the table is full.
+ */
 static int sym_index(const char *name) {
   int existing = sym_find(name);
   if (existing >= 0) return existing;
@@ -235,6 +315,14 @@ static LocalEnv *g_locals = NULL;
 static LocalEnv *g_func_env_stack[64];
 static int g_func_env_depth = 0; /* number of valid outer env entries */
 
+/**
+ * @brief Check whether a local name exists in any outer function environment.
+ *
+ * Used to enforce no-capture semantics for nested functions.
+ *
+ * @param name Local identifier to search for.
+ * @return 1 if present in any outer environment, 0 otherwise.
+ */
 static int name_in_outer_envs(const char *name) {
   if (g_func_env_depth <= 0) return 0;
   for (int d = g_func_env_depth - 1; d >= 0; --d) {
@@ -258,6 +346,12 @@ typedef struct LoopCtx {
 
 static LoopCtx *g_loop_ctx = NULL;
 
+/**
+ * @brief Find the index of a local variable in the current function.
+ *
+ * @param name Local identifier to look up.
+ * @return Zero-based local index, or -1 if not found or outside a function.
+ */
 static int local_find(const char *name) {
   if (!g_locals) return -1;
   for (int i = 0; i < g_locals->count; ++i) {
@@ -266,6 +360,12 @@ static int local_find(const char *name) {
   return -1;
 }
 
+/**
+ * @brief Add a new local variable to the current function environment.
+ *
+ * @param name Local identifier to define.
+ * @return The assigned local index, or -1 if no function env exists or limit exceeded.
+ */
 static int local_add(const char *name) {
   if (!g_locals) return -1;
   if (g_locals->count >= MAX_FRAME_LOCALS) {
@@ -281,6 +381,18 @@ static int local_add(const char *name) {
 static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos);
 
 /* primary: (expr) | string | number | true/false | identifier */
+/**
+ * @brief Parse and emit bytecode for primary expressions.
+ *
+ * Handles literals, identifiers, parenthesized expressions, function literals,
+ * array/map literals, indexing, calls, member access, and related constructs.
+ *
+ * @param bc Target bytecode under construction.
+ * @param src Source buffer.
+ * @param len Source length in bytes.
+ * @param pos In/out byte position pointer; advanced past the parsed primary.
+ * @return 1 on success, 0 on parse error.
+ */
 static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   skip_spaces(src, len, pos);
 
@@ -4301,7 +4413,18 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
   return 0;
 }
 
-/* unary: '!' unary | '-' unary | primary */
+/**
+ * @brief Parse and emit unary expressions.
+ *
+ * Supports logical not (!) and unary minus (-) with right associativity,
+ * falling back to primary expressions.
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_unary(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   skip_spaces(src, len, pos);
   if (*pos < len && src[*pos] == '!') {
@@ -4328,7 +4451,17 @@ static int emit_unary(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   return emit_primary(bc, src, len, pos);
 }
 
-/* multiplicative: unary (('*' | '/' | '%') unary)* */
+/**
+ * @brief Parse and emit multiplicative expressions.
+ *
+ * Grammar: unary (('*' | '/' | '%') unary)*
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_multiplicative(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   if (!emit_unary(bc, src, len, pos)) return 0;
   for (;;) {
@@ -4381,7 +4514,17 @@ static int emit_multiplicative(Bytecode *bc, const char *src, size_t len, size_t
   return 1;
 }
 
-/* additive: multiplicative (('+' | '-') multiplicative)* */
+/**
+ * @brief Parse and emit additive expressions.
+ *
+ * Grammar: multiplicative (('+' | '-') multiplicative)*
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_additive(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   if (!emit_multiplicative(bc, src, len, pos)) return 0;
   for (;;) {
@@ -4409,7 +4552,17 @@ static int emit_additive(Bytecode *bc, const char *src, size_t len, size_t *pos)
   return 1;
 }
 
-/* relational: additive (('<' | '<=' | '>' | '>=') additive)* */
+/**
+ * @brief Parse and emit relational expressions.
+ *
+ * Grammar: additive (('<' | '<=' | '>' | '>=') additive)*
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_relational(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   if (!emit_additive(bc, src, len, pos)) return 0;
   for (;;) {
@@ -4455,7 +4608,17 @@ static int emit_relational(Bytecode *bc, const char *src, size_t len, size_t *po
   return 1;
 }
 
-/* equality: relational (('==' | '!=') relational)* */
+/**
+ * @brief Parse and emit equality/inequality expressions.
+ *
+ * Grammar: relational (('==' | '!=') relational)*
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_equality(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   if (!emit_relational(bc, src, len, pos)) return 0;
   for (;;) {
@@ -4483,7 +4646,18 @@ static int emit_equality(Bytecode *bc, const char *src, size_t len, size_t *pos)
   return 1;
 }
 
-/* logical AND with short-circuit: equality ( '&&' equality )* */
+/**
+ * @brief Parse and emit logical AND (&&) with short-circuiting.
+ *
+ * Evaluates left-to-right, jumping around subsequent operands when a false
+ * operand is encountered.
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_and_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   int jf_idxs[64];
   int jf_count = 0;
@@ -4543,7 +4717,18 @@ static int emit_and_expr(Bytecode *bc, const char *src, size_t len, size_t *pos)
   return 1;
 }
 
-/* logical OR with short-circuit: and_expr ( '||' and_expr )* */
+/**
+ * @brief Parse and emit logical OR (||) with short-circuiting.
+ *
+ * Evaluates left-to-right; when a true operand is encountered, remaining
+ * operands are skipped and the expression yields true.
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_or_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   int true_jumps[64];
   int tj_count = 0;
@@ -4604,8 +4789,17 @@ static int emit_or_expr(Bytecode *bc, const char *src, size_t len, size_t *pos) 
   return 1;
 }
 
-/* conditional operator (ternary) with right associativity:
-   Parses: logical_or ('?' conditional ':' conditional)? */
+/**
+ * @brief Parse and emit the ternary conditional operator.
+ *
+ * Grammar (right-associative): logical_or ('?' conditional ':' conditional)?
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on error.
+ */
 static int emit_conditional(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   /* parse condition (logical OR precedence or higher) */
   if (!emit_or_expr(bc, src, len, pos)) return 0;
@@ -4654,6 +4848,19 @@ static int emit_conditional(Bytecode *bc, const char *src, size_t len, size_t *p
 }
 
 /* top-level expression */
+/**
+ * @brief Parse and emit a full expression using precedence climbing.
+ *
+ * Delegates to emit_conditional which handles the highest-level precedence
+ * (ternary). This serves as the common entry for expression parsing at
+ * various grammar positions.
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length in bytes.
+ * @param pos In/out byte position pointer.
+ * @return 1 on success, 0 on parse error.
+ */
 static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   return emit_conditional(bc, src, len, pos);
 }
@@ -4667,6 +4874,16 @@ static int emit_expression(Bytecode *bc, const char *src, size_t len, size_t *po
  */
 
 /* line/indent utilities */
+/**
+ * @brief Advance position to the end of the current line, validating tail.
+ *
+ * Skips spaces and inline/block comments until CR/LF/CRLF or end-of-input.
+ * Reports an error if trailing non-space/comment characters are found.
+ *
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer; set to first char of next line.
+ */
 static void skip_to_eol(const char *src, size_t len, size_t *pos) {
   /* Strict mode: only allow trailing spaces and comments until end-of-line. */
   size_t p = *pos;
@@ -4731,6 +4948,30 @@ static void skip_to_eol(const char *src, size_t len, size_t *pos) {
   }
 }
 
+/**
+ * @brief Read the start of a logical line and compute indentation.
+ *
+ * Consumes blank lines and comment-only lines. Tabs are forbidden for
+ * indentation; only spaces are allowed, counted in units of 2.
+ *
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer; advanced to first non-space.
+ * @param out_indent Receives the number of leading spaces on the line.
+ * @return 1 if a non-empty logical line was found, 0 if end reached.
+ */
+/**
+ * @brief Read the start of a logical line and compute indentation.
+ *
+ * Consumes blank lines and comment-only lines. Tabs are forbidden for
+ * indentation; only spaces are allowed, counted in units of 2.
+ *
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer; advanced to first non-space.
+ * @param out_indent Receives the number of leading spaces on the line.
+ * @return 1 if a non-empty logical line was found, 0 if end reached.
+ */
 static int read_line_start(const char *src, size_t len, size_t *pos, int *out_indent) {
   while (*pos < len) {
     size_t p = *pos;
@@ -4813,6 +5054,17 @@ static int read_line_start(const char *src, size_t len, size_t *pos, int *out_in
 static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, int current_indent);
 
 /* parse and emit a single simple (non-if) statement on the current line */
+/**
+ * @brief Parse a single statement on the current line and emit bytecode.
+ *
+ * Handles assignments, function calls, control flow starters, print/debug
+ * statements and other simple constructs that fit on one logical line.
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer at start of the statement line.
+ */
 static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, size_t *pos) {
   size_t local_pos = *pos;
   char *name = NULL;
@@ -5665,6 +5917,19 @@ static void parse_simple_statement(Bytecode *bc, const char *src, size_t len, si
 }
 
 /* parse a block with lines at indentation >= current_indent; stop at dedent */
+/**
+ * @brief Parse a block of statements at a given indentation level.
+ *
+ * Continues parsing lines while their indentation is >= current_indent. On
+ * dedent, returns control to the caller so upstream constructs (e.g., if/while)
+ * can close. Inserts OP_LINE markers to improve runtime diagnostics.
+ *
+ * @param bc Target bytecode.
+ * @param src Source buffer.
+ * @param len Source length.
+ * @param pos In/out byte position pointer.
+ * @param current_indent Indentation level (spaces) of the enclosing block.
+ */
 static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, int current_indent) {
   while (*pos < len) {
     if (g_has_error) return;
@@ -7219,6 +7484,17 @@ static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, 
   }
 }
 
+/**
+ * @brief Compile a full source buffer into bytecode.
+ *
+ * Preprocesses namespace aliases, handles shebangs and top-level constructs,
+ * parses the indentation-aware block and appends a final HALT instruction.
+ *
+ * @param src Source buffer to compile (preprocessed when used via file API).
+ * @param len Length of the source buffer in bytes.
+ * @return Newly allocated Bytecode on success; never NULL here (errors are
+ *         recorded globally and may lead to incomplete bytecode).
+ */
 static Bytecode *compile_minimal(const char *src, size_t len) {
   Bytecode *bc = bytecode_new();
   size_t pos = 0;
@@ -7240,6 +7516,16 @@ static Bytecode *compile_minimal(const char *src, size_t len) {
   return bc;
 }
 
+/**
+ * @brief Parse a .fun source file and return compiled bytecode.
+ *
+ * Reads the file, preprocesses includes (tracking original file paths),
+ * resets the global error state, and compiles to Bytecode while attaching
+ * source metadata (name, source_file).
+ *
+ * @param path Filesystem path to the source file.
+ * @return Bytecode pointer on success; NULL on I/O or parse error.
+ */
 Bytecode *parse_file_to_bytecode(const char *path) {
   size_t len = 0;
   char *src = read_file_all(path, &len);
@@ -7416,6 +7702,15 @@ Bytecode *parse_file_to_bytecode(const char *path) {
   return bc;
 }
 
+/**
+ * @brief Parse a source string and return compiled bytecode.
+ *
+ * Suitable for REPL or tests. Performs include preprocessing with no base
+ * path, compiles, and attaches generic source metadata.
+ *
+ * @param source NUL-terminated source code string.
+ * @return Bytecode pointer on success; NULL on parse error.
+ */
 Bytecode *parse_string_to_bytecode(const char *source) {
   if (!source) {
     fprintf(stderr, "Error: null source provided\n");
@@ -7459,6 +7754,19 @@ Bytecode *parse_string_to_bytecode(const char *source) {
   return bc;
 }
 
+/**
+ * @brief Retrieve the last parser/compiler error information, if any.
+ *
+ * Copies the error message into msgBuf (truncated to msgCap-1), and returns
+ * the one-based line and column where available. If no error is pending,
+ * returns 0 and leaves outputs unchanged.
+ *
+ * @param msgBuf Destination buffer for the error message (may be NULL).
+ * @param msgCap Capacity of msgBuf in bytes.
+ * @param outLine Optional out param for one-based line number.
+ * @param outCol Optional out param for one-based column number.
+ * @return 1 if an error was available and copied, 0 otherwise.
+ */
 int parser_last_error(char *msgBuf, unsigned long msgCap, int *outLine, int *outCol) {
   if (!g_has_error) return 0;
   if (msgBuf && msgCap > 0) {

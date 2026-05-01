@@ -5,8 +5,14 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file fun_version.c
+ * @brief VM opcode snippet: push the current Fun version string (OP_FUN_VERSION).
  *
- * Added: 2025-12-28
+ * Included into vm.c dispatch. Pushes a string constant with the build's
+ * FUN_VERSION onto the VM stack.
  */
 
 // Pushes the current Fun version string onto the stack.

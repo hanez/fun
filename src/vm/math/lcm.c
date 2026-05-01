@@ -5,13 +5,23 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- *  Added: 2026-01-03
  */
 
 /**
  * @file lcm.c
  * @brief Implements the OP_LCM opcode for least common multiple.
+ *
+ * Behavior:
+ * - Pops two numeric operands (a, b). Floats are truncated to int64.
+ * - Computes lcm(|a|, |b|) using gcd; returns 0 if either input is 0.
+ * - Pushes VAL_INT result. May overflow silently on extreme inputs.
+ *
+ * Stack effect:
+ * - Pop: b, a
+ * - Push: lcm(a, b)
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT; others cause a runtime error.
  */
 
 case OP_LCM: {

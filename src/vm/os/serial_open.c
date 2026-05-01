@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file serial_open.c
+ * @brief Implements OP_SERIAL_OPEN to open and configure a serial port.
  *
- * Added: 2025-12-28
+ * Behavior:
+ * - Pops baud_rate (int) and device path (string); opens and configures the port; pushes fd (>0) or 0 on failure.
+ * - Only available on UNIX-like systems; Windows is unsupported and returns 0.
+ *
+ * Errors:
+ * - On wrong types or OS errors, prints an error message and returns 0.
  */
 
 #ifdef __unix__

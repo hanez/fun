@@ -5,10 +5,35 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2025-10-04
  */
 
+/**
+ * @file regex_search.c
+ * @brief VM opcode snippet for OP_REGEX_SEARCH (POSIX first-match search).
+ *
+ * Finds the first match of a POSIX regular expression within an input string
+ * and returns a map with details about the match and captured groups.
+ *
+ * Behavior (stack effects):
+ * - Pops: pattern (string), input (string)
+ * - Pushes: map with keys:
+ *   - "match": string — the matched substring (empty if no match)
+ *   - "start": int — start index of the match, or -1
+ *   - "end": int — end index (exclusive) of the match, or -1
+ *   - "groups": array<string> — captured groups (may be empty)
+ *
+ * Platform notes:
+ * - On non-UNIX platforms (no POSIX regex available), returns a default map
+ *   with empty match, start=-1, end=-1, and empty groups.
+ *
+ * Errors:
+ * - If operands are not strings, the VM prints a runtime type error and exits.
+ * - If the pattern is an invalid regex, returns the default empty map.
+ *
+ * Example:
+ * - pattern = "h(ell)o", input = "oh hello!" ->
+ *   { match: "hello", start: 3, end: 8, groups: ["ell"] }
+ */
 /* Regex search (first match) opcode using POSIX regex */
 #ifdef __unix__
 #include <regex.h>

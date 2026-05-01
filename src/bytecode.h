@@ -7,13 +7,31 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file bytecode.h
+ * @brief Definitions for the Fun VM bytecode: opcodes, instruction format, and bytecode container API.
+ *
+ * This header declares the VM's operation codes (@ref OpCode), the compact
+ * instruction representation (@ref Instruction), and the owning bytecode
+ * container (@ref Bytecode) together with minimal constructor/manipulation
+ * helpers. The concrete execution semantics for each opcode are implemented
+ * in the VM (see vm.c and vm/* handlers).
+ */
 #ifndef FUN_BYTECODE_H
 #define FUN_BYTECODE_H
 
 #include "value.h"
 #include <stdint.h>
 
-// VM opcodes
+/**
+ * @brief VM operation codes executed by the Fun virtual machine.
+ *
+ * Unless stated otherwise, opcodes operate on the VM stack. Comments on each
+ * opcode describe stack effects using a left-to-right pop order and the value
+ * pushed as a result. For example, "pops b, a; pushes a+b" means the
+ * instruction will pop first b then a from the stack and finally push the
+ * result of a+b.
+ */
 typedef enum {
   OP_NOP,
   OP_LOAD_CONST,  // operand = constant index

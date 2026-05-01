@@ -7,12 +7,29 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file parser_utils.c
+ * @brief Low-level parsing helpers and include preprocessor for the Fun parser.
+ *
+ * This module provides character scanners, token helpers, simple string/number
+ * literal readers, a lightweight include preprocessor that can expand
+ * `include` directives, and mapping utilities to translate expanded line
+ * numbers back to original files for diagnostics.
+ */
 #include "parser.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Read entire file into a newly allocated buffer.
+ *
+ * @param path     Path to file.
+ * @param out_len  Optional; receives number of bytes read (not including NUL).
+ * @return Newly allocated NUL-terminated buffer on success, or NULL on error.
+ *         Caller must free() the returned buffer.
+ */
 static char *read_file_all(const char *path, size_t *out_len) {
   FILE *f = fopen(path, "rb");
   if (!f) return NULL;
@@ -38,6 +55,12 @@ static char *read_file_all(const char *path, size_t *out_len) {
   return buf;
 }
 
+/**
+ * @brief Skip spaces, tabs, carriage returns and newlines.
+ * @param src Source buffer.
+ * @param len Buffer length.
+ * @param pos In/out byte offset; advanced past whitespace.
+ */
 static void skip_ws(const char *src, size_t len, size_t *pos) {
   while (*pos < len) {
     char c = src[*pos];
@@ -49,12 +72,19 @@ static void skip_ws(const char *src, size_t len, size_t *pos) {
   }
 }
 
+/**
+ * @brief Advance @p pos to the next line, consuming the trailing '\n' if present.
+ */
 static void skip_line(const char *src, size_t len, size_t *pos) {
   while (*pos < len && src[*pos] != '\n')
     (*pos)++;
   if (*pos < len && src[*pos] == '\n') (*pos)++;
 }
 
+/**
+ * @brief Skip whitespace, then line (//) and block (/* ... *&#47;) comments.
+ * Continues until the next non-comment, non-whitespace character.
+ */
 static void skip_comments(const char *src, size_t len, size_t *pos) {
   for (;;) {
     skip_ws(src, len, pos);
@@ -74,18 +104,29 @@ static void skip_comments(const char *src, size_t len, size_t *pos) {
   }
 }
 
+/**
+ * @brief Check if src starting at pos begins with kw and fits in len.
+ * @return 1 if matches, 0 otherwise.
+ */
 static int starts_with(const char *src, size_t len, size_t pos, const char *kw) {
   size_t klen = strlen(kw);
   if (pos + klen > len) return 0;
   return strncmp(src + pos, kw, klen) == 0;
 }
 
+/**
+ * @brief Skip a top-of-file shebang line that starts with "#!" if present.
+ */
 static void skip_shebang_if_present(const char *src, size_t len, size_t *pos) {
   if (*pos == 0 && starts_with(src, len, *pos, "#!")) {
     skip_line(src, len, pos);
   }
 }
 
+/**
+ * @brief If an identifier starts at pos, advance pos to its end.
+ * Recognizes [A-Za-z_][A-Za-z0-9_]*.
+ */
 static void skip_identifier(const char *src, size_t len, size_t *pos) {
   size_t p = *pos;
   if (p < len && (isalpha((unsigned char)src[p]) || src[p] == '_')) {
@@ -96,6 +137,10 @@ static void skip_identifier(const char *src, size_t len, size_t *pos) {
   *pos = p;
 }
 
+/**
+ * @brief Consume expected character after skipping whitespace.
+ * @return 1 if consumed; 0 if not present.
+ */
 static int consume_char(const char *src, size_t len, size_t *pos, char expected) {
   skip_ws(src, len, pos);
   if (*pos < len && src[*pos] == expected) {
@@ -105,6 +150,13 @@ static int consume_char(const char *src, size_t len, size_t *pos, char expected)
   return 0;
 }
 
+/**
+ * @brief Parse a single-quoted or double-quoted string literal.
+ *
+ * Supports common C-style escapes: \n, \r, \t, \\, \", \\' . Returns a newly
+ * allocated buffer on success and advances pos. On failure returns NULL and
+ * does not modify the source. Caller must free() returned buffer.
+ */
 static char *parse_string_literal_any_quote(const char *src, size_t len, size_t *pos) {
   skip_ws(src, len, pos);
   if (*pos >= len) return NULL;
@@ -174,6 +226,9 @@ static char *parse_string_literal_any_quote(const char *src, size_t len, size_t 
 
 /* === Helpers for identifiers, numbers, booleans, and globals === */
 
+/**
+ * @brief Skip only spaces, tabs and carriage returns (not newlines).
+ */
 static void skip_spaces(const char *src, size_t len, size_t *pos) {
   while (*pos < len) {
     char c = src[*pos];
@@ -185,6 +240,11 @@ static void skip_spaces(const char *src, size_t len, size_t *pos) {
   }
 }
 
+/**
+ * @brief Read an identifier starting at pos and allocate its name.
+ * @param out_name Set to malloc'd NUL-terminated name on success.
+ * @return 1 on success (pos advanced), 0 otherwise.
+ */
 static int read_identifier_into(const char *src, size_t len, size_t *pos, char **out_name) {
   size_t p = *pos;
   if (p < len && (isalpha((unsigned char)src[p]) || src[p] == '_')) {
@@ -204,6 +264,11 @@ static int read_identifier_into(const char *src, size_t len, size_t *pos, char *
   return 0;
 }
 
+/**
+ * @brief Parse an integer literal (decimal or 0x-hex) with optional sign.
+ * @param ok Set to 1 on success, 0 on failure.
+ * @return Parsed value (two's complement cast for negative inputs).
+ */
 static uint64_t parse_int_literal_value(const char *src, size_t len, size_t *pos, int *ok) {
   size_t p = *pos;
   skip_spaces(src, len, &p);
@@ -262,17 +327,26 @@ static uint64_t parse_int_literal_value(const char *src, size_t len, size_t *pos
  * Directives are recognized only when not inside strings or block comments.
  */
 
+/**
+ * @brief Thin wrapper over realloc used by local buffers.
+ */
 static void *xrealloc(void *ptr, size_t newcap) {
   void *np = realloc(ptr, newcap);
   return np;
 }
 
+/**
+ * @brief Simple growable string buffer.
+ */
 typedef struct {
   char *buf;
   size_t len;
   size_t cap;
 } StrBuf;
 
+/**
+ * @brief Initialize a StrBuf with a small starting capacity.
+ */
 static void sb_init(StrBuf *sb) {
   sb->buf = (char *)malloc(256);
   sb->cap = sb->buf ? 256 : 0;
@@ -280,6 +354,9 @@ static void sb_init(StrBuf *sb) {
   if (sb->buf) sb->buf[0] = '\0';
 }
 
+/**
+ * @brief Ensure buffer capacity for at least need bytes (including terminator).
+ */
 static void sb_reserve(StrBuf *sb, size_t need) {
   if (need <= sb->cap) return;
   size_t nc = sb->cap ? sb->cap : 256;
@@ -291,6 +368,9 @@ static void sb_reserve(StrBuf *sb, size_t need) {
   sb->cap = nc;
 }
 
+/**
+ * @brief Append n bytes from s to the buffer.
+ */
 static void sb_append_n(StrBuf *sb, const char *s, size_t n) {
   if (n == 0) return;
   sb_reserve(sb, sb->len + n + 1);
@@ -300,10 +380,16 @@ static void sb_append_n(StrBuf *sb, const char *s, size_t n) {
   sb->buf[sb->len] = '\0';
 }
 
+/**
+ * @brief Append a NUL-terminated string to the buffer.
+ */
 static void sb_append(StrBuf *sb, const char *s) {
   sb_append_n(sb, s, strlen(s));
 }
 
+/**
+ * @brief Append a single character to the buffer.
+ */
 static void sb_append_ch(StrBuf *sb, char c) {
   sb_reserve(sb, sb->len + 2);
   if (!sb->buf) return;
@@ -312,18 +398,27 @@ static void sb_append_ch(StrBuf *sb, char c) {
 }
 
 /* ---- Export collection for include-as namespaces ---- */
+/**
+ * @brief List of exported symbol names discovered at top level.
+ */
 typedef struct {
   char **names;
   int count;
   int cap;
 } NameList;
 
+/**
+ * @brief Initialize an empty NameList.
+ */
 static void nl_init(NameList *nl) {
   nl->names = NULL;
   nl->count = 0;
   nl->cap = 0;
 }
 
+/**
+ * @brief Add a copy of name to the list (ignores NULL/empty).
+ */
 static void nl_add(NameList *nl, const char *name) {
   if (!name || !name[0]) return;
   if (nl->count >= nl->cap) {
@@ -336,6 +431,9 @@ static void nl_add(NameList *nl, const char *name) {
   nl->names[nl->count++] = strdup(name);
 }
 
+/**
+ * @brief Free all strings and internal storage in the list.
+ */
 static void nl_free(NameList *nl) {
   if (!nl) return;
   for (int i = 0; i < nl->count; ++i)
@@ -347,6 +445,10 @@ static void nl_free(NameList *nl) {
 
 /* Collect top-level (indent=0) exported symbols: function and class names.
    Ignores lines inside comments/strings and ignores nested indent. */
+/**
+ * @brief Collect top-level exported symbols (fun/class) from source text.
+ *        Ignores strings and comments. Only lines with zero indentation count.
+ */
 static void collect_exports_top_level(const char *text, NameList *out) {
   if (!text || !out) return;
   size_t len = strlen(text);
@@ -499,6 +601,20 @@ static void collect_exports_top_level(const char *text, NameList *out) {
   }
 }
 
+/**
+ * @brief Expand include directives in Fun source.
+ *
+ * Recognizes both `#include "..."` and `include "..."`/`include <...>` at
+ * the beginning of a line (after spaces/tabs). Angle-bracket includes search
+ * in FUN_LIB_DIR, then DEFAULT_LIB_DIR, then local lib/. Emits span markers of
+ * the form `// __include_begin__: <path> [as alias] @line N` to enable later
+ * mapping back to original files.
+ *
+ * @param src           Source code to preprocess.
+ * @param current_path  Optional path of the current file for initial marker.
+ * @param depth         Recursion depth guard.
+ * @return Newly allocated expanded text or NULL on OOM.
+ */
 static char *preprocess_includes_internal(const char *src, const char *current_path, int depth) {
   if (!src) return NULL;
   if (depth > 64) {
@@ -843,11 +959,17 @@ static char *preprocess_includes_internal(const char *src, const char *current_p
   return out.buf;
 }
 
+/**
+ * @brief Public wrapper to preprocess includes without a current path.
+ */
 char *preprocess_includes(const char *src) {
   return preprocess_includes_internal(src, NULL, 0);
 }
 
 /* Variant with known current file path to allow precise resume markers. */
+/**
+ * @brief Preprocess includes with a known file path to improve span markers.
+ */
 char *preprocess_includes_with_path(const char *src, const char *current_path) {
   return preprocess_includes_internal(src, current_path, 0);
 }
@@ -857,6 +979,19 @@ char *preprocess_includes_with_path(const char *src, const char *current_path) {
  * back to the original included file path and inner line number, using the
  * `// __include_begin__: <path>[ as <alias>]` markers injected by the
  * preprocessor. Returns 1 on success and fills out_path/out_line; 0 otherwise.
+ */
+/**
+ * @brief Map a line number in expanded source back to original include path/line.
+ *
+ * Scans the expanded text for the nearest preceding `__include_begin__` marker
+ * and computes the corresponding inner line number.
+ *
+ * @param path           Path to the original top-level file that was expanded.
+ * @param line           1-based line number in the expanded text.
+ * @param out_path       Output buffer for the resolved file path.
+ * @param out_path_cap   Capacity of out_path.
+ * @param out_line       Receives 1-based line number within resolved file.
+ * @return 1 on success, 0 on failure.
  */
 int map_expanded_line_to_include_path(const char *path, int line,
                                       char *out_path, size_t out_path_cap,
@@ -968,6 +1103,11 @@ next_scan_back:
 }
 
 /* Float literal parser: supports decimal and scientific notation. Returns parsed double and advances pos on success. */
+/**
+ * @brief Parse a floating-point literal (supports . and scientific notation).
+ * @param ok Set to 1 on success, 0 otherwise.
+ * @return Parsed double value.
+ */
 static double parse_float_literal_value(const char *src, size_t len, size_t *pos, int *ok) {
   size_t p = *pos;
   skip_spaces(src, len, &p);

@@ -7,6 +7,18 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file value.c
+ * @brief Implementation of the runtime Value type, including constructors,
+ *        dynamic array/map utilities, copying, comparison, printing, and
+ *        string conversion helpers.
+ *
+ * This translation unit provides the concrete operations for the Fun
+ * programming language's Value structure (ints, floats, bools, strings,
+ * arrays, maps, functions and nil). It is used by the VM and standard
+ * library to construct and manipulate runtime values.
+ */
+
 #include "value.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +42,12 @@ typedef struct Map {
   Value *vals; /* each value owned here */
 } Map;
 
+/**
+ * @brief Construct a Value representing a 64-bit integer.
+ *
+ * @param v The integer payload.
+ * @return A Value with type VAL_INT holding v.
+ */
 Value make_int(int64_t v) {
   Value val;
   val.type = VAL_INT;
@@ -37,6 +55,12 @@ Value make_int(int64_t v) {
   return val;
 }
 
+/**
+ * @brief Construct a Value representing a double-precision float.
+ *
+ * @param v The floating-point payload.
+ * @return A Value with type VAL_FLOAT holding v.
+ */
 Value make_float(double v) {
   Value val;
   val.type = VAL_FLOAT;
@@ -44,6 +68,14 @@ Value make_float(double v) {
   return val;
 }
 
+/**
+ * @brief Construct a boolean Value.
+ *
+ * Any non-zero input is treated as true, zero as false.
+ *
+ * @param v Integer truthy/falsey indicator.
+ * @return A Value with type VAL_BOOL and normalized 0/1 payload.
+ */
 Value make_bool(int v) {
   Value val;
   val.type = VAL_BOOL;
@@ -51,6 +83,15 @@ Value make_bool(int v) {
   return val;
 }
 
+/**
+ * @brief Construct a string Value by duplicating the given C string.
+ *
+ * If s is NULL, an empty string is used. The returned Value owns an allocated
+ * copy which must be released via free_value.
+ *
+ * @param s NUL-terminated C string (may be NULL).
+ * @return A Value with type VAL_STRING.
+ */
 Value make_string(const char *s) {
   Value val;
   val.type = VAL_STRING;
@@ -61,6 +102,15 @@ Value make_string(const char *s) {
   return val;
 }
 
+/**
+ * @brief Construct a function Value referencing bytecode.
+ *
+ * The Bytecode pointer is stored as-is; ownership/lifetime is managed by the
+ * caller/VM and not freed by free_value.
+ *
+ * @param fn Pointer to function bytecode (may be NULL to represent an invalid function).
+ * @return A Value with type VAL_FUNCTION.
+ */
 Value make_function(struct Bytecode *fn) {
   Value val;
   val.type = VAL_FUNCTION;
@@ -68,12 +118,27 @@ Value make_function(struct Bytecode *fn) {
   return val;
 }
 
+/**
+ * @brief Construct a nil Value.
+ *
+ * @return A Value with type VAL_NIL.
+ */
 Value make_nil(void) {
   Value v;
   v.type = VAL_NIL;
   return v;
 }
 
+/**
+ * @brief Create an array Value by copying items from an input span.
+ *
+ * Performs a shallow copy for scalars and reference-counted copy for arrays/maps
+ * via copy_value. On allocation failure, returns VAL_NIL.
+ *
+ * @param vals Pointer to input items; may be NULL when count == 0.
+ * @param count Number of items to copy (negative treated as 0).
+ * @return A Value with type VAL_ARRAY or VAL_NIL on failure.
+ */
 Value make_array_from_values(const Value *vals, int count) {
   if (count < 0) count = 0;
   Array *arr = (Array *)malloc(sizeof(Array));
@@ -102,12 +167,28 @@ Value make_array_from_values(const Value *vals, int count) {
   return v;
 }
 
+/**
+ * @brief Get the element count of an array Value.
+ *
+ * @param v Array Value.
+ * @return Number of elements, or -1 if v is not a valid array.
+ */
 int array_length(const Value *v) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return -1;
   const Array *a = (const Array *)v->arr;
   return a->count;
 }
 
+/**
+ * @brief Copy an array element into out.
+ *
+ * The element is copied with copy_value; ownership of out remains with caller.
+ *
+ * @param v Array Value.
+ * @param index Zero-based index.
+ * @param out Destination pointer to receive the copied Value (may be NULL to only validate index).
+ * @return 1 on success, 0 on bounds/type error.
+ */
 int array_get_copy(const Value *v, int index, Value *out) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return 0;
   const Array *a = (const Array *)v->arr;
@@ -116,6 +197,16 @@ int array_get_copy(const Value *v, int index, Value *out) {
   return 1;
 }
 
+/**
+ * @brief Replace an element of an array with a new Value.
+ *
+ * Takes ownership of newElem and frees the old element.
+ *
+ * @param v Array Value to mutate.
+ * @param index Zero-based index to replace.
+ * @param newElem New element (ownership transferred to array).
+ * @return 1 on success, 0 on bounds/type error.
+ */
 int array_set(Value *v, int index, Value newElem) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return 0;
   Array *a = (Array *)v->arr;
@@ -125,6 +216,15 @@ int array_set(Value *v, int index, Value newElem) {
   return 1;
 }
 
+/**
+ * @brief Ensure the internal items buffer can hold at least newCount items.
+ *
+ * May grow the allocation exponentially; initializes new slots to nil.
+ *
+ * @param a Internal Array pointer.
+ * @param newCount Required minimum logical capacity.
+ * @return 1 on success, 0 on allocation failure.
+ */
 static int ensure_array_capacity(Array *a, int newCount) {
   if (newCount <= a->count) return 1;
   /* grow to at least newCount; double strategy */
@@ -145,6 +245,15 @@ static int ensure_array_capacity(Array *a, int newCount) {
   return 1;
 }
 
+/**
+ * @brief Append a Value to an array.
+ *
+ * On success, ownership of newElem is transferred to the array.
+ *
+ * @param v Array Value to append to.
+ * @param newElem Element to append.
+ * @return New array length on success (>=0), or -1 on failure/type error.
+ */
 int array_push(Value *v, Value newElem) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return -1;
   Array *a = (Array *)v->arr;
@@ -160,6 +269,16 @@ int array_push(Value *v, Value newElem) {
   return a->count;
 }
 
+/**
+ * @brief Remove the last element from an array.
+ *
+ * If out is provided, ownership of the removed element is transferred to *out;
+ * otherwise the element is freed.
+ *
+ * @param v Array Value to pop from.
+ * @param out Optional destination for removed element.
+ * @return 1 on success, 0 if array empty or invalid.
+ */
 int array_pop(Value *v, Value *out) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return 0;
   Array *a = (Array *)v->arr;
@@ -173,6 +292,16 @@ int array_pop(Value *v, Value *out) {
   return 1;
 }
 
+/**
+ * @brief Insert a new element at a specific position in an array.
+ *
+ * Index is clamped into [0, count]. Takes ownership of newElem.
+ *
+ * @param v Array Value to modify.
+ * @param index Insertion index.
+ * @param newElem Element to insert.
+ * @return New array length on success (>=0), or -1 on allocation/type error.
+ */
 int array_insert(Value *v, int index, Value newElem) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return -1;
   Array *a = (Array *)v->arr;
@@ -193,6 +322,17 @@ int array_insert(Value *v, int index, Value newElem) {
   return a->count;
 }
 
+/**
+ * @brief Remove an element at index from an array.
+ *
+ * If out is provided, ownership of the removed element is transferred; else it
+ * is freed. Remaining items are shifted left.
+ *
+ * @param v Array Value to modify.
+ * @param index Zero-based index to remove.
+ * @param out Optional destination for removed element.
+ * @return 1 on success, 0 on bounds/type error.
+ */
 int array_remove(Value *v, int index, Value *out) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return 0;
   Array *a = (Array *)v->arr;
@@ -209,6 +349,16 @@ int array_remove(Value *v, int index, Value *out) {
   return 1;
 }
 
+/**
+ * @brief Create a shallow-copied slice of an array Value.
+ *
+ * Start and end are clamped into valid bounds; end < start yields empty array.
+ *
+ * @param v Source array Value.
+ * @param start Inclusive zero-based start index (clamped to >= 0).
+ * @param end Exclusive end index (clamped to <= length; -1 means length).
+ * @return A new array Value (possibly empty) or VAL_NIL if v is not an array.
+ */
 Value array_slice(const Value *v, int start, int end) {
   if (!v || v->type != VAL_ARRAY || !v->arr) return make_nil();
   const Array *a = (const Array *)v->arr;
@@ -223,6 +373,16 @@ Value array_slice(const Value *v, int start, int end) {
   return make_array_from_values(a->items + start, m);
 }
 
+/**
+ * @brief Concatenate two array Values.
+ *
+ * Copies elements into a new array. If either input is not an array, returns
+ * VAL_NIL.
+ *
+ * @param av First array.
+ * @param bv Second array.
+ * @return A new concatenated array Value or VAL_NIL on type/alloc error.
+ */
 Value array_concat(const Value *av, const Value *bv) {
   if (!av || !bv || av->type != VAL_ARRAY || bv->type != VAL_ARRAY) return make_nil();
   const Array *a = (const Array *)av->arr;
@@ -243,6 +403,15 @@ Value array_concat(const Value *av, const Value *bv) {
   return out;
 }
 
+/**
+ * @brief Shallow copy a Value.
+ *
+ * Strings are duplicated, arrays/maps have their refcount incremented, and
+ * function pointers are copied as-is.
+ *
+ * @param v Source Value.
+ * @return A new Value with appropriate copy semantics.
+ */
 Value copy_value(const Value *v) {
   Value out;
   out.type = v->type;
@@ -282,6 +451,15 @@ Value copy_value(const Value *v) {
 }
 
 /* deep copy including arrays (recursively copies items) */
+/**
+ * @brief Deep copy a Value, recursively copying arrays and maps.
+ *
+ * Function Values are copied shallowly. On allocation failure, returns nil or
+ * an empty container as appropriate.
+ *
+ * @param v Source Value.
+ * @return A deep-copied Value.
+ */
 Value deep_copy_value(const Value *v) {
   switch (v->type) {
   case VAL_INT:
@@ -328,6 +506,14 @@ Value deep_copy_value(const Value *v) {
   }
 }
 
+/**
+ * @brief Free dynamic storage owned by a Value.
+ *
+ * Strings are freed, arrays/maps are reference-counted and freed recursively
+ * when their refcount drops to zero. Functions are not freed here.
+ *
+ * @param v Value whose owned resources should be released.
+ */
 void free_value(Value v) {
   if (v.type == VAL_STRING && v.s) {
     free(v.s);
@@ -355,6 +541,14 @@ void free_value(Value v) {
   /* VAL_FUNCTION: we *do not* free the Bytecode here (caller frees it) */
 }
 
+/**
+ * @brief Print a human-readable representation of a Value to stdout.
+ *
+ * Numbers are printed in decimal; arrays/maps are formatted compactly; strings
+ * are printed without quotes.
+ *
+ * @param v Value to print.
+ */
 void print_value(const Value *v) {
   switch (v->type) {
   case VAL_INT:
@@ -404,6 +598,15 @@ void print_value(const Value *v) {
   }
 }
 
+/**
+ * @brief Evaluate a Value's truthiness according to Fun language rules.
+ *
+ * Empty strings, zero numbers, nil and empty arrays are falsey; everything
+ * else is truthy.
+ *
+ * @param v Value to evaluate.
+ * @return 1 if truthy, 0 otherwise.
+ */
 int value_is_truthy(const Value *v) {
   switch (v->type) {
   case VAL_INT:
@@ -427,6 +630,14 @@ int value_is_truthy(const Value *v) {
 }
 
 /* allocate a printable C string for the value; caller must free */
+/**
+ * @brief Allocate a printable C string for a Value.
+ *
+ * The returned string must be freed by the caller with free().
+ *
+ * @param v Value to convert.
+ * @return Newly allocated NUL-terminated string describing v.
+ */
 char *value_to_string_alloc(const Value *v) {
   if (!v) return strdup("nil");
   char buf[128];
@@ -470,6 +681,17 @@ char *value_to_string_alloc(const Value *v) {
   }
 }
 
+/**
+ * @brief Compare two Values for equality.
+ *
+ * Supports numeric cross-type equality between ints and floats. Strings are
+ * compared by content. Other types default to pointer/type equality as
+ * implemented in the switch.
+ *
+ * @param a First Value.
+ * @param b Second Value.
+ * @return 1 if equal, 0 otherwise.
+ */
 int value_equals(const Value *a, const Value *b) {
   // Numeric cross-type equality: int vs float compares numerically
   if ((a->type == VAL_INT || a->type == VAL_FLOAT) && (b->type == VAL_INT || b->type == VAL_FLOAT)) {

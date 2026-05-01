@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file list_dir.c
+ * @brief Implements OP_OS_LIST_DIR to list entries in a directory.
  *
- * Added: 2025-12-23
+ * Behavior:
+ * - Pops a path (string); pushes an array of file/directory names as strings.
+ * - Implementation may delegate to a platform command (e.g., ls -1) for portability.
+ *
+ * Errors:
+ * - Non-string path results in empty array; platform errors also yield an empty array.
  */
 
 case OP_OS_LIST_DIR: {

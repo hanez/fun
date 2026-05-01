@@ -8,26 +8,27 @@
  */
 
 /**
-* @file clear.c
+ * @file clear.c
  * @brief Implements the OP_CLEAR opcode for clearing arrays in the VM.
- *
- * This file handles the OP_CLEAR instruction, which clears all elements from an array.
- * The array is popped from the stack, and nothing is pushed back.
- *
+
+ * Handles the OP_CLEAR instruction, which removes all elements from an array.
+ * The array is popped from the stack; the opcode pushes an integer result
+ * (currently 0) as an acknowledgement.
+
  * Behavior:
  * - Pops the array from the stack.
- * - Clears all elements from the array.
- *
- * Error Handling:
- * - Exits with an error if the array is of the wrong type.
- *
- * Example:
+ * - Clears all elements from the array (array becomes empty in place).
+ * - Pushes 0 (integer) to acknowledge success.
 
+ * Error Handling:
+ * - Exits with a runtime error if the operand is not an array.
+
+ * Example:
  * // Bytecode: OP_CLEAR
  * // Stack before: [[10, 20, 30]]
- * // Stack after: []
- *
- * @author Johannes Findeise
+ * // Stack after: [0]
+
+ * @author Johannes Findeisen
  * @date 2025-10-16
  */
 

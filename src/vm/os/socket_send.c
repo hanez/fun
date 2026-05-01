@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file socket_send.c
+ * @brief Implements OP_SOCK_SEND to transmit data over a connected socket.
  *
- * Added: 2025-10-04
+ * Behavior:
+ * - Pops data (string) and a socket file descriptor (int) and pushes the number of bytes sent (>=0) or -1 on error.
+ * - On non-UNIX platforms, pushes -1 (unsupported) without sending.
+ *
+ * Errors:
+ * - If argument types are wrong, prints an error, frees values, and pushes -1.
  */
 
 case OP_SOCK_SEND: {

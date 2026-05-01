@@ -8,11 +8,12 @@
  */
 
 /**
- * @file arr_push.c
- * @brief Implements the OP_ARR_PUSH opcode for appending elements to arrays in the VM.
+ * @file push.c
+ * @brief Implements the OP_PUSH opcode for appending elements to arrays in the VM.
  *
- * This file handles the OP_ARR_PUSH instruction, which appends a value to the end of an array.
- * The array and value are popped from the stack, and the new length of the array is pushed back onto the stack.
+ * Handles the OP_PUSH instruction, which appends a value to the end of an array.
+ * The array and value are popped from the stack; the opcode pushes the new array
+ * length (integer) as a result.
  *
  * Behavior:
  * - Pops the value and array from the stack.
@@ -20,11 +21,11 @@
  * - Pushes the new length of the array onto the stack.
  *
  * Error Handling:
- * - Exits with an error if the array is of the wrong type.
- * - Exits with an error if memory allocation fails during the append operation.
+ * - Exits with a runtime error if the first operand is not an array.
+ * - Exits with a runtime error if memory allocation fails.
  *
  * Example:
- * // Bytecode: OP_ARR_PUSH
+ * // Bytecode: OP_PUSH
  * // Stack before: [42, [10, 20, 30]]
  * // Stack after: [4]
  *

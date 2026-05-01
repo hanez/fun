@@ -5,8 +5,38 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file match.c
+ * @brief Implements the OP_PCRE2_MATCH opcode (conditional build).
  *
- * Added: 2025-11-25
+ * Executes a single PCRE2 pattern match against a subject string and returns
+ * a map describing the first match and its capture groups when FUN_WITH_PCRE2
+ * is enabled. Returns Nil when there is no match or on error. When PCRE2
+ * support is disabled at build time, the opcode always returns Nil.
+ */
+
+/**
+ * OP_PCRE2_MATCH: (pattern:any, text:any, flags:int|bool=0) -> map|Nil
+ *
+ * Behavior when FUN_WITH_PCRE2 is enabled:
+ * - Pops: pattern, text, flags. Converts pattern/text to strings.
+ * - Flags bits:
+ *   - 1 = PCRE2_CASELESS (I)
+ *   - 2 = PCRE2_MULTILINE (M)
+ *   - 4 = PCRE2_DOTALL (S)
+ *   - 8 = PCRE2_UTF (U)
+ *   - 16 = PCRE2_EXTENDED (X)
+ * - On successful match, returns a map with keys:
+ *   - "full": matched substring (group 0)
+ *   - "start": start index (int)
+ *   - "end": end index (int, exclusive)
+ *   - "groups": array of captured group strings (excluding group 0)
+ * - On no match or compile error, returns Nil.
+ *
+ * Behavior when FUN_WITH_PCRE2 is disabled:
+ * - Pops three values and returns Nil.
  */
 
 /* PCRE2_MATCH */

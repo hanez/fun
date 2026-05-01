@@ -8,23 +8,24 @@
  */
 
 /**
- * @file arr_set.c
- * @brief Implements the OP_ARR_SET opcode for setting elements in arrays in the VM.
+ * @file set.c
+ * @brief Implements the OP_SET opcode for setting elements in arrays in the VM.
  *
- * This file handles the OP_ARR_SET instruction, which sets a value at a specified index in an array.
- * The value, index, and array are popped from the stack, and the value is pushed back onto the stack.
+ * Handles the OP_SET instruction, which sets a value at a specified index in an array.
+ * The value, index, and array are popped from the stack; the value is returned back
+ * on the stack (as a copy) to mirror expression semantics.
  *
  * Behavior:
  * - Pops the value, index, and array from the stack.
  * - Sets the value at the specified index in the array.
- * - Pushes the value back onto the stack.
+ * - Pushes a copy of the value back onto the stack.
  *
  * Error Handling:
- * - Exits with an error if the array or index is of the wrong type.
- * - Exits with an error if the index is out of bounds.
+ * - Exits with a runtime error if the array or index is of the wrong type.
+ * - Exits with a runtime error if the index is out of bounds.
  *
  * Example:
- * // Bytecode: OP_ARR_SET
+ * // Bytecode: OP_SET
  * // Stack before: [42, 1, [10, 20, 30]]
  * // Stack after: [42]
  *

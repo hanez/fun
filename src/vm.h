@@ -7,6 +7,15 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file vm.h
+ * @brief Core virtual machine data structures and public VM API.
+ *
+ * Declares the execution stack/frame layout, global state of the Fun VM,
+ * human-readable opcode names for diagnostics, and the public functions for
+ * initializing, running, resetting, and debugging the VM. FFI helper
+ * declarations for Rust/C++ experiments are also exposed here.
+ */
 #ifndef FUN_VM_H
 #define FUN_VM_H
 
@@ -74,6 +83,13 @@ static const char *opcode_names[] = {
   /* C++ demo */
   "CPP_ADD"};
 
+/**
+ * @brief Call frame representing one active function invocation.
+ *
+ * Each frame keeps a pointer to its function bytecode, the current
+ * instruction pointer within that bytecode, a fixed-size array of local
+ * variables, and a small try/catch stack for exception handling.
+ */
 typedef struct {
   Bytecode *fn;
   int ip;
@@ -83,6 +99,14 @@ typedef struct {
   int try_sp; /* -1 when empty */
 } Frame;
 
+/**
+ * @brief The Fun virtual machine state.
+ *
+ * Holds the operand stack, call frames, globals, standard output capture,
+ * runtime counters, and debugger state. Functions in this header operate on
+ * this structure; callers must ensure proper initialization with vm_init()
+ * before use and call vm_free()/vm_reset() as appropriate.
+ */
 struct VM {
   Value stack[STACK_SIZE];
   int sp;
@@ -120,76 +144,125 @@ struct VM {
   int break_count; // number of active breakpoints
 };
 
+/** @brief Opaque VM alias for external users. */
 typedef struct VM VM;
 
-// initialize VM (zero state)
+/**
+ * @brief Initialize a VM instance to zero/initial state.
+ * @param vm Non-NULL pointer to VM storage to initialize.
+ */
 void vm_init(VM *vm);
 
-// helper function to clear the output
+/**
+ * @brief Clear the buffered output captured by the VM.
+ * @param vm VM instance.
+ */
 void vm_clear_output(VM *vm);
+/**
+ * @brief Print buffered output entries to stdout (debug aid).
+ * @param vm VM instance.
+ */
 void vm_print_output(VM *vm);
+/**
+ * @brief Free all resources owned by the VM (globals, frames, output buffers).
+ * The VM object itself is not freed when allocated on the stack.
+ * @param vm VM instance to dispose.
+ */
 void vm_free(VM *vm);
 
-// reset VM to initial state (free globals/locals/output; keep VM object)
+/**
+ * @brief Reset VM to initial state, freeing globals/locals/output.
+ * The VM object remains valid for reuse after this call.
+ * @param vm VM instance to reset.
+ */
 void vm_reset(VM *vm);
 
-// print non-nil globals (index and value) to stdout
+/**
+ * @brief Print non-nil globals (index and value) to stdout.
+ * @param vm VM instance.
+ */
 void vm_dump_globals(VM *vm);
-// run entry Bytecode (pushes first frame)
+/**
+ * @brief Execute the provided entry bytecode in the VM.
+ * Pushes an initial frame and runs until HALT or an unrecoverable error.
+ * @param vm VM instance.
+ * @param entry Entry bytecode to execute; must outlive the call.
+ */
 void vm_run(VM *vm, Bytecode *entry);
 
-/* Raise a runtime error that respects try/catch/finally.
- * If a try handler is active in the current frame, control jumps to it
- * with an error string pushed on the stack. Otherwise, prints the error
- * (annotated with location) and terminates execution. */
+/**
+ * @brief Raise a runtime error honoring active try/catch/finally handlers.
+ * If a try handler is active in the current frame, control jumps to it with
+ * an error string pushed on the stack. Otherwise, prints the error (with
+ * location) and terminates execution.
+ * @param vm VM instance.
+ * @param msg Null-terminated error message.
+ */
 void vm_raise_error(VM *vm, const char *msg);
 
 /* --- Debugger API --- */
+/** Reset debugger state (clear step mode and breakpoints). */
 void vm_debug_reset(VM *vm);
-int vm_debug_add_breakpoint(VM *vm, const char *file, int line); // returns id >=0 or -1
-int vm_debug_delete_breakpoint(VM *vm, int id);                  // returns 1 on success
+/** Add a breakpoint at file:line; returns non-negative id on success or -1. */
+int vm_debug_add_breakpoint(VM *vm, const char *file, int line);
+/** Delete a breakpoint by id; returns 1 on success, 0 on failure. */
+int vm_debug_delete_breakpoint(VM *vm, int id);
+/** Remove all breakpoints. */
 void vm_debug_clear_breakpoints(VM *vm);
+/** Print the current list of breakpoints to stdout. */
 void vm_debug_list_breakpoints(VM *vm);
+/** Request single-step execution mode. */
 void vm_debug_request_step(VM *vm);
+/** Step over (next) within the current frame. */
 void vm_debug_request_next(VM *vm);
+/** Run until the current frame returns (finish). */
 void vm_debug_request_finish(VM *vm);
+/** Continue execution until next breakpoint/stop. */
 void vm_debug_request_continue(VM *vm);
 
+/**
+ * @brief Check whether an integer value corresponds to a defined opcode.
+ * @param op Numeric opcode to validate.
+ * @return 1 if valid, 0 otherwise.
+ */
 static inline int opcode_is_valid(int op) {
   return op >= OP_NOP && op <= OP_CPP_ADD; // all current opcodes
 }
 
 /* --- Minimal C ABI helpers for FFI (Rust opcode experiments) --- */
-/* Pop an int64 from VM stack (errors if not an int/float); returns integer-converted value. */
+/** Pop an int64 from the VM stack; accepts int/float; returns truncated value. */
 int64_t vm_pop_i64(VM *vm);
-/* Push an int64 onto VM stack. */
+/** Push an int64 onto the VM stack. */
 void vm_push_i64(VM *vm, int64_t v);
 
-/* Example Rust-implemented opcode (adds top two ints on stack) */
+/** Example Rust-implemented opcode (adds top two ints on stack). */
 int fun_op_radd(VM *vm);
 
-/* Example Rust function returning a demo C string (null-terminated). */
+/** Return a demo null-terminated C string owned by Rust. */
 const char *fun_rust_get_string(void);
-/* Rust function that prints a passed C string, returns 0 on success. */
+/** Print a C string via Rust; returns 0 on success. */
 int fun_rust_print_string(const char *msg);
-/* Rust function that returns a newly allocated duplicate of the input C string. */
+/** Return a newly allocated duplicate of the input C string (caller frees). */
 char *fun_rust_echo_string(const char *input);
-/* Free a C string previously returned by fun_rust_echo_string. */
+/** Free a C string previously returned by fun_rust_echo_string(). */
 void fun_rust_string_free(char *ptr);
 
-/* C++ demo opcode entry point (C ABI) */
+/** C++ demo opcode entry point (C ABI). */
 int fun_op_cpp_add(struct VM *vm);
 
 /* --- Extended C ABI for Rust to access VM internals (unsafe) --- */
-/* Size helpers for Rust side to compute offsets and do pointer math */
+/** Size of struct VM in bytes. */
 size_t vm_sizeof(void);
+/** Size of struct Value in bytes. */
 size_t vm_value_sizeof(void);
 
-/* Get a mutable byte pointer to the VM object. Extremely unsafe; intended for
- * low-level FFI where Rust wants parity access with C code. */
+/**
+ * @brief Get a mutable byte pointer to the VM object.
+ * Extremely unsafe; for low-level FFI use only.
+ */
 void *vm_as_mut_ptr(VM *vm);
 
-/* Offsets of commonly accessed VM fields to avoid re-declaring the struct layout in Rust */
+/** Offsets of commonly accessed VM fields (for Rust FFI). */
 size_t vm_offset_of_exit_code(void);
 size_t vm_offset_of_sp(void);
 size_t vm_offset_of_stack(void);

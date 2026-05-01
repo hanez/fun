@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file thread_join.c
+ * @brief Implements OP_THREAD_JOIN to wait for a spawned thread and get its result.
  *
- * Added: 2025-09-30
+ * Behavior:
+ * - Pops thread id (int); waits for the thread to finish; pushes the result Value produced by the thread.
+ * - If the thread failed or id is invalid, pushes Nil.
+ *
+ * Errors:
+ * - If argument type is wrong, prints an error and pushes Nil.
  */
 
 case OP_THREAD_JOIN: {

@@ -5,8 +5,20 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file thread_common.c
+ * @brief Cross-platform thread helpers and registry used by OP_THREAD_SPAWN/OP_THREAD_JOIN.
  *
- * Added: 2025-09-30
+ * This file provides a tiny cross-platform threading layer (Windows/UNIX) embedded into the
+ * VM translation unit. It exposes utilities used by VM opcodes to spawn a function call in a
+ * background thread and later join it to retrieve the result.
+ *
+ * Notes:
+ * - Thread registry is bounded by FUN_MAX_THREADS; not intended for high concurrency.
+ * - Each task owns its argument Values and transfers ownership of the result to the caller
+ *   on successful join.
  */
 
 /* Cross-platform minimal threading support embedded into vm.c TU */

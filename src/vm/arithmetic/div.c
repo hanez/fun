@@ -9,24 +9,28 @@
 
 /**
  * @file div.c
- * @brief Implements the OP_DIV opcode for integer division in the VM.
+ * @brief Implements the OP_DIV opcode (numeric division) in the VM.
  *
- * This file handles the OP_DIV instruction, which performs integer division
- * on two integer values popped from the stack and pushes the result back onto the stack.
+ * Handles the OP_DIV instruction, dividing two numeric operands and pushing
+ * the result. If either operand is a float, division is performed in double
+ * precision and a VAL_FLOAT is produced; otherwise integer division is
+ * used and a VAL_INT is produced.
  *
  * Behavior:
- * - Pops two integer values from the stack.
- * - Performs integer division (`a / b`).
- * - Pushes the result back onto the stack.
+ * - Pops two values from the stack.
+ * - If any operand is VAL_FLOAT, computes (double)a / (double)b and pushes a VAL_FLOAT.
+ * - Else computes a.i / b.i and pushes a VAL_INT.
  *
  * Error Handling:
- * - Exits with an error if the operands are not integers.
- * - Exits with an error if division by zero is attempted.
+ * - Raises a runtime error and aborts execution if operands are not numeric.
+ * - Raises a runtime error on division by zero (both integer and floating cases).
  *
  * Example:
  * // Bytecode: OP_DIV
  * // Stack before: [10, 2]
  * // Stack after: [5]
+ * // Stack before: [5.0, 2]
+ * // Stack after: [2.5]
  *
  * @author Johannes Findeisen
  * @date 2025-10-16

@@ -5,8 +5,17 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file socket_tcp_listen.c
+ * @brief Implements OP_SOCK_TCP_LISTEN to create a TCP listening socket.
  *
- * Added: 2025-10-04
+ * Behavior:
+ * - Pops port (int); creates a listening socket bound to INADDR_ANY; pushes fd (>0) on success or 0.
+ *
+ * Errors:
+ * - On wrong type or OS errors, prints an error and pushes 0. Non-UNIX platforms return 0.
  */
 
 case OP_SOCK_TCP_LISTEN: {

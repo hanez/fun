@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file proc_run.c
+ * @brief Implements OP_PROC_RUN to execute a shell command and capture stdout.
  *
- * Added: 2025-10-02
+ * Behavior:
+ * - Pops command (string); runs it via the platform shell; pushes a map {"out": string, "code": int}.
+ * - "code" is the process exit status if available, otherwise -1.
+ *
+ * Errors:
+ * - On allocation failures or popen errors, returns {out: "", code: -1}.
  */
 
 #include <stdio.h>

@@ -5,8 +5,18 @@
  * Copyright 2025 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
+ */
+
+/**
+ * @file serial_recv.c
+ * @brief Implements OP_SERIAL_RECV to read bytes from a serial port.
  *
- * Added: 2025-12-28
+ * Behavior:
+ * - Pops max_len (int) and fd (int); reads up to max_len bytes; pushes a string with received data (possibly empty).
+ * - Only supported on UNIX-like systems; other platforms push empty string.
+ *
+ * Errors:
+ * - On wrong types, prints an error and pushes empty string.
  */
 
 #ifdef __unix__

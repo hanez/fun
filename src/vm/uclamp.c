@@ -7,6 +7,19 @@
  * https://opensource.org/license/apache-2-0
  */
 
+/**
+ * @file uclamp.c
+ * @brief Implements the OP_UCLAMP opcode for unsigned N-bit wrapping.
+ *
+ * This VM opcode masks an integer to the lower N bits (N taken from the
+ * instruction operand), effectively performing an unsigned wrap-around into
+ * the range [0 .. 2^N - 1].
+ *
+ * Stack contract:
+ * - Pops: value (int)
+ * - Pushes: value (int)
+ */
+
 case OP_UCLAMP: {
   /* Unsigned wrap to N bits: mask lower N bits (operand = bits) */
   Value v = pop_value(vm);

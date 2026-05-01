@@ -5,13 +5,23 @@
  * Copyright 2026 Johannes Findeisen <you@hanez.org>
  * Licensed under the terms of the Apache-2.0 license.
  * https://opensource.org/license/apache-2-0
- *
- * Added: 2026-01-03
  */
 
 /**
  * @file log.c
  * @brief Implements the OP_LOG opcode using C99 math.h log() (natural logarithm).
+ *
+ * Behavior:
+ * - Pops one numeric operand (int or float).
+ * - If x <= 0, pushes NaN to indicate domain error; otherwise pushes ln(x).
+ * - Result type is VAL_FLOAT.
+ *
+ * Stack effect:
+ * - Pop: x
+ * - Push: ln(x) | NaN
+ *
+ * Types:
+ * - Accepts VAL_INT and VAL_FLOAT; errors on others.
  */
 
 #include <math.h>

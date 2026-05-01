@@ -1,3 +1,53 @@
+/**
+ * This file is part of the Fun programming language.
+ * https://fun-lang.xyz/
+ *
+ * Copyright 2025 Johannes Findeisen <you@hanez.org>
+ * Licensed under the terms of the Apache-2.0 license.
+ * https://opensource.org/license/apache-2-0
+ */
+ 
+/**
+ * @file input_line.c
+ * @brief Implements the OP_INPUT_LINE opcode for interactive console input.
+ *
+ * This snippet handles the OP_INPUT_LINE instruction in the VM dispatch. It can
+ * optionally print a prompt (taken from the stack) and can read input in a
+ * hidden mode (terminal echo disabled) suitable for passwords.
+ *
+ * Operand bits (inst.operand):
+ * - bit0 (1): Has prompt. When set, the top of the stack is popped and
+ *             converted to string, printed without a trailing newline.
+ * - bit1 (2): Hidden input. When set, terminal echo is temporarily disabled
+ *             while reading the line (best-effort, platform dependent).
+ *
+ * Stack effects:
+ * - If bit0 is set: pop(prompt)
+ * - Always: push(result_string)
+ *
+ * Behavior:
+ * - Converts an optional prompt Value to string using value_to_string_alloc,
+ *   prints it to stdout without a newline, and flushes the stream.
+ * - If hidden is requested, disables terminal echo (POSIX termios or Win32
+ *   console modes) before reading.
+ * - Reads a single line from stdin, accepting both "\n" and "\r\n" endings.
+ * - Restores terminal echo if it was disabled and, when a prompt was printed,
+ *   emits a newline for a better UX.
+ * - Pushes the captured line as a Fun string (never NULL; empty string on
+ *   failure or EOF).
+ *
+ * Errors and corner cases:
+ * - Memory allocation failures are reported to stderr; an empty string is
+ *   pushed in such cases to keep execution flowing.
+ * - If echo toggling fails, input still proceeds with echo enabled.
+ * - EOF before any character yields an empty string.
+ *
+ * Example:
+ *   // Bytecode: [optional PUSH prompt], OP_INPUT_LINE(operand)
+ *   // operand bit0=1 (has prompt), bit1=2 (hidden) can be combined
+ *   // Stack before (bit0=1): ["Enter password: "]
+ *   // Stack after: ["user-typed-line"]
+ */
 case OP_INPUT_LINE: {
   /* operand bit flags:
    *  bit0 (1): has prompt (string or any value convertible to string) — top of stack holds prompt when set

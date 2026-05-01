@@ -11,6 +11,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * @file bytecode.c
+ * @brief Bytecode container utilities: creation, mutation, dump helpers.
+ */
+
+/**
+ * @brief Allocate and initialize an empty Bytecode object.
+ *
+ * Initializes instruction and constant arrays to empty and clears metadata.
+ * Caller owns the returned pointer and must free it with bytecode_free().
+ *
+ * @return Newly allocated Bytecode*, or NULL on allocation failure.
+ */
 Bytecode *bytecode_new(void) {
   Bytecode *bc = (Bytecode *)malloc(sizeof(Bytecode));
   bc->instructions = NULL;
@@ -22,12 +35,30 @@ Bytecode *bytecode_new(void) {
   return bc;
 }
 
+/**
+ * @brief Append a constant to a Bytecode's constant table.
+ *
+ * The value is deep-copied into the table; the caller retains ownership of v
+ * and may free it independently.
+ *
+ * @param bc Target bytecode (must not be NULL).
+ * @param v  Value to store (copied).
+ * @return The index of the stored constant (zero-based).
+ */
 int bytecode_add_constant(Bytecode *bc, Value v) {
   bc->constants = (Value *)realloc(bc->constants, sizeof(Value) * (bc->const_count + 1));
   bc->constants[bc->const_count] = copy_value(&v);
   return bc->const_count++;
 }
 
+/**
+ * @brief Append a single instruction to the instruction stream.
+ *
+ * @param bc      Target bytecode (must not be NULL).
+ * @param op      Opcode to emit.
+ * @param operand Operand value (semantics depend on opcode).
+ * @return The index of the emitted instruction (zero-based).
+ */
 int bytecode_add_instruction(Bytecode *bc, OpCode op, int32_t operand) {
   bc->instructions = (Instruction *)realloc(bc->instructions, sizeof(Instruction) * (bc->instr_count + 1));
   bc->instructions[bc->instr_count].op = op;
@@ -35,12 +66,29 @@ int bytecode_add_instruction(Bytecode *bc, OpCode op, int32_t operand) {
   return bc->instr_count++;
 }
 
+/**
+ * @brief Patch the operand of a previously emitted instruction.
+ *
+ * Silently ignores out-of-bounds indices.
+ *
+ * @param bc      Target bytecode.
+ * @param idx     Instruction index to patch.
+ * @param operand New operand value.
+ */
 void bytecode_set_operand(Bytecode *bc, int idx, int32_t operand) {
   if (idx >= 0 && idx < bc->instr_count) {
     bc->instructions[idx].operand = operand;
   }
 }
 
+/**
+ * @brief Free a Bytecode and all memory it owns.
+ *
+ * Frees constants (deep), instruction array, and metadata strings.
+ * Accepts NULL and is then a no-op.
+ *
+ * @param bc Bytecode to free (may be NULL).
+ */
 void bytecode_free(Bytecode *bc) {
   if (!bc) return;
   for (int i = 0; i < bc->const_count; ++i) {
@@ -53,6 +101,12 @@ void bytecode_free(Bytecode *bc) {
   free(bc);
 }
 
+/**
+ * @brief Convert an opcode enum to a short mnemonic string.
+ *
+ * @param op Opcode value.
+ * @return Read-only C string with the mnemonic, or "???" if unknown.
+ */
 static const char *opcode_name(OpCode op) {
   switch (op) {
   case OP_NOP:
@@ -358,6 +412,14 @@ static const char *opcode_name(OpCode op) {
   }
 }
 
+/**
+ * @brief Print a human-readable dump of constants and instructions to stdout.
+ *
+ * Intended for debugging and tests. Formats constants with print_value()
+ * and shows each instruction index, mnemonic and operand.
+ *
+ * @param bc Bytecode to dump (prints "<null bytecode>" if NULL).
+ */
 void bytecode_dump(const Bytecode *bc) {
   if (!bc) {
     printf("<null bytecode>\n");
