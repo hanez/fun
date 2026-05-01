@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -28,9 +28,6 @@
  * // Bytecode: OP_MAKE_MAP 2
  * // Stack before: ["key1", 1, "key2", 2]
  * // Stack after: [{"key1": 1, "key2": 2}]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_MAKE_MAP: {

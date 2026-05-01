@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -26,9 +26,6 @@
  * // Bytecode: OP_WRITE_FILE
  * // Stack before: ["file.txt", "data"]
  * // Stack after: [1]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_WRITE_FILE: {

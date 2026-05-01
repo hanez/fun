@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -22,9 +22,6 @@
  * - Loops
  * - Function returns
  * - Conditional control flow
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_JUMP: {

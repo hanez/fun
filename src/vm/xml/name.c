@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * @file
+ * @file name.c
  * @brief VM opcode snippet for XML node name retrieval.
  *
  * This file is included into the main VM dispatch switch in vm.c and

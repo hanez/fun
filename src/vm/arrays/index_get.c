@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -28,9 +28,6 @@
  * // Bytecode: OP_INDEX_GET
  * // Stack before: [1, [10, 20, 30]]
  * // Stack after: [20]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_INDEX_GET: {

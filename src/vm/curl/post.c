@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -21,6 +21,10 @@
  * - Pops: body:string, url:string (values are converted via value_to_string_alloc)
  * - Pushes: body:string (server response; "" on error or when CURL is disabled)
  *
+ * Pops the POST body and URL, performs an HTTP POST, and pushes the
+ * response as a string. Without FUN_WITH_CURL, consumes two values and
+ * pushes an empty string.
+ * 
  * Error handling:
  * - If URL conversion fails, the opcode pushes an empty string and discards
  *   any converted body.
@@ -31,13 +35,7 @@
  * - Uses FunCurlBuf and fun_curl_write_cb from the curl extension helpers.
  * - All temporary allocations (URL, body, response buffer) are freed.
  */
-/**
- * @brief Opcode handler for OP_CURL_POST.
- *
- * Pops the POST body and URL, performs an HTTP POST, and pushes the
- * response as a string. Without FUN_WITH_CURL, consumes two values and
- * pushes an empty string.
- */
+
 case OP_CURL_POST: {
 #ifdef FUN_WITH_CURL
   Value vbody = pop_value(vm);

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -23,6 +23,7 @@
  * - iniparser 4.2.6 dictionary_unset() returns void; we assume success when
  *   called with valid parameters.
  */
+
 /* OP_INI_UNSET */
 #ifdef FUN_WITH_INI
 case OP_INI_UNSET: {

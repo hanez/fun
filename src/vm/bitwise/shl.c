@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -9,15 +9,11 @@
 
 /**
  * @file shl.c
- * @brief Implements the OP_SHL opcode (logical left shift).
+ * @brief Implements the OP_SHL opcode logical left shift (uint32).
  *
  * Opcode snippet included by vm.c. Performs a 32-bit unsigned logical left
  * shift of an integer operand by a masked shift count.
- */
-
-/**
- * OP_SHL: logical left shift (uint32)
- *
+ * 
  * Stack effects:
  *  - pops: s, a
  *  - pushes: (uint32_t)(a << (s & 31))
@@ -27,6 +23,7 @@
  *  - The shift count is masked to 0..31. A zero shift returns a unchanged.
  *  - Result is pushed as VAL_INT with the 32-bit value preserved in the low bits.
  */
+
 case OP_SHL: {
   Value vs = pop_value(vm);
   Value va = pop_value(vm);

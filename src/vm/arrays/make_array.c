@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -27,9 +27,6 @@
  * // Bytecode: OP_MAKE_ARRAY 3
  * // Stack before: [1, 2, 3]
  * // Stack after: [[1, 2, 3]]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_MAKE_ARRAY: {

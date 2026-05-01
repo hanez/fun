@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -22,6 +22,7 @@
  * Errors
  * - Invalid handle/args produce the default; no VM exception is raised.
  */
+
 /* OP_INI_GET_INT */
 #ifdef FUN_WITH_INI
 case OP_INI_GET_INT: {

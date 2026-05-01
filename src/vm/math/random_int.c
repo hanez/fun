@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -28,9 +28,6 @@
  * // Bytecode: OP_RANDOM_INT
  * // Stack before: [10, 1]
  * // Stack after: [7]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_RANDOM_INT: {

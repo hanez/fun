@@ -11,6 +11,7 @@
  * @file handles.h
  * @brief INI handle registry for iniparser 4.2.6 used by INI VM opcodes.
  */
+
 #pragma once
 
 #ifdef FUN_WITH_INI

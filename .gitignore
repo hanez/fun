@@ -1,10 +1,12 @@
 CMakeCache.txt
+Doxyfile
 .*
 !.editorconfig
 !.gitignore
 !.github
 !.gitkeep
 .venv
+api/
 build/*
 build_debug/*
 build_release/*
@@ -23,4 +25,5 @@ src/rust/target
 tmp*
 web/_cache/*
 web/_site/*
+web/api/
 web/Gemfile.lock

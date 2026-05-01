@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -26,9 +26,6 @@
  * // Bytecode: OP_ENUMERATE
  * // Stack before: [[10, 20, 30]]
  * // Stack after: [[[0, 10], [1, 20], [2, 30]]]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_ENUMERATE: {

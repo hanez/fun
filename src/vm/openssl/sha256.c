@@ -8,8 +8,24 @@
  */
 
 /**
- * OpenSSL SHA-256 builtin
+ * @file sha256.c
+ * @brief Implements OP_OPENSSL_SHA256 to compute a SHA-256 hash in hex.
+ *
+ * Behavior:
+ * - Pops one value from the VM stack and converts it to bytes by first
+ *   producing its string form with value_to_string_alloc().
+ * - Computes the SHA-256 digest via fun_openssl_sha256_hex() and pushes the
+ *   lowercase hexadecimal string.
+ * - On allocation or hashing failure, pushes an empty string ("").
+ *
+ * Notes:
+ * - Non-string inputs are allowed; values are stringified first.
+ * - Snippet is included by vm.c and executed for OP_OPENSSL_SHA256.
+ *
+ * Errors:
+ * - No hard VM error is raised; failures push an empty string.
  */
+
 case OP_OPENSSL_SHA256: {
   Value vdata = pop_value(vm);
   char *s = value_to_string_alloc(&vdata);

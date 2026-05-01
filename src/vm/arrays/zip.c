@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -27,9 +27,6 @@
  * // Bytecode: OP_ZIP
  * // Stack before: [[1,2], ['a','b']]
  * // Stack after: [[[1,'a'], [2,'b']]]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_ZIP: {

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -26,9 +26,6 @@
  * // Bytecode: OP_AND
  * // Stack before: [1, 0]
  * // Stack after: [0]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_AND: {

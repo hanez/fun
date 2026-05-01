@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -20,9 +20,6 @@
  *
  * Error Handling:
  * - Exits if stack underflow
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_SWAP: {

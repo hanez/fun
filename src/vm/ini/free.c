@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -29,6 +29,7 @@
  * See also
  * - ini_alloc_handle(), ini_free_handle() in src/vm/ini/handles.c
  */
+
 /* OP_INI_FREE: pops handle; pushes 1/0 */
 #ifdef FUN_WITH_INI
 case OP_INI_FREE: {

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -25,9 +25,6 @@
  * // Bytecode: OP_LOAD_GLOBAL 0
  * // Stack before: []
  * // Stack after: [global_value]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_LOAD_GLOBAL: {

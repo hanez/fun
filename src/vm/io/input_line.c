@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -48,6 +48,7 @@
  *   // Stack before (bit0=1): ["Enter password: "]
  *   // Stack after: ["user-typed-line"]
  */
+
 case OP_INPUT_LINE: {
   /* operand bit flags:
    *  bit0 (1): has prompt (string or any value convertible to string) — top of stack holds prompt when set

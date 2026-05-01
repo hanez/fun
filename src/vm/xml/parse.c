@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * @file
+ * @file parse.c
  * @brief VM opcode snippet for parsing XML text into a document handle.
  *
  * This snippet is included by vm.c and implements OP_XML_PARSE.

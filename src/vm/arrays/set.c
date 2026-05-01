@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -28,9 +28,6 @@
  * // Bytecode: OP_SET
  * // Stack before: [42, 1, [10, 20, 30]]
  * // Stack after: [42]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_SET: {

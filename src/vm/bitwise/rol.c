@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -9,15 +9,11 @@
 
 /**
  * @file rol.c
- * @brief Implements the OP_ROTL opcode (rotate-left).
+ * @brief Implements the OP_ROTL opcode rotate-left (uint32).
  *
  * Opcode snippet included by vm.c. Performs a 32-bit unsigned rotate-left of
  * an integer operand by a masked rotation count.
- */
-
-/**
- * OP_ROTL: rotate left (uint32)
- *
+ * 
  * Stack effects:
  *  - pops: s, a
  *  - pushes: (a << s) | (a >> (32 - s)), with s masked to 0..31
@@ -27,6 +23,7 @@
  *  - The rotation count is masked to 0..31. A zero rotation returns a unchanged.
  *  - Result is pushed as VAL_INT with the 32-bit value preserved in the low bits.
  */
+
 case OP_ROTL: {
   Value vs = pop_value(vm);
   Value va = pop_value(vm);

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -27,9 +27,6 @@
  * // Bytecode: OP_GT
  * // Stack before: [42, 10]
  * // Stack after: [1]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_GT: {

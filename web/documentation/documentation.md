@@ -21,6 +21,7 @@ This file serves as an index of the documents in this directory. Links are relat
 
 - [Handbook](./handbook/) - Comprehensive handbook for the Fun language and VM: install/build, configuration flags, usage, and full feature overview.
 - [REPL](./repl/) - REPL user guide: how to build/launch, editing and history, completions, REPL-on-error, and tips.
+- [API](../api/) - API documentation for the Fun language and VM.
 - Specification
   - [v0.4](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.4/){:class="git"}
   - [v0.3](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3/){:class="git"}

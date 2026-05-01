@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -22,9 +22,6 @@
  * Error Handling:
  * - Exits with error if not enough args
  * - Exits if function isn't callable
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_CALL: {

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -9,25 +9,22 @@
 
  /**
   * @file band.c
-  * @brief Implements the OP_BAND opcode (bitwise AND).
+  * @brief Implements the OP_BAND opcode bitwise AND (uint32).
   *
   * Opcode snippet included by vm.c. Performs a 32-bit unsigned bitwise AND
   * on two integer operands from the VM stack.
+  * 
+  * Stack effects:
+  *  - pops: b, a
+  *  - pushes: (uint32_t)(a & b)
+  *
+  * Notes:
+  *  - Operands are interpreted as 32-bit unsigned when of type VAL_INT;
+  *    non-integer values are treated as 0.
+  *  - The result is pushed as VAL_INT with the 32-bit value preserved in the
+  *    low bits.
   */
 
-/**
- * OP_BAND: bitwise AND (uint32)
- *
- * Stack effects:
- *  - pops: b, a
- *  - pushes: (uint32_t)(a & b)
- *
- * Notes:
- *  - Operands are interpreted as 32-bit unsigned when of type VAL_INT;
- *    non-integer values are treated as 0.
- *  - The result is pushed as VAL_INT with the 32-bit value preserved in the
- *    low bits.
- */
 case OP_BAND: {
   Value vb = pop_value(vm);
   Value va = pop_value(vm);

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -19,6 +19,11 @@
  * - Pops: path:string, url:string (values are converted via value_to_string_alloc)
  * - Pushes: int (1 on success, 0 on error or when CURL is disabled)
  *
+ * Pops a destination path and URL, streams the HTTP response body
+ * into the file, and pushes 1 on success or 0 on any error. Without
+ * FUN_WITH_CURL, behaves as a no-op that consumes two values and
+ * pushes 0.
+ * 
  * Error handling:
  * - Returns 0 if URL/path conversion fails, file open fails, CURL init
  *   or perform fails.
@@ -29,14 +34,7 @@
  * - All temporary allocations (URL, path) are freed; FILE* is closed.
  * - On builds without FUN_WITH_CURL, consumes two values and pushes 0.
  */
-/**
- * @brief Opcode handler for OP_CURL_DOWNLOAD.
- *
- * Pops a destination path and URL, streams the HTTP response body
- * into the file, and pushes 1 on success or 0 on any error. Without
- * FUN_WITH_CURL, behaves as a no-op that consumes two values and
- * pushes 0.
- */
+
 case OP_CURL_DOWNLOAD: {
 #ifdef FUN_WITH_CURL
   Value vpath = pop_value(vm);

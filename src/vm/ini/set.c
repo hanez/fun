@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -23,6 +23,7 @@
  * Errors
  * - No VM exception is thrown; failures return 0.
  */
+
 /* OP_INI_SET */
 #ifdef FUN_WITH_INI
 case OP_INI_SET: {

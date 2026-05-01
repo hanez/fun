@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -27,9 +27,6 @@
  * // Bytecode: OP_SLICE
  * // Stack before: [3, 1, [10,20,30,40]]
  * // Stack after: [[20,30]]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_SLICE: {

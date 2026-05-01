@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -23,9 +23,6 @@
  * - If statements
  * - While loops
  * - Logical expressions
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_JUMP_IF_FALSE: {

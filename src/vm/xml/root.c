@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -8,7 +8,7 @@
  */
 
 /**
- * @file
+ * @file root.c
  * @brief VM opcode snippet for retrieving the root node of an XML document.
  *
  * Included by vm.c; implements OP_XML_ROOT.

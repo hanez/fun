@@ -3,6 +3,8 @@ all:
 
 build:
 	bundle exec jekyll b --incremental
+	rm -rf _site/api
+	cp -Rv ../api/html ./_site/api
 
 clean:
 	rm -rf _site/*

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -26,9 +26,6 @@
  * // Bytecode: OP_KEYS
  * // Stack before: [{"a": 1, "b": 2}]
  * // Stack after: [["a", "b"]]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_KEYS: {

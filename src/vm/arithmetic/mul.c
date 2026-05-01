@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -30,9 +30,6 @@
  * // Stack after: [12]
  * // Stack before: [2.5, 4]
  * // Stack after: [10.0]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_MUL: {

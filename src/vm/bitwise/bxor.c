@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -9,15 +9,11 @@
 
 /**
  * @file bxor.c
- * @brief Implements the OP_BXOR opcode (bitwise XOR).
+ * @brief Implements the OP_BXOR opcode bitwise XOR (uint32).
  *
  * This file is an opcode snippet included by vm.c. It implements a
  * 32-bit unsigned bitwise XOR of two integer operands from the VM stack.
- */
-
-/**
- * OP_BXOR: bitwise XOR (uint32)
- *
+ * 
  * Stack effects:
  *  - pops: b, a
  *  - pushes: (uint32_t)(a ^ b)
@@ -28,6 +24,7 @@
  *  - Result is pushed back as VAL_INT, preserving 32-bit value in the
  *    low bits of the 64-bit integer storage.
  */
+
 case OP_BXOR: {
   Value vb = pop_value(vm);
   Value va = pop_value(vm);

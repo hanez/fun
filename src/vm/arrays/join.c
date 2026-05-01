@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -27,9 +27,6 @@
  * // Bytecode: OP_JOIN
  * // Stack before: [", ", ["a", "b", "c"]]
  * // Stack after: ["a, b, c"]
- *
- * @author Johannes Findeisen
- * @date 2025-10-16
  */
 
 case OP_JOIN: {

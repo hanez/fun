@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -23,6 +23,7 @@
  * - The returned handle must later be released with OP_INI_FREE to avoid
  *   leaking dictionary objects.
  */
+
 /* OP_INI_LOAD: pops path string; pushes handle (>0) or 0 */
 #ifdef FUN_WITH_INI
 case OP_INI_LOAD: {

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -9,25 +9,22 @@
 
  /**
   * @file bnot.c
-  * @brief Implements the OP_BNOT opcode (bitwise NOT).
+  * @brief Implements the OP_BNOT opcode bitwise NOT (uint32).
   *
   * Opcode snippet included by vm.c. Performs a 32-bit unsigned bitwise NOT
   * on a single integer operand from the VM stack.
+  *
+  * Stack effects:
+  *  - pops: a
+  *  - pushes: (uint32_t)(~a)
+  *
+  * Notes:
+  *  - Operand is interpreted as 32-bit unsigned when of type VAL_INT;
+  *    non-integer values are treated as 0.
+  *  - The result is pushed as VAL_INT with the 32-bit value preserved in the
+  *    low bits.
   */
 
-/**
- * OP_BNOT: bitwise NOT (uint32)
- *
- * Stack effects:
- *  - pops: a
- *  - pushes: (uint32_t)(~a)
- *
- * Notes:
- *  - Operand is interpreted as 32-bit unsigned when of type VAL_INT;
- *    non-integer values are treated as 0.
- *  - The result is pushed as VAL_INT with the 32-bit value preserved in the
- *    low bits.
- */
 case OP_BNOT: {
   Value va = pop_value(vm);
   uint32_t a = (va.type == VAL_INT) ? (uint32_t)va.i : 0u;

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -22,6 +22,7 @@
  * Errors
  * - Failing fopen() or invalid handle simply return 0; no exception is thrown.
  */
+
 /* OP_INI_SAVE */
 #ifdef FUN_WITH_INI
 case OP_INI_SAVE: {

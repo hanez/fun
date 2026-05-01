@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of the Fun programming language.
  * https://fun-lang.xyz/
  *
@@ -9,15 +9,11 @@
 
 /**
  * @file shr.c
- * @brief Implements the OP_SHR opcode (logical right shift).
+ * @brief Implements the OP_SHR opcode logical right shift (uint32).
  *
  * Opcode snippet included by vm.c. Performs a 32-bit unsigned logical right
  * shift of an integer operand by a masked shift count.
- */
-
-/**
- * OP_SHR: logical right shift (uint32)
- *
+ * 
  * Stack effects:
  *  - pops: s, a
  *  - pushes: (uint32_t)(a >> (s & 31))
@@ -28,6 +24,7 @@
  *  - Logical (zero-filling) right shift is used (no sign extend).
  *  - Result is pushed as VAL_INT with the 32-bit value preserved in the low bits.
  */
+
 case OP_SHR: {
   Value vs = pop_value(vm);
   Value va = pop_value(vm);
