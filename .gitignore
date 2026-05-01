@@ -1,6 +1,8 @@
 CMakeCache.txt
 Doxyfile
 .*
+!.clang-format
+!.clang-tidy
 !.editorconfig
 !.gitignore
 !.github
