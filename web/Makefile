@@ -3,8 +3,6 @@ all:
 
 build:
 	bundle exec jekyll b --incremental
-	rm -rf _site/api
-	cp -Rv ../api/html ./_site/api
 
 clean:
 	rm -rf _site/*
@@ -69,6 +67,7 @@ runreload:
 
 sync:
 	rsync -avr --delete --delete-excluded ./_site/ fun-lang.xyz:/var/www/fun-lang.xyz/www/htdocs/
+	rsync -avr --delete --delete-excluded ../api/html/ fun-lang.xyz:/var/www/fun-lang.xyz/api/htdocs/
 	#ssh a.xw3.org 'cd /var/www/fun-lang.xyz/www/lib/ && git pull'
 	#ssh a.xw3.org 'cd /var/www/fun-lang.xyz/www/htdocs/cgi/bin/ && gcc index.c -o index'
 

@@ -14,9 +14,9 @@ include(${CMAKE_SOURCE_DIR}/cmake/Targets.cmake)
 # --- Always show key build toggles ---
 # Normalize to ENABLED/DISABLED like the "Fun extension summary"
 if(FUN_DEBUG)
-    set(_FUN_DEBUG_STATE "ENABLED")
+  set(_FUN_DEBUG_STATE "ENABLED")
 else()
-    set(_FUN_DEBUG_STATE "DISABLED")
+  set(_FUN_DEBUG_STATE "DISABLED")
 endif()
 
 if(FUN_USE_MUSL)
@@ -38,9 +38,9 @@ else()
 endif()
 
 if(FUN_BUILD_DOCS)
-    set(_FUN_BUILD_DOCS "ENABLED")
+  set(_FUN_BUILD_DOCS "ENABLED")
 else()
-    set(_FUN_BUILD_DOCS "DISABLED")
+  set(_FUN_BUILD_DOCS "DISABLED")
 endif()
 
 message(STATUS "==== Fun build options ====")
