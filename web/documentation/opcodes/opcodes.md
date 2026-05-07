@@ -102,7 +102,7 @@ This document provides an overview of the available VM opcodes implemented under
 ## Bitwise (uint32)
 
 - OP_BAND: Bitwise AND; pops b, a; pushes a & b.
-- OP_BOR: Bitwise OR; pops b, a; pushes a | b.
+- OP_BOR: Bitwise OR; pops b, a; pushes a \| b.
 - OP_BXOR: Bitwise XOR; pops b, a; pushes a ^ b.
 - OP_BNOT: Bitwise NOT; pops a; pushes ~a.
 - OP_SHL: Logical left shift; pops shift, value; pushes value << shift.
@@ -112,7 +112,7 @@ This document provides an overview of the available VM opcodes implemented under
 
 ## Math
 
-- OP_ABS: Absolute value; pops x; pushes |x|.
+- OP_ABS: Absolute value; pops x; pushes \|x\|.
 - OP_CEIL: Ceiling; pops x; pushes ceil(x).
 - OP_FLOOR: Floor; pops x; pushes floor(x).
 - OP_ROUND: Round; pops x; pushes round(x).
