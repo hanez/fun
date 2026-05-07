@@ -16,16 +16,13 @@
  * This unit may be included or compiled conditionally based on build flags.
  */
 
-/* json-c helpers and VM opcode cases (included from vm.c) */
-
 #ifdef FUN_WITH_JSON
-#include "value.h"
-#include "vm.h"
+//#include "value.h"
+//#include "vm.h"
 
 #include <json-c/json.h>
-#include <string.h>
+//#include <string.h>
 
-/* --- Conversion helpers between json-c and Fun Value --- */
 /**
  * @brief Convert a json-c object into a Fun Value.
  *

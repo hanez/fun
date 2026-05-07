@@ -63,17 +63,9 @@
 #include "value.h"
 #include "vm.h"
 
-/* Notcurses support removed */
-
 // Optional by extensions commonly used code. #ifdef's are in each single file.
 #include "extensions/curl.c"
 #include "extensions/ini.c"
-#ifdef FUN_WITH_INI
-/* Central INI handle registry and helpers */
-#include "vm/ini/handles.c"
-#endif
-/* Note: INI opcode handlers are included below; changes in vm/ini/ .c files
- * require vm.c to rebuild. */
 #include "extensions/json.c"
 #include "extensions/openssl.c"
 #include "extensions/pcre2.c"
@@ -1105,11 +1097,6 @@ void vm_run(VM *vm, Bytecode *entry) {
 #include "vm/openssl/sha512.c"
 #endif
 
-
-/* Tcl/Tk support removed */
-
-/* Notcurses TUI ops removed */
-
 /* SQLite ops */
 #ifdef FUN_WITH_SQLITE
 #include "vm/sqlite/close.c"
@@ -1119,7 +1106,7 @@ void vm_run(VM *vm, Bytecode *entry) {
 #endif
 
 /* C++ demo opcodes (guarded) */
-#if defined(FUN_WITH_CPP)
+#ifdef FUN_WITH_CPP
     case OP_CPP_ADD: {
       int rc = fun_op_cpp_add(vm);
       if (rc != 0) {
@@ -1133,8 +1120,6 @@ void vm_run(VM *vm, Bytecode *entry) {
       break;
     }
 #endif
-
-/* libsql support removed */
 
 /* PCRE2 ops */
 #ifdef FUN_WITH_PCRE2
