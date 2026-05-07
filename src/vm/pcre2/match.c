@@ -58,58 +58,7 @@ case OP_PCRE2_MATCH: {
     push_value(vm, make_nil());
     break;
   }
-#ifndef PCRE2_CODE_UNIT_WIDTH
-#define PCRE2_CODE_UNIT_WIDTH 8
-#endif
-#include <pcre2.h>
-  int errorcode;
-  PCRE2_SIZE erroff;
-  uint32_t opt = 0;
-  if (flags & 1) opt |= PCRE2_CASELESS;  /* I */
-  if (flags & 2) opt |= PCRE2_MULTILINE; /* M */
-  if (flags & 4) opt |= PCRE2_DOTALL;    /* S */
-  if (flags & 8) opt |= PCRE2_UTF;       /* U */
-  if (flags & 16) opt |= PCRE2_EXTENDED; /* X */
-  pcre2_code *re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, opt, &errorcode, &erroff, NULL);
-  if (!re) {
-    free(pattern);
-    free(subject);
-    push_value(vm, make_nil());
-    break;
-  }
-  pcre2_match_data *mdata = pcre2_match_data_create_from_pattern(re, NULL);
-  int rc = pcre2_match(re, (PCRE2_SPTR)subject, (PCRE2_SIZE)strlen(subject), 0, 0, mdata, NULL);
-  if (rc <= 0) {
-    pcre2_match_data_free(mdata);
-    pcre2_code_free(re);
-    free(pattern);
-    free(subject);
-    push_value(vm, make_nil());
-    break;
-  }
-  PCRE2_SIZE *ov = pcre2_get_ovector_pointer(mdata);
-  /* Build result map */
-  Value res = make_map_empty();
-  int start0 = (int)ov[0];
-  int end0 = (int)ov[1];
-  char *full = string_substr(subject, start0, end0 - start0);
-  (void)map_set(&res, "full", make_string(full ? full : ""));
-  if (full) free(full);
-  (void)map_set(&res, "start", make_int(start0));
-  (void)map_set(&res, "end", make_int(end0));
-  /* groups array (excluding group 0) */
-  Value groups = make_array_from_values(NULL, 0);
-  for (int i = 1; i < rc; ++i) {
-    int s = (int)ov[2 * i];
-    int e = (int)ov[2 * i + 1];
-    char *gstr = (s >= 0 && e >= s) ? string_substr(subject, s, e - s) : NULL;
-    Value gv = make_string(gstr ? gstr : "");
-    if (gstr) free(gstr);
-    (void)array_push(&groups, gv);
-  }
-  (void)map_set(&res, "groups", groups);
-  pcre2_match_data_free(mdata);
-  pcre2_code_free(re);
+  Value res = fun_pcre2_match(pattern, subject, flags);
   free(pattern);
   free(subject);
   push_value(vm, res);

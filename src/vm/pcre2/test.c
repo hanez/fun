@@ -53,32 +53,10 @@ case OP_PCRE2_TEST: {
     push_value(vm, make_int(0));
     break;
   }
-#ifndef PCRE2_CODE_UNIT_WIDTH
-#define PCRE2_CODE_UNIT_WIDTH 8
-#endif
-#include <pcre2.h>
-  int errorcode;
-  PCRE2_SIZE erroff;
-  uint32_t opt = 0;
-  if (flags & 1) opt |= PCRE2_CASELESS;  /* I */
-  if (flags & 2) opt |= PCRE2_MULTILINE; /* M */
-  if (flags & 4) opt |= PCRE2_DOTALL;    /* S */
-  if (flags & 8) opt |= PCRE2_UTF;       /* U */
-  if (flags & 16) opt |= PCRE2_EXTENDED; /* X */
-  pcre2_code *re = pcre2_compile((PCRE2_SPTR)pattern, PCRE2_ZERO_TERMINATED, opt, &errorcode, &erroff, NULL);
-  if (!re) {
-    free(pattern);
-    free(subject);
-    push_value(vm, make_int(0));
-    break;
-  }
-  pcre2_match_data *mdata = pcre2_match_data_create_from_pattern(re, NULL);
-  int rc = pcre2_match(re, (PCRE2_SPTR)subject, (PCRE2_SIZE)strlen(subject), 0, 0, mdata, NULL);
-  pcre2_match_data_free(mdata);
-  pcre2_code_free(re);
+  int rc = fun_pcre2_test(pattern, subject, flags);
   free(pattern);
   free(subject);
-  push_value(vm, make_int(rc >= 0 ? 1 : 0));
+  push_value(vm, make_int(rc));
 #else
   /* pop args and return 0 when PCRE2 disabled */
   Value a = pop_value(vm);

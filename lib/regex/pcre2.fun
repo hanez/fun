@@ -15,14 +15,19 @@
 // Provides a small class with flags and user-friendly methods.
 
 class PCRE2()
+
   fun i(this)
     return 1
+
   fun m(this)
     return 2
+
   fun s(this)
     return 4
+
   fun u(this)
     return 8
+
   fun x(this)
     return 16
 
