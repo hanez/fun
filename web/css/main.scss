@@ -2,6 +2,7 @@
 # Only the main Sass file needs front matter (the dashes are enough)
 ---
 @charset "utf-8";
+@use "sass:color";
 $base-font-family:      "CPS";
 $base-font-size:        16px;
 $small-font-size:       $base-font-size * 0.875;
@@ -16,7 +17,7 @@ $headline-color:        #bc6c21; //#b40000;
 $hover-color:           #bc6c21;
 $topbutton-color:       $headline-color;
 $brand-color:           #6d0076;
-$brand-color-light:     lighten($brand-color, 40%);
+$brand-color-light:     #ed14ff;
 $grey-color:            #828282;
 $grey-color-light:      #e8e8e8;
 $grey-color-dark:       #dbdbdb;

@@ -9,11 +9,47 @@
 
 /**
  * @file json.c
- * @brief JSON extension helpers and VM opcode cases (conditional build).
+ * @brief json-c helpers for Fun VM JSON-related opcodes (conditional build).
  *
- * Provides conversions between json-c objects and the Fun Value type and
- * supplies VM opcode case implementations when FUN_WITH_JSON is enabled.
- * This unit may be included or compiled conditionally based on build flags.
+ * This module centralizes small utilities that convert between json-c objects
+ * and the Fun VM's Value type. Keeping the concrete conversion logic in
+ * src/extensions/ allows VM opcode implementations to remain minimal — they
+ * focus on VM stack marshalling and delegate the heavy lifting here, mirroring
+ * other extensions (PCRE2, SQLite, XML2, INI).
+ *
+ * Build-time feature flag:
+ * - All code in this file is compiled only when FUN_WITH_JSON is enabled. When
+ *   disabled, JSON-related opcodes should provide safe no-op fallbacks in
+ *   their respective VM files.
+ *
+ * Type mapping between json-c and Fun:
+ * - json null        -> Fun Nil
+ * - json boolean     -> Fun Bool
+ * - json number      -> Fun Int (64-bit) or Fun Float (double) depending on
+ *                       the underlying json-c representation
+ * - json string      -> Fun String (assumed UTF-8 from json-c)
+ * - json array       -> Fun Array (elements converted recursively)
+ * - json object      -> Fun Map<string, any> (values converted recursively)
+ *
+ * Ownership and memory:
+ * - The conversion functions allocate new Fun Values and/or new json-c trees.
+ *   The caller owns the returned result and is responsible for releasing it
+ *   (free_value for Fun Values, json_object_put for json-c objects) when no
+ *   longer needed.
+ * - No global state is retained; all allocations are tied to the returned
+ *   objects.
+ *
+ * Encoding and limits:
+ * - json-c strings are treated as UTF-8; the Fun VM strings are expected to be
+ *   UTF-8 as well. No transcoding is performed.
+ * - Deeply nested inputs convert recursively; extremely deep trees may exhaust
+ *   the C stack. Cycles are not possible in well-formed JSON; if presented via
+ *   custom json_object graphs, behaviour is undefined (may loop or duplicate).
+ *
+ * Thread-safety:
+ * - Not intrinsically thread-safe or unsafe. The helpers are stateless; each
+ *   invocation operates on its arguments only. Coordinate external access to
+ *   shared json_object instances if they are mutated concurrently.
  */
 
 #ifdef FUN_WITH_JSON
@@ -24,21 +60,30 @@
 //#include <string.h>
 
 /**
- * @brief Convert a json-c object into a Fun Value.
+ * @brief Convert a json-c object tree into a Fun Value.
  *
- * Maps json-c primitive and compound types to the closest Fun Value
- * representation.
+ * Mapping rules:
  * - null -> Nil
  * - boolean -> Bool
- * - number (int/double) -> Int/Float
- * - string -> String
- * - array -> Array (recursively converted)
- * - object -> Map<string,any> (values recursively converted)
+ * - number (int/double) -> Int/Float (uses json_object_get_int64/json_object_get_double)
+ * - string -> String (assumes UTF-8, no transcoding)
+ * - array -> Array (elements converted recursively, preserving order)
+ * - object -> Map<string, any> (values converted recursively; keys are copied as-is)
  *
- * @param j Pointer to a json_object; may be NULL.
- * @return A Value representing the converted JSON data. Ownership of the
- *         returned Value belongs to the caller and must be freed with
- *         free_value() when no longer needed.
+ * Error handling and ownership:
+ * - If j is NULL, returns Nil.
+ * - The returned Value is newly created and owned by the caller, who must
+ *   dispose it with free_value() when done. Internally allocated temporaries
+ *   are released before returning.
+ *
+ * Notes:
+ * - json-c may store numbers as double even when they look integral; such
+ *   values will end up as Float in Fun.
+ * - Deep or large JSON inputs are traversed recursively; excessive depth could
+ *   lead to stack pressure.
+ *
+ * @param j Pointer to a json_object (may be NULL).
+ * @return Value Converted Value (Nil on NULL input or on unsupported types).
  */
 static Value json_to_fun(json_object *j) {
   if (!j) return make_nil();
@@ -84,14 +129,32 @@ static Value json_to_fun(json_object *j) {
 }
 
 /**
- * @brief Convert a Fun Value into a json-c object.
+ * @brief Convert a Fun Value into a newly allocated json-c object tree.
  *
- * Produces a newly-allocated json_object tree representing the supplied
- * Value. Unsupported Fun types are stringified using a placeholder.
+ * Mapping rules:
+ * - Nil -> json null
+ * - Bool -> json boolean
+ * - Int (64-bit) -> json int64
+ * - Float (double) -> json double
+ * - String -> json string (assumes UTF-8 already)
+ * - Array -> json array (elements converted recursively)
+ * - Map   -> json object (keys are taken from the map's string keys)
  *
- * @param v Pointer to the source Value. Must not be NULL.
- * @return Newly created json_object* on success. The caller owns the
- *         returned object and must release it with json_object_put().
+ * Unsupported or opaque Fun types are stringified using the placeholder
+ * "<unsupported>" to keep the conversion total.
+ *
+ * Ownership:
+ * - The caller owns the returned json_object* and must release it with
+ *   json_object_put() when no longer needed.
+ *
+ * Notes and limitations:
+ * - Map keys are enumerated via map_keys_array(); only string keys are used.
+ *   Non-string keys are ignored.
+ * - json-c does not support NaN/Inf as JSON numbers in a standard way; if such
+ *   values appear in Fun Float, they are forwarded to json-c as-is.
+ *
+ * @param v Pointer to the source Value (must not be NULL).
+ * @return json_object* Newly created tree representing v.
  */
 static json_object *fun_to_json(const Value *v) {
   switch (v->type) {
