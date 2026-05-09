@@ -29,6 +29,7 @@ if [ "$target" = "all" ]; then
       -DFUN_WITH_JSON=ON \
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_CPP=ON \
+      -DFUN_WITH_KCGI=ON \
       -DFUN_WITH_OPENSSL=ON \
     && cmake --build build --target fun
 elif [ "$target" = "all_debug" ]; then

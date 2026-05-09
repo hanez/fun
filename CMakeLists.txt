@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.41.8 LANGUAGES C)
+project(fun VERSION 0.41.9 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -429,6 +429,26 @@ if(BUILD_TESTING)
     )
   else()
     message(WARNING "include_line_mapping_test.fun not found; skipping include_line_mapping CTest")
+  endif()
+
+  # KCGI example smoke test (only when the KCGI extension is enabled)
+  # We run the CGI example with minimal environment to avoid RFC warnings
+  # and assert the body contains the expected greeting.
+  if(FUN_WITH_KCGI)
+    set(_kcgi_example "${CMAKE_SOURCE_DIR}/examples/cgi/hello_kcgi.fun")
+    if(EXISTS "${_kcgi_example}")
+      add_test(NAME kcgi_hello
+        COMMAND $<TARGET_FILE:fun> "${_kcgi_example}"
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      )
+      # Provide standard library path and minimal CGI environment
+      set_tests_properties(kcgi_hello PROPERTIES
+        ENVIRONMENT "FUN_LIB_DIR=${CMAKE_SOURCE_DIR}/lib;REQUEST_METHOD=GET;QUERY_STRING=name=Fun;SERVER_NAME=localhost;SERVER_PORT=80;SCRIPT_NAME=/hello_kcgi.fun;REMOTE_ADDR=127.0.0.1"
+        PASS_REGULAR_EXPRESSION "Hello, Fun!"
+      )
+    else()
+      message(WARNING "KCGI example not found: ${_kcgi_example}; skipping kcgi_hello CTest")
+    endif()
   endif()
 endif()
 

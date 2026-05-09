@@ -42,7 +42,8 @@ foreach(var_pair
     INIPARSER
     LIBSQL
     LIBXML2
-    OPENSSL)
+    OPENSSL
+    KCGI)
   if(${var_pair}_INCLUDE_DIRS)
     target_include_directories(fun_core PRIVATE ${${var_pair}_INCLUDE_DIRS})
   endif()
@@ -91,6 +92,10 @@ endif()
 
 if(FUN_WITH_OPENSSL)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_OPENSSL=1)
+endif()
+
+if(FUN_WITH_KCGI)
+  target_compile_definitions(fun_core PUBLIC FUN_WITH_KCGI=1)
 endif()
 
 # LibreSSL toggle: ensure compile definitions are applied to fun_core so

@@ -47,6 +47,7 @@ This section documents Fun's optional, build-time selectable extensions. Each pa
 - [PCRE2 (Perl-compatible regex)](./pcre2/)
 - [PC/SC (Smart cards)](./pcsc/)
 - [OpenSSL](./openssl/)
+- [kcgi](./kcgi/)
 
 ## Notes:
 

@@ -16,7 +16,6 @@ tags:
 - xml
 ---
 
-
 - CMake option: FUN_WITH_XML2=ON
 - Purpose: Minimal XML parsing helpers using libxml2.
 - Homepage: [http://xmlsoft.org/](http://xmlsoft.org/){:class="ext"}

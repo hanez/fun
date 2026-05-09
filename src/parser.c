@@ -1351,6 +1351,71 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         free(name);
         return 1;
       }
+      /* KCGI intrinsics (optional feature; opcodes are safe no-ops when disabled) */
+      if (strcmp(name, "kcgi_parse") == 0) {
+        (*pos)++; /* '(' */
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "kcgi_parse expects ()");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_KCGI_PARSE, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "kcgi_reply_start") == 0) {
+        (*pos)++; /* '(' */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "kcgi_reply_start expects (code:int, content_type:string)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ',')) {
+          parser_fail(*pos, "kcgi_reply_start expects 2 args");
+          free(name);
+          return 0;
+        }
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "kcgi_reply_start expects (code:int, content_type:string)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after kcgi_reply_start args");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_KCGI_REPLY_START, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "kcgi_write") == 0) {
+        (*pos)++; /* '(' */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "kcgi_write expects (chunk:string)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after kcgi_write arg");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_KCGI_WRITE, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "kcgi_end") == 0) {
+        (*pos)++; /* '(' */
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "kcgi_end expects ()");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_KCGI_END, 0);
+        free(name);
+        return 1;
+      }
       if (strcmp(name, "rust_hello") == 0) {
         (*pos)++; /* '(' */
         if (!consume_char(src, len, pos, ')')) {

@@ -15,7 +15,6 @@ tags:
 - optional
 ---
 
-
 - CMake option: FUN_WITH_JSON=ON
 - Purpose: JSON parse/stringify and file helpers via json-c.
 - Homepage: [https://json-c.github.io/json-c/](https://json-c.github.io/json-c/){:class="ext"}

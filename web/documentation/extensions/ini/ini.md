@@ -16,7 +16,6 @@ tags:
 - optional
 ---
 
-
 - CMake option: FUN_WITH_INI=ON
 - Purpose: Read/write simple INI configuration files.
 - Homepage: [https://github.com/ndevilla/iniparser](https://github.com/ndevilla/iniparser){:class="ext"}

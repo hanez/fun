@@ -88,7 +88,7 @@ See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the stand
 
 ### Optional extensions (build-time selectable / only testing this on Linux actually):
 
-- [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) &#9744;
+- [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) — see [docs](./web/documentation/extensions/kcgi/kcgi.md) &#9745;
 - [cURL (libcurl)](./web/documentation/extensions/curl/curl.md) (optional) &#9745;
 - [INI (iniparser)](./web/documentation/extensions/ini/ini.md) (optional) &#9745;
 - [JSON (json-c)](./web/documentation/extensions/json/json.md) (optional) &#9745;

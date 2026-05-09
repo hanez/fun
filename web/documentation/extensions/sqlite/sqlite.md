@@ -15,7 +15,6 @@ tags:
 - sqlite
 ---
 
-
 - CMake option: FUN_WITH_SQLITE=ON
 - Purpose: Access SQLite databases via the native C API.
 - Homepage: [https://www.sqlite.org/](https://www.sqlite.org/){:class="ext"}

@@ -15,7 +15,6 @@ tags:
 - optional
 ---
 
-
 - CMake option: FUN_WITH_OPENSSL=ON
 - Purpose: provide small crypto helpers backed by OpenSSL. Includes md5, sha256, sha512, ripemd160 helpers.
 - Homepage: [https://www.openssl.org/](https://www.openssl.org/){:class="ext"}

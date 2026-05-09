@@ -143,6 +143,12 @@ typedef enum {
   OP_PROC_SYSTEM,   // pops command string; pushes exit code number
   OP_TIME_NOW_MS,   // pushes current wall-clock time in milliseconds since Unix epoch
   OP_CLOCK_MONO_MS, // pushes monotonic clock in milliseconds (not wall time)
+
+  // kcgi (optional)
+  OP_KCGI_PARSE,       // () -> Map | Nil (parse request via kcgi)
+  OP_KCGI_REPLY_START, // (code:int, content_type:string) -> 1/0
+  OP_KCGI_WRITE,       // (chunk:string) -> 1/0
+  OP_KCGI_END,         // () -> 1/0 (free request)
   OP_DATE_FORMAT,   // pops fmt string, ms epoch (int); pushes formatted date string using strftime
   OP_ENV_ALL,       // pushes map of all environment variables
   OP_FUN_VERSION,   // pushes version string

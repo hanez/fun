@@ -16,7 +16,6 @@ tags:
 - smart
 ---
 
-
 - CMake option: FUN_WITH_PCSC=ON
 - Purpose: Access smart card readers/cards via PC/SC (pcsclite).
 - Homepage: [https://pcsclite.apdu.fr/](https://pcsclite.apdu.fr/){:class="ext"}

@@ -72,6 +72,7 @@
 #include "extensions/pcsc.c"
 #include "extensions/sqlite.c"
 #include "extensions/xml2.c"
+#include "extensions/kcgi.c"
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
@@ -1087,6 +1088,14 @@ void vm_run(VM *vm, Bytecode *entry) {
 #include "vm/curl/download.c"
 #include "vm/curl/get.c"
 #include "vm/curl/post.c"
+#endif
+
+/* KCGI ops */
+#ifdef FUN_WITH_KCGI
+#include "vm/kcgi/parse.c"
+#include "vm/kcgi/reply_start.c"
+#include "vm/kcgi/write.c"
+#include "vm/kcgi/end.c"
 #endif
 
 /* OpenSSL ops (md5/sha256/sha512/ripemd160) */
