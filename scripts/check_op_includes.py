@@ -107,15 +107,21 @@ def parse_includes_from_vm(text: str) -> set[str]:
     def map_token(d: str, n: str) -> str:
         # Directory-specific namespaces
         if d == "curl":
-            return f"CURL_{n.upper()}"
+            if n in {"download", "get", "post"}:
+                return f"CURL_{n.upper()}"
         if d == "openssl":
-            return f"OPENSSL_{n.upper()}"
+            if n in {"md5", "ripemd160", "sha256", "sha512"}:
+                return f"OPENSSL_{n.upper()}"
         if d == "rust":
-            return f"RUST_{n.upper()}"
+            if n in {"get_sp", "hello", "hello_args", "hello_args_return", "set_exit" }:
+                return f"RUST_{n.upper()}"
         if d == "cpp":
             if n == "add":
                 return "CPP_ADD"
             return f"CPP_{n.upper()}"
+        if d == "kcgi":
+            if n in {"end", "parse", "reply_start", "write"}:
+                return f"KCGI_{n.upper()}"
         if d == "ini":
             if n in {"load", "free", "get_string", "get_int", "get_double", "get_bool", "set", "unset", "save"}:
                 return f"INI_{n.upper()}"
