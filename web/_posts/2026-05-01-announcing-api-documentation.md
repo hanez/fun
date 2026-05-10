@@ -8,7 +8,7 @@ noToc: false
 title: Announcing the Fun API Documentation
 description: A new API documentation hub is now available at fun-lang.xyz/api to explore the Fun VM internals and get contributors started faster.
 date: 2026-05-01
-date_updated: 2026-05-06
+date_updated: 2026-05-11
 categories:
 - news
 - docs
@@ -41,7 +41,7 @@ This is actually a work in progress, and we are continuously improving and expan
 
 - New contributors looking for a starting point.
 - Power users exploring advanced capabilities of the Fun VM.
-- Researchers and curious minds wanting to understand implementation details.
+- Researchers and curious minds who want to understand implementation details.
 
 ### How to get involved
 
@@ -50,10 +50,8 @@ This is actually a work in progress, and we are continuously improving and expan
 - Join the discussion: [https://fun-lang.xyz/community/](https://fun-lang.xyz/community/).
 - Reach out directly: [hanez@fun-lang.xyz](mailto:hanez@fun-lang.xyz){:class="mail"}.
 
-This is just the beginning — we will keep iterating on structure, coverage, and examples. If you notice gaps or have suggestions, please let us know.
+This is just the beginning - we will keep iterating on structure, coverage, and examples. If you notice gaps or have suggestions, please let us know.
 
 Happy hacking!
 
-Johannes Findeisen (hanez) — [hanez@fun-lang.xyz](mailto:hanez@fun-lang.xyz){:class="mail"}
-
-UPDATE: The api documentation moved to [https://api.fun-lang.xyz/](https://api.fun-lang.xyz/){:class="ext"}.
+Johannes Findeisen (hanez) - [hanez@fun-lang.xyz](mailto:hanez@fun-lang.xyz){:class="mail"}

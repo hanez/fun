@@ -85,7 +85,7 @@ The Fun VM is now more flexible than ever. Key parameters like `MAX_FRAMES`, `ST
 
 As always, Fun remains an experiment, but with version 0.40.5, we are closer than ever to a stable 1.0. We've focused on cleaning up experimental features that didn't fit our minimalism philosophy while adding the powerful primitives needed for real-world hacking.
 
-Want to try it out? Head over to our [Git Repository](https://git.xw3.org/fun/fun){:class="git"} or check out the updated [Documentation](/documentation/).
+Want to try it out? Head over to our [Git Repository](https://git.xw3.org/fun/fun){:class="git"} or check out the updated [Documentation](https://fun-lang.xyz/documentation/).
 
 Happy hacking, and remember: Fun is Fun!
 

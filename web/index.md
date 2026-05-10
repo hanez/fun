@@ -36,8 +36,7 @@ permalink: /
 {% for post in site.tags.pinned %}
 <article class="post-content">
 <h2><a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a> <span style="cursor:help; float: right;" title="Pinned Post!">📌</span></h2>
-<p class="post-meta">{{ post.date | date: "%b %-d, %Y %H:%M:%S" }} ({{ post.date | date: "%b %-d, %Y %H:%M:%S" | date: "%Z" }})
-{% if post.date_updated %} - Edited: {{ post.date_updated | date: "%b %-d, %Y %H:%M:%S" }} ({{ post.date_updated | date: "%b %-d, %Y %H:%M:%S" | date: "%Z" }}){% endif %}{% if post.author %}, <a href="{{ post.author_url }}" target="_blank" class="user">{{ post.author }}</a>{% endif %}</p>
+<p class="post-meta">{{ post.date | date: "%b %-d, %Y" }}{% if post.date_updated %} - Edited: {{ post.date_updated | date: "%b %-d, %Y" }}{% endif %}{% if post.author %}, <a href="{{ post.author_url }}" target="_blank" class="user">{{ post.author }}</a>{% endif %}</p>
 {{ post.content | truncatewords: site.truncatewords_length }}
 <p style="text-align:right;"><a href="{{ post.url }}" title="{{ post.url }}">[Read post]</a></p>
 </article>
@@ -47,8 +46,7 @@ permalink: /
 {% unless post.tags contains 'pinned' %}
 <article class="post-content">
 <h2><a href="{{ post.url }}" title="{{ post.title }}">{{ post.title }}</a></h2>
-<p class="post-meta">{{ post.date | date: "%b %-d, %Y %H:%M:%S" }} ({{ post.date | date: "%b %-d, %Y %H:%M:%S" | date: "%Z" }})
-{% if post.date_updated %} - Edited: {{ post.date_updated | date: "%b %-d, %Y %H:%M:%S" }} ({{ post.date_updated | date: "%b %-d, %Y %H:%M:%S" | date: "%Z" }}){% endif %}{% if post.author %}, <a href="{{ post.author_url }}" target="_blank" class="user">{{ post.author }}</a>{% endif %}</p>
+<p class="post-meta">{{ post.date | date: "%b %-d, %Y" }}{% if post.date_updated %} - Edited: {{ post.date_updated | date: "%b %-d, %Y" }}{% endif %}{% if post.author %}, <a href="{{ post.author_url }}" target="_blank" class="user">{{ post.author }}</a>{% endif %}</p>
 {{ post.content | truncatewords: site.truncatewords_length }}
 <p style="text-align:right;"><a href="{{ post.url }}" title="{{ post.url }}">[Read post]</a></p>
 </article>

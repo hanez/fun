@@ -18,7 +18,7 @@ tags:
 - jekyll
 ---
 
-We've recently completed a significant change to our project structure: the source code for the [fun-lang.xyz](https://fun-lang.xyz){:class="ext"} website has been moved directly into the root of the main Fun project repository.
+We've recently completed a significant change to our project structure: the source code for the [fun-lang.xyz](https://fun-lang.xyz) website has been moved directly into the root of the main Fun project repository.
 
 ### Why the Move?
 
@@ -34,11 +34,11 @@ Having everything in one place simplifies our development workflow:
 
 You can now find the website source in the `./web/` directory of the repository. It continues to use the [Jekyll](https://jekyllrb.com/){:class="ext"} static site generator.
 
-For those interested in the technical details or looking to contribute to the website, we have added a new documentation file: [/web/documentation/website/](../documentation/website/){:class="git"}. This document covers the technology stack, the directory structure, and the available `Makefile` targets for local development and deployment.
+For those interested in the technical details or looking to contribute to the website, we have added a new documentation file: [/documentation/website/](https://fun-lang.xyz/documentation/website/). This document covers the technology stack, the directory structure, and the available `Makefile` targets for local development and deployment.
 
 ### What changes for you?
 
-For most users, nothing changes! The website remains available at [https://fun-lang.xyz](https://fun-lang.xyz){:class="ext"}. If you are a contributor or following the project closely, you'll just need to look into the `./web/` directory instead of a separate repository.
+For most users, nothing changes! The website remains available at [https://fun-lang.xyz](https://fun-lang.xyz). If you are a contributor or following the project closely, you'll just need to look into the `./web/` directory instead of a separate repository.
 
 Happy hacking!
 

@@ -8,7 +8,7 @@ noToc: false
 title: Announcing Fun 0.37.62
 description: Homepage and Blog
 date: 2026-01-25
-date_updated: 2026-04-11 00:56:03
+date_updated: 2026-05-11
 categories:
 - news
 - project
@@ -32,7 +32,7 @@ Fun is a highly strict yet highly simple programming language that draws inspira
 
 ### Important: This is an Experiment
 
-Please note: Fun is an experimental language and should be treated as such. While Fun works, it has many known and unknown bugs. We will not declare Fun as stable until we reach the 1.0 release. This is a project born out of curiosity and passion for elegant code, not production readiness — at least not yet.
+Please note: Fun is an experimental language and should be treated as such. While Fun works, it has many known and unknown bugs. We will not declare Fun as stable until we reach the 1.0 release. This is a project born out of curiosity and passion for elegant code, not production readiness - at least not yet.
 
 ### What Makes Fun... Fun?
 
@@ -40,12 +40,12 @@ Please note: Fun is an experimental language and should be treated as such. Whil
 
 Fun is built on the idea that coding should be enjoyable, elegant, and consistent. Our manifesto includes core principles like:
 
-- Fun is Fun – Programming should spark creativity, not frustration
-- Fun Uses Nothing – Minimalism is power; no unnecessary features or syntax variations
-- Indentation is Truth – Two spaces, always (no tabs, no debates, no four-space wars)
-- One Way to Do It – No clutter, no 15 ways of writing the same thing. Simplicity means clarity
-- Hackable by Nature – Small and embeddable, like Lua. Easy to understand, extend, and tinker with
-- Beautiful Defaults – A language that doesn't need linters, formatters, or style guides. Beauty is built in
+- Fun is Fun - Programming should spark creativity, not frustration
+- Fun Uses Nothing - Minimalism is power; no unnecessary features or syntax variations
+- Indentation is Truth - Two spaces, always (no tabs, no debates, no four-space wars)
+- One Way to Do It - No clutter, no 15 ways of writing the same thing. Simplicity means clarity
+- Hackable by Nature - Small and embeddable, like Lua. Easy to understand, extend, and tinker with
+- Beautiful Defaults - A language that doesn't need linters, formatters, or style guides. Beauty is built in
 
 ### What's New in Specification v0.3 (and Fun 0.37.62)
 
@@ -115,7 +115,7 @@ print(thread_join(tid))  // 25</pre>
 
 Fun provides a clean, readable syntax with:
 
-- Strict indentation-based structure (2 spaces, no semicolons)
+- Strict indentation-based structure (two spaces, no semicolons)
 - Type safety with no implicit numeric coercions
 - Bounds-checked operations to prevent common errors
 - Higher-order functions: map, filter, reduce for functional programming
@@ -136,33 +136,33 @@ A language that feels like home for developers who love minimal, elegant tools, 
 
 Everybody is welcome to participate! However, before you can get started, you need to contact me at [hanez@fun-lang.org](mailto:hanez@fun-lang.org){:class="mail"} to request an account on our Git server.
 
-Important: Fun is not developed on third-party Git servers like GitHub or GitLab. All Fun infrastructure is self-hosted at git.xw3.org. This keeps us independent and aligned with the hacker spirit of the project — we control our tools, our code, and our community.
+Important: Fun is not developed on third-party Git servers like GitHub or GitLab. All Fun infrastructure is self-hosted at git.xw3.org. This keeps us independent and aligned with the hacker spirit of the project - we control our tools, our code, and our community.
 
 ### Getting Started
 
 If you're curious about Fun, check out:
 
 - [Git Repository](https://git.xw3.org/fun/fun){:class="git"}
-- [Fun Handbook](/documentation/handbook/)
-- [Fun REPL Guide](/documentation/repl/)
-- [Specification v0.3](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.3.md){:class="git"}
+- [Fun Handbook](https://fun-lang.xyz/documentation/handbook/)
+- [Fun REPL Guide](https://fun-lang.xyz/documentation/repl/)
+- [Specification v0.4](https://git.xw3.org/fun/fun/src/branch/main/spec/v0.4.md){:class="git"}
 - [Examples](https://git.xw3.org/fun/fun/src/branch/main/examples){:class="git"}
 - [Standard Library](https://git.xw3.org/fun/fun/src/branch/main/lib){:class="git"}
-- [Community](/community/)
+- [Community](https://fun-lang.xyz/community/)
 
-The examples directory contains demonstrations of most Fun features, from basic "Hello, World!" to threading, networking, classes, and more. The lib directory includes modules written in Fun itself — and in the future, most enhancements will be written in Fun rather than C.
+The examples directory contains demonstrations of most Fun features, from basic "Hello, World!" to threading, networking, classes, and more. The lib directory includes modules written in Fun itself - and in the future, most enhancements will be written in Fun rather than C.
 
 ### For Developers
 
-- [Fun Internals](/documentation/internals/){:class="git"}
-- [Fun Opcodes](/documentation/opcodes/){:class="git"}
-- [Basic Rust Opcodes Support](/documentation/rust/){:class="git"}
+- [Fun Internals](https://fun-lang.xyz/documentation/internals/)
+- [Fun Opcodes](https://fun-lang.xyz/documentation/opcodes/)
+- [Basic Rust Opcodes Support](https://fun-lang.xyz/documentation/rust/)
 
 ### The Road Ahead
 
-Documentation is a work in progress as we continue debugging, fixing bugs, and evolving the language. Complete API documentation will follow in future releases. Version 0.37.62 represents substantial progress, but remember: this is an experiment, and stability won't be declared until we reach 1.0.
+Documentation is a work in progress as we continue debugging, fixing bugs, and evolving the language. Complete API documentation will follow in future releases. Version 0.37.62 represents substantial progress, but remember, this is an experiment, and stability won't be declared until we reach 1.0.
 
-Fun may not change the world, but it aims to make programming a little more fun. We're on a journey, and we'd love to have you along for the ride — bugs and all.
+Fun may not change the world, but it aims to make programming a little more fun. We're on a journey, and we'd love to have you along for the ride - bugs and all.
 
 Fun is and will always be 100% free under the terms of the [Apache-2.0 License](https://opensource.org/license/apache-2-0){:class="ext"}.
 

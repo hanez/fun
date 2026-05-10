@@ -3,6 +3,7 @@ layout: page
 title: About
 subtitle: More information about having fun... :)
 description: About
+_date: 2023-09-20
 metasub: news
 noToc: true
 noDate: false
