@@ -43,13 +43,13 @@ endif()
 #  set(_FUN_BUILD_DOCS "DISABLED")
 #endif()
 
-message(STATUS "==== Fun build options ====")
+message(STATUS "---- Fun build options ---------")
 message(STATUS "  FUN_DEBUG: ${_FUN_DEBUG_STATE}")
 message(STATUS "  FUN_USE_MUSL: ${_FUN_USE_MUSL_STATE}")
 message(STATUS "  FUN_WITH_CPP: ${_FUN_WITH_CPP_STATE}")
 message(STATUS "  FUN_WITH_RUST: ${_FUN_WITH_RUST_STATE}")
 #message(STATUS "  FUN_BUILD_DOCS: ${_FUN_BUILD_DOCS}")
-message(STATUS "===========================")
+message(STATUS "--------------------------------")
 
 # Convenience aggregate target (like 'build' in Makefile)
 add_custom_target(build
