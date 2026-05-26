@@ -27,7 +27,7 @@ nick = "FunDemoBot"          // Pick an unused nickname
 user = "fundemo"
 real = "Fun Demo Bot"
 pass = ""                     // Optional network password (not NickServ)
-channel = "#funlang"           // Use a channel you may write to
+channel = "#fun-lang"           // Use a channel you may write to
 target_nick = "hanez"         // For a test private message
 
 // Date/time helper
