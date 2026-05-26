@@ -58,23 +58,19 @@ if (!c.connect())
 
 c.register(nick, user, real, pass)
 
-// Process greetings and auto-respond to PINGs
+// Process greetings and auto-respond to PINGs (briefly)
 start = dt.now_ms()
-while (dt.now_ms() - start < 3000)
+while (dt.now_ms() - start < 1500)
   handle_lines(c)
 
-// Join #funlang and speak
+// Join #funlang and speak once
 c.join(channel)
 dt.sleep_ms(500)
 c.privmsg(channel, real)
 
-// Read a bit more to display echoes/traffic
-start2 = dt.now_ms()
-while (dt.now_ms() - start2 < 2000)
+// Stay connected: continuously read and print lines; auto-respond to PINGs
+print("Listening (press Ctrl-C to quit)...")
+while (true)
   handle_lines(c)
-
-c.quit("bye")
-dt.sleep_ms(200)
-c.close()
-
-print("Done.")
+  // avoid busy loop if no data
+  dt.sleep_ms(50)
