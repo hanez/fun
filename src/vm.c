@@ -224,6 +224,8 @@ static void fun_vm_exit(int code) {
 
 /* Forward decl for stack push used by vm_raise_error */
 static void push_value(VM *vm, Value v);
+/* Forward decl for diagnostic helper used by vm_raise_error */
+static int vm_ip_to_line(const Bytecode *bc, int ip);
 
 /* Raise a runtime error that respects try/catch/finally semantics.
  * If a handler is installed for the current frame, jump to it and push
@@ -259,8 +261,22 @@ void vm_raise_error(VM *vm, const char *msg) {
     f->ip = target;
     return;
   }
-  /* No handler: print annotated message and terminate VM */
-  fprintf(stderr, "Runtime error: %s\n", msg ? msg : "<error>");
+  /* No handler: print annotated message, stack trace, and terminate VM */
+  Bytecode *bc = f->fn;
+  const char *fname = (bc && bc->name) ? bc->name : "<anon>";
+  const char *src = (bc && bc->source_file) ? bc->source_file : "<unknown>";
+  int last_ip = f->ip - 1;
+  int line = vm_ip_to_line(bc, last_ip);
+  const char *opname = "OP?";
+  if (bc && last_ip >= 0 && last_ip < bc->instr_count) {
+    int op = bc->instructions[last_ip].op;
+    if (op >= 0 && op < (int)(sizeof(opcode_names) / sizeof(opcode_names[0]))) {
+      opname = opcode_names[op];
+    }
+  }
+  fprintf(stderr, "Runtime error at %s:%d in %s (ip=%d, %s): %s\n",
+          src, line > 0 ? line : 0, fname, last_ip, opname, msg ? msg : "<error>");
+  vm_print_stacktrace(vm);
   vm->fp = -1; /* stop execution */
 }
 
@@ -388,6 +404,11 @@ void vm_reset(VM *vm) {
   vm_clear_output(vm);
   // Reset exit code
   vm->exit_code = 0;
+
+#ifdef FUN_TRACE
+  // Reset opcode counters
+  for (int i = 0; i < OPCODE_COUNT; ++i) vm->op_counts[i] = 0;
+#endif
 
   // Reset debugger state (breakpoints, stepping)
   vm_debug_reset(vm);
@@ -732,6 +753,10 @@ void vm_init(VM *vm) {
   vm->repl_on_error = 0;
   vm->on_error_repl = NULL;
 
+#ifdef FUN_TRACE
+  for (int i = 0; i < OPCODE_COUNT; ++i) vm->op_counts[i] = 0;
+#endif
+
   /* Debugger state */
   vm->debug_step_mode = 0;
   vm->debug_step_target_fp = -1;
@@ -812,6 +837,60 @@ void vm_print_output(VM *vm) {
   }
 }
 
+/* ---- Diagnostics helpers ---- */
+/* Find best-effort source line for given ip by scanning backwards for OP_LINE. */
+static int vm_ip_to_line(const Bytecode *bc, int ip) {
+  if (!bc || !bc->instructions || ip < 0) return 0;
+  if (ip >= bc->instr_count) ip = bc->instr_count - 1;
+  for (int i = ip; i >= 0; --i) {
+    if (bc->instructions[i].op == OP_LINE) {
+      return bc->instructions[i].operand;
+    }
+  }
+  return 0;
+}
+
+/* Print a human-readable stack trace (top frame first). */
+void vm_print_stacktrace(VM *vm) {
+  if (!vm) return;
+  fprintf(stderr, "Stack trace (most recent call first):\n");
+  for (int fp = vm->fp; fp >= 0; --fp) {
+    Frame *fr = &vm->frames[fp];
+    Bytecode *bc = fr->fn;
+    const char *fname = (bc && bc->name) ? bc->name : "<anon>";
+    const char *src = (bc && bc->source_file) ? bc->source_file : "<unknown>";
+    int ip = fr->ip - 1; /* last executed */
+    int line = vm_ip_to_line(bc, ip);
+    const char *opname = "OP?";
+    if (bc && ip >= 0 && ip < bc->instr_count) {
+      int op = bc->instructions[ip].op;
+      if (op >= 0 && op < (int)(sizeof(opcode_names) / sizeof(opcode_names[0]))) {
+        opname = opcode_names[op];
+      }
+    }
+    fprintf(stderr, "  at %s:%d in %s (ip=%d, %s)\n", src, line > 0 ? line : 0, fname, ip, opname);
+  }
+}
+
+#ifdef FUN_TRACE
+/**
+ * @brief Dump non-zero opcode execution counters to stdout.
+ */
+void vm_dump_opcode_counters(VM *vm) {
+  if (!vm) return;
+  long long total = 0;
+  for (int i = 0; i < OPCODE_COUNT; ++i) total += vm->op_counts[i];
+  printf("=== opcode counters (total %lld) ===\n", total);
+  for (int i = 0; i < OPCODE_COUNT; ++i) {
+    long long c = vm->op_counts[i];
+    if (c > 0) {
+      const char *name = (i >= 0 && i < (int)(sizeof(opcode_names) / sizeof(opcode_names[0]))) ? opcode_names[i] : "OP?";
+      printf("%3d %-16s %lld\n", i, name, c);
+    }
+  }
+}
+#endif
+
 /**
  * @brief Execute a bytecode program starting from the given entry point.
  *
@@ -886,10 +965,24 @@ void vm_run(VM *vm, Bytecode *entry) {
 
     /* Validate opcode defensively */
     if (!opcode_is_valid(inst.op)) {
-      fprintf(stderr, "Runtime error: invalid opcode %d at ip=%d\n", inst.op, f->ip - 1);
-      vm_raise_error(vm, "Invalid opcode");
+      char buf[256];
+      Bytecode *bc = f->fn;
+      const char *fname = (bc && bc->name) ? bc->name : "<anon>";
+      const char *src = (bc && bc->source_file) ? bc->source_file : "<unknown>";
+      int ip = f->ip - 1;
+      int line = vm_ip_to_line(bc, ip);
+      const char *opname = (inst.op >= 0 && inst.op < (int)(sizeof(opcode_names)/sizeof(opcode_names[0]))) ? opcode_names[inst.op] : "OP?";
+      snprintf(buf, sizeof(buf), "invalid opcode %d (%s) at %s:%d in %s (ip=%d)", inst.op, opname, src, line > 0 ? line : 0, fname, ip);
+      vm_raise_error(vm, buf);
       break;
     }
+
+#ifdef FUN_TRACE
+    /* Increment per-opcode counter */
+    if (inst.op >= 0 && inst.op < OPCODE_COUNT) {
+      vm->op_counts[inst.op]++;
+    }
+#endif
 
     if (vm->trace_enabled) {
       const char *opname = (inst.op >= 0 && inst.op < (int)(sizeof(opcode_names) / sizeof(opcode_names[0])))
@@ -1205,4 +1298,9 @@ void vm_run(VM *vm, Bytecode *entry) {
     }
   }
   g_active_vm = NULL;
+#ifdef FUN_TRACE
+  if (vm->trace_enabled) {
+    vm_dump_opcode_counters(vm);
+  }
+#endif
 }

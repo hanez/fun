@@ -36,16 +36,28 @@ Bytecode *bytecode_new(void) {
 }
 
 /**
- * @brief Append a constant to a Bytecode's constant table.
+ * @brief Append a constant to a Bytecode's constant table with de-duplication.
  *
- * The value is deep-copied into the table; the caller retains ownership of v
- * and may free it independently.
+ * The value is compared against existing constants and if an equal constant is
+ * already present, its index is returned without modifying the table. Equality
+ * uses value_equals which supports numeric cross-type (int/float) equality and
+ * string content equality. The caller retains ownership of @p v in all cases.
+ * When a new constant is inserted, a deep copy is stored in the table.
  *
  * @param bc Target bytecode (must not be NULL).
- * @param v  Value to store (copied).
- * @return The index of the stored constant (zero-based).
+ * @param v  Value to store (copied on insert).
+ * @return The index of the stored or matched existing constant (zero-based).
  */
 int bytecode_add_constant(Bytecode *bc, Value v) {
+  /* Linear scan for a match. This is fast enough for small constant pools and
+   * avoids duplicates (smaller bytecode, better cache locality). */
+  for (int i = 0; i < bc->const_count; ++i) {
+    if (value_equals(&bc->constants[i], &v)) {
+      return i;
+    }
+  }
+
+  /* Not found: append a copy */
   bc->constants = (Value *)realloc(bc->constants, sizeof(Value) * (bc->const_count + 1));
   bc->constants[bc->const_count] = copy_value(&v);
   return bc->const_count++;

@@ -121,6 +121,11 @@ struct VM {
   int output_is_partial[OUTPUT_SIZE]; // 1 when the corresponding output entry should not end with newline (echo)
 
   long long instr_count; // executed instructions in the last vm_run
+  
+#ifdef FUN_TRACE
+  /* Per-opcode execution counters (enabled when FUN_TRACE=1) */
+  long long op_counts[OPCODE_COUNT];
+#endif
 
   int current_line; // last executed source line (debug)
 
@@ -163,6 +168,10 @@ void vm_clear_output(VM *vm);
  * @param vm VM instance.
  */
 void vm_print_output(VM *vm);
+/** Dump per-opcode execution counters (when FUN_TRACE enabled). */
+void vm_dump_opcode_counters(VM *vm);
+/** Print a human-readable VM stack trace to stderr (top frame first). */
+void vm_print_stacktrace(VM *vm);
 /**
  * @brief Free all resources owned by the VM (globals, frames, output buffers).
  * The VM object itself is not freed when allocated on the stack.

@@ -291,6 +291,9 @@ typedef enum {
   OP_CPP_ADD, // pops b, a; pushes (a + b)
 } OpCode;
 
+/* Total number of opcodes (keep in sync with OpCode enum). */
+#define OPCODE_COUNT (OP_CPP_ADD + 1)
+
 typedef struct {
   OpCode op;
   int32_t operand;

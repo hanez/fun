@@ -21,6 +21,11 @@ if(FUN_DEBUG)
   target_compile_definitions(fun_core PUBLIC FUN_DEBUG=1)
 endif()
 
+# Enable VM tracing/counters when requested
+if(FUN_TRACE)
+  target_compile_definitions(fun_core PUBLIC FUN_TRACE=1)
+endif()
+
 # Provide default stdlib directory and version to the runtime
 target_compile_definitions(fun_core PUBLIC FUN_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(fun_core PUBLIC DEFAULT_LIB_DIR="${DEFAULT_LIB_DIR}")

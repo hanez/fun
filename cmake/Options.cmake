@@ -34,6 +34,9 @@ endif()
 # Debug option to enable verbose parser/VM logging
 option(FUN_DEBUG "Enable extra debug logging in Fun" OFF)
 
+# Optional: VM trace and opcode counters (disabled by default)
+option(FUN_TRACE "Enable VM tracing and opcode execution counters" OFF)
+
 # VM settings (configurable via -D...)
 set(MAX_FRAMES 128 CACHE STRING "Maximum depth of the call stack (frames)")
 set(MAX_FRAME_LOCALS 64 CACHE STRING "Maximum number of local variables per frame")

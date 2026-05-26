@@ -56,9 +56,16 @@ extern char *preprocess_includes_with_path(const char *src, const char *current_
 static void skip_to_eol(const char *src, size_t len, size_t *pos);
 static int read_line_start(const char *src, size_t len, size_t *pos, int *out_indent);
 static void parse_block(Bytecode *bc, const char *src, size_t len, size_t *pos, int current_indent);
+static void calc_line_col(const char *src, size_t len, size_t pos, int *out_line, int *out_col);
 
 /* ---- parser error state ---- */
 static const char *g_current_source_path = NULL; /* for propagating filename into nested bytecodes */
+/* Track active source buffer for error line computation and cascade control */
+static const char *g_active_src = NULL;
+static size_t g_active_len = 0;
+static int g_last_err_line = -1;
+static int g_line_err_count = 0;
+static const int G_ERRS_PER_LINE_CAP = 3; /* suppress floods after this many per line */
 static int g_has_error = 0;
 static size_t g_err_pos = 0;
 static char g_err_msg[256];
@@ -137,6 +144,22 @@ static int fun_debug_enabled(void) {
  * @param ... Arguments matching fmt.
  */
 static void parser_fail(size_t pos, const char *fmt, ...) {
+  /* Optional flood guard: suppress excessive errors on the same source line */
+  if (g_active_src && g_active_len > 0) {
+    int line = 0, col = 0;
+    calc_line_col(g_active_src, g_active_len, pos, &line, &col);
+    if (line == g_last_err_line) {
+      if (g_line_err_count >= G_ERRS_PER_LINE_CAP) {
+        /* Too many errors on this line; ignore to avoid cascades */
+        return;
+      }
+      g_line_err_count++;
+    } else {
+      g_last_err_line = line;
+      g_line_err_count = 1;
+    }
+  }
+
   g_has_error = 1;
   g_err_pos = pos;
   va_list ap;
@@ -7608,8 +7631,16 @@ Bytecode *parse_file_to_bytecode(const char *path) {
   g_err_line = 0;
   g_err_col = 0;
 
-  /* Set current source path for nested bytecodes to inherit */
+  /* Set active source for error mapping/cascade control and current source path for nested bytecodes */
   const char *prev_source = g_current_source_path;
+  const char *prev_active_src = g_active_src;
+  size_t prev_active_len = g_active_len;
+  int prev_last_line = g_last_err_line;
+  int prev_line_count = g_line_err_count;
+  g_active_src = compile_src;
+  g_active_len = compile_len;
+  g_last_err_line = -1;
+  g_line_err_count = 0;
   g_current_source_path = path;
   Bytecode *bc = compile_minimal(compile_src, compile_len);
   /* assign debug metadata to module bytecode */
@@ -7624,6 +7655,10 @@ Bytecode *parse_file_to_bytecode(const char *path) {
   }
   /* restore previous */
   g_current_source_path = prev_source;
+  g_active_src = prev_active_src;
+  g_active_len = prev_active_len;
+  g_last_err_line = prev_last_line;
+  g_line_err_count = prev_line_count;
 
   if (g_has_error) {
     int line = 1, col = 1;
@@ -7791,8 +7826,16 @@ Bytecode *parse_string_to_bytecode(const char *source) {
   g_err_line = 0;
   g_err_col = 0;
 
-  /* Set current source path to <input> for nested bytecodes */
+  /* Set active source for error mapping/cascade control and current source path to <input> for nested bytecodes */
   const char *prev_src = g_current_source_path;
+  const char *prev_active_src = g_active_src;
+  size_t prev_active_len = g_active_len;
+  int prev_last_line = g_last_err_line;
+  int prev_line_count = g_line_err_count;
+  g_active_src = compile_src;
+  g_active_len = len;
+  g_last_err_line = -1;
+  g_line_err_count = 0;
   g_current_source_path = NULL;
   Bytecode *bc = compile_minimal(compile_src, len);
   if (bc) {
@@ -7802,6 +7845,10 @@ Bytecode *parse_string_to_bytecode(const char *source) {
     bc->name = strdup("<input>");
   }
   g_current_source_path = prev_src;
+  g_active_src = prev_active_src;
+  g_active_len = prev_active_len;
+  g_last_err_line = prev_last_line;
+  g_line_err_count = prev_line_count;
 
   if (g_has_error) {
     int line = 1, col = 1;

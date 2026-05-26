@@ -33,6 +33,7 @@
  */
 
 case OP_ADD: {
+  vm_require_stack(vm, 2);
   Value b = pop_value(vm);
   Value a = pop_value(vm);
   if ((a.type == VAL_INT || a.type == VAL_FLOAT) && (b.type == VAL_INT || b.type == VAL_FLOAT)) {
