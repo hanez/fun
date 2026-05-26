@@ -100,6 +100,42 @@ int map_set(Value *vm, const char *key, Value v) {
 }
 
 /**
+ * @brief Insert or replace a key in the map with a copy of the provided value.
+ *
+ * Unlike map_set(), this function does NOT take ownership of @p v. The value is
+ * copied according to copy_value() semantics, and the caller retains ownership
+ * of the original.
+ *
+ * @param vm  Target Value of type VAL_MAP.
+ * @param key NUL-terminated key string (copied into the map).
+ * @param v   Pointer to Value to copy from; not consumed.
+ * @return 1 on success, 0 on error (type mismatch, OOM, or NULL params).
+ */
+int map_set_copy(Value *vm, const char *key, const Value *v) {
+  if (!vm || vm->type != VAL_MAP || !vm->map || !key || !v) {
+    return 0;
+  }
+  /* make a defensive copy first so we can reuse map_set path semantics */
+  Value cv = copy_value(v);
+  Map *m = (Map *)vm->map;
+  for (int i = 0; i < m->count; ++i) {
+    if (strcmp(m->keys[i], key) == 0) {
+      free_value(m->vals[i]);
+      m->vals[i] = cv;
+      return 1;
+    }
+  }
+  if (!map_ensure_cap(m, m->count + 1)) {
+    free_value(cv);
+    return 0;
+  }
+  m->keys[m->count] = strdup(key);
+  m->vals[m->count] = cv;
+  m->count++;
+  return 1;
+}
+
+/**
  * @brief Look up a key and copy the stored value into out.
  *
  * The returned value is a deep copy; caller owns it and must free it.

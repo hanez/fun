@@ -546,6 +546,22 @@ void vm_debug_request_continue(VM *vm) {
   vm->debug_stop_requested = 0;
 }
 
+/* --- Centralized operand stack safety helpers --- */
+/** Return current number of values on the stack. */
+static inline int vm_stack_count(const VM *vm) { return vm->sp + 1; }
+
+/** Return available space left on the stack (in Values). */
+static inline int vm_stack_space(const VM *vm) { return STACK_SIZE - (vm->sp + 1); }
+
+/** Ensure at least n values are available to pop; aborts on underflow. */
+static inline void vm_require_stack(VM *vm, int n) {
+  if (n < 0) n = 0;
+  if (vm_stack_count(vm) < n) {
+    fprintf(stderr, "Runtime error: stack underflow (need %d, have %d)\n", n, vm_stack_count(vm));
+    exit(1);
+  }
+}
+
 /**
  * @brief Push a Value onto the VM operand stack.
  *
@@ -867,6 +883,13 @@ void vm_run(VM *vm, Bytecode *entry) {
 
     Instruction inst = f->fn->instructions[f->ip++];
     vm->instr_count++; /* count each executed instruction */
+
+    /* Validate opcode defensively */
+    if (!opcode_is_valid(inst.op)) {
+      fprintf(stderr, "Runtime error: invalid opcode %d at ip=%d\n", inst.op, f->ip - 1);
+      vm_raise_error(vm, "Invalid opcode");
+      break;
+    }
 
     if (vm->trace_enabled) {
       const char *opname = (inst.op >= 0 && inst.op < (int)(sizeof(opcode_names) / sizeof(opcode_names[0])))

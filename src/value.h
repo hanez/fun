@@ -118,6 +118,8 @@ Value array_concat(const Value *a, const Value *b);
 Value make_map_empty(void);
 /** Set key to v (takes ownership); returns 1 on success. */
 int map_set(Value *m, const char *key, Value v);
+/** Set key to a copy of v (caller retains ownership); returns 1 on success. */
+int map_set_copy(Value *m, const char *key, const Value *v);
 /** Lookup key; returns 1 and copies value to out on success. */
 int map_get_copy(const Value *m, const char *key, Value *out);
 /** Test if key exists; returns 1/0. */
