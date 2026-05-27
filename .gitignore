@@ -7,9 +7,9 @@ Doxygen.in
 !.gitignore
 !.github
 !.gitkeep
-!api/.gitkeep
 .venv
 api/
+!api/.gitkeep
 build/*
 build_debug/*
 build_release/*
@@ -23,6 +23,8 @@ downloaded.png
 json.xml
 lib/*.so
 out/
+playground/*
+!playground/.gitkeep
 src/*.o
 src/rust/Cargo.lock
 src/rust/target
