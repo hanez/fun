@@ -19,11 +19,13 @@ permalink: /
 
 <h2>What is Fun?</h2>
 
-<p>Fun is an experiment, just for fun, but Fun works!</p>
+<p>Fun is a small, strict, and simple programming language that runs on a compact stack-based virtual machine. The C core is intentionally minimal; most functionality and standard libraries are implemented in Fun itself.</p>
 
-<p>Fun is a highly strict programming language, but also highly simple. It looks like Python (My favorite language), but there are differences.</p>
+<p>Fun is dynamically typed with optional static type annotations, <a href="/features/">featuring first-class functions</a>, classes with inheritance, pattern matching, and a rich standard library. It supports everything from basic scripting to TCP sockets, serial communication, threading, cryptography (MD5, SHA-1/256/384/512, CRC-32, AES-256), and a built-in debugger.</p>
 
-<p>Influenced by <a href="https://www.gnu.org/software/bash/" class="ext">Bash</a>, <a href="https://en.wikipedia.org/wiki/The_C_Programming_Language" class="ext">C</a>, <a href="https://www.lua.org/" class="ext">Lua</a>, PHP, <a href="https://www.python.org/" class="ext">Python</a>, and a little Rust (Most influences came from linked languages).</p>
+<p>Influenced by: <a href="https://www.gnu.org/software/bash/" class="ext">Bash</a>, <a href="https://en.wikipedia.org/wiki/The_C_Programming_Language" class="ext">C</a>, <a href="https://www.lua.org/" class="ext">Lua</a>, <a href="https://www.php.net/" class="ext">PHP</a>, <a href="https://www.python.org/" class="ext">Python</a>, and <a href="https://www.rust-lang.org/" class="ext">Rust</a>.</p>
+
+<p>Fun is an experiment - just for fun - but Fun works!</p>
 
 <p>Fun is and will ever be 100% free under the terms of the <a href="https://opensource.org/license/apache-2-0" class="ext">Apache-2.0 License</a>.</p>
 
@@ -61,4 +63,3 @@ permalink: /
 {% if count == paginator.page %}<a href="/{{ count }}/" class="active" title="Page {{ count }}">{{ count }}</a>{% else %}<a href="/{{ count }}/" title="Page {{ count }}">{{ count }}</a>{% endif %}
 {% endfor %}
 </div><br>
-

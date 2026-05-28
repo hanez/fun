@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun — Feature Overview
+title: Feature Overview
 subtitle: A high-level list of language, VM/runtime, tooling, and ecosystem features in Fun.
 description: Comprehensive feature list of the Fun programming language, its VM/runtime, tooling, build options, and optional extensions.
 permalink: /features/
@@ -31,6 +31,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 ## Language
 
 ### Syntax & Structure
+
 - Indentation-based block structure (strict 2-space indent)
 - Line comments (`//`) and block comments (`/* */`)
 - Optional shebang (`#!`) line for script execution
@@ -38,6 +39,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - `exit` statement with optional exit code
 
 ### Type System
+
 - **Dynamic typing** with optional **static type annotations**
 - **Value types:** Integer (signed 64-bit), Float (double), Boolean, String, Array, Map, Function, Nil
 - **Type annotations:** `number`, `string`, `boolean`, `float`, `nil`, `array`, `map`, `class`
@@ -48,6 +50,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - `cast(value, typeName)` explicit type casting
 
 ### Variables & Scope
+
 - Global and local (per-function) variable scoping
 - Auto-declaration on first assignment
 - Typed variable declarations: `string name = "Fun"`
@@ -55,37 +58,37 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 
 ### Operators
 
-**Arithmetic:** `+`, `-`, `*`, `/`, `%` (addition also concatenates strings)
-
-**Comparison:** `<`, `<=`, `>`, `>=`, `==`, `!=`
-
-**Logical:** `&&` (and), `||` (or), `!` (not) — short-circuit evaluation
-
-**Bitwise (32-bit):** `band()`, `bor()`, `bxor()`, `bnot()`, `shl()`, `shr()`, `rol()`, `ror()`
-
-**Ternary:** `condition ? true_expr : false_expr`
+- **Arithmetic:** `+`, `-`, `*`, `/`, `%` (addition also concatenates strings)
+- **Comparison:** `<`, `<=`, `>`, `>=`, `==`, `!=`
+- **Logical:** `&&` (and), `||` (or), `!` (not) — short-circuit evaluation
+- **Bitwise (32-bit):** `band()`, `bor()`, `bxor()`, `bnot()`, `shl()`, `shr()`, `rol()`, `ror()`
+- **Ternary:** `condition ? true_expr : false_expr`
 
 ### Data Structures
 
-**Arrays:**
+#### **Arrays**
+
 - Literal syntax: `[1, 2, 3]`
 - Index get/set: `arr[0]`, `arr[0] = value`
 - Slice syntax: `arr[start:end]`
 - Negative indices for end-relative access
 - Built-in operations: `len()`, `push()`, `pop()`, `insert()`, `remove()`, `slice()`, `contains()`, `indexOf()`, `clear()`, `enumerate()`, `zip()`, `join()`, `map()`, `filter()`, `reduce()`
 
-**Maps (dictionaries):**
+#### **Maps (dictionaries)**
+
 - Literal syntax: `{"key": value, ...}`
 - Bracket access/assignment: `map["key"]`, `map["key"] = value`
 - Dot property access: `map.key`
 - Built-in operations: `has()`, `keys()`, `values()`
 
 ### Strings
+
 - Double and single-quoted string literals
 - Concatenation with `+`
 - Built-in operations: `len()`, `substr()`, `find()`, `split()`, `join()`
 
 ### Control Flow
+
 - `if` / `else if` / `else` conditional chains
 - `while` loops with `break` and `continue`
 - `for var in array` — array iteration
@@ -94,6 +97,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - `match` expression (stdlib `lib/utils/match.fun`)
 
 ### Functions
+
 - Named function definitions: `fun name(params) body`
 - Anonymous function literals: `fn(params) body`
 - First-class functions (pass as arguments, store in variables)
@@ -101,6 +105,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - Return with `return expr` (or implicit nil)
 
 ### Object-Oriented Programming
+
 - Class definitions: `class Name(typed params) body`
 - Constructor method: `_construct(this, ...)` — auto-invoked on instantiation
 - Methods: `fun method(this, ...)` inside class body
@@ -111,17 +116,20 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - Method overriding in subclasses
 
 ### Error Handling
+
 - `try` / `catch` / `finally` blocks
 - Error variable binding: `catch err`
 - `throw` opcode for raising exceptions
 - Per-frame try-stack for nested exception handlers
 
 ### Pattern Matching & Regex (Built-in POSIX)
+
 - `regex_match(str, pattern)` — full match test (returns 1/0)
 - `regex_search(str, pattern)` — first match with groups (returns map)
 - `regex_replace(str, pattern, replacement)` — global search and replace
 
 ### Functional Programming
+
 - First-class and anonymous functions
 - `map(array, fn)` — transform each element
 - `filter(array, fn)` — keep matching elements
@@ -130,6 +138,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - `enumerate()` and `zip()` iteration helpers
 
 ### Concurrency
+
 - `thread_spawn(fn, args)` — spawn a thread, returns thread ID
 - `thread_join(id)` — join a thread, returns its result
 - Cooperative async scheduler (stdlib `lib/async/scheduler.fun`)
@@ -139,6 +148,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 ## Virtual Machine & Runtime
 
 ### Architecture
+
 - Compact stack-based bytecode VM written in **C99**
 - Tagged union value type supporting 8 runtime types
 - ~220 opcodes covering all language features
@@ -146,12 +156,14 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - Each frame has 64 local slots and a 16-entry try/catch stack
 
 ### Memory & Performance
+
 - Deterministic execution model
 - Reference-counted arrays and maps
 - Function/data sectioning with linker GC for small binaries
 - LTO (Link-Time Optimization) support for Release builds
 
 ### Debugging & Tracing
+
 - Built-in debugger with breakpoints (up to 64)
 - Step, next, finish, and continue commands
 - `--trace` / `-t` flag for opcode-level execution tracing
@@ -161,6 +173,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - Source line mapping in error messages (includes include-file resolution)
 
 ### I/O & Platform
+
 - `print()` — output with newline
 - `echo()` — output without newline (immediate flush)
 - `read_file(path)` — read entire file into string
@@ -172,6 +185,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - `os_list_dir(path)` — list directory entries
 
 ### Date, Time & Random
+
 - `time_now_ms()` — wall clock in milliseconds since Unix epoch
 - `clock_mono_ms()` — monotonic clock for interval measurement
 - `date_format(ms, fmt)` — format timestamps via strftime
@@ -181,6 +195,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - `random_number(len)` — cryptographically random hex string
 
 ### Networking (Built-in, Unix)
+
 - `sock_tcp_listen(port, backlog)` — TCP server socket
 - `sock_tcp_accept(listen_fd)` — accept client connection
 - `sock_tcp_connect(host, port)` — TCP client connection
@@ -191,12 +206,14 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 - `fd_poll_read(fd, timeout_ms)` / `fd_poll_write(fd, timeout_ms)` — I/O readiness polling
 
 ### Serial Communication (Unix)
+
 - `serial_open(path, baud_rate)` — open serial port
 - `serial_config(fd, data_bits, parity, stop_bits, flow_control)` — configure
 - `serial_send(fd, data)` / `serial_recv(fd, maxlen)` — send/receive
 - `serial_close(fd)` — close
 
 ### Integer Utilities
+
 - `sclamp(value, bits)` / `uclamp(value, bits)` — signed/unsigned bit-width clamping
 - Integer type declarations (`byte`, `uint8`–`uint64`, `int8`–`int64`) with automatic range clamping
 - `gcd(a, b)`, `lcm(a, b)` — greatest common divisor, least common multiple
@@ -210,6 +227,7 @@ This page summarizes the core capabilities of Fun: the language, its virtual mac
 The standard library is written primarily in **Fun itself** and lives in `lib/`:
 
 ### Strings (`lib/strings.fun`)
+
 - `str_ltrim`, `str_rtrim`, `str_trim` — whitespace trimming
 - `str_starts_with`, `str_ends_with` — prefix/suffix checking
 - `str_split` — single-character delimiter splitting
@@ -219,22 +237,27 @@ The standard library is written primarily in **Fun itself** and lives in `lib/`:
 - `string_to_bytes_ascii` — ASCII string to byte array
 
 ### Arrays (`lib/arrays.fun`)
+
 - `array_slice`, `array_reverse`, `array_concat` — slicing and combining
 - `array_index_of`, `array_contains` — searching
 - `array_unique` — deduplication
 - `array_flatten1` — flatten one level of nesting
 
 ### Math (`lib/math.fun`)
+
 - `abs`, `clamp`, `gcd`, `lcm`, `powi` (integer exponentiation)
 - `min3`, `max3`, `array_min`, `array_max`
 
 ### Hex (`lib/hex.fun`)
+
 - `hex_to_dec`, `dec_to_hex`, `hex_to_bytes`, `bytes_to_hex`
 
 ### Encoding (`lib/encoding/base64.fun`)
+
 - `b64_encode_bytes`, `b64_decode_to_bytes` — Base64 encoding/decoding
 
 ### Cryptography (Pure Fun implementations in `lib/crypt/`)
+
 - **MD5** — `MD5` class (`lib/crypt/md5.fun`)
 - **SHA-1** — `SHA1` class (`lib/crypt/sha1.fun`)
 - **SHA-256** — `SHA256` class (`lib/crypt/sha256.fun`)
@@ -245,44 +268,55 @@ The standard library is written primarily in **Fun itself** and lives in `lib/`:
 - **AES-256** — `AES256` class (ECB mode)
 
 ### Functional Utilities
+
 - **Option type** (`lib/utils/option.fun`): `some()`, `none()`, `is_some`, `is_none`, `unwrap`, `unwrap_or`, `option_map`, `and_then`, `or_else`, `try_get`
 - **Result type** (`lib/utils/result.fun`): `ok()`, `err()`, `is_ok`, `is_err`, `unwrap`, `unwrap_or`, `result_map`, `map_err`, `and_then`, `or_else`, `to_option`
 - **Pattern matching** (`lib/utils/match.fun`): `match(value, cases)` with `is`, `when`, `else` patterns
 
 ### Range Utilities (`lib/utils/range.fun`)
+
 - `range(n)` — `[0, n)`
 - `range2(start, end)` — `[start, end)`
 - `range3(start, end, step)` — stepped range
 
 ### Date/Time (`lib/utils/datetime.fun`)
+
 - `DateTime` class with `now_ms`, `mono_ms`, `format`, `iso_now`, `iso_from`, `date_str`, `time_str`, `today_str`, `start_timer`, `elapsed_ms`, `sleep_ms`, `sleep_s`
 
 ### CLI (`lib/cli.fun`)
+
 - `argv()` — retrieve command-line arguments
 - `parse_args(args)` — parse flags and positional arguments
 
 ### Console (`lib/io/console.fun`)
+
 - `Console` class with `prompt`, `ask`, `ask_hidden`, `ask_yes_no`, `term_cols`, `progress` (progress bar)
 
 ### Process (`lib/io/process.fun`)
+
 - `Process` class wrapping `proc_run` and `system`
 
 ### Thread (`lib/io/thread.fun`)
+
 - `Thread` class wrapping `thread_spawn` / `thread_join`
 
 ### Socket Classes (`lib/io/socket.fun`)
+
 - `TcpClient` — TCP client with connect/send/recv/close/recv_all
 - `TcpServer` — TCP server with listen/accept/close
 - `UnixClient` — Unix domain socket client
 
 ### Serial (`lib/io/serial.fun`)
+
 - `Serial` class wrapping serial port operations
 
 ### Async Scheduler (`lib/async/scheduler.fun`)
+
 - Cooperative multitasking with `task_spawn`, `co_yield`, `run_once`, `run_until_done`
 - I/O readiness polling: `await_read`, `await_write`
 
 ### Networking / Web
+
 - **CGI** (`lib/net/cgi.fun`): full CGI request parsing, response generation, URL encoding/decoding
 - **HTTP Server** (`lib/net/http_server.fun`): static file serving with `.fun` script execution
 - **HTTP CGI Server** (`lib/net/http_cgi_server.fun`): CGI-based HTTP server
@@ -307,6 +341,7 @@ Enabled via CMake flags; each wraps a mature C library:
 | **KCGI** | `FUN_WITH_KCGI` | libkcgi | `kcgi_parse()`, `kcgi_reply_start()`, `kcgi_write()`, `kcgi_end()` |
 
 Each extension also has a corresponding **stdlib wrapper class** in `lib/io/` or `lib/net/`:
+
 - `JSON` class (`lib/io/json.fun`)
 - `INI` class (`lib/io/ini.fun`)
 - `XML` class (`lib/io/xml.fun`)
@@ -319,11 +354,13 @@ Each extension also has a corresponding **stdlib wrapper class** in `lib/io/` or
 ## FFI / Interop (Experimental)
 
 ### Rust FFI (`FUN_WITH_RUST`)
+
 - Cargo-based Rust static library linked into the VM
 - Demo opcodes: `rust_hello()`, `rust_hello_args()`, `rust_hello_args_return()`, `rust_get_sp()`, `rust_set_exit()`
 - Rust has unsafe access to VM internals via raw pointer and struct offset APIs
 
 ### C++ FFI (`FUN_WITH_CPP`)
+
 - C++ static library linked into the VM
 - Demo opcode: `cpp_add(a, b)`
 

@@ -1,19 +1,20 @@
 ---
 layout: page
-published: true
-noToc: false
-noComments: false
-noDate: false
 title: Documentation
-subtitle: Detailed documentation for the Fun programming language.<br><br><span style="color:red;">The documentation is always a work in progress! It will always be behind the development of the code. It will be 100% aligned with a 1.0 release... ;)</span>
+subtitle: Detailed documentation for the Fun programming language.
 description: The Fun Documentation Index
 permalink: /documentation/
 lang: en
 tags:
+- documentation
 - index
+- fun
 - language
 - programming
+- api
 ---
+
+> **Note:** The documentation is always a work in progress and may lag behind the code. It will be fully aligned with a 1.0 release.
 
 This file serves as an index of the documents in this directory. Links are relative and can be opened directly on Git hosting or locally.
 
