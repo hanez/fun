@@ -6,7 +6,7 @@ Fun is a small, strict, and simple programming language that runs on a compact s
 
 Fun is dynamically typed with optional static type annotations, featuring first-class functions, classes with inheritance, pattern matching, and a rich standard library. It supports everything from basic scripting to TCP sockets, serial communication, threading, cryptography (MD5, SHA-1/256/384/512, CRC-32, AES-256), and a built-in debugger.
 
-Fun is an experiment - just for fun - but Fun works!
+Fun is an experiment &mdash; just for fun &mdash; but Fun works!
 
 Influenced by **[Bash](https://www.gnu.org/software/bash/)**, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, **[Lua](https://www.lua.org/)**, PHP, **[Python](https://www.python.org/)**, and **[Rust](https://www.rust-lang.org/)**.
 
@@ -78,7 +78,7 @@ A language that feels like home for developers who:
 - Believe consistency is freedom
 - Want to write code that looks good and feels good
 
-Fun may not change the world - but it will make programming a little more fun.
+Fun may not change the world &mdash; but it will make programming a little more fun.
 
 ## Language Features
 
