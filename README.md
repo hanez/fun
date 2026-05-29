@@ -2,13 +2,13 @@
 
 ## What is Fun?
 
-Fun is a small, strict, and simple programming language that runs on a compact stack-based virtual machine. The C core is intentionally minimal; most functionality and standard libraries are implemented in Fun itself. The language emphasizes simplicity, consistency, and joy in coding.
+Fun is a small, strict, and simple programming language that runs on a compact stack-based virtual machine. The C core is intentionally minimal; most functionality and standard libraries are implemented in Fun itself.
 
-Fun is an experiment, just for fun, but Fun works!
+Fun is dynamically typed with optional static type annotations, featuring first-class functions, classes with inheritance, pattern matching, and a rich standard library. It supports everything from basic scripting to TCP sockets, serial communication, threading, cryptography (MD5, SHA-1/256/384/512, CRC-32, AES-256), and a built-in debugger.
 
-Fun is a highly strict programming language, but also highly simple. It looks like Python (My favorite language), but there are differences.
+Fun is an experiment - just for fun - but Fun works!
 
-Influenced by **[Bash](https://www.gnu.org/software/bash/)**, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, **[Lua](https://www.lua.org/)**, PHP, **[Python](https://www.python.org/)**, and Rust (Most influences came from linked languages).
+Influenced by **[Bash](https://www.gnu.org/software/bash/)**, **[C](https://en.wikipedia.org/wiki/The_C_Programming_Language)**, **[Lua](https://www.lua.org/)**, PHP, **[Python](https://www.python.org/)**, and **[Rust](https://www.rust-lang.org/)**.
 
 Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](https://opensource.org/license/apache-2-0).
 
@@ -23,11 +23,19 @@ Fun is and will ever be 100% free under the terms of the [Apache-2.0 License](ht
 
 ## Characteristics
 
-- Dynamic and optionally statically typed
-- Type safety
-- Written in C (C99) and Fun
-- Internal libs are written with no_camel_case even when written in Fun, except class names
-- Only a minimal function set is written in C, and most other core functions and libraries are implemented in Fun
+- **Dynamic typing** with optional **static type annotations** (`number`, `string`, `boolean`, `float`, `byte`, `uint8`&ndash;`uint64`, `int8`&ndash;`int64`)
+- **Stack-based bytecode VM** written in C99 with ~220 opcodes
+- **First-class functions**, anonymous functions (`fn`), and higher-order operations (`map`, `filter`, `reduce`)
+- **Classes** with constructors, methods, and single inheritance
+- **Exception handling** with `try`/`catch`/`finally`
+- **Built-in data structures**: arrays (with slicing), maps/objects, strings
+- **Concurrency**: threads (`thread_spawn`, `thread_join`) and cooperative async scheduler
+- **Networking**: TCP and Unix domain sockets with non-blocking I/O polling
+- **Serial communication**: full termios-based serial port control
+- **Cryptography**: pure-Fun implementations of MD5, SHA-1/256/384/512, CRC-32/CRC-32C, AES-256 ECB
+- **Built-in debugger** with breakpoints, step/next/finish, and stack inspection
+- **Minimal C core** &mdash; most standard libraries are implemented in Fun itself
+- **Internal style**: `snake_case` for functions and variables, `CamelCase` for class names
 
 ## The Fun Manifesto
 
@@ -45,13 +53,13 @@ Coding should be enjoyable, elegant, and consistent.
 - **One Way to Do It**<br>
   No clutter, no 15 ways of writing the same thing. Simplicity means clarity.
 - **Hackable by Nature**<br>
-  Fun should be small and embeddable, like Lua. Easy to understand, extend, and tinker with — true to the hacker spirit.
+  Fun should be small and embeddable, like Lua. Easy to understand, extend, and tinker with &mdash; true to the hacker spirit.
 - **Beautiful Defaults**<br>
-  A language that doesn’t need linters, formatters, or style guides. Beauty is built in.
+  A language that doesn't need linters, formatters, or style guides. Beauty is built in.
 
 ## The Community
 
-Fun is not about being the fastest or the most feature-rich. It’s about sharing joy in coding. The community should be:
+Fun is not about being the fastest or the most feature-rich. It's about sharing joy in coding. The community should be:
 
 - Respectful
 - Curious
@@ -70,63 +78,166 @@ A language that feels like home for developers who:
 - Believe consistency is freedom
 - Want to write code that looks good and feels good
 
-Fun may not change the world — but it will make programming a little more fun.
+Fun may not change the world - but it will make programming a little more fun.
 
-## Features
+## Language Features
 
-### Core
+### Core Syntax & Types
 
-- functions/classes/objects
-- if/else if/else
-- try/catch/finally
+- Indentation-based blocks (2-space), line and block comments
+- Static type annotations with automatic runtime range clamping for fixed-width integers
+- `typeof()`, `to_string()`, `to_number()`, `cast()` &mdash; type introspection and conversion
+- `exit` statement with optional exit code, `#include` for source includes
 
-And much more...! Look at the specs in [Spec](./spec/) for more detailed information.
+### Operators
 
-### Lib (./lib/)
+- Arithmetic: `+`, `-`, `*`, `/`, `%`
+- Comparison: `<`, `<=`, `>`, `>=`, `==`, `!=`
+- Logical: `&&`, `||`, `!` (short-circuit)
+- Bitwise: `band()`, `bor()`, `bxor()`, `bnot()`, `shl()`, `shr()`, `rol()`, `ror()`
+- Ternary: `condition ? true_expr : false_expr`
 
-See [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) for what the standard library provides.
+### Control Flow
 
-### Optional extensions (build-time selectable / only testing this on Linux actually):
+- `if` / `else if` / `else`
+- `while` with `break` and `continue`
+- `for var in array` &mdash; iteration
+- `for var in range(start, end)` &mdash; numeric range
+- `for (key, value) in map` &mdash; map destructuring
+- `match` expression (stdlib)
+- `try` / `catch` / `finally`
 
-- [CGI](https://en.wikipedia.org/wiki/Common_Gateway_Interface) support builtin using [kcgi](https://kristaps.bsd.lv/kcgi/) (optional) — see [docs](./web/documentation/extensions/kcgi/kcgi.md) &#9745;
-- [cURL (libcurl)](./web/documentation/extensions/curl/curl.md) (optional) &#9745;
-- [INI (iniparser)](./web/documentation/extensions/ini/ini.md) (optional) &#9745;
-- [JSON (json-c)](./web/documentation/extensions/json/json.md) (optional) &#9745;
-- [PCRE2](./web/documentation/extensions/pcre2/pcre2.md) (optional) &#9745;
-- [PCSC (smart cards)](./web/documentation/extensions/pcsc/pcsc.md) (optional) &#9745;
-- [OpenSSL](./web/documentation/extensions/openssl/openssl.md) (optional) &#9745;
-- [SQLite](./web/documentation/extensions/sqlite/sqlite.md) (optional) &#9745;
-- [XML (libxml2)](./web/documentation/extensions/xml2/xml2.md) (optional) &#9745;
+### Functions
 
-&#9745; = Done (or basics implemented) / &#9744; = Planned or in progress.
+- `fun name(params) body` &mdash; named functions
+- `fn(params) body` &mdash; anonymous function literals
+- First-class: pass as arguments, store in variables, recursion
+- `return` with optional value (implicit nil)
 
-Note: Not all of the above features will be implemented. Those who are marked "Done" will probaly remain in Fun, but I don't know actually... ;)
+### Object-Oriented Programming
 
-There are some libs written in Fun available in the [./lib/](https://git.xw3.org/fun/fun/src/branch/main/lib) diretory. In the future most Fun enhancements should be written in Fun itself.
+- `class Name(typed params) body` with `_construct(this, ...)` auto-invoked constructor
+- `this` keyword, `obj.method(args)` method call sugar, `obj.field` dot property access
+- `class Child(...) extends Parent` with method overriding
+
+### Data Structures
+
+- **Arrays**: literal `[1, 2, 3]`, index `arr[0]`, slice `arr[1:3]`, negative indices; `len()`, `push()`, `pop()`, `insert()`, `remove()`, `contains()`, `indexOf()`, `clear()`, `enumerate()`, `zip()`, `join()`, `map()`, `filter()`, `reduce()`
+- **Maps**: literal `{key: value}`, bracket `map["key"]`, dot `map.key` access; `has()`, `keys()`, `values()`
+- **Strings**: concatenation with `+`, `len()`, `substr()`, `find()`, `split()`, `join()`
+
+### Mathematics
+
+- Built-in: `abs`, `min`, `max`, `fmin`, `fmax`, `clamp`, `pow`, `sqrt`, `floor`, `ceil`, `trunc`, `round`, `sin`, `cos`, `tan`, `exp`, `log`, `log10`, `gcd`, `lcm`, `isqrt`, `sign`
+- Random: `random_seed()`, `random_int()`, `random_number()` (cryptographic)
+- Integer clamping: `sclamp()`, `uclamp()`
+
+### I/O & Platform
+
+- `print()`, `echo()` &mdash; output
+- `read_file()`, `write_file()` &mdash; file I/O
+- `input_line()` &mdash; stdin with optional prompt
+- `env()`, `env_all()` &mdash; environment variables
+- `proc_run()`, `system()` &mdash; process execution
+- `os_list_dir()` &mdash; directory listing
+- `time_now_ms()`, `clock_mono_ms()`, `date_format()`, `sleep()`
+
+### Networking (Built-in, Unix)
+
+- TCP: listen, accept, connect, send, recv, close
+- Unix domain sockets: listen, connect
+- Non-blocking I/O: `fd_set_nonblock()`, `fd_poll_read()`, `fd_poll_write()`
+
+### Serial Communication (Unix)
+
+- `serial_open()`, `serial_config()`, `serial_send()`, `serial_recv()`, `serial_close()`
+
+### Concurrency
+
+- `thread_spawn(fn, args)` returns thread ID; `thread_join(id)` returns result
+- Cooperative async scheduler in stdlib
+
+### Debugging & Tooling
+
+- Built-in debugger with 64 breakpoints, step/next/finish/continue
+- `--trace` / `-t` for opcode-level execution tracing
+- `--repl-on-error`: enter REPL on runtime error with stack preserved
+- Full-featured REPL with history, tab completion, multi-line input, commands (`:help`, `:load`, `:edit`, `:save`, `:debug`, `:trace`, `:type`, and more)
+- `funstx` &mdash; syntax checker with optional `--fix` mode
+
+## Standard Library (lib/)
+
+Written primarily in Fun itself:
+
+- **Strings**: trim, starts/ends-with, split, replace-all, case conversion, repeat
+- **Arrays**: slice, reverse, concat, unique, flatten
+- **Math**: `abs`, `clamp`, `gcd`, `lcm`, `powi`, min3, max3, array min/max
+- **Encoding**: hex encode/decode, base64 encode/decode
+- **Cryptography** (pure Fun): MD5, SHA-1, SHA-256, SHA-384, SHA-512, CRC-32, CRC-32C, AES-256 ECB
+- **Functional**: Option (Some/None), Result (Ok/Err), pattern matching
+- **Ranges**: `range(n)`, `range2(start, end)`, `range3(start, end, step)`
+- **Date/Time**: `DateTime` class with formatting, timers, sleep
+- **CLI**: `argv()`, `parse_args()` with flag support
+- **Console**: `Console` class with prompt, ask, hidden input, progress bar
+- **Thread**: `Thread` class, **Process**: `Process` class
+- **Socket classes**: `TcpClient`, `TcpServer`, `UnixClient`
+- **Serial**: `Serial` class
+- **Async**: Cooperative scheduler with I/O polling
+- **HTTP**: Static file server, CGI-capable server
+- **IRC**: `IRCClient` with full protocol support
+- **CGI**: `CGI` class for web applications
+
+## Optional Extensions (Build-time)
+
+Enabled via CMake flags, wrapping mature C libraries:
+
+| Extension | Backend |
+|---|---|
+| JSON | json-c |
+| cURL | libcurl |
+| SQLite | libsqlite3 |
+| PCRE2 | libpcre2 |
+| OpenSSL | libcrypto |
+| INI | iniparser 4.2.6 |
+| XML | libxml2 |
+| PC/SC | libpcsclite |
+| KCGI | libkcgi |
+
+Each extension also has a corresponding stdlib wrapper class (e.g., `JSON`, `INI`, `XML`, `PCSC`, `PCRE2`, `KCGI`).
+
+## Quick start
+
+<pre>console
+$ git clone https://git.xw3.org/fun/fun.git
+$ cd fun
+$ cmake -B build -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build
+$ ./build/fun
+fun> print("Hello, World!")
+Hello, World!
+fun> :quit</pre>
 
 ### OpenSSL quickstart (MD5)
 
-See the dedicated page: [./web/documentation/extensions/openssl/](./web/documentation/extensions/openssl/openssl.md)
+See: [./web/documentation/extensions/openssl/openssl.md](./web/documentation/extensions/openssl/openssl.md)
+
+## Build Options
+
+- **`-DCMAKE_BUILD_TYPE=Debug`** &mdash; debug build with asserts
+- **`-DCMAKE_BUILD_TYPE=Release`** &mdash; optimized build with LTO and stripping
+- **`-DFUN_BUILD_MUSL=ON`** &mdash; static musl build
+- Toggle each extension: `-DFUN_WITH_JSON=ON`, `-DFUN_WITH_CURL=ON`, etc.
+- **`-DFUN_BUILD_DOXYGEN=ON`** &mdash; API reference
 
 ## Documentation
 
-Looking for docs? Start here:
-
-- Local documentation index: [./web/documentation/documenatation.md](./web/documentation/documentation.md)
-  - Handbook: [./web/documentation/handbook/handbook.md](./web/documentation/handbook/handbook.md)
-  - Types overview: [./web/documentation/types/types.md](./web/documentation/types/types.md)
-  - REPL guide: [./web/documentation/repl/repl.md](./web/documentation/repl/repl.md)
-  - Testing: [./web/documentation/testing/testing.md](./web/documentation/testing/testing.md)
-  - Troubleshooting: [./web/documentation/troubleshooting/troubleshooting.md](./web/documentation/troubleshooting/troubleshooting.md)
-
-Additional references:
-
-- Specification: [./web/documentation/spec/v0.4.md](./web/documentation/spec/v0.4.md) (work in progress)
+- Handbook: [./web/documentation/handbook/handbook.md](./web/documentation/handbook/handbook.md)
+- Types: [./web/documentation/types/types.md](./web/documentation/types/types.md)
+- REPL: [./web/documentation/repl/repl.md](./web/documentation/repl/repl.md)
+- Testing: [./web/documentation/testing/testing.md](./web/documentation/testing/testing.md)
+- Spec: [./web/documentation/spec/v0.4.md](./web/documentation/spec/v0.4.md)
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
-- Examples demonstrating most features: [./examples/](./examples/)
-- Internals and VM opcodes live in [./src/](./src/) (see [./src/vm/](./src/vm) for opcode implementations)
-
-Note: The project is evolving; some documents may lag behind. The docs index in [./web/documentation/documenatation.md](./web/documentation/documentation.md) is the most up‑to‑date entry point.
+- Examples: [./examples/features.fun](./examples/features.fun)
 
 ## Author
 
