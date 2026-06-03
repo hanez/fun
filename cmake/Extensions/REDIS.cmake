@@ -1,5 +1,5 @@
 # Redis (hiredis)
-option(FUN_WITH_REDIS "Enable Redis (hiredis) support" ON)
+option(FUN_WITH_REDIS "Enable Redis (hiredis) support" OFF)
 set(HIREDIS_INCLUDE_DIRS "")
 set(HIREDIS_LINK_LIBS "")
 if(FUN_WITH_REDIS)
