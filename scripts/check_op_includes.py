@@ -134,6 +134,9 @@ def parse_includes_from_vm(text: str) -> set[str]:
         if d == "sqlite":
             if n in {"open", "close", "exec", "query"}:
                 return f"SQLITE_{n.upper()}"
+        if d == "redis":
+            if n in {"connect", "cmd", "close"}:
+                return f"REDIS_{n.upper()}"
         if d == "pcsc":
             if n in {"establish", "release", "list_readers", "connect", "disconnect", "transmit"}:
                 return f"PCSC_{n.upper()}"
