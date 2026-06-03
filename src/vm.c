@@ -73,6 +73,7 @@
 #include "extensions/sqlite.c"
 #include "extensions/xml2.c"
 #include "extensions/kcgi.c"
+#include "extensions/redis.c"
 
 /* forward declarations for include mapping used in error reporting */
 extern char *preprocess_includes(const char *src);
@@ -1228,6 +1229,13 @@ void vm_run(VM *vm, Bytecode *entry) {
 #include "vm/sqlite/exec.c"
 #include "vm/sqlite/open.c"
 #include "vm/sqlite/query.c"
+#endif
+
+/* Redis ops */
+#ifdef FUN_WITH_REDIS
+#include "vm/redis/connect.c"
+#include "vm/redis/cmd.c"
+#include "vm/redis/close.c"
 #endif
 
 /* C++ demo opcodes (guarded) */

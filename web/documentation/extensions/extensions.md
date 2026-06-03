@@ -48,6 +48,7 @@ This section documents Fun's optional, build-time selectable extensions. Each pa
 - [PC/SC (Smart cards)](./pcsc/)
 - [OpenSSL](./openssl/)
 - [kcgi](./kcgi/)
+- [Redis (hiredis)](./redis/)
 
 ## Notes:
 

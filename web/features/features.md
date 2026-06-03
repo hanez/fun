@@ -339,8 +339,9 @@ Enabled via CMake flags; each wraps a mature C library:
 | **XML** | `FUN_WITH_XML2` | libxml2 | `xml_parse()`, `xml_root()`, `xml_name()`, `xml_text()` |
 | **PC/SC** | `FUN_WITH_PCSC` | libpcsclite | `pcsc_establish()`, `pcsc_list_readers()`, `pcsc_connect()`, `pcsc_transmit()`, etc. |
 | **KCGI** | `FUN_WITH_KCGI` | libkcgi | `kcgi_parse()`, `kcgi_reply_start()`, `kcgi_write()`, `kcgi_end()` |
+| **Redis** | `FUN_WITH_REDIS` | hiredis | `redis_connect()`, `redis_cmd()`, `redis_close()` |
 
-Each extension also has a corresponding **stdlib wrapper class** in `lib/io/` or `lib/net/`:
+Some extensions also have a corresponding **stdlib wrapper class** in `lib/io/` or `lib/net/`:
 
 - `JSON` class (`lib/io/json.fun`)
 - `INI` class (`lib/io/ini.fun`)

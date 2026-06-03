@@ -21,6 +21,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/Extensions/PCSC.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/REPL.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/SQLITE.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/Extensions/XML2.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/Extensions/REDIS.cmake)
 
 # Summary of extension toggles
 message(STATUS "---- Fun extension summary ----")
@@ -34,4 +35,5 @@ _fun_print_feature("PCRE2 (FUN_WITH_PCRE2)" FUN_WITH_PCRE2)
 _fun_print_feature("PCSC-Lite (FUN_WITH_PCSC)" FUN_WITH_PCSC)
 _fun_print_feature("REPL (FUN_WITH_REPL)" FUN_WITH_REPL)
 _fun_print_feature("SQLite (FUN_WITH_SQLITE)" FUN_WITH_SQLITE)
+_fun_print_feature("Redis (FUN_WITH_REDIS)" FUN_WITH_REDIS)
 message(STATUS "--------------------------------")

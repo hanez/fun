@@ -78,7 +78,7 @@ The examples directory contains demonstrations of most Fun features, from basic 
 Documentation for optional, build-time selectable integrations lives in [./extensions/](./extensions/):
 
 - [Index of extensions](./extensions/)
- - Highlights: [cURL](./extensions/curl/), [INI](./extensions/ini/), [JSON](./extensions/json/), [XML (libxml2)](./extensions/xml2/), [SQLite](./extensions/sqlite/), [PCRE2](./extensions/pcre2/), [PC/SC](./extensions/pcsc/), [OpenSSL](./extensions/openssl/)
+ - Highlights: [cURL](./extensions/curl/), [INI](./extensions/ini/), [JSON](./extensions/json/), [XML (libxml2)](./extensions/xml2/), [SQLite](./extensions/sqlite/), [PCRE2](./extensions/pcre2/), [PC/SC](./extensions/pcsc/), [OpenSSL](./extensions/openssl/), [Redis](./extensions/redis/)
 
 ## Tips
 

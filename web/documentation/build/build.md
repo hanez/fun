@@ -5,8 +5,8 @@ noToc: false
 noComments: false
 noDate: false
 title: Building Fun
-subtitle: How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL).
-description: How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL).
+subtitle: How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL, FUN_WITH_REDIS).
+description: How to build Fun with CMake, available targets, and build options (FUN_DEBUG, FUN_USE_MUSL, FUN_WITH_CPP, FUN_WITH_RUST, FUN_WITH_OPENSSL, FUN_WITH_REDIS).
 permalink: /documentation/build/
 lang: en
 tags:
@@ -50,6 +50,7 @@ Fun exposes several options you can toggle at configure time:
 - `FUN_WITH_CPP` (ON/OFF) - Enable C++-based opcode/examples support
 - `FUN_WITH_RUST` (ON/OFF) - Build and link Rust staticlib from `src/rust/`
 - `FUN_WITH_OPENSSL` (ON/OFF) - Enable OpenSSL-backed helpers (MD5/SHA-256/SHA-512/RIPEMD-160)
+- `FUN_WITH_REDIS` (ON/OFF) - Enable Redis extension powered by hiredis (sync API: connect/cmd/close)
 
 ### VM configuration constants
 
@@ -72,6 +73,8 @@ See [VM](../vm/) for more information.
   FUN_USE_MUSL: ENABLED|DISABLED
   FUN_WITH_CPP: ENABLED|DISABLED
   FUN_WITH_RUST: ENABLED|DISABLED
+  FUN_WITH_OPENSSL: ENABLED|DISABLED
+  FUN_WITH_REDIS: ENABLED|DISABLED
 ===========================</pre>
 
 ## Example commands
@@ -92,7 +95,7 @@ cmake --build build_release --target build</pre>
 ### Enabling optional extensions
 
 <pre>cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
-  -DFUN_WITH_CPP=ON -DFUN_WITH_RUST=ON -DFUN_WITH_OPENSSL=ON
+  -DFUN_WITH_CPP=ON -DFUN_WITH_RUST=ON -DFUN_WITH_OPENSSL=ON -DFUN_WITH_REDIS=ON
 cmake --build build_release --target build</pre>
 
 ### Customizing VM limits
@@ -103,6 +106,8 @@ cmake --build build_custom --target fun</pre>
 If `FUN_WITH_RUST` is enabled, ensure `cargo` is available in PATH; the build will invoke it and link the produced static library.
 
 If `FUN_WITH_OPENSSL` is enabled, CMake must detect your system OpenSSL (libcrypto).
+
+If `FUN_WITH_REDIS` is enabled, ensure `hiredis` headers and library are installed and discoverable (typically via pkg-config).
 
 ## Running
 - CLI: run the `fun` executable from your build directory.

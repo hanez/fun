@@ -2070,6 +2070,75 @@ static int emit_primary(Bytecode *bc, const char *src, size_t len, size_t *pos) 
         free(name);
         return 1;
       }
+      /* Redis builtins (hiredis) */
+      if (strcmp(name, "redis_connect") == 0) {
+        (*pos)++; /* '(' */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "redis_connect expects (host, port)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ',')) {
+          parser_fail(*pos, "redis_connect expects (host, port)");
+          free(name);
+          return 0;
+        }
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "redis_connect expects (host, port)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after redis_connect args");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_REDIS_CONNECT, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "redis_cmd") == 0) {
+        (*pos)++; /* '(' */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "redis_cmd expects (handle, cmd)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ',')) {
+          parser_fail(*pos, "redis_cmd expects (handle, cmd)");
+          free(name);
+          return 0;
+        }
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "redis_cmd expects (handle, cmd)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after redis_cmd args");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_REDIS_CMD, 0);
+        free(name);
+        return 1;
+      }
+      if (strcmp(name, "redis_close") == 0) {
+        (*pos)++; /* '(' */
+        if (!emit_expression(bc, src, len, pos)) {
+          parser_fail(*pos, "redis_close expects (handle)");
+          free(name);
+          return 0;
+        }
+        if (!consume_char(src, len, pos, ')')) {
+          parser_fail(*pos, "Expected ')' after redis_close arg");
+          free(name);
+          return 0;
+        }
+        bytecode_add_instruction(bc, OP_REDIS_CLOSE, 0);
+        free(name);
+        return 1;
+      }
       if (strcmp(name, "sqlite_close") == 0) {
         (*pos)++; /* '(' */
         if (!emit_expression(bc, src, len, pos)) {

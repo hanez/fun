@@ -186,6 +186,11 @@ typedef enum {
   OP_SQLITE_EXEC,  // pops sql, handle; pushes sqlite rc (0=OK)
   OP_SQLITE_QUERY, // pops sql, handle; pushes array<map>
   
+  // Redis (optional, hiredis)
+  OP_REDIS_CONNECT, // pops port:int, host:string; pushes handle (>0) or 0
+  OP_REDIS_CMD,     // pops cmd:string, handle:int; pushes reply (string/int/array/nil/map)
+  OP_REDIS_CLOSE,   // pops handle:int; pushes Nil
+  
   // PCSC (smart card) opcodes
   OP_PCSC_ESTABLISH,    // returns context id (>0) or 0
   OP_PCSC_RELEASE,      // pops ctx id; returns 1/0

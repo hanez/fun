@@ -48,7 +48,8 @@ foreach(var_pair
     LIBSQL
     LIBXML2
     OPENSSL
-    KCGI)
+    KCGI
+    HIREDIS)
   if(${var_pair}_INCLUDE_DIRS)
     target_include_directories(fun_core PRIVATE ${${var_pair}_INCLUDE_DIRS})
   endif()
@@ -94,6 +95,9 @@ if(FUN_WITH_SQLITE)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_SQLITE=1)
 endif()
 
+if(FUN_WITH_REDIS)
+  target_compile_definitions(fun_core PUBLIC FUN_WITH_REDIS=1)
+endif()
 
 if(FUN_WITH_OPENSSL)
   target_compile_definitions(fun_core PUBLIC FUN_WITH_OPENSSL=1)
