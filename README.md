@@ -191,19 +191,20 @@ Written primarily in Fun itself:
 
 Enabled via CMake flags, wrapping mature C libraries:
 
-| Extension | Backend |
-|---|---|
-| JSON | json-c |
-| cURL | libcurl |
-| SQLite | libsqlite3 |
-| PCRE2 | libpcre2 |
-| OpenSSL | libcrypto |
-| INI | iniparser 4.2.6 |
-| XML | libxml2 |
-| PC/SC | libpcsclite |
-| KCGI | libkcgi |
+| Extension    | Backend         |
+|--------------|-----------------|
+| JSON         | json-c          |
+| cURL         | libcurl         |
+| SQLite       | libsqlite3      |
+| PCRE2        | libpcre2        |
+| OpenSSL      | libcrypto       |
+| INI          | iniparser 4.2.6 |
+| XML          | libxml2         |
+| PC/SC        | libpcsclite     |
+| KCGI         | libkcgi         |
+| Redis/Valkey | hiredis         |
 
-Each extension also has a corresponding stdlib wrapper class (e.g., `JSON`, `INI`, `XML`, `PCSC`, `PCRE2`, `KCGI`).
+Some extensions also have a corresponding stdlib wrapper class (e.g., `JSON`, `INI`, `XML`, `PCSC`, `PCRE2`, `KCGI`).
 
 ## Quick start
 

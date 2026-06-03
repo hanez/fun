@@ -31,6 +31,7 @@ if [ "$target" = "all" ]; then
       -DFUN_WITH_CPP=ON \
       -DFUN_WITH_KCGI=ON \
       -DFUN_WITH_OPENSSL=ON \
+      -DFUN_WITH_REDIS=ON \
     && cmake --build build --target fun
 elif [ "$target" = "all_debug" ]; then
   rm -rf build \
@@ -45,6 +46,7 @@ elif [ "$target" = "all_debug" ]; then
       -DFUN_WITH_INI=ON \
       -DFUN_WITH_CPP=ON \
       -DFUN_WITH_OPENSSL=ON \
+      -DFUN_WITH_REDIS=ON \
       -DFUN_DEBUG=ON \
     && cmake --build build --target fun
 elif [ "$target" = "alpine" ]; then
