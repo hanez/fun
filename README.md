@@ -191,25 +191,24 @@ Written primarily in Fun itself:
 
 Enabled via CMake flags, wrapping mature C libraries:
 
-| Extension    | Backend         |
-|--------------|-----------------|
-| JSON         | json-c          |
-| cURL         | libcurl         |
-| SQLite       | libsqlite3      |
-| PCRE2        | libpcre2        |
-| OpenSSL      | libcrypto       |
-| INI          | iniparser 4.2.6 |
-| XML          | libxml2         |
-| PC/SC        | libpcsclite     |
-| KCGI         | libkcgi         |
-| Redis/Valkey | hiredis         |
+| Extension                                                     | Backend     |
+|---------------------------------------------------------------|-------------|
+| [JSON](./web/documentation/extensions/json/json.md)           | json-c      |
+| [cURL](./web/documentation/extensions/curl/curl.md)           | libcurl     |
+| [SQLite](./web/documentation/extensions/sqlite/sqlite.md)     | libsqlite3  |
+| [PCRE2](./web/documentation/extensions/pcre2/pcre2.md)        | libpcre2    |
+| [OpenSSL](./web/documentation/extensions/openssl/openssl.md)  | libcrypto   |
+| [INI](./web/documentation/extensions/ini/ini.md)              | iniparser   |
+| [XML](./web/documentation/extensions/xml2/xml2.md)            | libxml2     |
+| [PC/SC](./web/documentation/extensions/pcsc/pcsc.md)          | libpcsclite |
+| [KCGI](./web/documentation/extensions/kcgi/kcgi.md)           | libkcgi     |
+| [Redis/Valkey](./web/documentation/extensions/redis/redis.md) | hiredis     |
 
 Some extensions also have a corresponding stdlib wrapper class (e.g., `JSON`, `INI`, `XML`, `PCSC`, `PCRE2`, `KCGI`).
 
 ## Quick start
 
-<pre>console
-$ git clone https://git.xw3.org/fun/fun.git
+<pre>$ git clone https://git.xw3.org/fun/fun.git
 $ cd fun
 $ cmake -B build -DCMAKE_BUILD_TYPE=Release
 $ cmake --build build
@@ -217,10 +216,6 @@ $ ./build/fun
 fun> print("Hello, World!")
 Hello, World!
 fun> :quit</pre>
-
-### OpenSSL quickstart (MD5)
-
-See: [./web/documentation/extensions/openssl/openssl.md](./web/documentation/extensions/openssl/openssl.md)
 
 ## Build Options
 
