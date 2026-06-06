@@ -27,21 +27,21 @@ All commands assume you are in the repository root.
 
 ## Prerequisites
 
-- Build the interpreter (see handbook/). You’ll have `build/fun` (paths may vary by your setup/IDE).
+- Build the interpreter (see [handbook](/documentation/handbook/). You’ll have `build/fun` (paths may vary by your setup/IDE).
 - Set FUN_LIB_DIR to the repo’s lib directory when running without installation so `#include <...>` can find the standard library.
 
-Example (Linux/macOS/BSD):
+### Linux/macOS/BSD:
 
-<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun examples/include_lib.fun</pre>
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/include_lib.fun</pre>
 
-Windows (PowerShell):
+### Windows (PowerShell):
 
 <pre>$env:FUN_LIB_DIR = "$PWD/lib"
 ./build/fun.exe .\examples\include_lib.fun</pre>
 
 ## Interactive showcase: play.fun
 
-The script `./scripts/play.fun` discovers all `.fun` files under `./examples` and offers to run them one by one:
+The script `./scripts/play.fun` discovers all `.fun` files in `./examples` and offers to run them one by one:
 
 <pre>./scripts/play.fun</pre>
 
@@ -52,7 +52,7 @@ Notes:
 
 Tip: you can run specific examples directly too:
 
-<pre>FUN_LIB_DIR="$(pwd)/lib" fun examples/crypto/openssl_md5.fun</pre>
+<pre>FUN_LIB_DIR="$(pwd)/lib" ./build/fun ./examples/extensions/openssl/openssl_md5.fun</pre>
 
 ## Example categories
 
@@ -72,3 +72,4 @@ Place your `.fun` files anywhere under `examples/` to have them picked up by `pl
 #include <io/console.fun></pre>
 
 If you add an example showcasing a new feature, also consider adding a brief note to the relevant doc (types.md, includes.md, opcodes.md, etc.).
+

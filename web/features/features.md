@@ -330,16 +330,16 @@ Enabled via CMake flags; each wraps a mature C library:
 
 | Extension | CMake Flag | Library | Features |
 |-----------|-----------|---------|----------|
-| **JSON** | `FUN_WITH_JSON` | json-c | `json_parse()`, `json_stringify()`, `json_from_file()`, `json_to_file()` |
-| **cURL** | `FUN_WITH_CURL` | libcurl | `curl_get()`, `curl_post()`, `curl_download()` |
-| **SQLite** | `FUN_WITH_SQLITE` | libsqlite3 | `sqlite_open()`, `sqlite_close()`, `sqlite_exec()`, `sqlite_query()` |
-| **PCRE2** | `FUN_WITH_PCRE2` | libpcre2 | `pcre2_test()`, `pcre2_match()`, `pcre2_find_all()` — with flags (i, m, s, u, x) |
-| **OpenSSL** | `FUN_WITH_OPENSSL` | libcrypto | `openssl_md5()`, `openssl_sha256()`, `openssl_sha512()`, `openssl_ripemd160()` |
-| **INI** | `FUN_WITH_INI` | iniparser 4.2.6 | `ini_load()`, `ini_get_string/int/double/bool()`, `ini_set()`, `ini_unset()`, `ini_save()` |
-| **XML** | `FUN_WITH_XML2` | libxml2 | `xml_parse()`, `xml_root()`, `xml_name()`, `xml_text()` |
-| **PC/SC** | `FUN_WITH_PCSC` | libpcsclite | `pcsc_establish()`, `pcsc_list_readers()`, `pcsc_connect()`, `pcsc_transmit()`, etc. |
-| **KCGI** | `FUN_WITH_KCGI` | libkcgi | `kcgi_parse()`, `kcgi_reply_start()`, `kcgi_write()`, `kcgi_end()` |
-| **Redis** | `FUN_WITH_REDIS` | hiredis | `redis_connect()`, `redis_cmd()`, `redis_close()` |
+| **[JSON](/documentation/extensions/json/)** | `FUN_WITH_JSON` | [json-c](https://json-c.github.io/json-c/){:class="ext"} | `json_parse()`, `json_stringify()`, `json_from_file()`, `json_to_file()` |
+| **[cURL](/documentation/extensions/curl/)** | `FUN_WITH_CURL` | [libcurl](https://curl.se/libcurl/){:class="ext"} | `curl_get()`, `curl_post()`, `curl_download()` |
+| **[SQLite](/documentation/extensions/sqlite/)** | `FUN_WITH_SQLITE` | [libsqlite3](https://www.sqlite.org/){:class="ext"} | `sqlite_open()`, `sqlite_close()`, `sqlite_exec()`, `sqlite_query()` |
+| **[PCRE2](/documentation/extensions/pcre2/)** | `FUN_WITH_PCRE2` | [libpcre2](https://www.pcre.org/){:class="ext"} | `pcre2_test()`, `pcre2_match()`, `pcre2_find_all()` — with flags (i, m, s, u, x) |
+| **[OpenSSL](/documentation/extensions/openssl/)** | `FUN_WITH_OPENSSL` | [libcrypto](https://www.openssl.org/){:class="ext"} | `openssl_md5()`, `openssl_sha256()`, `openssl_sha512()`, `openssl_ripemd160()` |
+| **[INI](/documentation/extensions/ini/)** | `FUN_WITH_INI` | [iniparser](https://github.com/ndevilla/iniparser){:class="ext"} | `ini_load()`, `ini_get_string/int/double/bool()`, `ini_set()`, `ini_unset()`, `ini_save()` |
+| **[XML](/documentation/extensions/xml2/)** | `FUN_WITH_XML2` | [libxml2](http://xmlsoft.org/){:class="ext"} | `xml_parse()`, `xml_root()`, `xml_name()`, `xml_text()` |
+| **[PC/SC](/documentation/extensions/pcsc/)** | `FUN_WITH_PCSC` | [libpcsclite](https://pcsclite.apdu.fr/){:class="ext"} | `pcsc_establish()`, `pcsc_list_readers()`, `pcsc_connect()`, `pcsc_transmit()`, etc. |
+| **[KCGI](/documentation/extensions/kcgi/)** | `FUN_WITH_KCGI` | [libkcgi](https://kristaps.bsd.lv/kcgi/){:class="ext"} | `kcgi_parse()`, `kcgi_reply_start()`, `kcgi_write()`, `kcgi_end()` |
+| **[Redis/Valkey](/documentation/extensions/redis/)** | `FUN_WITH_REDIS` | [hiredis](https://github.com/redis/hiredis){:class="ext"} | `redis_connect()`, `redis_cmd()`, `redis_close()` |
 
 Some extensions also have a corresponding **stdlib wrapper class** in `lib/io/` or `lib/net/`:
 
@@ -426,3 +426,4 @@ Some extensions also have a corresponding **stdlib wrapper class** in `lib/io/` 
 ## Licensing
 
 - **Apache 2.0** — fully open source, freely usable and modifiable
+

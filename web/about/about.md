@@ -5,7 +5,7 @@ subtitle: More information about having fun... :)
 description: About
 _date: 2023-09-20
 metasub: news
-noToc: true
+noToc: false
 noDate: false
 tags:
 - fun
@@ -210,15 +210,16 @@ Written primarily in Fun itself (lib/):
 
 Enabled via CMake flags, each wrapping a mature C library:
 
-- **JSON** (`FUN_WITH_JSON` / json-c) &mdash; parse, stringify, file I/O <span style="color:green;font-weight:bold;">&#9745;</span>
-- **cURL** (`FUN_WITH_CURL` / libcurl) &mdash; HTTP GET, POST, download <span style="color:green;font-weight:bold;">&#9745;</span>
-- **SQLite** (`FUN_WITH_SQLITE` / libsqlite3) &mdash; open, query, exec, close <span style="color:green;font-weight:bold;">&#9745;</span>
-- **PCRE2** (`FUN_WITH_PCRE2` / libpcre2) &mdash; Perl-compatible regex with flags <span style="color:green;font-weight:bold;">&#9745;</span>
-- **OpenSSL** (`FUN_WITH_OPENSSL` / libcrypto) &mdash; MD5, SHA-256, SHA-512, RIPEMD-160 hashing <span style="color:green;font-weight:bold;">&#9745;</span>
-- **INI** (`FUN_WITH_INI` / iniparser 4.2.6) &mdash; load, get/set, save config files <span style="color:green;font-weight:bold;">&#9745;</span>
-- **XML** (`FUN_WITH_XML2` / libxml2) &mdash; parse, navigate, query XML documents <span style="color:green;font-weight:bold;">&#9745;</span>
-- **PC/SC** (`FUN_WITH_PCSC` / libpcsclite) &mdash; smart card communication <span style="color:green;font-weight:bold;">&#9745;</span>
-- **KCGI** (`FUN_WITH_KCGI` / libkcgi) &mdash; CGI web applications <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[JSON](/documentation/extensions/json/)** (`FUN_WITH_JSON` / [json-c](https://json-c.github.io/json-c/){:class="ext"}) &mdash; parse, stringify, file I/O <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[cURL](/documentation/extensions/curl/)** (`FUN_WITH_CURL` / [libcurl](https://curl.se/libcurl/){:class="ext"}) &mdash; HTTP GET, POST, download <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[SQLite](/documentation/extensions/sqlite/)** (`FUN_WITH_SQLITE` / [libsqlite3](https://www.sqlite.org/){:class="ext"}) &mdash; open, query, exec, close <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[PCRE2](/documentation/extensions/pcre2/)** (`FUN_WITH_PCRE2` / [libpcre2](https://www.pcre.org/){:class="ext"}) &mdash; Perl-compatible regex with flags <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[OpenSSL](/documentation/extensions/openssl/)** (`FUN_WITH_OPENSSL` / [libcrypto](https://www.openssl.org/){:class="ext"}) &mdash; MD5, SHA-256, SHA-512, RIPEMD-160 hashing <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[INI](/documentation/extensions/ini/)** (`FUN_WITH_INI` / [iniparser](https://github.com/ndevilla/iniparser){:class="ext"}) &mdash; load, get/set, save config files <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[XML](/documentation/extensions/xml2/)** (`FUN_WITH_XML2` / [libxml2](http://xmlsoft.org/){:class="ext"}) &mdash; parse, navigate, query XML documents <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[PC/SC](/documentation/extensions/pcsc/)** (`FUN_WITH_PCSC` / [libpcsclite](https://pcsclite.apdu.fr/){:class="ext"}) &mdash; smart card communication <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[KCGI](/documentation/extensions/kcgi/)** (`FUN_WITH_KCGI` / [libkcgi](https://kristaps.bsd.lv/kcgi/){:class="ext"}) &mdash; CGI web applications <span style="color:green;font-weight:bold;">&#9745;</span>
+- **[Redis/Valkey](/documentation/extensions/redis/)** (`FUN_WITH_REDIS` / [hiredis](https://github.com/redis/hiredis){:class="ext"}) &mdash; Redis and Valkey support <span style="color:green;font-weight:bold;">&#9745;</span>
 
 <span style="color:green;font-weight:bold;">&#9745;</span> = Done
 
@@ -244,3 +245,4 @@ Each extension also has a corresponding stdlib wrapper class (e.g., `JSON`, `INI
 ## Code
 
 - [https://git.xw3.org/fun/fun/](https://git.xw3.org/fun/fun/){:class="git"}
+

@@ -19,12 +19,12 @@ tags:
 - Purpose: provide small crypto helpers backed by OpenSSL. Includes md5, sha256, sha512, ripemd160 helpers.
 - Homepage: [https://www.openssl.org/](https://www.openssl.org/){:class="ext"}
 
-## Build notes:
+## Build notes
 
 - Requires system OpenSSL development headers and libraries.
 - On OpenSSL 3.x, legacy MD5_* APIs are deprecated; you may see warnings during build.
 
-## Provided helper/opcodes:
+## Provided helper/opcodes
 
 - Function: openssl_md5(data:string) -> string (lowercase hex). Falls back to empty string when the extension is disabled, mirroring other optional modules.
 - Function: openssl_sha256(data:string) -> string (lowercase hex).
@@ -32,7 +32,7 @@ tags:
 - Function: openssl_ripemd160(data:string) -> string (lowercase hex). Note: On OpenSSL 3.x this may require the legacy provider; if the digest is unavailable, the helper returns an empty string.
 - Opcodes: OP_OPENSSL_MD5, OP_OPENSSL_SHA256, OP_OPENSSL_SHA512, OP_OPENSSL_RIPEMD160 (internal mappings for the functions above).
 
-## Quickstart:
+## Quickstart
 
 - Configure: cmake -S . -B build -DFUN_WITH_OPENSSL=ON
 - Build: cmake --build build --target fun
@@ -42,7 +42,7 @@ tags:
   - ./build/fun examples/crypto/openssl_sha512.fun
   - ./build/fun examples/crypto/openssl_ripemd160.fun
 
-## Example output:
+## Example output
 
 - md5(abc) = 900150983cd24fb0d6963f7d28e17f72
 - md5("") = d41d8cd98f00b204e9800998ecf8427e
@@ -53,6 +53,7 @@ tags:
 - ripemd160(abc) = 8eb208f7e05d987a9b044a8e98c6b087f15a0bfc
 - ripemd160("") = 9c1185a5c5e9fc54612808977ee8f548b2258d31
 
-## Notes:
+## Notes
 
 - The OpenSSL 3.x provider configuration on your system determines availability of RIPEMD-160. If the legacy provider is not enabled, openssl_ripemd160() will return an empty string.
+
