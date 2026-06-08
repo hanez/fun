@@ -72,4 +72,3 @@ Place your `.fun` files anywhere under `examples/` to have them picked up by `pl
 #include <io/console.fun></pre>
 
 If you add an example showcasing a new feature, also consider adding a brief note to the relevant doc (types.md, includes.md, opcodes.md, etc.).
-

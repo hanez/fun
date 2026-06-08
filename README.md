@@ -211,7 +211,7 @@ Some extensions also have a corresponding stdlib wrapper class (e.g., `JSON`, `I
 <pre>$ git clone https://git.xw3.org/fun/fun.git
 $ cd fun
 $ cmake -B build -DCMAKE_BUILD_TYPE=Release
-$ cmake --build build
+$ cmake --build build --target fun
 $ ./build/fun
 fun> print("Hello, World!")
 Hello, World!

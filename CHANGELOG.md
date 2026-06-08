@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (during 0.x.y development phase).
 
+## [0.42.1] - 2026-06-08
+### Fixed
+- Small test script issue.  
+### Changed
+- Documentation and website updates. No runtime code changes.
+- README, `make`, and `Doxyfile` updates. No runtime code changes.
+
+## [0.42.0] - 2026-06-03
+### Added
+- Redis/Valkey extension named `redis` (see `src/extensions/redis.c` and `src/vm/redis/*`).
+- Redis example programs: `basic_ping.fun`, `hash_ops.fun`, `kv_set_get.fun`, `list_ops.fun`, and `redis_test.fun`.
+- Initial Redis documentation page under `web/documentation/extensions/redis/`.
+### Changed
+- Build system: Redis extension is not compiled by default; enable it explicitly if needed. No other code changes.
+- GitHub workflow tweaks. No code changes.
+
+## [0.41.16] - 2026-05-29
+### Added
+- `playground/` directory for local-only experiments.
+### Changed
+- `examples/features.fun` and website features page updates.
+- README and API documentation updates. No code changes.
+- Documentation and web fixes. No code changes.
+
 ## [0.41.15] - 2026-05-26
 ### Changed
 - More internal optimizations.
