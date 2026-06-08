@@ -41,8 +41,8 @@ To enable the Redis extension when building Fun, pass the CMake option `-DFUN_WI
 Example (Release build directory shown by your setup):
 
 ```
-cmake -S . -B build_release -DFUN_WITH_REDIS=ON
-cmake --build build_release --target fun
+cmake -S . -B build -DFUN_WITH_REDIS=ON
+cmake --build build --target fun
 ```
 
 ### Changelog
