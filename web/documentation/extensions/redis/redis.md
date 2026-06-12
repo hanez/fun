@@ -32,7 +32,7 @@ The Redis extension adds a minimal client for Redis-compatible servers using the
 
 Example CMake configure line enabling Redis along with other options:
 
-<pre>cmake -S . -B build_release -DCMAKE_BUILD_TYPE=Release \
+<pre>cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
   -DFUN_WITH_REDIS=ON</pre>
 
 When configured, the build summary will include a line:

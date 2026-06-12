@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Troubleshooting Guide
+title: Troubleshooting Guide
 subtitle: Common issues and quick fixes for build, includes, and REPL usage.
 description: Common issues and quick fixes for build, includes, and REPL usage.
 permalink: /documentation/troubleshooting/

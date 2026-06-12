@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - funstx — Fun syntax checker and fixer
+title: funstx — Fun syntax checker and fixer
 subtitle: Syntax checker for .fun files with optional --fix auto-corrections; usage, exit codes, and limitations.
 description: Syntax checker for .fun files with optional --fix auto-corrections; usage, exit codes, and limitations.
 permalink: /documentation/funstx/

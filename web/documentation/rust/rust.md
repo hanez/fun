@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Writing Rust-backed opcodes for Fun VM
+title: Writing Rust-backed opcodes for Fun VM
 subtitle: Writing Rust-backed opcodes and wiring them into the C VM; build/setup notes.
 description: Writing Rust-backed opcodes and wiring them into the C VM; build/setup notes.
 permalink: /documentation/rust/
@@ -179,7 +179,7 @@ The minimal helpers shown cover 64-bit integers and simple strings. Extending th
 - Ensuring all pointers and lifetimes are well-defined: strings pushed to the VM should be copied or allocated using VM facilities so they remain valid after the call.
 - Keeping Rust no_std unless you add an allocator and link setup to support std.
 
-## Troubleshooting	
+## Troubleshooting
 
 - Link errors: Make sure FUN_WITH_RUST=ON for your build directory and that the Rust library is compiled before linking the VM. Use the rust_ops_build target if provided by your profile.
 - Missing symbol at runtime: Confirm #[no_mangle] and extern "C" on the Rust function and that C sees the correct prototype.
