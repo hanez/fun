@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Performance Guide
+title: Performance Guide
 subtitle: Build/runtime tuning tips and patterns for better performance.
 description: Build/runtime tuning tips and patterns for better performance.
 permalink: /documentation/performance/

@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Building and Running Tests
+title: Building and Running Tests
 subtitle: How to build and run tests/targets with CMake/CTest, and where to add new tests.
 description: How to build and run tests/targets with CMake/CTest, and where to add new tests.
 permalink: /documentation/testing/

@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Security and Sandboxing
+title: Security and Sandboxing
 subtitle: Trust boundaries, I/O expectations, and capability restrictions.
 description: Trust boundaries, I/O expectations, and capability restrictions.
 permalink: /documentation/security-and-sandboxing/

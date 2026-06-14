@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Bytecode Format (Overview)
+title: Bytecode Format (Overview)
 subtitle: Reference for the bytecode format (split out from internals for convenience).
 description: Reference for the bytecode format (split out from internals for convenience).
 permalink: /documentation/bytecode-format/

@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Writing Tests
+title: Writing Tests
 subtitle: How to author new tests for Fun and opcode components.
 description: How to author new tests for Fun and opcode components.
 permalink: /documentation/writing-tests/

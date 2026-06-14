@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Optional extensions
+title: Optional extensions
 subtitle: Catalog of optional, build-time selectable extensions for the Fun VM (e.g., cURL, SQLite, JSON).
 description: Catalog of optional, build-time selectable extensions for the Fun VM (e.g., cURL, SQLite, JSON).
 permalink: /documentation/extensions/

@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Fun Style Guide
+title: Fun Style Guide
 subtitle: Coding conventions for C and Fun (indentation, naming, idioms).
 description: Coding conventions for C and Fun (indentation, naming, idioms).
 permalink: /documentation/style-guide/

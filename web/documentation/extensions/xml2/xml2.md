@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - XML (libxml2) extension (optional)
+title: XML (libxml2) extension (optional)
 subtitle: Documentation for XML (libxml2) extension (optional)
 description: Documentation for XML (libxml2) extension (optional)
 permalink: /documentation/extensions/xml2/

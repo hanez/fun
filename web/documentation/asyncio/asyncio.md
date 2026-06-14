@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Async I/O ("asyncio") in Fun
+title: Async I/O ("asyncio") in Fun
 subtitle: Async I/O primitives and patterns, non-blocking sockets, fd polling, examples, and best practices.
 description: Async I/O primitives and patterns, non-blocking sockets, fd polling, examples, and best practices.
 permalink: /documentation/asyncio/

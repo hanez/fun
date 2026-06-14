@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Arrays in Fun
+title: Arrays in Fun
 subtitle: Working with arrays, creation, indexing/slicing, iteration patterns, helpers, and idioms.
 description: Working with arrays, creation, indexing/slicing, iteration patterns, helpers, and idioms.
 permalink: /documentation/arrays/

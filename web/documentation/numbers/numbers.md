@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Working with numbers and floats in Fun
+title: Working with numbers and floats in Fun
 subtitle: Working with integers and floats, arithmetic, conversions, clamping, bitwise ops, and patterns.
 description: Working with integers and floats, arithmetic, conversions, clamping, bitwise ops, and patterns.
 permalink: /documentation/numbers/

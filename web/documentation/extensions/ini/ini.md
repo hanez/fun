@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - INI (iniparser) extension (optional)
+title: INI (iniparser) extension (optional)
 subtitle: Documentation for INI (iniparser) extension (optional)
 description: Documentation for INI (iniparser) extension (optional)
 permalink: /documentation/extensions/ini/

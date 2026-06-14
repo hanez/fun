@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Errors and Diagnostics
+title: Errors and Diagnostics
 subtitle: Understanding parser/runtime errors and enabling diagnostics.
 description: Understanding parser/runtime errors and enabling diagnostics.
 permalink: /documentation/errors-and-diagnostics/

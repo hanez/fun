@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - OpenSSL extension (optional)
+title: OpenSSL extension (optional)
 subtitle: Documentation for OpenSSL extension (optional)
 description: Documentation for OpenSSL extension (optional)
 permalink: /documentation/extensions/openssl/

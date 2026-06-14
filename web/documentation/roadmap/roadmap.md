@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Roadmap
+title: Roadmap
 subtitle: High-level direction, planned features, and pointers to issues.
 description: High-level direction, planned features, and pointers to issues.
 permalink: /documentation/roadmap/

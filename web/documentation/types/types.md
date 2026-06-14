@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Core datatypes, arrays, maps, strings, numbers, booleans and nil
+title: Core datatypes, arrays, maps, strings, numbers, booleans and nil
 subtitle: Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
 description: Core types (numbers, strings, arrays, maps, nil/bool), common operations, patterns, and interop notes.
 permalink: /documentation/types/
@@ -177,7 +177,7 @@ print(typeof({}))          // "map"</pre>
 ## Common patterns
 
 - Accumulate values:
-- 
+-
   ```
   acc = []
   for i = 0; i < 5; i = i + 1 { push(acc, i*i) }
@@ -185,14 +185,14 @@ print(typeof({}))          // "map"</pre>
   ```
 
 - Group related data with a map:
-- 
+-
   ```
   person = { "name": "Lin", "skills": ["C", "Fun"] }
   print(person["skills"][1])  // Fun
   ```
 
 - Safe map read:
-- 
+-
   ```
   v = person["twitter"]
   handle = v != nil ? v : "(none)"

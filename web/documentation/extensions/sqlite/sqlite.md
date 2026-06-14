@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - SQLite extension (optional)
+title: SQLite extension (optional)
 subtitle: Documentation for SQLite extension (optional)
 description: Documentation for SQLite extension (optional)
 permalink: /documentation/extensions/sqlite/

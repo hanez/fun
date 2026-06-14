@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Maps in Fun
+title: Maps in Fun
 subtitle: Working with maps, construction, lookup/update, merging, iteration, and common patterns.
 description: Working with maps, construction, lookup/update, merging, iteration, and common patterns.
 permalink: /documentation/maps/

@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Fun CLI
+title: Fun CLI
 subtitle: Command-line usage of the `fun` executable, synopsis, options, exit codes, includes and library paths.
 description: Command-line usage of the `fun` executable, synopsis, options, exit codes, includes and library paths.
 permalink: /documentation/cli/

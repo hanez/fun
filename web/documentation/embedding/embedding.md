@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Embedding Fun
+title: Embedding Fun
 subtitle: Embedding the VM from C/Rust, lifecycle, and host integration tips.
 description: Embedding the VM from C/Rust, lifecycle, and host integration tips.
 permalink: /documentation/embedding/

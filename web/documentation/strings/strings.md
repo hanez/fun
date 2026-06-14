@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Working with strings in Fun
+title: Working with strings in Fun
 subtitle: Working with strings, literals/escaping, concatenation, substr/find, split, and conversions.
 description: Working with strings, literals/escaping, concatenation, substr/find, split, and conversions.
 permalink: /documentation/strings/

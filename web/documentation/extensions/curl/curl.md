@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - cURL (libcurl) extension (optional)
+title: cURL (libcurl) extension (optional)
 subtitle: Documentation for cURL (libcurl) extension (optional)
 description: Documentation for cURL (libcurl) extension (optional)
 permalink: /documentation/extensions/curl/

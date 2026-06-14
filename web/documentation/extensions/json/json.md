@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - JSON (json-c) extension (optional)
+title: JSON (json-c) extension (optional)
 subtitle: Documentation for JSON (json-c) extension (optional)
 description: Documentation for JSON (json-c) extension (optional)
 permalink: /documentation/extensions/json/

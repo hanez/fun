@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Contributing to Fun
+title: Contributing to Fun
 subtitle: How to contribute, project structure, coding style, running tests, and PR guidelines.
 description: How to contribute, project structure, coding style, running tests, and PR guidelines.
 permalink: /documentation/contributing/

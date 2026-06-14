@@ -4,7 +4,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - Fun executable, full usage guide
+title: Fun executable, full usage guide
 subtitle: Full usage guide for the `fun` executable, invocation patterns, REPL, env vars, include paths, examples, and install locations.
 description: Full usage guide for the `fun` executable, invocation patterns, REPL, env vars, include paths, examples, and install locations.
 permalink: /documentation/fun/
@@ -28,7 +28,7 @@ This document explains how to use the `fun` binary after building or installing 
 ## Synopsis
 
 <pre>fun [options] [script.fun] [-- args...]</pre>
-- 
+-
 - If [script.fun] is provided, `fun` runs the script.
 - If omitted and the build enables the REPL, `fun` starts an interactive session.
 

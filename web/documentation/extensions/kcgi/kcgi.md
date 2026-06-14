@@ -3,7 +3,7 @@ published: true
 noToc: false
 noComments: false
 noDate: false
-title: Fun - KCGI extension (optional)
+title: KCGI extension (optional)
 subtitle: Documentation for KCGI (kcgi) extension (optional)
 description: Documentation for KCGI (kcgi) extension (optional)
 permalink: /documentation/extensions/kcgi/
