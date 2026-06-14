@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(fun VERSION 0.42.1 LANGUAGES C)
+project(fun VERSION 0.42.2 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -521,7 +521,7 @@ install(DIRECTORY lib/
 # Optionally install example scripts
 option(FUN_INSTALL_EXAMPLES "Install example .fun scripts" ON)
 if(FUN_INSTALL_EXAMPLES)
-  install(DIRECTORY examples/ 
+  install(DIRECTORY examples/
     DESTINATION /usr/share/fun/examples
     FILES_MATCHING PATTERN "*.fun"
   )

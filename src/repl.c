@@ -259,14 +259,16 @@ static int complete_load_path(char *buf, size_t *len_io) {
   if (slash) {
     size_t dlen = (size_t)(slash - expanded);
     if (dlen == 0) {
-      strcpy(dirpart, "/");
+      /* use bounded copy to avoid potential overflow (even though "/" fits) */
+      snprintf(dirpart, sizeof(dirpart), "%s", "/");
     } else {
       memcpy(dirpart, expanded, dlen);
       dirpart[dlen] = '\0';
     }
     snprintf(base, sizeof(base), "%s", slash + 1);
   } else {
-    strcpy(dirpart, ".");
+    /* use bounded copy to avoid potential overflow (even though "." fits) */
+    snprintf(dirpart, sizeof(dirpart), "%s", ".");
     snprintf(base, sizeof(base), "%s", expanded);
   }
 

@@ -27,6 +27,24 @@ case OP_PROC_SYSTEM: {
     push_value(vm, make_int(-1));
     break;
   }
+  /* Security hardening: reject commands containing shell metacharacters or control chars
+     to reduce risk of command injection when using system(3). This preserves simple
+     command execution like "ls -l" but blocks dangerous constructs like pipes, redirects,
+     command substitution, etc. */
+  const char *bad = "&;|$<>`\\\"'()*?[]{}~";
+  int unsafe = 0;
+  for (const unsigned char *p = (const unsigned char *)cmd; *p; ++p) {
+    if (*p < 0x20 || strchr(bad, (int)*p)) { /* control or meta */
+      unsafe = 1;
+      break;
+    }
+  }
+  if (unsafe) {
+    /* refuse to execute potentially unsafe shell command */
+    push_value(vm, make_int(-1));
+    free(cmd);
+    break;
+  }
   int status = system(cmd);
   int code = -1;
 #ifdef __unix__

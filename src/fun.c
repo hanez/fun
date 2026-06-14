@@ -142,11 +142,26 @@ int main(int argc, char **argv) {
       }
       char *joined = (char *)malloc(total);
       if (joined) {
-        joined[0] = '\0';
+        size_t off = 0;
         for (int i = 0; i < sargc; ++i) {
-          strcat(joined, argv[sargi + i]);
-          if (i + 1 < sargc) strcat(joined, " ");
+          int written = snprintf(joined + off, (off < total ? total - off : 0),
+                                 "%s%s",
+                                 argv[sargi + i],
+                                 (i + 1 < sargc) ? " " : "");
+          if (written < 0) { /* encoding error */
+            off = total; /* force stop */
+            break;
+          }
+          size_t w = (size_t)written;
+          if (off + w >= total) { /* ensure we don't advance beyond buffer */
+            off = total ? total - 1 : 0;
+            joined[off] = '\0';
+            break;
+          }
+          off += w;
         }
+        /* Ensure NUL termination even if loop didn't run */
+        if (total > 0) joined[(off < total) ? off : (total - 1)] = '\0';
         setenv("FUN_ARGS", joined, 1);
         free(joined);
       }
