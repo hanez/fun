@@ -15,4 +15,15 @@
   <script src="/js/jquery-3.6.4.min.js" charset="{{ site.charset }}"></script>
   <script src="/js/js-cookie-3.0.5.min.js" charset="{{ site.charset }}"></script>
   <script src="/js/matomo.min.js" charset="{{ site.charset }}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const links = document.querySelectorAll('a');
+      links.forEach(link => {
+        if (link.hostname !== window.location.hostname) {
+          link.setAttribute('target', '_blank');
+          link.setAttribute('rel', 'noopener noreferrer');
+        }
+      });
+    });
+  </script>
 </head>

@@ -33,7 +33,7 @@ permalink: /
 
 <!--<p><a href="/about/">More about Fun</a><p>-->
 
-<h2>Blog (<a href="/feed/" title="Blog Feed" class="rss">Feed</a>)</h2>
+<h2>News (<a href="/feed/" title="Blog Feed" class="rss">Feed</a>)</h2>
 
 {% for post in site.tags.pinned %}
 <article class="post-content">
